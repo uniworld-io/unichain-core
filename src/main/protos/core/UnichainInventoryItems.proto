@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package protocol;
+
+option java_package = "org.unichain.protos"; //Specify the name of the package that generated the Java file
+option java_outer_classname = "UnichainInventoryItems"; //Specify the class name of the generated Java file
+option go_package = "github.com/unichainprotocol/grpc-gateway/core";
+
+message InventoryItems {
+  int32 type = 1;
+  repeated bytes items = 2;
+}

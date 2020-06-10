@@ -1,6 +1,41 @@
 
 ## UINICHAIN CORE
 
+## Build application
+### Prepare dependencies
+
+* JDK 1.8 (JDK 1.9+ are not supported yet)
+* On Linux Ubuntu system (e.g. Ubuntu 16.04.4 LTS), ensure that the machine has [__Oracle JDK 8__](https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-get-on-ubuntu-16-04), instead of having __Open JDK 8__ in the system. If you are building the source code by using __Open JDK 8__, you may get fails
+
+### Build application from source code
+```bash
+git clone https://github.com/uniworld-io/unichain-core.git
+# checkout to stable version 
+cd unichain-core
+./gradlew build 
+```
+Binary files located in `build/libs` folder. 
+
+### Run application
+```bash 
+cd build/libs
+java -jar unichain-core.jar
+     _   _ _ __ (_) ___| |__   __ _(_)_ __  
+    | | | | '_ \| |/ __| '_ \ / _` | | '_ \ 
+    | |_| | | | | | (__| | | | (_| | | | | |
+     \__,_|_| |_|_|\___|_| |_|\__,_|_|_| |_|
+
+```
+Run unichain node with customized config
+```bash
+cd build/libs
+java -jar unichain-core.jar -c ./your_localtion/of_config_file.conf
+```
+If you are witness, run unichain node with *--witness* and *-p* options (witness private key)
+```
+java -jar unichain-core --witness -p your_witness_private_key
+java -jar unichain-core --witness -p d06f6fbea126162c1bfac04869cf94331ca2a98610737e4b05b56527b0b8bf45
+``` 
 ## Contributing
 unichain-core is an open source project.
 It is the work of contributors. We appreciate your help!

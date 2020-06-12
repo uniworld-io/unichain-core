@@ -1,5 +1,12 @@
 
 ## UINICHAIN CORE
+UniChain is a high secure and scalable blockchain platform for Smart Society 5.0. This repos implements the core components of UniChain blockchain including unichain-core node, database and key management tools. For more information, please check out UniChain website and UniWolrd ecosystem.
+- [UniChain](https://unichain.world)
+- [UniWorld](https://uniworld.io) 
+- [UniMe](https://unime.world)
+- [UniBot](https://unibot.org)
+- [Mia Social Network](https://mia.world)
+
 
 ## Build application
 ### Prepare dependencies
@@ -31,7 +38,7 @@ Run unichain node with customized config
 cd build/libs
 java -jar unichain-core.jar -c ./your_localtion/of_config_file.conf
 ```
-If you are witness, run unichain node with *--witness* and *-p* options (witness private key)
+If you are witness, run unichain node with *--witness* and *-p* options (-p: witness private key)
 ```
 java -jar unichain-core --witness -p your_witness_private_key
 java -jar unichain-core --witness -p d06f6fbea126162c1bfac04869cf94331ca2a98610737e4b05b56527b0b8bf45

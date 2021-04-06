@@ -13,13 +13,13 @@ public class TransactionsMessage extends UnichainMessage {
     Protocol.Transactions.Builder builder = Protocol.Transactions.newBuilder();
     unxs.forEach(unx -> builder.addTransactions(unx));
     this.transactions = builder.build();
-    this.type = MessageTypes.UNXS.asByte();
+    this.type = MessageTypes.UNWS.asByte();
     this.data = this.transactions.toByteArray();
   }
 
   public TransactionsMessage(byte[] data) throws Exception {
     super(data);
-    this.type = MessageTypes.UNXS.asByte();
+    this.type = MessageTypes.UNWS.asByte();
     this.transactions = Protocol.Transactions.parseFrom(getCodedInputStream(data));
     if (isFilter()) {
       compareBytes(data, transactions.toByteArray());

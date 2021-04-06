@@ -151,7 +151,7 @@ public class MessageQueue {
     }
 
     if (msg instanceof InventoryMessage &&
-        ((InventoryMessage) msg).getInventoryType().equals(InventoryType.UNX)) {
+        ((InventoryMessage) msg).getInventoryType().equals(InventoryType.UNW)) {
       return false;
     }
 

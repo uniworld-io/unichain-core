@@ -46,12 +46,12 @@ public class Parameter {
     public static final long HEAD_NUM_MAX_DELTA = 1000L;
     public static final long HEAD_NUM_CHECK_TIME = 60000L;
     public static final int MAX_INVENTORY_SIZE_IN_MINUTES = 2;
-    public static final long NET_MAX_UNX_PER_SECOND = 700L;
-    public static final long MAX_UNX_PER_PEER = 200L;
+    public static final long NET_MAX_UNW_PER_SECOND = 700L;
+    public static final long MAX_UNW_PER_PEER = 200L;
     public static final int NET_MAX_INV_SIZE_IN_MINUTES = 2;
     public static final int MSG_CACHE_DURATION_IN_BLOCKS = 5;
     public static final int MAX_BLOCK_FETCH_PER_PEER = 100;
-    public static final int MAX_UNX_FETCH_PER_PEER = 1000;
+    public static final int MAX_UNW_FETCH_PER_PEER = 1000;
   }
 
   public class DatabaseConstants {

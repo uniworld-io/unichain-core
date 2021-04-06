@@ -39,27 +39,27 @@ public class TransactionLogTriggerCapsule extends TriggerCapsule {
     transactionLogTrigger.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
   }
 
-  public TransactionLogTriggerCapsule(TransactionCapsule unxCasule, BlockCapsule blockCapsule) {
+  public TransactionLogTriggerCapsule(TransactionCapsule unwCasule, BlockCapsule blockCapsule) {
     transactionLogTrigger = new TransactionLogTrigger();
     if (Objects.nonNull(blockCapsule)) {
       transactionLogTrigger.setBlockHash(blockCapsule.getBlockId().toString());
     }
-    transactionLogTrigger.setTransactionId(unxCasule.getTransactionId().toString());
+    transactionLogTrigger.setTransactionId(unwCasule.getTransactionId().toString());
     transactionLogTrigger.setTimeStamp(blockCapsule.getTimeStamp());
-    transactionLogTrigger.setBlockNumber(unxCasule.getBlockNum());
+    transactionLogTrigger.setBlockNumber(unwCasule.getBlockNum());
 
-    TransactionTrace unxTrace = unxCasule.getUnxTrace();
+    TransactionTrace unwTrace = unwCasule.getUnxTrace();
 
     //result
-    if (Objects.nonNull(unxCasule.getContractRet())) {
-      transactionLogTrigger.setResult(unxCasule.getContractRet().toString());
+    if (Objects.nonNull(unwCasule.getContractRet())) {
+      transactionLogTrigger.setResult(unwCasule.getContractRet().toString());
     }
 
-    if (Objects.nonNull(unxCasule.getInstance().getRawData())) {
+    if (Objects.nonNull(unwCasule.getInstance().getRawData())) {
       // feelimit
-      transactionLogTrigger.setFeeLimit(unxCasule.getInstance().getRawData().getFeeLimit());
+      transactionLogTrigger.setFeeLimit(unwCasule.getInstance().getRawData().getFeeLimit());
 
-      Protocol.Transaction.Contract contract = unxCasule.getInstance().getRawData().getContract(0);
+      Protocol.Transaction.Contract contract = unwCasule.getInstance().getRawData().getContract(0);
       Any contractParameter = null;
       // contract type
       if (Objects.nonNull(contract)) {
@@ -79,7 +79,7 @@ public class TransactionLogTriggerCapsule extends TriggerCapsule {
             TransferContract contractTransfer = contractParameter.unpack(TransferContract.class);
 
             if (Objects.nonNull(contractTransfer)) {
-              transactionLogTrigger.setAssetName("unx");
+              transactionLogTrigger.setAssetName("unw");
 
               if (Objects.nonNull(contractTransfer.getOwnerAddress())) {
                 transactionLogTrigger.setFromAddress(
@@ -122,18 +122,18 @@ public class TransactionLogTriggerCapsule extends TriggerCapsule {
     }
 
     // receipt
-    if (Objects.nonNull(unxTrace) && Objects.nonNull(unxTrace.getReceipt())) {
-      transactionLogTrigger.setEnergyFee(unxTrace.getReceipt().getEnergyFee());
-      transactionLogTrigger.setOriginEnergyUsage(unxTrace.getReceipt().getOriginEnergyUsage());
-      transactionLogTrigger.setEnergyUsageTotal(unxTrace.getReceipt().getEnergyUsageTotal());
-      transactionLogTrigger.setNetUsage(unxTrace.getReceipt().getNetUsage());
-      transactionLogTrigger.setNetFee(unxTrace.getReceipt().getNetFee());
-      transactionLogTrigger.setEnergyUsage(unxTrace.getReceipt().getEnergyUsage());
+    if (Objects.nonNull(unwTrace) && Objects.nonNull(unwTrace.getReceipt())) {
+      transactionLogTrigger.setEnergyFee(unwTrace.getReceipt().getEnergyFee());
+      transactionLogTrigger.setOriginEnergyUsage(unwTrace.getReceipt().getOriginEnergyUsage());
+      transactionLogTrigger.setEnergyUsageTotal(unwTrace.getReceipt().getEnergyUsageTotal());
+      transactionLogTrigger.setNetUsage(unwTrace.getReceipt().getNetUsage());
+      transactionLogTrigger.setNetFee(unwTrace.getReceipt().getNetFee());
+      transactionLogTrigger.setEnergyUsage(unwTrace.getReceipt().getEnergyUsage());
     }
 
     // program result
-    if (Objects.nonNull(unxTrace) && Objects.nonNull(unxTrace.getRuntime()) &&  Objects.nonNull(unxTrace.getRuntime().getResult())) {
-      ProgramResult programResult = unxTrace.getRuntime().getResult();
+    if (Objects.nonNull(unwTrace) && Objects.nonNull(unwTrace.getRuntime()) &&  Objects.nonNull(unwTrace.getRuntime().getResult())) {
+      ProgramResult programResult = unwTrace.getRuntime().getResult();
       ByteString contractResult = ByteString.copyFrom(programResult.getHReturn());
       ByteString contractAddress = ByteString.copyFrom(programResult.getContractAddress());
 

@@ -121,13 +121,13 @@ public class RuntimeImpl implements Runtime {
     ContractType contractType = this.unx.getRawData().getContract(0).getType();
     switch (contractType.getNumber()) {
       case ContractType.TriggerSmartContract_VALUE:
-        unxType = UnxType.UNX_CONTRACT_CALL_TYPE;
+        unxType = UnxType.UNW_CONTRACT_CALL_TYPE;
         break;
       case ContractType.CreateSmartContract_VALUE:
-        unxType = UnxType.UNX_CONTRACT_CREATION_TYPE;
+        unxType = UnxType.UNW_CONTRACT_CREATION_TYPE;
         break;
       default:
-        unxType = UnxType.UNX_PRECOMPILED_TYPE;
+        unxType = UnxType.UNW_PRECOMPILED_TYPE;
     }
   }
 
@@ -152,13 +152,13 @@ public class RuntimeImpl implements Runtime {
     ContractType contractType = tx.getRawData().getContract(0).getType();
     switch (contractType.getNumber()) {
       case ContractType.TriggerSmartContract_VALUE:
-        unxType = UnxType.UNX_CONTRACT_CALL_TYPE;
+        unxType = UnxType.UNW_CONTRACT_CALL_TYPE;
         break;
       case ContractType.CreateSmartContract_VALUE:
-        unxType = UnxType.UNX_CONTRACT_CREATION_TYPE;
+        unxType = UnxType.UNW_CONTRACT_CREATION_TYPE;
         break;
       default:
-        unxType = UnxType.UNX_PRECOMPILED_TYPE;
+        unxType = UnxType.UNW_PRECOMPILED_TYPE;
     }
   }
 
@@ -177,13 +177,13 @@ public class RuntimeImpl implements Runtime {
   public void execute()
       throws ContractValidateException, ContractExeException, VMIllegalException {
     switch (unxType) {
-      case UNX_PRECOMPILED_TYPE:
+      case UNW_PRECOMPILED_TYPE:
         precompiled();
         break;
-      case UNX_CONTRACT_CREATION_TYPE:
+      case UNW_CONTRACT_CREATION_TYPE:
         create();
         break;
-      case UNX_CONTRACT_CALL_TYPE:
+      case UNW_CONTRACT_CALL_TYPE:
         call();
         break;
       default:
@@ -279,7 +279,7 @@ public class RuntimeImpl implements Runtime {
     if (Arrays.equals(creator.getAddress().toByteArray(), caller.getAddress().toByteArray())) {
       // when the creator calls his own contract, this logic will be used.
       // so, the creator must use a BIG feeLimit to call his own contract,
-      // which will cost the feeLimit UNX when the creator's frozen energy is 0.
+      // which will cost the feeLimit UNW when the creator's frozen energy is 0.
       return callerEnergyLimit;
     }
 
@@ -423,7 +423,7 @@ public class RuntimeImpl implements Runtime {
       long vmStartInUs = System.nanoTime() / Constant.ONE_THOUSAND;
       long vmShouldEndInUs = vmStartInUs + thisTxCPULimitInUs;
       ProgramInvoke programInvoke = programInvokeFactory
-          .createProgramInvoke(UnxType.UNX_CONTRACT_CREATION_TYPE, executorType, unx,
+          .createProgramInvoke(UnxType.UNW_CONTRACT_CREATION_TYPE, executorType, unx,
               tokenValue, tokenId, blockCap.getInstance(), deposit, vmStartInUs,
               vmShouldEndInUs, energyLimit);
       this.vm = new VM(config);
@@ -532,7 +532,7 @@ public class RuntimeImpl implements Runtime {
       long vmStartInUs = System.nanoTime() / Constant.ONE_THOUSAND;
       long vmShouldEndInUs = vmStartInUs + thisTxCPULimitInUs;
       ProgramInvoke programInvoke = programInvokeFactory
-          .createProgramInvoke(UnxType.UNX_CONTRACT_CALL_TYPE, executorType, unx,
+          .createProgramInvoke(UnxType.UNW_CONTRACT_CALL_TYPE, executorType, unx,
               tokenValue, tokenId, blockCap.getInstance(), deposit, vmStartInUs,
               vmShouldEndInUs, energyLimit);
       if (isConstantCall) {
@@ -602,7 +602,7 @@ public class RuntimeImpl implements Runtime {
           return;
         }
 
-        if (UnxType.UNX_CONTRACT_CREATION_TYPE == unxType && !result.isRevert()) {
+        if (UnxType.UNW_CONTRACT_CREATION_TYPE == unxType && !result.isRevert()) {
           byte[] code = program.getResult().getHReturn();
           long saveCodeEnergy = (long) getLength(code) * EnergyCost.getInstance().getCREATE_DATA();
           long afterSpend = program.getEnergyLimitLeft().longValue() - saveCodeEnergy;

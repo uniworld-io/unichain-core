@@ -1993,6 +1993,10 @@ public class Manager {
         if (!triggerCapsuleQueue.offer(contractEventTriggerCapsule)) {
           logger.info("too many tigger, lost contract log trigger: {}", trigger.getTransactionId());
         }
+        //[TEST]=================================
+        if (!remove) {
+          contractEventTriggerCapsule.processTrigger();
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 package org.unichain.core.net.service;
 
 import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
-import static org.unichain.core.config.Parameter.NetConstants.MAX_UNX_FETCH_PER_PEER;
+import static org.unichain.core.config.Parameter.NetConstants.MAX_UNW_FETCH_PER_PEER;
 import static org.unichain.core.config.Parameter.NetConstants.MSG_CACHE_DURATION_IN_BLOCKS;
 
 import com.google.common.cache.Cache;
@@ -102,7 +102,7 @@ public class AdvService {
 
   synchronized public boolean addInv(Item item) {
 
-    if (fastForward && item.getType().equals(InventoryType.UNX)) {
+    if (fastForward && item.getType().equals(InventoryType.UNW)) {
       return false;
     }
 
@@ -110,7 +110,7 @@ public class AdvService {
       return false;
     }
 
-    if (item.getType().equals(InventoryType.UNX)) {
+    if (item.getType().equals(InventoryType.UNW)) {
       if (unxCache.getIfPresent(item) != null) {
         return false;
       }
@@ -131,7 +131,7 @@ public class AdvService {
   }
 
   public Message getMessage(Item item) {
-    if (item.getType().equals(InventoryType.UNX)) {
+    if (item.getType().equals(InventoryType.UNW)) {
       return unxCache.getIfPresent(item);
     } else {
       return blockCache.getIfPresent(item);
@@ -157,13 +157,13 @@ public class AdvService {
       blockMsg.getBlockCapsule().getTransactions().forEach(transactionCapsule -> {
         Sha256Hash tid = transactionCapsule.getTransactionId();
         invToSpread.remove(tid);
-        unxCache.put(new Item(tid, InventoryType.UNX),
+        unxCache.put(new Item(tid, InventoryType.UNW),
             new TransactionMessage(transactionCapsule.getInstance()));
       });
       blockCache.put(item, msg);
     } else if (msg instanceof TransactionMessage) {
       TransactionMessage unxMsg = (TransactionMessage) msg;
-      item = new Item(unxMsg.getMessageId(), InventoryType.UNX);
+      item = new Item(unxMsg.getMessageId(), InventoryType.UNW);
       unxCount.add();
       unxCache.put(item, new TransactionMessage(unxMsg.getTransactionCapsule().getInstance()));
     } else {
@@ -236,7 +236,7 @@ public class AdvService {
       }
       peers.stream()
           .filter(peer -> peer.getAdvInvReceive().getIfPresent(item) != null
-              && invSender.getSize(peer) < MAX_UNX_FETCH_PER_PEER)
+              && invSender.getSize(peer) < MAX_UNW_FETCH_PER_PEER)
           .sorted(Comparator.comparingInt(peer -> invSender.getSize(peer)))
           .findFirst().ifPresent(peer -> {
         invSender.add(item, peer);
@@ -309,7 +309,7 @@ public class AdvService {
 
     public void sendInv() {
       send.forEach((peer, ids) -> ids.forEach((key, value) -> {
-        if (peer.isFastForwardPeer() && key.equals(InventoryType.UNX)) {
+        if (peer.isFastForwardPeer() && key.equals(InventoryType.UNW)) {
           return;
         }
         if (key.equals(InventoryType.BLOCK)) {

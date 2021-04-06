@@ -132,7 +132,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
       throw new ContractValidateException("frozenBalance must be positive");
     }
     if (frozenBalance < 1_000_000L) {
-      throw new ContractValidateException("frozenBalance must be more than 1UNX");
+      throw new ContractValidateException("frozenBalance must be more than 1 UNW");
     }
 
     int frozenCount = accountCapsule.getFrozenCount();

@@ -135,7 +135,7 @@ public class VoteWitnessActuator extends AbstractActuator {
 
       long unichainPower = accountCapsule.getUnichainPower();
 
-      sum = LongMath.checkedMultiply(sum, 1000000L); //unx -> drop. The vote count is based on UNX
+      sum = LongMath.checkedMultiply(sum, 1000000L); //unx -> drop. The vote count is based on UNW
       if (sum > unichainPower) {
         throw new ContractValidateException(
             "The total number of votes[" + sum + "] is greater than the unichainPower[" + unichainPower

@@ -14,15 +14,15 @@ public class StorageMarket {
     this.dbManager = manager;
   }
 
-  private long exchange_to_supply(boolean isUNX, long quant) {
-    logger.info("isUNX: " + isUNX);
-    long balance = isUNX ? dbManager.getDynamicPropertiesStore().getTotalStoragePool() :
+  private long exchange_to_supply(boolean isUNW, long quant) {
+    logger.info("isUNW: " + isUNW);
+    long balance = isUNW ? dbManager.getDynamicPropertiesStore().getTotalStoragePool() :
         dbManager.getDynamicPropertiesStore().getTotalStorageReserved();
     logger.info("balance: " + balance);
     long newBalance = balance + quant;
     logger.info("balance + quant: " + (balance + quant));
 
-//    if (isUNX) {
+//    if (isUNW) {
 //      dbManager.getDynamicPropertiesStore().saveTotalStoragePool(newBalance);
 //    } else {
 //      dbManager.getDynamicPropertiesStore().saveTotalStorageReserved(newBalance);
@@ -36,15 +36,15 @@ public class StorageMarket {
     return out;
   }
 
-  private long exchange_to_supply2(boolean isUNX, long quant) {
-    logger.info("isUNX: " + isUNX);
-    long balance = isUNX ? dbManager.getDynamicPropertiesStore().getTotalStoragePool() :
+  private long exchange_to_supply2(boolean isUNW, long quant) {
+    logger.info("isUNW: " + isUNW);
+    long balance = isUNW ? dbManager.getDynamicPropertiesStore().getTotalStoragePool() :
         dbManager.getDynamicPropertiesStore().getTotalStorageReserved();
     logger.info("balance: " + balance);
     long newBalance = balance - quant;
     logger.info("balance - quant: " + (balance - quant));
 
-//    if (isUNX) {
+//    if (isUNW) {
 //      dbManager.getDynamicPropertiesStore().saveTotalStoragePool(newBalance);
 //    } else {
 //      dbManager.getDynamicPropertiesStore().saveTotalStorageReserved(newBalance);
@@ -58,8 +58,8 @@ public class StorageMarket {
     return out;
   }
 
-  private long exchange_from_supply(boolean isUNX, long supplyQuant) {
-    long balance = isUNX ? dbManager.getDynamicPropertiesStore().getTotalStoragePool() :
+  private long exchange_from_supply(boolean isUNW, long supplyQuant) {
+    long balance = isUNW ? dbManager.getDynamicPropertiesStore().getTotalStoragePool() :
         dbManager.getDynamicPropertiesStore().getTotalStorageReserved();
     supply -= supplyQuant;
 
@@ -68,7 +68,7 @@ public class StorageMarket {
     logger.info("exchangeBalance: " + exchangeBalance);
     long out = (long) exchangeBalance;
 
-    if (isUNX) {
+    if (isUNW) {
       out = Math.round(exchangeBalance / 100000) * 100000;
       logger.info("---out: " + out);
     }
@@ -76,9 +76,9 @@ public class StorageMarket {
     return out;
   }
 
-  public long exchange(long from, boolean isUNX) {
-    long relay = exchange_to_supply(isUNX, from);
-    return exchange_from_supply(!isUNX, relay);
+  public long exchange(long from, boolean isUNW) {
+    long relay = exchange_to_supply(isUNW, from);
+    return exchange_from_supply(!isUNW, relay);
   }
 
   public long calculateTax(long duration, long limit) {

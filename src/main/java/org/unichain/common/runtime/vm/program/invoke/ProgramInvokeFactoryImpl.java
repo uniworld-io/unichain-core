@@ -17,8 +17,8 @@
  */
 package org.unichain.common.runtime.vm.program.invoke;
 
-import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNX_CONTRACT_CALL_TYPE;
-import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNX_CONTRACT_CREATION_TYPE;
+import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_CONTRACT_CALL_TYPE;
+import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_CONTRACT_CREATION_TYPE;
 
 import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.Arrays;
@@ -60,7 +60,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
     long timestamp = 0L;
     long number = -1L;
 
-    if (unxType == UNX_CONTRACT_CREATION_TYPE) {
+    if (unxType == UNW_CONTRACT_CREATION_TYPE) {
       CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(tx);
       contractAddress = Wallet.generateContractAddress(tx);
       ownerAddress = contract.getOwnerAddress().toByteArray();
@@ -87,7 +87,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
           tokenValue, tokenId, data, lastHash, coinbase, timestamp, number, deposit, vmStartInUs,
           vmShouldEndInUs, energyLimit);
 
-    } else if (unxType == UNX_CONTRACT_CALL_TYPE) {
+    } else if (unxType == UNW_CONTRACT_CALL_TYPE) {
       Contract.TriggerSmartContract contract = ContractCapsule
           .getTriggerContractFromTransaction(tx);
       /***         ADDRESS op       ***/

@@ -95,7 +95,7 @@ public class BuyStorageBytesActuator extends AbstractActuator {
     long quant = storageMarket.tryBuyStorageBytes(bytes);
 
     if (quant < 1_000_000L) {
-      throw new ContractValidateException("quantity must be larger than 1UNX");
+      throw new ContractValidateException("quantity must be larger than 1 UNW");
     }
 
     if (quant > accountCapsule.getBalance()) {

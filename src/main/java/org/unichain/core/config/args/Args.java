@@ -833,7 +833,7 @@ public class Args {
     }
 
     INSTANCE.netMaxUnxPerSecond = config.hasPath("node.netMaxUnxPerSecond") ?
-        config.getInt("node.netMaxUnxPerSecond") : NetConstants.NET_MAX_UNX_PER_SECOND;
+        config.getInt("node.netMaxUnxPerSecond") : NetConstants.NET_MAX_UNW_PER_SECOND;
 
     INSTANCE.maxConnectionAgeInMillis = config.hasPath("node.rpc.maxConnectionAgeInMillis") ?
         config.getLong("node.rpc.maxConnectionAgeInMillis") : Long.MAX_VALUE;

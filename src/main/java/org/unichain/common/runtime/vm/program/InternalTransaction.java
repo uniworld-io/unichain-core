@@ -68,10 +68,10 @@ public class InternalTransaction {
 
 
   public enum UnxType {
-    UNX_PRECOMPILED_TYPE,
-    UNX_CONTRACT_CREATION_TYPE,
-    UNX_CONTRACT_CALL_TYPE,
-    UNX_UNKNOWN_TYPE,
+    UNW_PRECOMPILED_TYPE,
+    UNW_CONTRACT_CREATION_TYPE,
+    UNW_CONTRACT_CALL_TYPE,
+    UNW_UNKNOWN_TYPE,
   }
 
   public enum ExecutorType {
@@ -94,7 +94,7 @@ public class InternalTransaction {
     // outside transaction should not have deep, so use -1 to mark it is root.
     // It will not count in vm trace. But this deep will be shown in program result.
     this.deep = -1;
-    if (unxType == UnxType.UNX_CONTRACT_CREATION_TYPE) {
+    if (unxType == UnxType.UNW_CONTRACT_CREATION_TYPE) {
       CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(unx);
       if (contract == null) {
         throw new ContractValidateException("Invalid CreateSmartContract Protocol");
@@ -106,7 +106,7 @@ public class InternalTransaction {
       this.value = contract.getNewContract().getCallValue();
       this.data = contract.getNewContract().getBytecode().toByteArray();
       this.tokenInfo.put(String.valueOf(contract.getTokenId()), contract.getCallTokenValue());
-    } else if (unxType == UnxType.UNX_CONTRACT_CALL_TYPE) {
+    } else if (unxType == UnxType.UNW_CONTRACT_CALL_TYPE) {
       TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(unx);
       if (contract == null) {
         throw new ContractValidateException("Invalid TriggerSmartContract Protocol");

@@ -49,7 +49,7 @@ public class InventoryMessage extends UnichainMessage {
   }
 
   public MessageTypes getInvMessageType() {
-    return getInventoryType().equals(InventoryType.BLOCK) ? MessageTypes.BLOCK : MessageTypes.UNX;
+    return getInventoryType().equals(InventoryType.BLOCK) ? MessageTypes.BLOCK : MessageTypes.UNW;
 
   }
 

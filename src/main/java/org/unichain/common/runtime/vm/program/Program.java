@@ -181,8 +181,8 @@ public class Program {
   }
 
   /**
-   * @param transferAddress the address send unx to.
-   * @param value the unx value transferred in the internaltransaction
+   * @param transferAddress the address send unw to.
+   * @param value the unw value transferred in the internaltransaction
    */
   private InternalTransaction addInternalTx(DataWord energyLimit, byte[] senderAddress,
       byte[] transferAddress,
@@ -425,7 +425,7 @@ public class Program {
       } catch (ContractValidateException e) {
         if (VMConfig.allowTvmConstantinople()) {
           throw new TransferException(
-              "transfer all token or transfer all unx failed in suicide: %s", e.getMessage());
+              "transfer all token or transfer all unw failed in suicide: %s", e.getMessage());
         }
         throw new BytecodeExecutionException("transfer failure");
       }
@@ -662,7 +662,7 @@ public class Program {
         throw e;
       }
     }
-    // transfer unx validation
+    // transfer unw validation
     byte[] tokenId = null;
 
     checkTokenId(msg);
@@ -693,7 +693,7 @@ public class Program {
     byte[] programCode =
         accountCapsule != null ? getContractState().getCode(codeAddress) : EMPTY_BYTE_ARRAY;
 
-    // only for unx, not for token
+    // only for unw, not for token
     long contextBalance = 0L;
     if (byTestingSuite()) {
       // This keeps track of the calls created for a test
@@ -710,7 +710,7 @@ public class Program {
         } catch (ContractValidateException e) {
           if (VMConfig.allowTvmConstantinople()) {
             refundEnergy(msg.getEnergy().longValue(), "refund energy from message call");
-            throw new TransferException("transfer unx failed: %s", e.getMessage());
+            throw new TransferException("transfer unw failed: %s", e.getMessage());
           }
           throw new BytecodeExecutionException(VALIDATE_FOR_SMART_CONTRACT_FAILURE, e.getMessage());
         }
@@ -1401,7 +1401,7 @@ public class Program {
 
     checkTokenId(msg);
     boolean isTokenTransfer = isTokenTransfer(msg);
-    // transfer unx validation
+    // transfer unw validation
     if (!isTokenTransfer) {
       senderBalance = deposit.getBalance(senderAddress);
     } else {
@@ -1491,7 +1491,7 @@ public class Program {
    * [Long.Min, 0)        Not possible                               error
    * --------------------------------------------------------------------------------------------- 0
    * allowed and only allowed                    error (guaranteed in CALLTOKEN) transfertoken id=0
-   * should not transfer unx） ---------------------------------------------------------------------
+   * should not transfer unw） ---------------------------------------------------------------------
    * (0-100_0000]          Not possible                              error
    * ---------------------------------------------------------------------------------------------
    * (100_0000, Long.Max]  Not possible                             allowed

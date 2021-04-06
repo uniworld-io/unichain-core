@@ -45,14 +45,14 @@ public class AccountStore extends UnichainStoreWithRevoking<AccountCapsule> {
   }
 
   /**
-   * Max UNX account.
+   * Max UNW account.
    */
   public AccountCapsule getGinza() {
     return getUnchecked(assertsAddress.get("Ginza"));
   }
 
   /**
-   * Min UNX account.
+   * Min UNW account.
    */
   public AccountCapsule getBurnaccount() {
     return getUnchecked(assertsAddress.get("BurnAccount"));

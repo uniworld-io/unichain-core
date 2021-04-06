@@ -93,9 +93,9 @@ public class FetchInvDataMsgHandler implements UnichainMsgHandler {
   private void check(PeerConnection peer, FetchInvDataMessage fetchInvDataMsg) throws P2pException {
     MessageTypes type = fetchInvDataMsg.getInvMessageType();
 
-    if (type == MessageTypes.UNX) {
+    if (type == MessageTypes.UNW) {
       for (Sha256Hash hash : fetchInvDataMsg.getHashList()) {
-        if (peer.getAdvInvSpread().getIfPresent(new Item(hash, InventoryType.UNX)) == null) {
+        if (peer.getAdvInvSpread().getIfPresent(new Item(hash, InventoryType.UNW)) == null) {
           throw new P2pException(TypeEnum.BAD_MESSAGE, "not spread inv: {}" + hash);
         }
       }

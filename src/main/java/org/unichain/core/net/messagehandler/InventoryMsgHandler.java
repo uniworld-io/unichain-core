@@ -53,7 +53,7 @@ public class InventoryMsgHandler implements UnichainMsgHandler {
       return false;
     }
 
-    if (type.equals(InventoryType.UNX)) {
+    if (type.equals(InventoryType.UNW)) {
       int count = peer.getNodeStatistics().messageStatistics.unichainInUnxInventoryElement.getCount(10);
       if (count > maxCountIn10s) {
         logger.warn("Drop inv: {} size: {} from Peer {}, Inv count: {} is overload.",

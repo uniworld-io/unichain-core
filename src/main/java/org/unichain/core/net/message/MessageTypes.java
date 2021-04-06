@@ -7,11 +7,11 @@ public enum MessageTypes {
 
   FIRST(0x00),
 
-  UNX(0x01),
+  UNW(0x01),
 
   BLOCK(0x02),
 
-  UNXS(0x03),
+  UNWS(0x03),
 
   BLOCKS(0x04),
 
@@ -31,7 +31,7 @@ public enum MessageTypes {
 
   BLOCK_INVENTORY(0x12),
 
-  UNX_INVENTORY(0x13),
+  UNW_INVENTORY(0x13),
 
   P2P_HELLO(0x20),
 
@@ -82,14 +82,14 @@ public enum MessageTypes {
   }
 
   public static boolean inUnichainRange(byte code) {
-    return code <= UNX_INVENTORY.asByte() && code >= FIRST.asByte();
+    return code <= UNW_INVENTORY.asByte() && code >= FIRST.asByte();
   }
 
   @Override
   public String toString() {
     switch (type) {
       case 1:
-        return "UNX";
+        return "UNW";
       case 2:
         return "BLOCK";
       case 6:

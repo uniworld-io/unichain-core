@@ -148,7 +148,7 @@ public class UnichainNetDelegate {
   public boolean contain(Sha256Hash hash, MessageTypes type) {
     if (type.equals(MessageTypes.BLOCK)) {
       return dbManager.containBlock(hash);
-    } else if (type.equals(MessageTypes.UNX)) {
+    } else if (type.equals(MessageTypes.UNW)) {
       return dbManager.getTransactionStore().has(hash.getBytes());
     }
     return false;
@@ -159,7 +159,7 @@ public class UnichainNetDelegate {
       switch (type) {
         case BLOCK:
           return new BlockMessage(dbManager.getBlockById(hash));
-        case UNX:
+        case UNW:
           TransactionCapsule tx = dbManager.getTransactionStore().get(hash.getBytes());
           if (tx != null) {
             return new TransactionMessage(tx.getInstance());
@@ -214,7 +214,7 @@ public class UnichainNetDelegate {
       dbManager.pushTransaction(unx);
     } catch (ContractSizeNotEqualToOneException
         | VMIllegalException e) {
-      throw new P2pException(TypeEnum.BAD_UNX, e);
+      throw new P2pException(TypeEnum.BAD_UNW, e);
     } catch (ContractValidateException
         | ValidateSignatureException
         | ContractExeException
@@ -225,7 +225,7 @@ public class UnichainNetDelegate {
         | ReceiptCheckErrException
         | TooBigTransactionResultException
         | AccountResourceInsufficientException e) {
-      throw new P2pException(TypeEnum.UNX_EXE_FAILED, e);
+      throw new P2pException(TypeEnum.UNW_EXE_FAILED, e);
     }
   }
 

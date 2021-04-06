@@ -14,7 +14,7 @@ public class TransactionMessage extends UnichainMessage {
   public TransactionMessage(byte[] data) throws Exception {
     super(data);
     this.transactionCapsule = new TransactionCapsule(getCodedInputStream(data));
-    this.type = MessageTypes.UNX.asByte();
+    this.type = MessageTypes.UNW.asByte();
     if (Message.isFilter()) {
       compareBytes(data, transactionCapsule.getInstance().toByteArray());
       transactionCapsule
@@ -24,7 +24,7 @@ public class TransactionMessage extends UnichainMessage {
 
   public TransactionMessage(Transaction unx) {
     this.transactionCapsule = new TransactionCapsule(unx);
-    this.type = MessageTypes.UNX.asByte();
+    this.type = MessageTypes.UNW.asByte();
     this.data = unx.toByteArray();
   }
 

@@ -435,7 +435,7 @@ message BlockInventory {
 
 message Inventory {
   enum InventoryType {
-    UNX = 0;
+    UNW = 0;
     BLOCK = 1;
   }
   InventoryType type = 1;
@@ -445,7 +445,7 @@ message Inventory {
 message Items {
   enum ItemType {
     ERR = 0;
-    UNX = 1;
+    UNW = 1;
     BLOCK = 2;
     BLOCKHEADER = 3;
   }

@@ -105,7 +105,7 @@ public class UnichainNetService {
         case BLOCK:
           blockMsgHandler.processMessage(peer, msg);
           break;
-        case UNXS:
+        case UNWS:
           transactionsMsgHandler.processMessage(peer, msg);
           break;
         default:
@@ -122,7 +122,7 @@ public class UnichainNetService {
     if (ex instanceof P2pException) {
       TypeEnum type = ((P2pException) ex).getType();
       switch (type) {
-        case BAD_UNX:
+        case BAD_UNW:
           code = ReasonCode.BAD_TX;
           break;
         case BAD_BLOCK:

@@ -1,8 +1,8 @@
 package org.unichain.core.db;
 
-import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNX_CONTRACT_CALL_TYPE;
-import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNX_CONTRACT_CREATION_TYPE;
-import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNX_PRECOMPILED_TYPE;
+import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_CONTRACT_CALL_TYPE;
+import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_CONTRACT_CREATION_TYPE;
+import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_PRECOMPILED_TYPE;
 
 import java.util.Objects;
 import lombok.Getter;
@@ -87,13 +87,13 @@ public class TransactionTrace {
         .getContract(0).getType();
     switch (contractType.getNumber()) {
       case ContractType.TriggerSmartContract_VALUE:
-        unxType = UNX_CONTRACT_CALL_TYPE;
+        unxType = UNW_CONTRACT_CALL_TYPE;
         break;
       case ContractType.CreateSmartContract_VALUE:
-        unxType = UNX_CONTRACT_CREATION_TYPE;
+        unxType = UNW_CONTRACT_CREATION_TYPE;
         break;
       default:
-        unxType = UNX_PRECOMPILED_TYPE;
+        unxType = UNW_PRECOMPILED_TYPE;
     }
 
     this.dbManager = dbManager;
@@ -103,7 +103,7 @@ public class TransactionTrace {
   }
 
   private boolean needVM() {
-    return this.unxType == UNX_CONTRACT_CALL_TYPE || this.unxType == UNX_CONTRACT_CREATION_TYPE;
+    return this.unxType == UNW_CONTRACT_CALL_TYPE || this.unxType == UNW_CONTRACT_CREATION_TYPE;
   }
 
   public void init(BlockCapsule blockCap) {
@@ -125,7 +125,7 @@ public class TransactionTrace {
 
     TriggerSmartContract triggerContractFromTransaction = ContractCapsule
         .getTriggerContractFromTransaction(this.getUnx().getInstance());
-    if (UnxType.UNX_CONTRACT_CALL_TYPE == this.unxType) {
+    if (UnxType.UNW_CONTRACT_CALL_TYPE == this.unxType) {
       DepositImpl deposit = DepositImpl.createRoot(dbManager);
       ContractCapsule contract = deposit
           .getContract(triggerContractFromTransaction.getContractAddress().toByteArray());
@@ -167,7 +167,7 @@ public class TransactionTrace {
     runtime.execute();
     runtime.go();
 
-    if (UNX_PRECOMPILED_TYPE != runtime.getUnxType()) {
+    if (UNW_PRECOMPILED_TYPE != runtime.getUnxType()) {
       if (contractResult.OUT_OF_TIME
           .equals(receipt.getResult())) {
         setTimeResultType(TimeResultType.OUT_OF_TIME);
@@ -196,11 +196,11 @@ public class TransactionTrace {
     long percent = 0;
     long originEnergyLimit = 0;
     switch (unxType) {
-      case UNX_CONTRACT_CREATION_TYPE:
+      case UNW_CONTRACT_CREATION_TYPE:
         callerAccount = TransactionCapsule.getOwner(unx.getInstance().getRawData().getContract(0));
         originAccount = callerAccount;
         break;
-      case UNX_CONTRACT_CALL_TYPE:
+      case UNW_CONTRACT_CALL_TYPE:
         TriggerSmartContract callContract = ContractCapsule
             .getTriggerContractFromTransaction(unx.getInstance());
         ContractCapsule contractCapsule =

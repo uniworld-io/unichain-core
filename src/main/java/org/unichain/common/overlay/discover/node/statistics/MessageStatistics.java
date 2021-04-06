@@ -175,7 +175,7 @@ public class MessageStatistics {
         InventoryMessage inventoryMessage = (InventoryMessage) msg;
         int inventorySize = inventoryMessage.getInventory().getIdsCount();
         if (flag) {
-          if (inventoryMessage.getInvMessageType() == MessageTypes.UNX) {
+          if (inventoryMessage.getInvMessageType() == MessageTypes.UNW) {
             unichainInUnxInventory.add();
             unichainInUnxInventoryElement.add(inventorySize);
           } else {
@@ -183,7 +183,7 @@ public class MessageStatistics {
             unichainInBlockInventoryElement.add(inventorySize);
           }
         } else {
-          if (inventoryMessage.getInvMessageType() == MessageTypes.UNX) {
+          if (inventoryMessage.getInvMessageType() == MessageTypes.UNW) {
             unichainOutUnxInventory.add();
             unichainOutUnxInventoryElement.add(inventorySize);
           } else {
@@ -196,7 +196,7 @@ public class MessageStatistics {
         FetchInvDataMessage fetchInvDataMessage = (FetchInvDataMessage) msg;
         int fetchSize = fetchInvDataMessage.getInventory().getIdsCount();
         if (flag) {
-          if (fetchInvDataMessage.getInvMessageType() == MessageTypes.UNX) {
+          if (fetchInvDataMessage.getInvMessageType() == MessageTypes.UNW) {
             unichainInUnxFetchInvData.add();
             unichainInUnxFetchInvDataElement.add(fetchSize);
           } else {
@@ -204,7 +204,7 @@ public class MessageStatistics {
             unichainInBlockFetchInvDataElement.add(fetchSize);
           }
         } else {
-          if (fetchInvDataMessage.getInvMessageType() == MessageTypes.UNX) {
+          if (fetchInvDataMessage.getInvMessageType() == MessageTypes.UNW) {
             unichainOutUnxFetchInvData.add();
             unichainOutUnxFetchInvDataElement.add(fetchSize);
           } else {
@@ -213,7 +213,7 @@ public class MessageStatistics {
           }
         }
         break;
-      case UNXS:
+      case UNWS:
         TransactionsMessage transactionsMessage = (TransactionsMessage) msg;
         if (flag) {
           unichainInUnxs.add();
@@ -223,7 +223,7 @@ public class MessageStatistics {
           unichainOutUnx.add(transactionsMessage.getTransactions().getTransactionsCount());
         }
         break;
-      case UNX:
+      case UNW:
         if (flag) {
           unichainInMessage.add();
         } else {

@@ -102,7 +102,7 @@ public class TransferActuator extends AbstractActuator {
     }
 
     if (Arrays.equals(toAddress, ownerAddress)) {
-      throw new ContractValidateException("Cannot transfer unx to yourself.");
+      throw new ContractValidateException("Cannot transfer unw to yourself.");
     }
 
     AccountCapsule ownerAccount = dbManager.getAccountStore().get(ownerAddress);
@@ -128,7 +128,7 @@ public class TransferActuator extends AbstractActuator {
       if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1
               && toAccount != null
               && toAccount.getType() == AccountType.Contract) {
-        throw new ContractValidateException("Cannot transfer unx to smartContract.");
+        throw new ContractValidateException("Cannot transfer unw to smartContract.");
       }
 
       if (balance < Math.addExact(amount, fee)) {
@@ -157,7 +157,7 @@ public class TransferActuator extends AbstractActuator {
     }
 
     if (Arrays.equals(toAddress, ownerAddress)) {
-      throw new ContractValidateException("Cannot transfer unx to yourself.");
+      throw new ContractValidateException("Cannot transfer unw to yourself.");
     }
 
     AccountCapsule ownerAccount = deposit.getAccount(ownerAddress);

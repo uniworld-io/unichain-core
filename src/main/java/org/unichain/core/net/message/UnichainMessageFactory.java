@@ -30,11 +30,11 @@ public class UnichainMessageFactory extends MessageFactory {
           "type=" + type + ", len=" + packed.length);
     }
     switch (receivedTypes) {
-      case UNX:
+      case UNW:
         return new TransactionMessage(packed);
       case BLOCK:
         return new BlockMessage(packed);
-      case UNXS:
+      case UNWS:
         return new TransactionsMessage(packed);
       case BLOCKS:
         return new BlocksMessage(packed);
@@ -50,7 +50,7 @@ public class UnichainMessageFactory extends MessageFactory {
         return new ItemNotFound();
       case FETCH_BLOCK_HEADERS:
         return new FetchBlockHeadersMessage(packed);
-      case UNX_INVENTORY:
+      case UNW_INVENTORY:
         return new TransactionInventoryMessage(packed);
       default:
         throw new P2pException(P2pException.TypeEnum.NO_SUCH_MESSAGE,

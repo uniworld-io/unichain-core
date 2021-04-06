@@ -37,13 +37,13 @@ public class TransactionsMsgHandler implements UnichainMsgHandler {
   @Autowired
   private AdvService advService;
 
-  private static int MAX_UNX_SIZE = 50_000;
+  private static int MAX_UNW_SIZE = 50_000;
 
   private static int MAX_SMART_CONTRACT_SUBMIT_SIZE = 100;
 
 //  private static int TIME_OUT = 10 * 60 * 1000;
 
-  private BlockingQueue<UnxEvent> smartContractQueue = new LinkedBlockingQueue(MAX_UNX_SIZE);
+  private BlockingQueue<UnxEvent> smartContractQueue = new LinkedBlockingQueue(MAX_UNW_SIZE);
 
   private BlockingQueue<Runnable> queue = new LinkedBlockingQueue();
 
@@ -79,7 +79,7 @@ public class TransactionsMsgHandler implements UnichainMsgHandler {
   }
 
   public boolean isBusy() {
-    return queue.size() + smartContractQueue.size() > MAX_UNX_SIZE;
+    return queue.size() + smartContractQueue.size() > MAX_UNW_SIZE;
   }
 
   @Override
@@ -102,7 +102,7 @@ public class TransactionsMsgHandler implements UnichainMsgHandler {
 
   private void check(PeerConnection peer, TransactionsMessage msg) throws P2pException {
     for (Transaction unx : msg.getTransactions().getTransactionsList()) {
-      Item item = new Item(new TransactionMessage(unx).getMessageId(), InventoryType.UNX);
+      Item item = new Item(new TransactionMessage(unx).getMessageId(), InventoryType.UNW);
       if (!peer.getAdvInvRequest().containsKey(item)) {
         throw new P2pException(TypeEnum.BAD_MESSAGE,
             "unx: " + msg.getMessageId() + " without request.");
@@ -131,7 +131,7 @@ public class TransactionsMsgHandler implements UnichainMsgHandler {
       return;
     }
 
-    if (advService.getMessage(new Item(unx.getMessageId(), InventoryType.UNX)) != null) {
+    if (advService.getMessage(new Item(unx.getMessageId(), InventoryType.UNW)) != null) {
       return;
     }
 
@@ -141,7 +141,7 @@ public class TransactionsMsgHandler implements UnichainMsgHandler {
     } catch (P2pException e) {
       logger.warn("Unx {} from peer {} process failed. type: {}, reason: {}",
           unx.getMessageId(), peer.getInetAddress(), e.getType(), e.getMessage());
-      if (e.getType().equals(TypeEnum.BAD_UNX)) {
+      if (e.getType().equals(TypeEnum.BAD_UNW)) {
         peer.disconnect(ReasonCode.BAD_TX);
       }
     } catch (Exception e) {

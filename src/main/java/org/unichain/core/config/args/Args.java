@@ -1072,9 +1072,13 @@ public class Args {
   private static EventPluginConfig getEventPluginConfig(final com.typesafe.config.Config config) {
     EventPluginConfig eventPluginConfig = new EventPluginConfig();
 
+    boolean enable = false;
     boolean useNativeQueue = false;
     int bindPort = 0;
     int sendQueueLength = 0;
+    if (config.hasPath("event.subscribe.enable")) {
+      enable = config.getBoolean("event.subscribe.enable");
+    }
     if (config.hasPath("event.subscribe.native.useNativeQueue")) {
       useNativeQueue = config.getBoolean("event.subscribe.native.useNativeQueue");
 
@@ -1085,7 +1089,8 @@ public class Args {
       if (config.hasPath("event.subscribe.native.sendqueuelength")) {
         sendQueueLength = config.getInt("event.subscribe.native.sendqueuelength");
       }
-
+      
+      eventPluginConfig.setEnable(enable);
       eventPluginConfig.setUseNativeQueue(useNativeQueue);
       eventPluginConfig.setBindPort(bindPort);
       eventPluginConfig.setSendQueueLength(sendQueueLength);

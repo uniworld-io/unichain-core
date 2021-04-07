@@ -497,7 +497,7 @@ public class Manager {
     Thread repushThread = new Thread(repushLoop);
     repushThread.start();
     // add contract event listener for subscribing
-    if (Args.getInstance().isEventSubscribe()) {
+    if (Args.getInstance().isEventSubscribe() || Args.getInstance().getEventPluginConfig().isEnable()) {
       startEventSubscribing();
       Thread triggerCapsuleProcessThread = new Thread(triggerCapsuleProcessLoop);
       triggerCapsuleProcessThread.start();

@@ -15,6 +15,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.AccountCreateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class CreateAccountActuator extends AbstractActuator {
 
@@ -23,35 +24,21 @@ public class CreateAccountActuator extends AbstractActuator {
   }
 
   @Override
-  public boolean execute(TransactionResultCapsule ret)
-      throws ContractExeException {
+  public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
       AccountCreateContract accountCreateContract = contract.unpack(AccountCreateContract.class);
-      boolean withDefaultPermission =
-          dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
-      AccountCapsule accountCapsule = new AccountCapsule(accountCreateContract,
-          dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-
-      dbManager.getAccountStore()
-          .put(accountCreateContract.getAccountAddress().toByteArray(), accountCapsule);
-
-      dbManager.adjustBalance(accountCreateContract.getOwnerAddress().toByteArray(), -fee);
-      // Add to burnaccount address
-      dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().createDbKey(), fee);
-
+      boolean withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
+      AccountCapsule accountCapsule = new AccountCapsule(accountCreateContract, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+      dbManager.getAccountStore().put(accountCreateContract.getAccountAddress().toByteArray(), accountCapsule);
+      chargeFee(accountCreateContract.getOwnerAddress().toByteArray(), fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (InvalidProtocolBufferException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-
-    return true;
   }
 
   @Override
@@ -63,9 +50,7 @@ public class CreateAccountActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!contract.is(AccountCreateContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [AccountCreateContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [AccountCreateContract],real type[" + contract.getClass() + "]");
     }
     final AccountCreateContract contract;
     try {
@@ -85,14 +70,12 @@ public class CreateAccountActuator extends AbstractActuator {
     AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
     if (accountCapsule == null) {
       String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-      throw new ContractValidateException(
-          "Account[" + readableOwnerAddress + "] not exists");
+      throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
     }
 
     final long fee = calcFee();
     if (accountCapsule.getBalance() < fee) {
-      throw new ContractValidateException(
-          "Validate CreateAccountActuator error, insufficient fee.");
+      throw new ContractValidateException("Validate CreateAccountActuator error, insufficient fee.");
     }
 
     byte[] accountAddress = contract.getAccountAddress().toByteArray();

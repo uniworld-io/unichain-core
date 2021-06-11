@@ -26,6 +26,7 @@ import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.AssetIssueCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract;
@@ -33,6 +34,7 @@ import org.unichain.protos.Contract.ParticipateAssetIssueContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class ParticipateAssetIssueActuator extends AbstractActuator {
 
@@ -44,8 +46,7 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      final ParticipateAssetIssueContract participateAssetIssueContract =
-          contract.unpack(Contract.ParticipateAssetIssueContract.class);
+      final ParticipateAssetIssueContract participateAssetIssueContract = contract.unpack(Contract.ParticipateAssetIssueContract.class);
       long cost = participateAssetIssueContract.getAmount();
 
       //subtract from owner address
@@ -75,18 +76,14 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
       //write to db
       dbManager.getAccountStore().put(ownerAddress, ownerAccount);
       dbManager.getAccountStore().put(toAddress, toAccount);
+      dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
       ret.setStatus(fee, Protocol.Transaction.Result.code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (ArithmeticException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-
-    return true;
   }
 
   @Override
@@ -98,19 +95,17 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(ParticipateAssetIssueContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [ParticipateAssetIssueContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [ParticipateAssetIssueContract],real type[" + contract.getClass() + "]");
     }
 
     final ParticipateAssetIssueContract participateAssetIssueContract;
     try {
-      participateAssetIssueContract =
-          this.contract.unpack(ParticipateAssetIssueContract.class);
+      participateAssetIssueContract = this.contract.unpack(ParticipateAssetIssueContract.class);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
+
     //Parameters check
     byte[] ownerAddress = participateAssetIssueContract.getOwnerAddress().toByteArray();
     byte[] toAddress = participateAssetIssueContract.getToAddress().toByteArray();
@@ -154,13 +149,11 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
       }
 
       if (!Arrays.equals(toAddress, assetIssueCapsule.getOwnerAddress().toByteArray())) {
-        throw new ContractValidateException(
-            "The asset is not issued by " + ByteArray.toHexString(toAddress));
+        throw new ContractValidateException("The asset is not issued by " + ByteArray.toHexString(toAddress));
       }
       //Whether the exchange can be processed: to see if the exchange can be the exact int
       long now = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderTimestamp();
-      if (now >= assetIssueCapsule.getEndTime() || now < assetIssueCapsule
-          .getStartTime()) {
+      if (now >= assetIssueCapsule.getEndTime() || now < assetIssueCapsule.getStartTime()) {
         throw new ContractValidateException("No longer valid period!");
       }
 
@@ -177,8 +170,7 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
         throw new ContractValidateException("To account does not exist!");
       }
 
-      if (!toAccount.assetBalanceEnoughV2(assetName, exchangeAmount,
-          dbManager)) {
+      if (!toAccount.assetBalanceEnoughV2(assetName, exchangeAmount, dbManager)) {
         throw new ContractValidateException("Asset balance is not enough !");
       }
     } catch (ArithmeticException e) {

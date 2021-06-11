@@ -36,6 +36,7 @@ import org.unichain.protos.Contract.AssetIssueContract.FrozenSupply;
 import org.unichain.protos.Protocol.Account.Frozen;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class AssetIssueActuator extends AbstractActuator {
 
@@ -69,18 +70,13 @@ public class AssetIssueActuator extends AbstractActuator {
 
       if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
         assetIssueCapsuleV2.setPrecision(0);
-        dbManager.getAssetIssueStore()
-            .put(assetIssueCapsule.createDbKey(), assetIssueCapsule);
-        dbManager.getAssetIssueV2Store()
-            .put(assetIssueCapsuleV2.createDbV2Key(), assetIssueCapsuleV2);
+        dbManager.getAssetIssueStore().put(assetIssueCapsule.createDbKey(), assetIssueCapsule);
+        dbManager.getAssetIssueV2Store().put(assetIssueCapsuleV2.createDbV2Key(), assetIssueCapsuleV2);
       } else {
-        dbManager.getAssetIssueV2Store()
-            .put(assetIssueCapsuleV2.createDbV2Key(), assetIssueCapsuleV2);
+        dbManager.getAssetIssueV2Store().put(assetIssueCapsuleV2.createDbV2Key(), assetIssueCapsuleV2);
       }
 
-      dbManager.adjustBalance(ownerAddress, -fee);
-      dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().getAddress().toByteArray(),
-          fee);//send to burnaccount
+      chargeFee(ownerAddress, fee);
 
       AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
       List<FrozenSupply> frozenSupplyList = assetIssueContract.getFrozenSupplyList();
@@ -106,9 +102,7 @@ public class AssetIssueActuator extends AbstractActuator {
       accountCapsule.setAssetIssuedName(assetIssueCapsule.createDbKey());
       accountCapsule.setAssetIssuedID(assetIssueCapsule.createDbV2Key());
       accountCapsule.addAssetV2(assetIssueCapsuleV2.createDbV2Key(), remainSupply);
-      accountCapsule.setInstance(accountCapsule.getInstance().toBuilder()
-          .addAllFrozenSupply(frozenList).build());
-
+      accountCapsule.setInstance(accountCapsule.getInstance().toBuilder().addAllFrozenSupply(frozenList).build());
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
 
       ret.setAssetIssueID(Long.toString(tokenIdNum));
@@ -139,9 +133,7 @@ public class AssetIssueActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(AssetIssueContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [AssetIssueContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [AssetIssueContract],real type[" + contract.getClass() + "]");
     }
 
     final AssetIssueContract assetIssueContract;
@@ -175,8 +167,7 @@ public class AssetIssueActuator extends AbstractActuator {
       }
     }
 
-    if ((!assetIssueContract.getAbbr().isEmpty()) && !TransactionUtil
-        .validAssetName(assetIssueContract.getAbbr().toByteArray())) {
+    if ((!assetIssueContract.getAbbr().isEmpty()) && !TransactionUtil.validAssetName(assetIssueContract.getAbbr().toByteArray())) {
       throw new ContractValidateException("Invalid abbreviation for token");
     }
 
@@ -184,8 +175,7 @@ public class AssetIssueActuator extends AbstractActuator {
       throw new ContractValidateException("Invalid url");
     }
 
-    if (!TransactionUtil
-        .validAssetDescription(assetIssueContract.getDescription().toByteArray())) {
+    if (!TransactionUtil.validAssetDescription(assetIssueContract.getDescription().toByteArray())) {
       throw new ContractValidateException("Invalid description");
     }
 
@@ -203,8 +193,7 @@ public class AssetIssueActuator extends AbstractActuator {
     }
 
     if (this.dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0
-        && this.dbManager.getAssetIssueStore().get(assetIssueContract.getName().toByteArray())
-        != null) {
+        && this.dbManager.getAssetIssueStore().get(assetIssueContract.getName().toByteArray()) != null) {
       throw new ContractValidateException("Token exists");
     }
 
@@ -224,20 +213,17 @@ public class AssetIssueActuator extends AbstractActuator {
       throw new ContractValidateException("PublicFreeAssetNetUsage must be 0!");
     }
 
-    if (assetIssueContract.getFrozenSupplyCount()
-        > this.dbManager.getDynamicPropertiesStore().getMaxFrozenSupplyNumber()) {
+    if (assetIssueContract.getFrozenSupplyCount() > this.dbManager.getDynamicPropertiesStore().getMaxFrozenSupplyNumber()) {
       throw new ContractValidateException("Frozen supply list length is too long");
     }
 
     if (assetIssueContract.getFreeAssetNetLimit() < 0
-        || assetIssueContract.getFreeAssetNetLimit() >=
-        dbManager.getDynamicPropertiesStore().getOneDayNetLimit()) {
+        || assetIssueContract.getFreeAssetNetLimit() >= dbManager.getDynamicPropertiesStore().getOneDayNetLimit()) {
       throw new ContractValidateException("Invalid FreeAssetNetLimit");
     }
 
     if (assetIssueContract.getPublicFreeAssetNetLimit() < 0
-        || assetIssueContract.getPublicFreeAssetNetLimit() >=
-        dbManager.getDynamicPropertiesStore().getOneDayNetLimit()) {
+        || assetIssueContract.getPublicFreeAssetNetLimit() >= dbManager.getDynamicPropertiesStore().getOneDayNetLimit()) {
       throw new ContractValidateException("Invalid PublicFreeAssetNetLimit");
     }
 
@@ -257,9 +243,7 @@ public class AssetIssueActuator extends AbstractActuator {
       }
       if (!(next.getFrozenDays() >= minFrozenSupplyTime
           && next.getFrozenDays() <= maxFrozenSupplyTime)) {
-        throw new ContractValidateException(
-            "frozenDuration must be less than " + maxFrozenSupplyTime + " days "
-                + "and more than " + minFrozenSupplyTime + " days");
+        throw new ContractValidateException("frozenDuration must be less than " + maxFrozenSupplyTime + " days " + "and more than " + minFrozenSupplyTime + " days");
       }
       remainSupply -= next.getFrozenAmount();
     }
@@ -304,9 +288,5 @@ public class AssetIssueActuator extends AbstractActuator {
   @Override
   public long calcFee() {
     return dbManager.getDynamicPropertiesStore().getAssetIssueFee();
-  }
-
-  public long calcUsage() {
-    return 0;
   }
 }

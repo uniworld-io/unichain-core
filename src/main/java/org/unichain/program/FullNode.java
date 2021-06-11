@@ -44,7 +44,6 @@ public class FullNode {
     logger.info("Full node running.");
     Args.setParam(args, Constant.TESTNET_CONF);
     Args cfgArgs = Args.getInstance();
-
     load(cfgArgs.getLogbackPath());
 
     if (cfgArgs.isHelp()) {
@@ -60,8 +59,7 @@ public class FullNode {
 
     DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
     beanFactory.setAllowCircularReferences(false);
-    UnichainApplicationContext context =
-        new UnichainApplicationContext(beanFactory);
+    UnichainApplicationContext context = new UnichainApplicationContext(beanFactory);
     context.register(DefaultConfig.class);
 
     context.refresh();
@@ -81,11 +79,9 @@ public class FullNode {
 
     // fullnode and soliditynode fuse together, provide solidity rpc and http server on the fullnode.
     if (Args.getInstance().getStorage().getDbVersion() == 2) {
-      RpcApiServiceOnSolidity rpcApiServiceOnSolidity = context
-          .getBean(RpcApiServiceOnSolidity.class);
+      RpcApiServiceOnSolidity rpcApiServiceOnSolidity = context.getBean(RpcApiServiceOnSolidity.class);
       appT.addService(rpcApiServiceOnSolidity);
-      HttpApiOnSolidityService httpApiOnSolidityService = context
-          .getBean(HttpApiOnSolidityService.class);
+      HttpApiOnSolidityService httpApiOnSolidityService = context.getBean(HttpApiOnSolidityService.class);
       appT.addService(httpApiOnSolidityService);
     }
 

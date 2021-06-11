@@ -36,6 +36,7 @@ import org.unichain.protos.Contract.TransferAssetContract;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class TransferAssetActuator extends AbstractActuator {
 
@@ -47,26 +48,21 @@ public class TransferAssetActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      TransferAssetContract transferAssetContract = this.contract
-          .unpack(TransferAssetContract.class);
+      TransferAssetContract transferAssetContract = this.contract.unpack(TransferAssetContract.class);
       AccountStore accountStore = this.dbManager.getAccountStore();
       byte[] ownerAddress = transferAssetContract.getOwnerAddress().toByteArray();
       byte[] toAddress = transferAssetContract.getToAddress().toByteArray();
       AccountCapsule toAccountCapsule = accountStore.get(toAddress);
       if (toAccountCapsule == null) {
-        boolean withDefaultPermission =
-            dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
-        toAccountCapsule = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal,
-            dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+        boolean withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
+        toAccountCapsule = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         dbManager.getAccountStore().put(toAddress, toAccountCapsule);
-
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
       ByteString assetName = transferAssetContract.getAssetName();
       long amount = transferAssetContract.getAmount();
 
-      dbManager.adjustBalance(ownerAddress, -fee);
-      dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().createDbKey(), fee);
+      chargeFee(ownerAddress, fee);
 
       AccountCapsule ownerAccountCapsule = accountStore.get(ownerAddress);
       if (!ownerAccountCapsule.reduceAssetAmountV2(assetName.toByteArray(), amount, dbManager)) {
@@ -78,19 +74,14 @@ public class TransferAssetActuator extends AbstractActuator {
       accountStore.put(toAddress, toAccountCapsule);
 
       ret.setStatus(fee, code.SUCESS);
-    } catch (BalanceInsufficientException e) {
+      return true;
+    } catch (BalanceInsufficientException
+        | InvalidProtocolBufferException
+        | ArithmeticException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
-    } catch (InvalidProtocolBufferException e) {
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (ArithmeticException e) {
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
     }
-
-    return true;
   }
 
   @Override
@@ -102,9 +93,7 @@ public class TransferAssetActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(TransferAssetContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [TransferAssetContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [TransferAssetContract],real type[" + contract.getClass() + "]");
     }
     final TransferAssetContract transferAssetContract;
     try {
@@ -167,8 +156,7 @@ public class TransferAssetActuator extends AbstractActuator {
     AccountCapsule toAccount = this.dbManager.getAccountStore().get(toAddress);
     if (toAccount != null) {
       //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
-      if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1
-              && toAccount.getType() == AccountType.Contract) {
+      if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1 && toAccount.getType() == AccountType.Contract) {
         throw new ContractValidateException("Cannot transfer asset to smartContract.");
       }
 
@@ -196,8 +184,7 @@ public class TransferAssetActuator extends AbstractActuator {
     return true;
   }
 
-  public static boolean validateForSmartContract(Deposit deposit, byte[] ownerAddress,
-      byte[] toAddress, byte[] tokenId, long amount) throws ContractValidateException {
+  public static boolean validateForSmartContract(Deposit deposit, byte[] ownerAddress, byte[] toAddress, byte[] tokenId, long amount) throws ContractValidateException {
     if (deposit == null) {
       throw new ContractValidateException("No deposit!");
     }
@@ -267,8 +254,7 @@ public class TransferAssetActuator extends AbstractActuator {
         }
       }
     } else {
-      throw new ContractValidateException(
-          "Validate InternalTransfer error, no ToAccount. And not allowed to create account in smart contract.");
+      throw new ContractValidateException("Validate InternalTransfer error, no ToAccount. And not allowed to create account in smart contract.");
     }
 
     return true;

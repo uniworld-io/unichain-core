@@ -10,11 +10,13 @@ import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.db.StorageMarket;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.BuyStorageContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class BuyStorageActuator extends AbstractActuator {
 
@@ -31,23 +33,20 @@ public class BuyStorageActuator extends AbstractActuator {
     final BuyStorageContract buyStorageContract;
     try {
       buyStorageContract = contract.unpack(BuyStorageContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      byte[] ownerAddress = buyStorageContract.getOwnerAddress().toByteArray();
+      AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      long qty = buyStorageContract.getQuant();
+      storageMarket.buyStorage(accountCapsule, qty);
+      chargeFee(ownerAddress, fee);
+      ret.setStatus(fee, code.SUCESS);
+      return true;
+
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-
-    AccountCapsule accountCapsule = dbManager.getAccountStore()
-        .get(buyStorageContract.getOwnerAddress().toByteArray());
-    long quant = buyStorageContract.getQuant();
-
-    storageMarket.buyStorage(accountCapsule, quant);
-
-    ret.setStatus(fee, code.SUCESS);
-
-    return true;
   }
-
 
   @Override
   public boolean validate() throws ContractValidateException {
@@ -58,9 +57,7 @@ public class BuyStorageActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!contract.is(BuyStorageContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [BuyStorageContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [BuyStorageContract],real type[" + contract.getClass() + "]");
     }
 
     final BuyStorageContract buyStorageContract;
@@ -78,8 +75,7 @@ public class BuyStorageActuator extends AbstractActuator {
     AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
     if (accountCapsule == null) {
       String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-      throw new ContractValidateException(
-          "Account[" + readableOwnerAddress + "] not exists");
+      throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
     }
 
     long quant = buyStorageContract.getQuant();
@@ -96,8 +92,7 @@ public class BuyStorageActuator extends AbstractActuator {
     }
     long storage_bytes = storageMarket.tryBuyStorage(quant);
     if (storage_bytes < 1L) {
-      throw new ContractValidateException(
-          "storage_bytes must be larger than 1,current storage_bytes[" + storage_bytes + "]");
+      throw new ContractValidateException("storage_bytes must be larger than 1,current storage_bytes[" + storage_bytes + "]");
     }
 
 //    long storageBytes = storageMarket.exchange(quant, true);
@@ -117,5 +112,4 @@ public class BuyStorageActuator extends AbstractActuator {
   public long calcFee() {
     return 0;
   }
-
 }

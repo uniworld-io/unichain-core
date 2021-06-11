@@ -13,13 +13,15 @@ import org.unichain.core.capsule.ContractCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.AccountStore;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.UpdateEnergyLimitContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@note confirmed new fee policy
 @Slf4j(topic = "actuator")
-public class UpdateEnergyLimitContractActuator extends AbstractActuator {
+  public class UpdateEnergyLimitContractActuator extends AbstractActuator {
 
   UpdateEnergyLimitContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -29,23 +31,21 @@ public class UpdateEnergyLimitContractActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      UpdateEnergyLimitContract usContract = contract
-          .unpack(UpdateEnergyLimitContract.class);
+      UpdateEnergyLimitContract usContract = contract.unpack(UpdateEnergyLimitContract.class);
+      byte[] ownerAddress = usContract.getOwnerAddress().toByteArray();
       long newOriginEnergyLimit = usContract.getOriginEnergyLimit();
       byte[] contractAddress = usContract.getContractAddress().toByteArray();
       ContractCapsule deployedContract = dbManager.getContractStore().get(contractAddress);
+      dbManager.getContractStore().put(contractAddress, new ContractCapsule(deployedContract.getInstance().toBuilder().setOriginEnergyLimit(newOriginEnergyLimit).build()));
 
-      dbManager.getContractStore().put(contractAddress, new ContractCapsule(
-          deployedContract.getInstance().toBuilder().setOriginEnergyLimit(newOriginEnergyLimit)
-              .build()));
-
+      chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override

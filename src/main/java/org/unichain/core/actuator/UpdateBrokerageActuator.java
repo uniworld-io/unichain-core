@@ -10,11 +10,13 @@ import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.WitnessCapsule;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.UpdateBrokerageContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@note confirmed new fee policy
 @Slf4j(topic = "actuator")
 public class UpdateBrokerageActuator extends AbstractActuator {
 
@@ -28,26 +30,24 @@ public class UpdateBrokerageActuator extends AbstractActuator {
     final long fee = calcFee();
     try {
       updateBrokerageContract = contract.unpack(UpdateBrokerageContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      byte[] ownerAddress = updateBrokerageContract.getOwnerAddress().toByteArray();
+      int brokerage = updateBrokerageContract.getBrokerage();
+      //@note review role of brokerage when charging fee
+      dbManager.getDelegationStore().setBrokerage(ownerAddress, brokerage);
+      chargeFee(ownerAddress, fee);
+      ret.setStatus(fee, code.SUCESS);
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-
-    byte[] ownerAddress = updateBrokerageContract.getOwnerAddress().toByteArray();
-    int brokerage = updateBrokerageContract.getBrokerage();
-
-    dbManager.getDelegationStore().setBrokerage(ownerAddress, brokerage);
-    ret.setStatus(fee, code.SUCESS);
-
-    return true;
   }
 
   @Override
   public boolean validate() throws ContractValidateException {
     if (!dbManager.getDynamicPropertiesStore().allowChangeDelegation()) {
-      throw new ContractValidateException(
-          "contract type error,unexpected type [UpdateBrokerageContract]");
+      throw new ContractValidateException("contract type error,unexpected type [UpdateBrokerageContract]");
     }
     if (this.contract == null) {
       throw new ContractValidateException("No contract!");
@@ -56,9 +56,7 @@ public class UpdateBrokerageActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(UpdateBrokerageContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [UpdateBrokerageContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [UpdateBrokerageContract],real type[" + contract.getClass() + "]");
     }
     final UpdateBrokerageContract updateBrokerageContract;
     try {

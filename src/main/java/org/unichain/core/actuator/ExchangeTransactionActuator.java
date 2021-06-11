@@ -13,12 +13,14 @@ import org.unichain.core.capsule.ExchangeCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.exception.ItemNotFoundException;
 import org.unichain.protos.Contract.ExchangeTransactionContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class ExchangeTransactionActuator extends AbstractActuator {
 
@@ -30,13 +32,10 @@ public class ExchangeTransactionActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      final ExchangeTransactionContract exchangeTransactionContract = this.contract
-          .unpack(ExchangeTransactionContract.class);
-      AccountCapsule accountCapsule = dbManager.getAccountStore()
-          .get(exchangeTransactionContract.getOwnerAddress().toByteArray());
-
-      ExchangeCapsule exchangeCapsule = dbManager.getExchangeStoreFinal().
-          get(ByteArray.fromLong(exchangeTransactionContract.getExchangeId()));
+      final ExchangeTransactionContract exchangeTransactionContract = this.contract.unpack(ExchangeTransactionContract.class);
+      byte[] ownerAddress = exchangeTransactionContract.getOwnerAddress().toByteArray();
+      AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      ExchangeCapsule exchangeCapsule = dbManager.getExchangeStoreFinal().get(ByteArray.fromLong(exchangeTransactionContract.getExchangeId()));
 
       byte[] firstTokenID = exchangeCapsule.getFirstTokenId();
       byte[] secondTokenID = exchangeCapsule.getSecondTokenId();
@@ -67,23 +66,17 @@ public class ExchangeTransactionActuator extends AbstractActuator {
       } else {
         accountCapsule.addAssetAmountV2(anotherTokenID, anotherTokenQuant, dbManager);
       }
-
       dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
-
       dbManager.putExchangeCapsule(exchangeCapsule);
-
+      chargeFee(ownerAddress, fee);
       ret.setExchangeReceivedAmount(anotherTokenQuant);
       ret.setStatus(fee, code.SUCESS);
-    } catch (ItemNotFoundException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (InvalidProtocolBufferException e) {
+      return true;
+    } catch (ItemNotFoundException | InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
 
@@ -96,9 +89,7 @@ public class ExchangeTransactionActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(ExchangeTransactionContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [ExchangeTransactionContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [ExchangeTransactionContract],real type[" + contract.getClass() + "]");
     }
     final ExchangeTransactionContract contract;
     try {
@@ -126,8 +117,7 @@ public class ExchangeTransactionActuator extends AbstractActuator {
 
     ExchangeCapsule exchangeCapsule;
     try {
-      exchangeCapsule = dbManager.getExchangeStoreFinal().
-          get(ByteArray.fromLong(contract.getExchangeId()));
+      exchangeCapsule = dbManager.getExchangeStoreFinal().get(ByteArray.fromLong(contract.getExchangeId()));
     } catch (ItemNotFoundException ex) {
       throw new ContractValidateException("Exchange[" + contract.getExchangeId() + "] not exists");
     }
@@ -164,8 +154,7 @@ public class ExchangeTransactionActuator extends AbstractActuator {
     }
 
     long balanceLimit = dbManager.getDynamicPropertiesStore().getExchangeBalanceLimit();
-    long tokenBalance = (Arrays.equals(tokenID, firstTokenID) ? firstTokenBalance
-        : secondTokenBalance);
+    long tokenBalance = (Arrays.equals(tokenID, firstTokenID) ? firstTokenBalance : secondTokenBalance);
     tokenBalance += tokenQuant;
     if (tokenBalance > balanceLimit) {
       throw new ContractValidateException("token balance must less than " + balanceLimit);
@@ -196,8 +185,7 @@ public class ExchangeTransactionActuator extends AbstractActuator {
   }
 
   @Override
-  public long calcFee() {
-    return 0;
-  }
-
+    public long calcFee() {
+      return 0;
+    }
 }

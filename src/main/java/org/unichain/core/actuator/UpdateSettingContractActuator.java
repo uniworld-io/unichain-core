@@ -12,11 +12,13 @@ import org.unichain.core.capsule.ContractCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.AccountStore;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.UpdateSettingContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@note confirmed new fee policy
 @Slf4j(topic = "actuator")
 public class UpdateSettingContractActuator extends AbstractActuator {
 
@@ -28,23 +30,21 @@ public class UpdateSettingContractActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      UpdateSettingContract usContract = contract
-          .unpack(UpdateSettingContract.class);
+      UpdateSettingContract usContract = contract.unpack(UpdateSettingContract.class);
+      byte[] ownerAddress = usContract.getOwnerAddress().toByteArray();
       long newPercent = usContract.getConsumeUserResourcePercent();
       byte[] contractAddress = usContract.getContractAddress().toByteArray();
       ContractCapsule deployedContract = dbManager.getContractStore().get(contractAddress);
 
-      dbManager.getContractStore().put(contractAddress, new ContractCapsule(
-          deployedContract.getInstance().toBuilder().setConsumeUserResourcePercent(newPercent)
-              .build()));
-
+      dbManager.getContractStore().put(contractAddress, new ContractCapsule(deployedContract.getInstance().toBuilder().setConsumeUserResourcePercent(newPercent).build()));
+      chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override

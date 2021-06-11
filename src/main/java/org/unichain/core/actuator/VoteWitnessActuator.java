@@ -23,15 +23,16 @@ import org.unichain.core.db.AccountStore;
 import org.unichain.core.db.Manager;
 import org.unichain.core.db.VotesStore;
 import org.unichain.core.db.WitnessStore;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.VoteWitnessContract;
 import org.unichain.protos.Contract.VoteWitnessContract.Vote;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@note confirmed new fee policy
 @Slf4j(topic = "actuator")
 public class VoteWitnessActuator extends AbstractActuator {
-
 
   VoteWitnessActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -42,14 +43,16 @@ public class VoteWitnessActuator extends AbstractActuator {
     long fee = calcFee();
     try {
       VoteWitnessContract voteContract = contract.unpack(VoteWitnessContract.class);
+      byte[] ownerAddress = voteContract.getOwnerAddress().toByteArray();
       countVoteAccount(voteContract, getDeposit());
+      chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
@@ -61,9 +64,7 @@ public class VoteWitnessActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(VoteWitnessContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [VoteWitnessContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [VoteWitnessContract],real type[" + contract.getClass() + "]");
     }
     final VoteWitnessContract contract;
     try {
@@ -156,17 +157,15 @@ public class VoteWitnessActuator extends AbstractActuator {
     VotesStore votesStore = dbManager.getVotesStore();
     AccountStore accountStore = dbManager.getAccountStore();
 
-    //
+    //withdraw reward
     dbManager.getDelegationService().withdrawReward(ownerAddress, getDeposit());
 
-    AccountCapsule accountCapsule = (Objects.isNull(getDeposit())) ? accountStore.get(ownerAddress)
-        : getDeposit().getAccount(ownerAddress);
+    AccountCapsule accountCapsule = (Objects.isNull(getDeposit())) ? accountStore.get(ownerAddress) : getDeposit().getAccount(ownerAddress);
 
     if (!Objects.isNull(getDeposit())) {
       VotesCapsule vCapsule = getDeposit().getVotesCapsule(ownerAddress);
       if (Objects.isNull(vCapsule)) {
-        votesCapsule = new VotesCapsule(voteContract.getOwnerAddress(),
-            accountCapsule.getVotesList());
+        votesCapsule = new VotesCapsule(voteContract.getOwnerAddress(), accountCapsule.getVotesList());
       } else {
         votesCapsule = vCapsule;
       }
@@ -181,9 +180,7 @@ public class VoteWitnessActuator extends AbstractActuator {
     votesCapsule.clearNewVotes();
 
     voteContract.getVotesList().forEach(vote -> {
-      logger.debug("countVoteAccount,address[{}]",
-          ByteArray.toHexString(vote.getVoteAddress().toByteArray()));
-
+      logger.debug("countVoteAccount,address[{}]", ByteArray.toHexString(vote.getVoteAddress().toByteArray()));
       votesCapsule.addNewVotes(vote.getVoteAddress(), vote.getVoteCount());
       accountCapsule.addVotes(vote.getVoteAddress(), vote.getVoteCount());
     });
@@ -196,7 +193,6 @@ public class VoteWitnessActuator extends AbstractActuator {
       deposit.putAccountValue(accountCapsule.createDbKey(), accountCapsule);
       deposit.putVoteValue(ownerAddress, votesCapsule);
     }
-
   }
 
   @Override
@@ -208,5 +204,4 @@ public class VoteWitnessActuator extends AbstractActuator {
   public long calcFee() {
     return 0;
   }
-
 }

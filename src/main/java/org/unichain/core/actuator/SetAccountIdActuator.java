@@ -11,11 +11,13 @@ import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.AccountIdIndexStore;
 import org.unichain.core.db.AccountStore;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.SetAccountIdContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class SetAccountIdActuator extends AbstractActuator {
 
@@ -29,23 +31,23 @@ public class SetAccountIdActuator extends AbstractActuator {
     final long fee = calcFee();
     try {
       setAccountIdContract = contract.unpack(SetAccountIdContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      byte[] ownerAddress = setAccountIdContract.getOwnerAddress().toByteArray();
+      AccountStore accountStore = dbManager.getAccountStore();
+      AccountIdIndexStore accountIdIndexStore = dbManager.getAccountIdIndexStore();
+      AccountCapsule ownerAccount = accountStore.get(ownerAddress);
+
+      ownerAccount.setAccountId(setAccountIdContract.getAccountId().toByteArray());
+      accountStore.put(ownerAddress, ownerAccount);
+      accountIdIndexStore.put(ownerAccount);
+      chargeFee(ownerAddress, fee);
+      ret.setStatus(fee, code.SUCESS);
+      return true;
+    }
+    catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-
-    byte[] ownerAddress = setAccountIdContract.getOwnerAddress().toByteArray();
-    AccountStore accountStore = dbManager.getAccountStore();
-    AccountIdIndexStore accountIdIndexStore = dbManager.getAccountIdIndexStore();
-    AccountCapsule account = accountStore.get(ownerAddress);
-
-    account.setAccountId(setAccountIdContract.getAccountId().toByteArray());
-    accountStore.put(ownerAddress, account);
-    accountIdIndexStore.put(account);
-    ret.setStatus(fee, code.SUCESS);
-
-    return true;
   }
 
   @Override
@@ -57,9 +59,7 @@ public class SetAccountIdActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(SetAccountIdContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [SetAccountIdContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [SetAccountIdContract],real type[" + contract.getClass() + "]");
     }
     final SetAccountIdContract setAccountIdContract;
     try {

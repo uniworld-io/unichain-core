@@ -4,6 +4,7 @@ import com.google.protobuf.Any;
 import org.unichain.common.storage.Deposit;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 
 public abstract class AbstractActuator implements Actuator {
@@ -24,5 +25,10 @@ public abstract class AbstractActuator implements Actuator {
   AbstractActuator(Any contract, Manager dbManager) {
     this.contract = contract;
     this.dbManager = dbManager;
+  }
+
+  protected void chargeFee(byte[] ownerAddress, long fee) throws BalanceInsufficientException {
+    dbManager.adjustBalance(ownerAddress, -fee);
+    dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
   }
 }

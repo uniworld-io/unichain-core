@@ -12,12 +12,14 @@ import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.UnfreezeAssetContract;
 import org.unichain.protos.Protocol.Account.Frozen;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class UnfreezeAssetActuator extends AbstractActuator {
 
@@ -29,8 +31,7 @@ public class UnfreezeAssetActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      final UnfreezeAssetContract unfreezeAssetContract = contract
-          .unpack(UnfreezeAssetContract.class);
+      final UnfreezeAssetContract unfreezeAssetContract = contract.unpack(UnfreezeAssetContract.class);
       byte[] ownerAddress = unfreezeAssetContract.getOwnerAddress().toByteArray();
 
       AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
@@ -48,31 +49,24 @@ public class UnfreezeAssetActuator extends AbstractActuator {
       }
 
       if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
-        accountCapsule
-            .addAssetAmountV2(accountCapsule.getAssetIssuedName().toByteArray(), unfreezeAsset,
-                dbManager);
+        accountCapsule.addAssetAmountV2(accountCapsule.getAssetIssuedName().toByteArray(), unfreezeAsset, dbManager);
       } else {
-        accountCapsule
-            .addAssetAmountV2(accountCapsule.getAssetIssuedID().toByteArray(), unfreezeAsset,
-                dbManager);
+        accountCapsule.addAssetAmountV2(accountCapsule.getAssetIssuedID().toByteArray(), unfreezeAsset, dbManager);
       }
 
-      accountCapsule.setInstance(accountCapsule.getInstance().toBuilder()
-          .clearFrozenSupply().addAllFrozenSupply(frozenList).build());
+      accountCapsule.setInstance(accountCapsule.getInstance().toBuilder().clearFrozenSupply().addAllFrozenSupply(frozenList).build());
 
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
+      chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (ArithmeticException e) {
+      return true;
+    } catch (InvalidProtocolBufferException
+        | ArithmeticException
+        | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-
-    return true;
   }
 
   @Override
@@ -84,9 +78,7 @@ public class UnfreezeAssetActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(UnfreezeAssetContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [UnfreezeAssetContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [UnfreezeAssetContract],real type[" + contract.getClass() + "]");
     }
     final UnfreezeAssetContract unfreezeAssetContract;
     try {
@@ -103,8 +95,7 @@ public class UnfreezeAssetActuator extends AbstractActuator {
     AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
     if (accountCapsule == null) {
       String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-      throw new ContractValidateException(
-          "Account[" + readableOwnerAddress + "] not exists");
+      throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
     }
 
     if (accountCapsule.getFrozenSupplyCount() <= 0) {
@@ -140,5 +131,4 @@ public class UnfreezeAssetActuator extends AbstractActuator {
   public long calcFee() {
     return 0;
   }
-
 }

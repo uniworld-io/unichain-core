@@ -9,11 +9,13 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.WitnessCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.WitnessUpdateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@note confirmed new fee policy
 @Slf4j(topic = "actuator")
 public class WitnessUpdateActuator extends AbstractActuator {
 
@@ -21,27 +23,23 @@ public class WitnessUpdateActuator extends AbstractActuator {
     super(contract, dbManager);
   }
 
-  private void updateWitness(final WitnessUpdateContract contract) {
-    WitnessCapsule witnessCapsule = this.dbManager.getWitnessStore()
-        .get(contract.getOwnerAddress().toByteArray());
-    witnessCapsule.setUrl(contract.getUpdateUrl().toStringUtf8());
-    this.dbManager.getWitnessStore().put(witnessCapsule.createDbKey(), witnessCapsule);
-  }
-
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      final WitnessUpdateContract witnessUpdateContract = this.contract
-          .unpack(WitnessUpdateContract.class);
-      this.updateWitness(witnessUpdateContract);
+      final WitnessUpdateContract witnessUpdateContract = this.contract.unpack(WitnessUpdateContract.class);
+      byte[] ownerAddress = witnessUpdateContract.getOwnerAddress().toByteArray();
+      WitnessCapsule witnessCapsule = this.dbManager.getWitnessStore().get(ownerAddress);
+      witnessCapsule.setUrl(witnessUpdateContract.getUpdateUrl().toStringUtf8());
+      this.dbManager.getWitnessStore().put(witnessCapsule.createDbKey(), witnessCapsule);
+      chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (final InvalidProtocolBufferException e) {
+      return true;
+    } catch (final InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
@@ -53,9 +51,7 @@ public class WitnessUpdateActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(WitnessUpdateContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [WitnessUpdateContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [WitnessUpdateContract],real type[" + contract.getClass() + "]");
     }
     final WitnessUpdateContract contract;
     try {

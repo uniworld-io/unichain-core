@@ -11,12 +11,14 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.AssetIssueStore;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.AccountUpdateContract;
 import org.unichain.protos.Contract.UpdateAssetContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@note confirmed new fee policy
 @Slf4j(topic = "actuator")
 public class UpdateAssetActuator extends AbstractActuator {
 
@@ -28,12 +30,11 @@ public class UpdateAssetActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      final UpdateAssetContract updateAssetContract = this.contract
-          .unpack(UpdateAssetContract.class);
-
+      final UpdateAssetContract updateAssetContract = this.contract.unpack(UpdateAssetContract.class);
+      byte[] ownerAddress = updateAssetContract.getOwnerAddress().toByteArray();
       long newLimit = updateAssetContract.getNewLimit();
       long newPublicLimit = updateAssetContract.getNewPublicLimit();
-      byte[] ownerAddress = updateAssetContract.getOwnerAddress().toByteArray();
+
       ByteString newUrl = updateAssetContract.getUrl();
       ByteString newDescription = updateAssetContract.getDescription();
 
@@ -43,7 +44,6 @@ public class UpdateAssetActuator extends AbstractActuator {
 
       AssetIssueStore assetIssueStoreV2 = dbManager.getAssetIssueV2Store();
       assetIssueCapsuleV2 = assetIssueStoreV2.get(accountCapsule.getAssetIssuedID().toByteArray());
-
       assetIssueCapsuleV2.setFreeAssetNetLimit(newLimit);
       assetIssueCapsuleV2.setPublicFreeAssetNetLimit(newPublicLimit);
       assetIssueCapsuleV2.setUrl(newUrl);
@@ -57,28 +57,24 @@ public class UpdateAssetActuator extends AbstractActuator {
         assetIssueCapsule.setUrl(newUrl);
         assetIssueCapsule.setDescription(newDescription);
 
-        dbManager.getAssetIssueStore()
-            .put(assetIssueCapsule.createDbKey(), assetIssueCapsule);
-        dbManager.getAssetIssueV2Store()
-            .put(assetIssueCapsuleV2.createDbV2Key(), assetIssueCapsuleV2);
+        dbManager.getAssetIssueStore().put(assetIssueCapsule.createDbKey(), assetIssueCapsule);
+        dbManager.getAssetIssueV2Store().put(assetIssueCapsuleV2.createDbV2Key(), assetIssueCapsuleV2);
       } else {
-        dbManager.getAssetIssueV2Store()
-            .put(assetIssueCapsuleV2.createDbV2Key(), assetIssueCapsuleV2);
+        dbManager.getAssetIssueV2Store().put(assetIssueCapsuleV2.createDbV2Key(), assetIssueCapsuleV2);
       }
 
+      chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-
-    return true;
   }
 
   @Override
   public boolean validate() throws ContractValidateException {
-
     if (this.contract == null) {
       throw new ContractValidateException("No contract!");
     }
@@ -86,9 +82,7 @@ public class UpdateAssetActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(UpdateAssetContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [UpdateAssetContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [UpdateAssetContract],real type[" + contract.getClass() + "]");
     }
     final UpdateAssetContract updateAssetContract;
     try {
@@ -118,8 +112,7 @@ public class UpdateAssetActuator extends AbstractActuator {
         throw new ContractValidateException("Account has not issue any asset");
       }
 
-      if (dbManager.getAssetIssueStore().get(account.getAssetIssuedName().toByteArray())
-          == null) {
+      if (dbManager.getAssetIssueStore().get(account.getAssetIssuedName().toByteArray()) == null) {
         throw new ContractValidateException("Asset not exists in AssetIssueStore");
       }
     } else {
@@ -127,8 +120,7 @@ public class UpdateAssetActuator extends AbstractActuator {
         throw new ContractValidateException("Account has not issue any asset");
       }
 
-      if (dbManager.getAssetIssueV2Store().get(account.getAssetIssuedID().toByteArray())
-          == null) {
+      if (dbManager.getAssetIssueV2Store().get(account.getAssetIssuedID().toByteArray()) == null) {
         throw new ContractValidateException("Asset not exists  in AssetIssueV2Store");
       }
     }

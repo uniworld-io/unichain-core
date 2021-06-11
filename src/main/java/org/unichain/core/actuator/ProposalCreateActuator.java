@@ -16,12 +16,14 @@ import org.unichain.core.capsule.ProposalCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.ProposalService;
 import org.unichain.protos.Contract.ProposalCreateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class ProposalCreateActuator extends AbstractActuator {
 
@@ -33,13 +35,13 @@ public class ProposalCreateActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      final ProposalCreateContract proposalCreateContract = this.contract
-          .unpack(ProposalCreateContract.class);
+      final ProposalCreateContract proposalCreateContract = this.contract.unpack(ProposalCreateContract.class);
+      byte[] ownerAddress = proposalCreateContract.getOwnerAddress().toByteArray();
       long id = (Objects.isNull(getDeposit())) ?
           dbManager.getDynamicPropertiesStore().getLatestProposalNum() + 1 :
           getDeposit().getLatestProposalNum() + 1;
-      ProposalCapsule proposalCapsule =
-          new ProposalCapsule(proposalCreateContract.getOwnerAddress(), id);
+
+      ProposalCapsule proposalCapsule = new ProposalCapsule(proposalCreateContract.getOwnerAddress(), id);
 
       proposalCapsule.setParameters(proposalCreateContract.getParametersMap());
 
@@ -49,14 +51,11 @@ public class ProposalCreateActuator extends AbstractActuator {
           getDeposit().getMaintenanceTimeInterval();
       proposalCapsule.setCreateTime(now);
 
-      long currentMaintenanceTime =
-          (Objects.isNull(getDeposit())) ? dbManager.getDynamicPropertiesStore()
-              .getNextMaintenanceTime() :
-              getDeposit().getNextMaintenanceTime();
+      long currentMaintenanceTime = (Objects.isNull(getDeposit())) ? dbManager.getDynamicPropertiesStore().getNextMaintenanceTime()
+              : getDeposit().getNextMaintenanceTime();
       long now3 = now + Args.getInstance().getProposalExpireTime();
       long round = (now3 - currentMaintenanceTime) / maintenanceTimeInterval;
-      long expirationTime =
-          currentMaintenanceTime + (round + 1) * maintenanceTimeInterval;
+      long expirationTime = currentMaintenanceTime + (round + 1) * maintenanceTimeInterval;
       proposalCapsule.setExpirationTime(expirationTime);
 
       if (Objects.isNull(deposit)) {
@@ -67,13 +66,14 @@ public class ProposalCreateActuator extends AbstractActuator {
         deposit.putDynamicPropertiesWithLatestProposalNum(id);
       }
 
+      chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
@@ -85,9 +85,7 @@ public class ProposalCreateActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(ProposalCreateContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [ProposalCreateContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [ProposalCreateContract],real type[" + contract.getClass() + "]");
     }
     final ProposalCreateContract contract;
     try {
@@ -105,22 +103,18 @@ public class ProposalCreateActuator extends AbstractActuator {
 
     if (!Objects.isNull(deposit)) {
       if (Objects.isNull(deposit.getAccount(ownerAddress))) {
-        throw new ContractValidateException(
-            ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+        throw new ContractValidateException(ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
       }
     } else if (!dbManager.getAccountStore().has(ownerAddress)) {
-      throw new ContractValidateException(
-          ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+      throw new ContractValidateException(ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
     }
 
     if (!Objects.isNull(getDeposit())) {
       if (Objects.isNull(getDeposit().getWitness(ownerAddress))) {
-        throw new ContractValidateException(
-            WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+        throw new ContractValidateException(WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
       }
     } else if (!dbManager.getWitnessStore().has(ownerAddress)) {
-      throw new ContractValidateException(
-          WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+      throw new ContractValidateException(WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
     }
 
     if (contract.getParametersMap().size() == 0) {
@@ -147,5 +141,4 @@ public class ProposalCreateActuator extends AbstractActuator {
   public long calcFee() {
     return 0;
   }
-
 }

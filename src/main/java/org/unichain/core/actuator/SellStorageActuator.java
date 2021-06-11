@@ -10,11 +10,13 @@ import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.db.StorageMarket;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.SellStorageContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class SellStorageActuator extends AbstractActuator {
 
@@ -31,24 +33,19 @@ public class SellStorageActuator extends AbstractActuator {
     final SellStorageContract sellStorageContract;
     try {
       sellStorageContract = contract.unpack(SellStorageContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      byte[] ownerAddress = sellStorageContract.getOwnerAddress().toByteArray();
+      AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      long bytes = sellStorageContract.getStorageBytes();
+      storageMarket.sellStorage(accountCapsule, bytes);
+      chargeFee(ownerAddress, fee);
+      ret.setStatus(fee, code.SUCESS);
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-
-    AccountCapsule accountCapsule = dbManager.getAccountStore()
-        .get(sellStorageContract.getOwnerAddress().toByteArray());
-
-    long bytes = sellStorageContract.getStorageBytes();
-
-    storageMarket.sellStorage(accountCapsule, bytes);
-
-    ret.setStatus(fee, code.SUCESS);
-
-    return true;
-  }
-
+}
 
   @Override
   public boolean validate() throws ContractValidateException {
@@ -59,11 +56,8 @@ public class SellStorageActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!contract.is(SellStorageContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [SellStorageContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [SellStorageContract],real type[" + contract.getClass() + "]");
     }
-
     final SellStorageContract sellStorageContract;
     try {
       sellStorageContract = this.contract.unpack(SellStorageContract.class);
@@ -79,8 +73,7 @@ public class SellStorageActuator extends AbstractActuator {
     AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
     if (accountCapsule == null) {
       String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-      throw new ContractValidateException(
-          "Account[" + readableOwnerAddress + "] not exists");
+      throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
     }
 
     long bytes = sellStorageContract.getStorageBytes();
@@ -92,14 +85,12 @@ public class SellStorageActuator extends AbstractActuator {
     long currentUnusedStorage = currentStorageLimit - accountCapsule.getStorageUsage();
 
     if (bytes > currentUnusedStorage) {
-      throw new ContractValidateException(
-          "bytes must be less than currentUnusedStorage[" + currentUnusedStorage + "]");
+      throw new ContractValidateException("bytes must be less than currentUnusedStorage[" + currentUnusedStorage + "]");
     }
 
     long quantity = storageMarket.trySellStorage(bytes);
     if (quantity <= 1_000_000L) {
-      throw new ContractValidateException(
-          "quantity must be larger than 1UNW,current quantity[" + quantity + "]");
+      throw new ContractValidateException("quantity must be larger than 1UNW,current quantity[" + quantity + "]");
     }
 
     return true;
@@ -114,5 +105,4 @@ public class SellStorageActuator extends AbstractActuator {
   public long calcFee() {
     return 0;
   }
-
 }

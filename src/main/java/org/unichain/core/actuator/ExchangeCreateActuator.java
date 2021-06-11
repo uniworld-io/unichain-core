@@ -18,6 +18,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.ExchangeCreateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class ExchangeCreateActuator extends AbstractActuator {
 
@@ -29,10 +30,8 @@ public class ExchangeCreateActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      final ExchangeCreateContract exchangeCreateContract = this.contract
-          .unpack(ExchangeCreateContract.class);
-      AccountCapsule accountCapsule = dbManager.getAccountStore()
-          .get(exchangeCreateContract.getOwnerAddress().toByteArray());
+      final ExchangeCreateContract exchangeCreateContract = this.contract.unpack(ExchangeCreateContract.class);
+      AccountCapsule accountCapsule = dbManager.getAccountStore().get(exchangeCreateContract.getOwnerAddress().toByteArray());
 
       byte[] firstTokenID = exchangeCreateContract.getFirstTokenId().toByteArray();
       byte[] secondTokenID = exchangeCreateContract.getSecondTokenId().toByteArray();
@@ -40,7 +39,6 @@ public class ExchangeCreateActuator extends AbstractActuator {
       long secondTokenBalance = exchangeCreateContract.getSecondTokenBalance();
 
       long newBalance = accountCapsule.getBalance() - fee;
-
       accountCapsule.setBalance(newBalance);
 
       if (Arrays.equals(firstTokenID, "_".getBytes())) {
@@ -96,9 +94,8 @@ public class ExchangeCreateActuator extends AbstractActuator {
       }
 
       dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
-      dbManager.getDynamicPropertiesStore().saveLatestExchangeNum(id);
-
       dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().createDbKey(), fee);
+      dbManager.getDynamicPropertiesStore().saveLatestExchangeNum(id);
 
       ret.setExchangeId(id);
       ret.setStatus(fee, code.SUCESS);
@@ -123,9 +120,7 @@ public class ExchangeCreateActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(ExchangeCreateContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [ExchangeCreateContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [ExchangeCreateContract],real type[" + contract.getClass() + "]");
     }
     final ExchangeCreateContract contract;
     try {
@@ -212,5 +207,4 @@ public class ExchangeCreateActuator extends AbstractActuator {
   public long calcFee() {
     return dbManager.getDynamicPropertiesStore().getExchangeCreateFee();
   }
-
 }

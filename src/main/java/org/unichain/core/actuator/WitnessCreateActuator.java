@@ -17,6 +17,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.WitnessCreateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@note confirmed new fee policy
 @Slf4j(topic = "actuator")
 public class WitnessCreateActuator extends AbstractActuator {
 
@@ -28,20 +29,27 @@ public class WitnessCreateActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      final WitnessCreateContract witnessCreateContract = this.contract
-          .unpack(WitnessCreateContract.class);
-      this.createWitness(witnessCreateContract);
+      final WitnessCreateContract witnessCreateContract = this.contract.unpack(WitnessCreateContract.class);
+
+      final WitnessCapsule witnessCapsule = new WitnessCapsule(witnessCreateContract.getOwnerAddress(), 0, witnessCreateContract.getUrl().toStringUtf8());
+
+      logger.debug("createWitness, address[{}]", witnessCapsule.createReadableString());
+      this.dbManager.getWitnessStore().put(witnessCapsule.createDbKey(), witnessCapsule);
+      AccountCapsule accountCapsule = this.dbManager.getAccountStore().get(witnessCapsule.createDbKey());
+      accountCapsule.setIsWitness(true);
+      if (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1) {
+        accountCapsule.setDefaultWitnessPermission(dbManager);
+      }
+      this.dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
+      dbManager.getDynamicPropertiesStore().addTotalCreateWitnessCost(fee);
+      chargeFee(witnessCreateContract.getOwnerAddress().toByteArray(), fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (BalanceInsufficientException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
@@ -53,9 +61,7 @@ public class WitnessCreateActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(WitnessCreateContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [WitnessCreateContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [WitnessCreateContract],real type[" + contract.getClass() + "]");
     }
     final WitnessCreateContract contract;
     try {
@@ -89,8 +95,7 @@ public class WitnessCreateActuator extends AbstractActuator {
       throw new ContractValidateException("Witness[" + readableOwnerAddress + "] has existed");
     }
 
-    if (accountCapsule.getBalance() < dbManager.getDynamicPropertiesStore()
-        .getAccountUpgradeCost()) {
+    if (accountCapsule.getBalance() < calcFee()) {
       throw new ContractValidateException("balance < AccountUpgradeCost");
     }
 
@@ -105,30 +110,5 @@ public class WitnessCreateActuator extends AbstractActuator {
   @Override
   public long calcFee() {
     return dbManager.getDynamicPropertiesStore().getAccountUpgradeCost();
-  }
-
-  private void createWitness(final WitnessCreateContract witnessCreateContract)
-      throws BalanceInsufficientException {
-    //Create Witness by witnessCreateContract
-    final WitnessCapsule witnessCapsule = new WitnessCapsule(
-        witnessCreateContract.getOwnerAddress(),
-        0,
-        witnessCreateContract.getUrl().toStringUtf8());
-
-    logger.debug("createWitness,address[{}]", witnessCapsule.createReadableString());
-    this.dbManager.getWitnessStore().put(witnessCapsule.createDbKey(), witnessCapsule);
-    AccountCapsule accountCapsule = this.dbManager.getAccountStore()
-        .get(witnessCapsule.createDbKey());
-    accountCapsule.setIsWitness(true);
-    if (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1) {
-      accountCapsule.setDefaultWitnessPermission(dbManager);
-    }
-    this.dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
-    long cost = dbManager.getDynamicPropertiesStore().getAccountUpgradeCost();
-    dbManager.adjustBalance(witnessCreateContract.getOwnerAddress().toByteArray(), -cost);
-
-    dbManager.adjustBalance(this.dbManager.getAccountStore().getBurnaccount().createDbKey(), +cost);
-
-    dbManager.getDynamicPropertiesStore().addTotalCreateWitnessCost(cost);
   }
 }

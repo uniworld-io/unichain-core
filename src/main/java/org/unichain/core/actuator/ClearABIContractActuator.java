@@ -13,11 +13,13 @@ import org.unichain.core.capsule.ContractCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.AccountStore;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.ClearABIContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class ClearABIContractActuator extends AbstractActuator {
 
@@ -30,27 +32,25 @@ public class ClearABIContractActuator extends AbstractActuator {
     long fee = calcFee();
     try {
       ClearABIContract usContract = contract.unpack(ClearABIContract.class);
-
       byte[] contractAddress = usContract.getContractAddress().toByteArray();
+      byte[] ownerAddress = usContract.getOwnerAddress().toByteArray();
       ContractCapsule deployedContract = dbManager.getContractStore().get(contractAddress);
-
       deployedContract.clearABI();
       dbManager.getContractStore().put(contractAddress, deployedContract);
-
+      chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
   public boolean validate() throws ContractValidateException {
     if (!VMConfig.allowTvmConstantinople()) {
-      throw new ContractValidateException(
-          "contract type error,unexpected type [ClearABIContract]");
+      throw new ContractValidateException("contract type error,unexpected type [ClearABIContract]");
     }
 
     if (this.contract == null) {
@@ -60,10 +60,7 @@ public class ClearABIContractActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(ClearABIContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [ClearABIContract],real type["
-              + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [ClearABIContract],real type[" + contract.getClass() + "]");
     }
     final ClearABIContract contract;
     try {
@@ -79,27 +76,22 @@ public class ClearABIContractActuator extends AbstractActuator {
     String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
 
     AccountStore accountStore = dbManager.getAccountStore();
-
     AccountCapsule accountCapsule = accountStore.get(ownerAddress);
     if (accountCapsule == null) {
-      throw new ContractValidateException(
-          "Account[" + readableOwnerAddress + "] not exists");
+      throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
     }
 
     byte[] contractAddress = contract.getContractAddress().toByteArray();
     ContractCapsule deployedContract = dbManager.getContractStore().get(contractAddress);
 
     if (deployedContract == null) {
-      throw new ContractValidateException(
-          "Contract not exists");
+      throw new ContractValidateException("Contract not exists");
     }
 
-    byte[] deployedContractOwnerAddress = deployedContract.getInstance().getOriginAddress()
-        .toByteArray();
+    byte[] deployedContractOwnerAddress = deployedContract.getInstance().getOriginAddress().toByteArray();
 
     if (!Arrays.equals(ownerAddress, deployedContractOwnerAddress)) {
-      throw new ContractValidateException(
-          "Account[" + readableOwnerAddress + "] is not the owner of the contract");
+      throw new ContractValidateException("Account[" + readableOwnerAddress + "] is not the owner of the contract");
     }
 
     return true;
@@ -114,5 +106,4 @@ public class ClearABIContractActuator extends AbstractActuator {
   public long calcFee() {
     return 0;
   }
-
 }

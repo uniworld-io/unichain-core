@@ -18,6 +18,7 @@ import org.unichain.protos.Contract.TransferContract;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class TransferActuator extends AbstractActuator {
 
@@ -37,33 +38,21 @@ public class TransferActuator extends AbstractActuator {
       // if account with to_address does not exist, create it first.
       AccountCapsule toAccount = dbManager.getAccountStore().get(toAddress);
       if (toAccount == null) {
-        boolean withDefaultPermission =
-            dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
-        toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal,
-            dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+        boolean withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
+        toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         dbManager.getAccountStore().put(toAddress, toAccount);
-
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
-      dbManager.adjustBalance(ownerAddress, -fee);
-      dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().createDbKey(), fee);
+      chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       dbManager.adjustBalance(ownerAddress, -amount);
       dbManager.adjustBalance(toAddress, amount);
-    } catch (BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (ArithmeticException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (InvalidProtocolBufferException e) {
+      return true;
+    } catch (BalanceInsufficientException | ArithmeticException | InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
@@ -75,9 +64,7 @@ public class TransferActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(TransferContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [TransferContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [TransferContract],real type[" + contract.getClass() + "]");
     }
     long fee = calcFee();
     final TransferContract transferContract;
@@ -91,8 +78,6 @@ public class TransferActuator extends AbstractActuator {
     byte[] toAddress = transferContract.getToAddress().toByteArray();
     byte[] ownerAddress = transferContract.getOwnerAddress().toByteArray();
     long amount = transferContract.getAmount();
-
-
 
     if (!Wallet.addressValid(ownerAddress)) {
       throw new ContractValidateException("Invalid ownerAddress");
@@ -110,8 +95,6 @@ public class TransferActuator extends AbstractActuator {
     if (ownerAccount == null) {
       throw new ContractValidateException("Validate TransferContract error, no OwnerAccount.");
     }
-
-
 
     long balance = ownerAccount.getBalance();
 
@@ -132,8 +115,7 @@ public class TransferActuator extends AbstractActuator {
       }
 
       if (balance < Math.addExact(amount, fee)) {
-        throw new ContractValidateException(
-            "Validate TransferContract error, balance is not sufficient.");
+        throw new ContractValidateException("Validate TransferContract error, balance is not sufficient.");
       }
 
       if (toAccount != null) {
@@ -147,8 +129,7 @@ public class TransferActuator extends AbstractActuator {
     return true;
   }
 
-  public static boolean validateForSmartContract(Deposit deposit, byte[] ownerAddress,
-      byte[] toAddress, long amount) throws ContractValidateException {
+  public static boolean validateForSmartContract(Deposit deposit, byte[] ownerAddress, byte[] toAddress, long amount) throws ContractValidateException {
     if (!Wallet.addressValid(ownerAddress)) {
       throw new ContractValidateException("Invalid ownerAddress");
     }
@@ -167,8 +148,7 @@ public class TransferActuator extends AbstractActuator {
 
     AccountCapsule toAccount = deposit.getAccount(toAddress);
     if (toAccount == null) {
-      throw new ContractValidateException(
-          "Validate InternalTransfer error, no ToAccount. And not allowed to create account in smart contract.");
+      throw new ContractValidateException("Validate InternalTransfer error, no ToAccount. And not allowed to create account in smart contract.");
     }
 
     long balance = ownerAccount.getBalance();
@@ -179,8 +159,7 @@ public class TransferActuator extends AbstractActuator {
 
     try {
       if (balance < amount) {
-        throw new ContractValidateException(
-            "Validate InternalTransfer error, balance is not sufficient.");
+        throw new ContractValidateException("Validate InternalTransfer error, balance is not sufficient.");
       }
       Math.addExact(toAccount.getBalance(), amount);
     } catch (ArithmeticException e) {
@@ -200,5 +179,4 @@ public class TransferActuator extends AbstractActuator {
   public long calcFee() {
     return ChainConstant.TRANSFER_FEE;
   }
-
 }

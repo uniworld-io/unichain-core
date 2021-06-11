@@ -15,12 +15,14 @@ import org.unichain.core.capsule.DelegatedResourceCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.FreezeBalanceContract;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class FreezeBalanceActuator extends AbstractActuator {
 
@@ -33,64 +35,56 @@ public class FreezeBalanceActuator extends AbstractActuator {
     long fee = calcFee();
     final FreezeBalanceContract freezeBalanceContract;
     try {
-      freezeBalanceContract = contract.unpack(FreezeBalanceContract.class);
-    } catch (InvalidProtocolBufferException e) {
+        freezeBalanceContract = contract.unpack(FreezeBalanceContract.class);
+      byte[] txOwnerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
+      AccountCapsule ownerAccountCapsule = dbManager.getAccountStore().get(txOwnerAddress);
+
+      long now = dbManager.getHeadBlockTimeStamp();
+      long duration = freezeBalanceContract.getFrozenDuration() * 86_400_000;
+
+      long newBalance = ownerAccountCapsule.getBalance() - freezeBalanceContract.getFrozenBalance();
+
+      long frozenBalance = freezeBalanceContract.getFrozenBalance();
+      long expireTime = now + duration;
+      byte[] ownerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
+      byte[] receiverAddress = freezeBalanceContract.getReceiverAddress().toByteArray();
+
+      switch (freezeBalanceContract.getResource()) {
+        case BANDWIDTH:
+          if (!ArrayUtils.isEmpty(receiverAddress) && dbManager.getDynamicPropertiesStore().supportDR()) {
+            delegateResource(ownerAddress, receiverAddress, true, frozenBalance, expireTime);
+            ownerAccountCapsule.addDelegatedFrozenBalanceForBandwidth(frozenBalance);
+          } else {
+            long newFrozenBalanceForBandwidth = frozenBalance + ownerAccountCapsule.getFrozenBalance();
+            ownerAccountCapsule.setFrozenForBandwidth(newFrozenBalanceForBandwidth, expireTime);
+          }
+          dbManager.getDynamicPropertiesStore().addTotalNetWeight(frozenBalance / 1000_000L);
+          break;
+        case ENERGY:
+          if (!ArrayUtils.isEmpty(receiverAddress) && dbManager.getDynamicPropertiesStore().supportDR()) {
+            delegateResource(ownerAddress, receiverAddress, false, frozenBalance, expireTime);
+            ownerAccountCapsule.addDelegatedFrozenBalanceForEnergy(frozenBalance);
+          } else {
+            long newFrozenBalanceForEnergy = frozenBalance + ownerAccountCapsule.getAccountResource()
+                    .getFrozenBalanceForEnergy()
+                    .getFrozenBalance();
+            ownerAccountCapsule.setFrozenForEnergy(newFrozenBalanceForEnergy, expireTime);
+          }
+          dbManager.getDynamicPropertiesStore().addTotalEnergyWeight(frozenBalance / 1000_000L);
+          break;
+      }
+
+      ownerAccountCapsule.setBalance(newBalance);
+      dbManager.getAccountStore().put(ownerAccountCapsule.createDbKey(), ownerAccountCapsule);
+
+      chargeFee(txOwnerAddress, fee);
+      ret.setStatus(fee, code.SUCESS);
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    AccountCapsule accountCapsule = dbManager.getAccountStore()
-        .get(freezeBalanceContract.getOwnerAddress().toByteArray());
-
-    long now = dbManager.getHeadBlockTimeStamp();
-    long duration = freezeBalanceContract.getFrozenDuration() * 86_400_000;
-
-    long newBalance = accountCapsule.getBalance() - freezeBalanceContract.getFrozenBalance();
-
-    long frozenBalance = freezeBalanceContract.getFrozenBalance();
-    long expireTime = now + duration;
-    byte[] ownerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
-    byte[] receiverAddress = freezeBalanceContract.getReceiverAddress().toByteArray();
-
-    switch (freezeBalanceContract.getResource()) {
-      case BANDWIDTH:
-        if (!ArrayUtils.isEmpty(receiverAddress)
-            && dbManager.getDynamicPropertiesStore().supportDR()) {
-          delegateResource(ownerAddress, receiverAddress, true,
-              frozenBalance, expireTime);
-          accountCapsule.addDelegatedFrozenBalanceForBandwidth(frozenBalance);
-        } else {
-          long newFrozenBalanceForBandwidth =
-              frozenBalance + accountCapsule.getFrozenBalance();
-          accountCapsule.setFrozenForBandwidth(newFrozenBalanceForBandwidth, expireTime);
-        }
-        dbManager.getDynamicPropertiesStore()
-            .addTotalNetWeight(frozenBalance / 1000_000L);
-        break;
-      case ENERGY:
-        if (!ArrayUtils.isEmpty(receiverAddress)
-            && dbManager.getDynamicPropertiesStore().supportDR()) {
-          delegateResource(ownerAddress, receiverAddress, false,
-              frozenBalance, expireTime);
-          accountCapsule.addDelegatedFrozenBalanceForEnergy(frozenBalance);
-        } else {
-          long newFrozenBalanceForEnergy =
-              frozenBalance + accountCapsule.getAccountResource()
-                  .getFrozenBalanceForEnergy()
-                  .getFrozenBalance();
-          accountCapsule.setFrozenForEnergy(newFrozenBalanceForEnergy, expireTime);
-        }
-        dbManager.getDynamicPropertiesStore()
-            .addTotalEnergyWeight(frozenBalance / 1000_000L);
-        break;
-    }
-
-    accountCapsule.setBalance(newBalance);
-    dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
-
-    ret.setStatus(fee, code.SUCESS);
-
-    return true;
   }
 
 
@@ -103,9 +97,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!contract.is(FreezeBalanceContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [FreezeBalanceContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [FreezeBalanceContract],real type[" + contract.getClass() + "]");
     }
 
     final FreezeBalanceContract freezeBalanceContract;
@@ -123,8 +115,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
     AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
     if (accountCapsule == null) {
       String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-      throw new ContractValidateException(
-          "Account[" + readableOwnerAddress + "] not exists");
+      throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
     }
 
     long frozenBalance = freezeBalanceContract.getFrozenBalance();
@@ -155,9 +146,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
     boolean needCheckFrozeTime = Args.getInstance().getCheckFrozenTime() == 1;//for test
     if (needCheckFrozeTime && !(frozenDuration >= minFrozenTime
         && frozenDuration <= maxFrozenTime)) {
-      throw new ContractValidateException(
-          "frozenDuration must be less than " + maxFrozenTime + " days "
-              + "and more than " + minFrozenTime + " days");
+      throw new ContractValidateException("frozenDuration must be less than " + maxFrozenTime + " days " + "and more than " + minFrozenTime + " days");
     }
 
     switch (freezeBalanceContract.getResource()) {
@@ -166,8 +155,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
       case ENERGY:
         break;
       default:
-        throw new ContractValidateException(
-            "ResourceCode error,valid ResourceCode[BANDWIDTH、ENERGY]");
+        throw new ContractValidateException("ResourceCode error, valid ResourceCode[BANDWIDTH、ENERGY]");
     }
 
     //todo：need version control and config for delegating resource
@@ -175,8 +163,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
     //If the receiver is included in the contract, the receiver will receive the resource.
     if (!ArrayUtils.isEmpty(receiverAddress) && dbManager.getDynamicPropertiesStore().supportDR()) {
       if (Arrays.equals(receiverAddress, ownerAddress)) {
-        throw new ContractValidateException(
-            "receiverAddress must not be the same as ownerAddress");
+        throw new ContractValidateException("receiverAddress must not be the same as ownerAddress");
       }
 
       if (!Wallet.addressValid(receiverAddress)) {
@@ -186,17 +173,12 @@ public class FreezeBalanceActuator extends AbstractActuator {
       AccountCapsule receiverCapsule = dbManager.getAccountStore().get(receiverAddress);
       if (receiverCapsule == null) {
         String readableOwnerAddress = StringUtil.createReadableString(receiverAddress);
-        throw new ContractValidateException(
-            "Account[" + readableOwnerAddress + "] not exists");
+        throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
       }
 
-      if (dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 1
-          && receiverCapsule.getType() == AccountType.Contract) {
-        throw new ContractValidateException(
-            "Do not allow delegate resources to contract addresses");
-
+      if (dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 1 && receiverCapsule.getType() == AccountType.Contract) {
+        throw new ContractValidateException("Do not allow delegate resources to contract addresses");
       }
-
     }
 
     return true;
@@ -212,12 +194,10 @@ public class FreezeBalanceActuator extends AbstractActuator {
     return 0;
   }
 
-  private void delegateResource(byte[] ownerAddress, byte[] receiverAddress, boolean isBandwidth,
-      long balance, long expireTime) {
+  private void delegateResource(byte[] ownerAddress, byte[] receiverAddress, boolean isBandwidth, long balance, long expireTime) {
     byte[] key = DelegatedResourceCapsule.createDbKey(ownerAddress, receiverAddress);
     //modify DelegatedResourceStore
-    DelegatedResourceCapsule delegatedResourceCapsule = dbManager.getDelegatedResourceStore()
-        .get(key);
+    DelegatedResourceCapsule delegatedResourceCapsule = dbManager.getDelegatedResourceStore().get(key);
     if (delegatedResourceCapsule != null) {
       if (isBandwidth) {
         delegatedResourceCapsule.addFrozenBalanceForBandwidth(balance, expireTime);
@@ -225,16 +205,14 @@ public class FreezeBalanceActuator extends AbstractActuator {
         delegatedResourceCapsule.addFrozenBalanceForEnergy(balance, expireTime);
       }
     } else {
-      delegatedResourceCapsule = new DelegatedResourceCapsule(
-          ByteString.copyFrom(ownerAddress),
-          ByteString.copyFrom(receiverAddress));
+      delegatedResourceCapsule = new DelegatedResourceCapsule(ByteString.copyFrom(ownerAddress), ByteString.copyFrom(receiverAddress));
       if (isBandwidth) {
         delegatedResourceCapsule.setFrozenBalanceForBandwidth(balance, expireTime);
       } else {
         delegatedResourceCapsule.setFrozenBalanceForEnergy(balance, expireTime);
       }
-
     }
+
     dbManager.getDelegatedResourceStore().put(key, delegatedResourceCapsule);
 
     //modify DelegatedResourceAccountIndexStore
@@ -243,32 +221,25 @@ public class FreezeBalanceActuator extends AbstractActuator {
           .getDelegatedResourceAccountIndexStore()
           .get(ownerAddress);
       if (delegatedResourceAccountIndexCapsule == null) {
-        delegatedResourceAccountIndexCapsule = new DelegatedResourceAccountIndexCapsule(
-            ByteString.copyFrom(ownerAddress));
+        delegatedResourceAccountIndexCapsule = new DelegatedResourceAccountIndexCapsule(ByteString.copyFrom(ownerAddress));
       }
       List<ByteString> toAccountsList = delegatedResourceAccountIndexCapsule.getToAccountsList();
       if (!toAccountsList.contains(ByteString.copyFrom(receiverAddress))) {
         delegatedResourceAccountIndexCapsule.addToAccount(ByteString.copyFrom(receiverAddress));
       }
-      dbManager.getDelegatedResourceAccountIndexStore()
-          .put(ownerAddress, delegatedResourceAccountIndexCapsule);
+      dbManager.getDelegatedResourceAccountIndexStore().put(ownerAddress, delegatedResourceAccountIndexCapsule);
     }
 
     {
-      DelegatedResourceAccountIndexCapsule delegatedResourceAccountIndexCapsule = dbManager
-          .getDelegatedResourceAccountIndexStore()
-          .get(receiverAddress);
+      DelegatedResourceAccountIndexCapsule delegatedResourceAccountIndexCapsule = dbManager.getDelegatedResourceAccountIndexStore().get(receiverAddress);
       if (delegatedResourceAccountIndexCapsule == null) {
-        delegatedResourceAccountIndexCapsule = new DelegatedResourceAccountIndexCapsule(
-            ByteString.copyFrom(receiverAddress));
+        delegatedResourceAccountIndexCapsule = new DelegatedResourceAccountIndexCapsule(ByteString.copyFrom(receiverAddress));
       }
-      List<ByteString> fromAccountsList = delegatedResourceAccountIndexCapsule
-          .getFromAccountsList();
+      List<ByteString> fromAccountsList = delegatedResourceAccountIndexCapsule.getFromAccountsList();
       if (!fromAccountsList.contains(ByteString.copyFrom(ownerAddress))) {
         delegatedResourceAccountIndexCapsule.addFromAccount(ByteString.copyFrom(ownerAddress));
       }
-      dbManager.getDelegatedResourceAccountIndexStore()
-          .put(receiverAddress, delegatedResourceAccountIndexCapsule);
+      dbManager.getDelegatedResourceAccountIndexStore().put(receiverAddress, delegatedResourceAccountIndexCapsule);
     }
 
     //modify AccountStore
@@ -281,5 +252,4 @@ public class FreezeBalanceActuator extends AbstractActuator {
 
     dbManager.getAccountStore().put(receiverCapsule.createDbKey(), receiverCapsule);
   }
-
 }

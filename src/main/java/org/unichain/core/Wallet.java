@@ -147,7 +147,6 @@ import java.io.UnsupportedEncodingException;
 @Slf4j
 @Component
 public class Wallet {
-
   @Getter
   private final ECKey ecKey;
   @Autowired
@@ -178,8 +177,7 @@ public class Wallet {
     logger.info("wallet address: {}", ByteArray.toHexString(this.ecKey.getAddress()));
   }
 
-  public static boolean isConstant(ABI abi, TriggerSmartContract triggerSmartContract)
-      throws ContractValidateException {
+  public static boolean isConstant(ABI abi, TriggerSmartContract triggerSmartContract) throws ContractValidateException {
     try {
       boolean constant = isConstant(abi, getSelector(triggerSmartContract.getData().toByteArray()));
       if (constant) {
@@ -221,14 +219,11 @@ public class Wallet {
       return false;
     }
     if (address.length != Constant.ADDRESS_SIZE / 2) {
-      logger.warn(
-          "Warning: Address length need " + Constant.ADDRESS_SIZE + " but " + address.length
-              + " !!");
+      logger.warn("Warning: Address length need " + Constant.ADDRESS_SIZE + " but " + address.length + " !!");
       return false;
     }
     if (address[0] != addressPreFixByte) {
-      logger.warn("Warning: Address need prefix with " + addressPreFixByte + " but "
-          + address[0] + " !!");
+      logger.warn("Warning: Address need prefix with " + addressPreFixByte + " but " + address[0] + " !!");
       return false;
     }
     //Other rule;

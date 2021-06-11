@@ -46,8 +46,7 @@ public class GetBlockByLatestNumServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String input = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       boolean visible = Util.getVisiblePost(input);
       NumberMessage.Builder build = NumberMessage.newBuilder();

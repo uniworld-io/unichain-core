@@ -20,7 +20,6 @@ import org.unichain.protos.Protocol.TransactionSign;
 @Component
 @Slf4j(topic = "API")
 public class TransactionSignServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 
@@ -30,15 +29,13 @@ public class TransactionSignServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String contract = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       JSONObject input = JSONObject.parseObject(contract);
       boolean visible = Util.getVisibleOnlyForSign(input);
       String strTransaction = input.getJSONObject("transaction").toJSONString();
       Transaction transaction = Util.packTransaction(strTransaction, visible);
-      JSONObject jsonTransaction = JSONObject.parseObject(JsonFormat.printToString(transaction,
-          visible));
+      JSONObject jsonTransaction = JSONObject.parseObject(JsonFormat.printToString(transaction, visible));
       input.put("transaction", jsonTransaction);
       TransactionSign.Builder build = TransactionSign.newBuilder();
       JsonFormat.merge(input.toJSONString(), build, visible);

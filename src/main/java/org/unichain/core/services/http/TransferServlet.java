@@ -30,14 +30,12 @@ public class TransferServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String contract = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       boolean visible = Util.getVisiblePost(contract);
       TransferContract.Builder build = TransferContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
-      Transaction tx = wallet.createTransactionCapsule(build.build(), ContractType.TransferContract)
-          .getInstance();
+      Transaction tx = wallet.createTransactionCapsule(build.build(), ContractType.TransferContract).getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

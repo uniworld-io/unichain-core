@@ -31,8 +31,7 @@ public class GetAccountResourceServlet extends HttpServlet {
       if (visible) {
         address = Util.getHexAddress(address);
       }
-      AccountResourceMessage reply = wallet
-          .getAccountResource(ByteString.copyFrom(ByteArray.fromHexString(address)));
+      AccountResourceMessage reply = wallet.getAccountResource(ByteString.copyFrom(ByteArray.fromHexString(address)));
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {

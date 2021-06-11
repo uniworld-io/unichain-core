@@ -15,7 +15,6 @@ import org.unichain.core.Wallet;
 @Component
 @Slf4j(topic = "API")
 public class ListNodesServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 

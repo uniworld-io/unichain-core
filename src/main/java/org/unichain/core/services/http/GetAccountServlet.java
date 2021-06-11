@@ -21,7 +21,6 @@ import org.unichain.protos.Protocol.Account;
 @Component
 @Slf4j(topic = "API")
 public class GetAccountServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 
@@ -35,8 +34,7 @@ public class GetAccountServlet extends HttpServlet {
     } else {
       JSONObject accountJson = JSONObject.parseObject(JsonFormat.printToString(account, false));
       String assetId = accountJson.get("asset_issued_ID").toString();
-      accountJson.put(
-          "asset_issued_ID", ByteString.copyFrom(ByteArray.fromHexString(assetId)).toStringUtf8());
+      accountJson.put("asset_issued_ID", ByteString.copyFrom(ByteArray.fromHexString(assetId)).toStringUtf8());
       return accountJson.toJSONString();
     }
   }
@@ -72,8 +70,7 @@ public class GetAccountServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String account = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String account = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(account);
       boolean visible = Util.getVisiblePost(account);
       Account.Builder build = Account.newBuilder();

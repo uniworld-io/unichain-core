@@ -40,8 +40,7 @@ public class EasyTransferAssetServlet extends HttpServlet {
     EasyTransferResponse.Builder responseBuild = EasyTransferResponse.newBuilder();
     boolean visible = false;
     try {
-      String input = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       visible = Util.getVisiblePost(input);
       EasyTransferAssetMessage.Builder build = EasyTransferAssetMessage.newBuilder();
       JsonFormat.merge(input, build, visible);
@@ -64,8 +63,7 @@ public class EasyTransferAssetServlet extends HttpServlet {
       response.getWriter().println(Util.printEasyTransferResponse(responseBuild.build(), visible));
     } catch (ParseException e) {
       logger.debug("ParseException: {}", e.getMessage());
-      returnBuilder.setResult(false).setCode(response_code.OTHER_ERROR)
-          .setMessage(ByteString.copyFromUtf8(e.getMessage()));
+      returnBuilder.setResult(false).setCode(response_code.OTHER_ERROR).setMessage(ByteString.copyFromUtf8(e.getMessage()));
       responseBuild.setResult(returnBuilder.build());
       try {
         response.getWriter().println(JsonFormat.printToString(responseBuild.build(), visible));
@@ -75,8 +73,7 @@ public class EasyTransferAssetServlet extends HttpServlet {
       return;
     } catch (IOException e) {
       logger.debug("IOException: {}", e.getMessage());
-      returnBuilder.setResult(false).setCode(response_code.OTHER_ERROR)
-          .setMessage(ByteString.copyFromUtf8(e.getMessage()));
+      returnBuilder.setResult(false).setCode(response_code.OTHER_ERROR).setMessage(ByteString.copyFromUtf8(e.getMessage()));
       responseBuild.setResult(returnBuilder.build());
       try {
         response.getWriter().println(JsonFormat.printToString(responseBuild.build(), visible));
@@ -85,8 +82,7 @@ public class EasyTransferAssetServlet extends HttpServlet {
       }
       return;
     } catch (ContractValidateException e) {
-      returnBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
-          .setMessage(ByteString.copyFromUtf8(e.getMessage()));
+      returnBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR).setMessage(ByteString.copyFromUtf8(e.getMessage()));
       responseBuild.setResult(returnBuilder.build());
       try {
         response.getWriter().println(JsonFormat.printToString(responseBuild.build(), visible));

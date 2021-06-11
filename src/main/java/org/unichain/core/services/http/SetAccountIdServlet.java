@@ -17,6 +17,7 @@ import org.unichain.protos.Protocol;
 @Component
 @Slf4j(topic = "API")
 public class SetAccountIdServlet extends HttpServlet {
+
   @Autowired
   private Wallet wallet;
 
@@ -26,14 +27,12 @@ public class SetAccountIdServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String contract = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       boolean visible = Util.getVisiblePost(contract);
       Contract.SetAccountIdContract.Builder build = Contract.SetAccountIdContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
-      Protocol.Transaction tx = wallet.createTransactionCapsule(build.build(),
-          Protocol.Transaction.Contract.ContractType.SetAccountIdContract).getInstance();
+      Protocol.Transaction tx = wallet.createTransactionCapsule(build.build(), Protocol.Transaction.Contract.ContractType.SetAccountIdContract).getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

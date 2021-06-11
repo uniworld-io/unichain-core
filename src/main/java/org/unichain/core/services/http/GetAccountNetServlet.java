@@ -20,7 +20,6 @@ import org.unichain.protos.Protocol.Account;
 @Component
 @Slf4j(topic = "API")
 public class GetAccountNetServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 
@@ -31,8 +30,7 @@ public class GetAccountNetServlet extends HttpServlet {
       if (visible) {
         address = Util.getHexAddress(address);
       }
-      AccountNetMessage reply = wallet
-          .getAccountNet(ByteString.copyFrom(ByteArray.fromHexString(address)));
+      AccountNetMessage reply = wallet.getAccountNet(ByteString.copyFrom(ByteArray.fromHexString(address)));
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {

@@ -28,7 +28,6 @@ import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 @Component
 @Slf4j(topic = "API")
 public class DeployContractServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 
@@ -37,8 +36,7 @@ public class DeployContractServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String contract = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       boolean visible = getVisiblePost(contract);
       CreateSmartContract.Builder build = CreateSmartContract.newBuilder();
@@ -49,8 +47,7 @@ public class DeployContractServlet extends HttpServlet {
       }
       byte[] ownerAddress = ByteArray.fromHexString(owner_address);
       build.setOwnerAddress(ByteString.copyFrom(ownerAddress));
-      build.setCallTokenValue(Util.getJsonLongValue(jsonObject, "call_token_value"))
-          .setTokenId(Util.getJsonLongValue(jsonObject, "token_id"));
+      build.setCallTokenValue(Util.getJsonLongValue(jsonObject, "call_token_value")).setTokenId(Util.getJsonLongValue(jsonObject, "token_id"));
 
       ABI.Builder abiBuilder = ABI.newBuilder();
       if (jsonObject.containsKey("abi")) {
@@ -66,8 +63,7 @@ public class DeployContractServlet extends HttpServlet {
       smartBuilder
           .setAbi(abiBuilder)
           .setCallValue(Util.getJsonLongValue(jsonObject, "call_value"))
-          .setConsumeUserResourcePercent(Util.getJsonLongValue(jsonObject,
-              "consume_user_resource_percent"))
+          .setConsumeUserResourcePercent(Util.getJsonLongValue(jsonObject, "consume_user_resource_percent"))
           .setOriginEnergyLimit(Util.getJsonLongValue(jsonObject, "origin_energy_limit"));
       if (!ArrayUtils.isEmpty(ownerAddress)) {
         smartBuilder.setOriginAddress(ByteString.copyFrom(ownerAddress));

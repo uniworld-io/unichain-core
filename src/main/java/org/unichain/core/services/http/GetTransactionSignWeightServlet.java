@@ -17,18 +17,15 @@ import org.unichain.protos.Protocol.Transaction;
 @Component
 @Slf4j(topic = "API")
 public class GetTransactionSignWeightServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-
   }
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String input = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       boolean visible = Util.getVisiblePost(input);
       Transaction transaction = Util.packTransaction(input, visible);

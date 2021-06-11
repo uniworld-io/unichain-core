@@ -34,8 +34,7 @@ public class GetDelegatedResourceServlet extends HttpServlet {
         toAddress = Util.getHexAddress(toAddress);
       }
 
-      DelegatedResourceList reply =
-          wallet.getDelegatedResource(
+      DelegatedResourceList reply = wallet.getDelegatedResource(
               ByteString.copyFrom(ByteArray.fromHexString(fromAddress)),
               ByteString.copyFrom(ByteArray.fromHexString(toAddress)));
       if (reply != null) {
@@ -55,14 +54,12 @@ public class GetDelegatedResourceServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String input =
-          request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       boolean visible = Util.getVisiblePost(input);
       DelegatedResourceMessage.Builder build = DelegatedResourceMessage.newBuilder();
       JsonFormat.merge(input, build, visible);
-      DelegatedResourceList reply =
-          wallet.getDelegatedResource(build.getFromAddress(), build.getToAddress());
+      DelegatedResourceList reply = wallet.getDelegatedResource(build.getFromAddress(), build.getToAddress());
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {

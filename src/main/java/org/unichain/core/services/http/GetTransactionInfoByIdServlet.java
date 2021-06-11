@@ -20,7 +20,6 @@ import org.unichain.protos.Protocol.TransactionInfo;
 @Component
 @Slf4j(topic = "API")
 public class GetTransactionInfoByIdServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 
@@ -28,8 +27,7 @@ public class GetTransactionInfoByIdServlet extends HttpServlet {
     try {
       boolean visible = Util.getVisible(request);
       String input = request.getParameter("value");
-      TransactionInfo reply = wallet
-          .getTransactionInfoById(ByteString.copyFrom(ByteArray.fromHexString(input)));
+      TransactionInfo reply = wallet.getTransactionInfoById(ByteString.copyFrom(ByteArray.fromHexString(input)));
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {
@@ -47,8 +45,7 @@ public class GetTransactionInfoByIdServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String input = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       boolean visible = Util.getVisiblePost(input);
       BytesMessage.Builder build = BytesMessage.newBuilder();

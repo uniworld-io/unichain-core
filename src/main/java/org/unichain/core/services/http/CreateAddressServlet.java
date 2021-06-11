@@ -19,7 +19,6 @@ import org.unichain.core.Wallet;
 @Component
 @Slf4j(topic = "API")
 public class CreateAddressServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 
@@ -60,8 +59,7 @@ public class CreateAddressServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String input = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       boolean visible = Util.getVisiblePost(input);
       if (visible) {

@@ -53,15 +53,13 @@ public class TriggerConstantContractServlet extends HttpServlet {
     }
   }
 
-  protected void doPost(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     TriggerSmartContract.Builder build = TriggerSmartContract.newBuilder();
     TransactionExtention.Builder unxExtBuilder = TransactionExtention.newBuilder();
     Return.Builder retBuilder = Return.newBuilder();
     boolean visible = false;
     try {
-      String contract = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       visible = Util.getVisiblePost(contract);
       validateParameter(contract);
@@ -73,31 +71,27 @@ public class TriggerConstantContractServlet extends HttpServlet {
       build.setData(ByteString.copyFrom(ByteArray.fromHexString(data)));
       long feeLimit = Util.getJsonLongValue(jsonObject, "fee_limit");
 
-      TransactionCapsule unxCap = wallet
-          .createTransactionCapsule(build.build(), ContractType.TriggerSmartContract);
+      TransactionCapsule unxCap = wallet.createTransactionCapsule(build.build(), ContractType.TriggerSmartContract);
 
       Transaction.Builder txBuilder = unxCap.getInstance().toBuilder();
       Transaction.raw.Builder rawBuilder = unxCap.getInstance().getRawData().toBuilder();
       rawBuilder.setFeeLimit(feeLimit);
       txBuilder.setRawData(rawBuilder);
 
-      Transaction unx = wallet
-          .triggerConstantContract(build.build(), new TransactionCapsule(txBuilder.build()),
+      Transaction unx = wallet.triggerConstantContract(build.build(), new TransactionCapsule(txBuilder.build()),
               unxExtBuilder,
               retBuilder);
       unx = Util.setTransactionPermissionId(jsonObject, unx);
       unxExtBuilder.setTransaction(unx);
       retBuilder.setResult(true).setCode(response_code.SUCCESS);
     } catch (ContractValidateException e) {
-      retBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
-          .setMessage(ByteString.copyFromUtf8(e.getMessage()));
+      retBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR).setMessage(ByteString.copyFromUtf8(e.getMessage()));
     } catch (Exception e) {
       String errString = null;
       if (e.getMessage() != null) {
         errString = e.getMessage().replaceAll("[\"]", "\'");
       }
-      retBuilder.setResult(false).setCode(response_code.OTHER_ERROR)
-          .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + errString));
+      retBuilder.setResult(false).setCode(response_code.OTHER_ERROR).setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + errString));
     }
     unxExtBuilder.setResult(retBuilder);
     response.getWriter().println(Util.printTransactionExtention(unxExtBuilder.build(), visible));

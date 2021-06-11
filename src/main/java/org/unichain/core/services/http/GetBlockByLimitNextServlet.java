@@ -17,7 +17,6 @@ import org.unichain.core.Wallet;
 @Component
 @Slf4j(topic = "API")
 public class GetBlockByLimitNextServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
   private static final long BLOCK_LIMIT_NUM = 100;
@@ -47,8 +46,7 @@ public class GetBlockByLimitNextServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String input = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       boolean visible = Util.getVisiblePost(input);
       BlockLimit.Builder build = BlockLimit.newBuilder();

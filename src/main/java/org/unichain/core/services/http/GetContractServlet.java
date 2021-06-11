@@ -36,8 +36,7 @@ public class GetContractServlet extends HttpServlet {
       BytesMessage.Builder build = BytesMessage.newBuilder();
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
       SmartContract smartContract = wallet.getContract(build.build());
-      JSONObject jsonSmartContract = JSONObject
-          .parseObject(JsonFormat.printToString(smartContract, visible));
+      JSONObject jsonSmartContract = JSONObject.parseObject(JsonFormat.printToString(smartContract, visible));
       response.getWriter().println(jsonSmartContract.toJSONString());
     } catch (Exception e) {
       logger.debug("Exception: {}", e.getMessage());
@@ -51,8 +50,7 @@ public class GetContractServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String input = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       boolean visible = Util.getVisiblePost(input);
       if (visible) {
@@ -65,8 +63,7 @@ public class GetContractServlet extends HttpServlet {
       BytesMessage.Builder build = BytesMessage.newBuilder();
       JsonFormat.merge(input, build, visible);
       SmartContract smartContract = wallet.getContract(build.build());
-      JSONObject jsonSmartContract = JSONObject
-          .parseObject(JsonFormat.printToString(smartContract, visible));
+      JSONObject jsonSmartContract = JSONObject.parseObject(JsonFormat.printToString(smartContract, visible));
       response.getWriter().println(jsonSmartContract.toJSONString());
     } catch (Exception e) {
       logger.debug("Exception: {}", e.getMessage());

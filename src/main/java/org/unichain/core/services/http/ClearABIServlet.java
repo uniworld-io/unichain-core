@@ -20,7 +20,6 @@ import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 @Component
 @Slf4j(topic = "API")
 public class ClearABIServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 
@@ -30,8 +29,7 @@ public class ClearABIServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String contract = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       boolean visible = Util.getVisiblePost(contract);
       ClearABIContract.Builder build = ClearABIContract.newBuilder();

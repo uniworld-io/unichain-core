@@ -50,8 +50,7 @@ public class GetRewardServlet extends HttpServlet {
     String addressParam = "address";
     String addressStr = request.getParameter(addressParam);
     if (StringUtils.isBlank(addressStr)) {
-      String input = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       JSONObject jsonObject = JSONObject.parseObject(input);
       addressStr = jsonObject.getString(addressParam);

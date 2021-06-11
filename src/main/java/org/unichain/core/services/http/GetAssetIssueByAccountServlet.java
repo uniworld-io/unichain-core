@@ -20,7 +20,6 @@ import org.unichain.protos.Protocol.Account;
 @Component
 @Slf4j(topic = "API")
 public class GetAssetIssueByAccountServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 
@@ -31,8 +30,7 @@ public class GetAssetIssueByAccountServlet extends HttpServlet {
       if (visible) {
         address = Util.getHexAddress(address);
       }
-      AssetIssueList reply = wallet
-          .getAssetIssueByAccount(ByteString.copyFrom(ByteArray.fromHexString(address)));
+      AssetIssueList reply = wallet.getAssetIssueByAccount(ByteString.copyFrom(ByteArray.fromHexString(address)));
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {
@@ -50,8 +48,7 @@ public class GetAssetIssueByAccountServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String account = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String account = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(account);
       boolean visible = Util.getVisiblePost(account);
       Account.Builder build = Account.newBuilder();

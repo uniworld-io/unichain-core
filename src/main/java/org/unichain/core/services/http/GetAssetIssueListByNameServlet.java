@@ -32,8 +32,7 @@ public class GetAssetIssueListByNameServlet extends HttpServlet {
       if (visible) {
         input = Util.getHexString(input);
       }
-      AssetIssueList reply = wallet
-          .getAssetIssueListByName(ByteString.copyFrom(ByteArray.fromHexString(input)));
+      AssetIssueList reply = wallet.getAssetIssueListByName(ByteString.copyFrom(ByteArray.fromHexString(input)));
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {
@@ -51,8 +50,7 @@ public class GetAssetIssueListByNameServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String input = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       boolean visible = Util.getVisiblePost(input);
       JSONObject jsonObject = JSON.parseObject(input);
@@ -60,8 +58,7 @@ public class GetAssetIssueListByNameServlet extends HttpServlet {
       if (visible) {
         value = Util.getHexString(value);
       }
-      AssetIssueList reply = wallet.getAssetIssueListByName(ByteString.copyFrom(
-          ByteArray.fromHexString(value)));
+      AssetIssueList reply = wallet.getAssetIssueListByName(ByteString.copyFrom(ByteArray.fromHexString(value)));
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {

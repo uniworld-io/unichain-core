@@ -20,7 +20,6 @@ import org.unichain.protos.Protocol.Block;
 @Component
 @Slf4j(topic = "API")
 public class GetBlockByIdServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 
@@ -46,8 +45,7 @@ public class GetBlockByIdServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String input = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       boolean visible = Util.getVisiblePost(input);
       BytesMessage.Builder build = BytesMessage.newBuilder();

@@ -40,8 +40,7 @@ public class EasyTransferServlet extends HttpServlet {
     EasyTransferResponse.Builder responseBuild = EasyTransferResponse.newBuilder();
     boolean visible = false;
     try {
-      String input = request.getReader().lines()
-          .collect(Collectors.joining(System.lineSeparator()));
+      String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       visible = Util.getVisiblePost(input);
       EasyTransferMessage.Builder build = EasyTransferMessage.newBuilder();
@@ -55,8 +54,7 @@ public class EasyTransferServlet extends HttpServlet {
       builder.setAmount(build.getAmount());
 
       TransactionCapsule transactionCapsule;
-      transactionCapsule = wallet
-          .createTransactionCapsule(builder.build(), ContractType.TransferContract);
+      transactionCapsule = wallet.createTransactionCapsule(builder.build(), ContractType.TransferContract);
       transactionCapsule.sign(privateKey);
       GrpcAPI.Return retur = wallet.broadcastTransaction(transactionCapsule.getInstance());
       responseBuild.setTransaction(transactionCapsule.getInstance());
@@ -67,8 +65,9 @@ public class EasyTransferServlet extends HttpServlet {
     } catch (IOException e) {
       logger.debug("IOException: {}", e.getMessage());
     } catch (ContractValidateException e) {
-      returnBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
-          .setMessage(ByteString.copyFromUtf8(e.getMessage()));
+      returnBuilder.setResult(false)
+              .setCode(response_code.CONTRACT_VALIDATE_ERROR)
+              .setMessage(ByteString.copyFromUtf8(e.getMessage()));
       responseBuild.setResult(returnBuilder.build());
       try {
         response.getWriter().println(JsonFormat.printToString(responseBuild.build(), visible));

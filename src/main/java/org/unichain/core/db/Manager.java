@@ -656,8 +656,7 @@ public class Manager {
     return this.accountStore;
   }
 
-  public void adjustBalance(byte[] accountAddress, long amount)
-      throws BalanceInsufficientException {
+  public void adjustBalance(byte[] accountAddress, long amount) throws BalanceInsufficientException {
     AccountCapsule account = getAccountStore().getUnchecked(accountAddress);
     adjustBalance(account, amount);
   }
@@ -665,17 +664,14 @@ public class Manager {
   /**
    * judge balance.
    */
-  public void adjustBalance(AccountCapsule account, long amount)
-      throws BalanceInsufficientException {
-
+  public void adjustBalance(AccountCapsule account, long amount) throws BalanceInsufficientException {
     long balance = account.getBalance();
     if (amount == 0) {
       return;
     }
 
     if (amount < 0 && balance < -amount) {
-      throw new BalanceInsufficientException(
-          StringUtil.createReadableString(account.createDbKey()) + " insufficient balance");
+      throw new BalanceInsufficientException(StringUtil.createReadableString(account.createDbKey()) + " insufficient balance");
     }
     account.setBalance(Math.addExact(balance, amount));
     this.getAccountStore().put(account.getAddress().toByteArray(), account);
@@ -699,10 +695,8 @@ public class Manager {
   }
 
   void validateTapos(TransactionCapsule transactionCapsule) throws TaposException {
-    byte[] refBlockHash = transactionCapsule.getInstance()
-        .getRawData().getRefBlockHash().toByteArray();
-    byte[] refBlockNumBytes = transactionCapsule.getInstance()
-        .getRawData().getRefBlockBytes().toByteArray();
+    byte[] refBlockHash = transactionCapsule.getInstance().getRawData().getRefBlockHash().toByteArray();
+    byte[] refBlockNumBytes = transactionCapsule.getInstance().getRawData().getRefBlockBytes().toByteArray();
     try {
       byte[] blockHash = this.recentBlockStore.get(refBlockNumBytes).getData();
       if (!Arrays.equals(blockHash, refBlockHash)) {
@@ -715,8 +709,7 @@ public class Manager {
         throw new TaposException(str);
       }
     } catch (ItemNotFoundException e) {
-      String str = String.
-          format("Tapos failed, block not found, ref block %s, %s , solid block %s head block %s",
+      String str = String.format("Tapos failed, block not found, ref block %s, %s , solid block %s head block %s",
               ByteArray.toLong(refBlockNumBytes), Hex.toHexString(refBlockHash),
               getSolidBlockId().getString(), getHeadBlockId().getString()).toString();
       logger.info(str);
@@ -724,19 +717,14 @@ public class Manager {
     }
   }
 
-  void validateCommon(TransactionCapsule transactionCapsule)
-      throws TransactionExpirationException, TooBigTransactionException {
+  void validateCommon(TransactionCapsule transactionCapsule) throws TransactionExpirationException, TooBigTransactionException {
     if (transactionCapsule.getData().length > Constant.TRANSACTION_MAX_BYTE_SIZE) {
-      throw new TooBigTransactionException(
-          "too big transaction, the size is " + transactionCapsule.getData().length + " bytes");
+      throw new TooBigTransactionException("too big transaction, the size is " + transactionCapsule.getData().length + " bytes");
     }
     long transactionExpiration = transactionCapsule.getExpiration();
     long headBlockTime = getHeadBlockTimeStamp();
-    if (transactionExpiration <= headBlockTime ||
-        transactionExpiration > headBlockTime + Constant.MAXIMUM_TIME_UNTIL_EXPIRATION) {
-      throw new TransactionExpirationException(
-          "transaction expiration, transaction expiration time is " + transactionExpiration
-              + ", but headBlockTime is " + headBlockTime);
+    if (transactionExpiration <= headBlockTime || transactionExpiration > headBlockTime + Constant.MAXIMUM_TIME_UNTIL_EXPIRATION) {
+      throw new TransactionExpirationException("transaction expiration, transaction expiration time is " + transactionExpiration + ", but headBlockTime is " + headBlockTime);
     }
   }
 
@@ -790,8 +778,7 @@ public class Manager {
     return true;
   }
 
-  public void consumeMultiSignFee(TransactionCapsule unx, TransactionTrace trace)
-      throws AccountResourceInsufficientException {
+  public void consumeMultiSignFee(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException {
     if (unx.getInstance().getSignatureCount() > 1) {
       long fee = getDynamicPropertiesStore().getMultiSignFee();
 
@@ -800,22 +787,35 @@ public class Manager {
         byte[] address = TransactionCapsule.getOwner(contract);
         AccountCapsule accountCapsule = getAccountStore().get(address);
         try {
-          adjustBalance(accountCapsule, -fee);
-          adjustBalance(this.getAccountStore().getBurnaccount().createDbKey(), +fee);
+          chargeFee(accountCapsule, fee);
         } catch (BalanceInsufficientException e) {
-          throw new AccountResourceInsufficientException(
-              "Account Insufficient  balance[" + fee + "] to MultiSign");
+          throw new AccountResourceInsufficientException("Account Insufficient  balance[" + fee + "] to MultiSign");
         }
       }
-
       trace.getReceipt().setMultiSignFee(fee);
     }
   }
 
-  public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace)
-      throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    BandwidthProcessor processor = new BandwidthProcessor(this);
-    processor.consume(unx, trace);
+  public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule blockCapsule) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
+    if(useHardForkVersion(blockCapsule))
+      (new BandwidthProcessorV2(this)).consume(unx, trace);
+    else
+      (new BandwidthProcessor(this)).consume(unx, trace);
+  }
+
+  //detect that it's time to play hardfork version
+  private boolean useHardForkVersion(BlockCapsule blockCapsule){
+    long hardForkBlockNumber = Args.getInstance().getHardforkBlockNumber();
+    long headBlockNumber;
+    if(blockCapsule == null)
+    {
+      headBlockNumber = getDynamicPropertiesStore().getLatestBlockHeaderNumber();
+      return headBlockNumber + 1 >= hardForkBlockNumber;
+    }
+    else{
+      headBlockNumber = blockCapsule.getNum();
+      return headBlockNumber >= hardForkBlockNumber;
+    }
   }
 
 
@@ -825,8 +825,7 @@ public class Manager {
   public synchronized void eraseBlock() {
     session.reset();
     try {
-      BlockCapsule oldHeadBlock = getBlockById(
-          getDynamicPropertiesStore().getLatestBlockHeaderHash());
+      BlockCapsule oldHeadBlock = getBlockById(getDynamicPropertiesStore().getLatestBlockHeaderHash());
       logger.info("begin to erase block:" + oldHeadBlock);
       khaosDb.pop();
       revokingStore.fastPop();
@@ -1213,7 +1212,7 @@ public class Manager {
    * Process transaction.
    */
   public TransactionInfo processTransaction(final TransactionCapsule unxCap, BlockCapsule blockCap)
-      throws ValidateSignatureException, ContractValidateException, ContractExeException,
+          throws ValidateSignatureException, ContractValidateException, ContractExeException,
       AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException, TooBigTransactionResultException,
       DupTransactionException, TaposException, ReceiptCheckErrException, VMIllegalException {
     if (unxCap == null) {
@@ -1224,8 +1223,7 @@ public class Manager {
     validateCommon(unxCap);
 
     if (unxCap.getInstance().getRawData().getContractList().size() != 1) {
-      throw new ContractSizeNotEqualToOneException(
-          "act size should be exactly 1, this is extend feature");
+      throw new ContractSizeNotEqualToOneException("act size should be exactly 1, this is extend feature");
     }
 
     validateDup(unxCap);
@@ -1237,7 +1235,7 @@ public class Manager {
     TransactionTrace trace = new TransactionTrace(unxCap, this);
     unxCap.setUnxTrace(trace);
 
-    consumeBandwidth(unxCap, trace);
+    consumeBandwidth(unxCap, trace, blockCap);
     consumeMultiSignFee(unxCap, trace);
 
     VMConfig.initVmHardFork();
@@ -1260,25 +1258,23 @@ public class Manager {
           trace.checkIsConstant();
           trace.exec();
           trace.setResult();
-          logger.info("Retry result for tx id: {}, tx resultCode in receipt: {}",
-              txId, trace.getReceipt().getResult());
+          logger.info("Retry result for tx id: {}, tx resultCode in receipt: {}", txId, trace.getReceipt().getResult());
         }
         trace.check();
       }
     }
 
     trace.finalization();
+
     if (Objects.nonNull(blockCap) && getDynamicPropertiesStore().supportVM()) {
       unxCap.setResult(trace.getRuntime());
     }
     transactionStore.put(unxCap.getTransactionId().getBytes(), unxCap);
 
     Optional.ofNullable(transactionCache)
-        .ifPresent(t -> t.put(unxCap.getTransactionId().getBytes(),
-            new BytesCapsule(ByteArray.fromLong(unxCap.getBlockNum()))));
+          .ifPresent(t -> t.put(unxCap.getTransactionId().getBytes(), new BytesCapsule(ByteArray.fromLong(unxCap.getBlockNum()))));
 
-    TransactionInfoCapsule transactionInfo = TransactionInfoCapsule
-        .buildInstance(unxCap, blockCap, trace);
+    TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(unxCap, blockCap, trace);
 
     // if event subscribe is enabled, post contract triggers to queue
     postContractTrigger(trace, false);
@@ -1314,12 +1310,8 @@ public class Manager {
     //check that the first block after the maintenance period has just been processed
     // if (lastHeadBlockIsMaintenanceBefore != lastHeadBlockIsMaintenance()) {
     if (!witnessController.validateWitnessSchedule(witnessCapsule.getAddress(), when)) {
-      logger.info("It's not my turn, "
-          + "and the first block after the maintenance period has just been processed.");
-
-      logger.info("when:{},lastHeadBlockIsMaintenanceBefore:{},lastHeadBlockIsMaintenanceAfter:{}",
-          when, lastHeadBlockIsMaintenanceBefore, lastHeadBlockIsMaintenance());
-
+      logger.info("It's not my turn, " + "and the first block after the maintenance period has just been processed.");
+      logger.info("when:{},lastHeadBlockIsMaintenanceBefore:{},lastHeadBlockIsMaintenanceAfter:{}", when, lastHeadBlockIsMaintenanceBefore, lastHeadBlockIsMaintenance());
       return null;
     }
     // }
@@ -1335,21 +1327,17 @@ public class Manager {
 
     long postponedUnxCount = 0;
 
-    final BlockCapsule blockCapsule =
-        new BlockCapsule(number + 1, preHash, when, witnessCapsule.getAddress());
+    final BlockCapsule blockCapsule = new BlockCapsule(number + 1, preHash, when, witnessCapsule.getAddress());
     blockCapsule.generatedByMyself = true;
     session.reset();
     session.setValue(revokingStore.buildSession());
-    //
     accountStateCallBack.preExecute(blockCapsule);
 
-    if (needCheckWitnessPermission && !witnessService.
-        validateWitnessPermission(witnessCapsule.getAddress())) {
+    if (needCheckWitnessPermission && !witnessService.validateWitnessPermission(witnessCapsule.getAddress())) {
       logger.warn("Witness permission is wrong");
       return null;
     }
-    TransactionRetCapsule transationRetCapsule =
-        new TransactionRetCapsule(blockCapsule);
+    TransactionRetCapsule transationRetCapsule = new TransactionRetCapsule(blockCapsule);
 
     Set<String> accountSet = new HashSet<>();
     Iterator<TransactionCapsule> iterator = pendingTransactions.iterator();
@@ -1549,8 +1537,7 @@ public class Manager {
       }
     }
 
-    TransactionRetCapsule transationRetCapsule =
-        new TransactionRetCapsule(block);
+    TransactionRetCapsule transationRetCapsule = new TransactionRetCapsule(block);
 
     try {
       accountStateCallBack.preExecute(block);
@@ -1647,9 +1634,7 @@ public class Manager {
 
   public long getSyncBeginNumber() {
     logger.info("headNumber:" + dynamicPropertiesStore.getLatestBlockHeaderNumber());
-    logger.info(
-        "syncBeginNumber:"
-            + (dynamicPropertiesStore.getLatestBlockHeaderNumber() - revokingStore.size()));
+    logger.info("syncBeginNumber:" + (dynamicPropertiesStore.getLatestBlockHeaderNumber() - revokingStore.size()));
     logger.info("solidBlockNumber:" + dynamicPropertiesStore.getLatestSolidifiedBlockNum());
     return dynamicPropertiesStore.getLatestBlockHeaderNumber() - revokingStore.size();
   }
@@ -1999,5 +1984,20 @@ public class Manager {
         }
       }
     }
+  }
+
+  protected void chargeFee(byte[] ownerAddress, long fee) throws BalanceInsufficientException {
+    adjustBalance(ownerAddress, -fee);
+    adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
+  }
+
+  protected void chargeFee(AccountCapsule accountCapsule, long fee) throws BalanceInsufficientException {
+    adjustBalance(accountCapsule, -fee);
+    adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
+  }
+
+  public long loadEnergyGinzaFactor(){
+    long dynamicEnergyFee = getDynamicPropertiesStore().getEnergyFee();
+    return dynamicEnergyFee > 0 ? dynamicEnergyFee : Constant.GINZA_PER_ENERGY;
   }
 }

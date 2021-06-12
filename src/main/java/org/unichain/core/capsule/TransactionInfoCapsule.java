@@ -143,22 +143,22 @@ public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {
     return this.transactionInfo;
   }
 
-  public static TransactionInfoCapsule buildInstance(TransactionCapsule unxCap, BlockCapsule block,
-      TransactionTrace trace) {
-
+  public static TransactionInfoCapsule buildInstance(TransactionCapsule unxCap, BlockCapsule block, TransactionTrace trace) {
     TransactionInfo.Builder builder = TransactionInfo.newBuilder();
     ReceiptCapsule traceReceipt = trace.getReceipt();
+    //default
     builder.setResult(code.SUCESS);
-    if (StringUtils.isNoneEmpty(trace.getRuntimeError()) || Objects
-        .nonNull(trace.getRuntimeResult().getException())) {
+
+    //error
+    if (StringUtils.isNoneEmpty(trace.getRuntimeError()) || Objects.nonNull(trace.getRuntimeResult().getException())) {
       builder.setResult(code.FAILED);
       builder.setResMessage(ByteString.copyFromUtf8(trace.getRuntimeError()));
     }
+
     builder.setId(ByteString.copyFrom(unxCap.getTransactionId().getBytes()));
     ProgramResult programResult = trace.getRuntimeResult();
-    long fee =
-        programResult.getRet().getFee() + traceReceipt.getEnergyFee()
-            + traceReceipt.getNetFee() + traceReceipt.getMultiSignFee();
+    //@note fee = [ret fee that charged by actuator] + [energy fee from deploy/call smart contract] + [netFee] + [multi-sign fee]
+    long fee = programResult.getRet().getFee() + traceReceipt.getEnergyFee() + traceReceipt.getNetFee() + traceReceipt.getMultiSignFee();
     ByteString contractResult = ByteString.copyFrom(programResult.getHReturn());
     ByteString ContractAddress = ByteString.copyFrom(programResult.getContractAddress());
 
@@ -171,14 +171,11 @@ public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {
     builder.setWithdrawAmount(programResult.getRet().getWithdrawAmount());
     builder.setExchangeReceivedAmount(programResult.getRet().getExchangeReceivedAmount());
     builder.setExchangeInjectAnotherAmount(programResult.getRet().getExchangeInjectAnotherAmount());
-    builder.setExchangeWithdrawAnotherAmount(
-        programResult.getRet().getExchangeWithdrawAnotherAmount());
+    builder.setExchangeWithdrawAnotherAmount(programResult.getRet().getExchangeWithdrawAnotherAmount());
 
     List<Log> logList = new ArrayList<>();
     programResult.getLogInfoList().forEach(
-        logInfo -> {
-          logList.add(LogInfo.buildLog(logInfo));
-        }
+        logInfo -> logList.add(LogInfo.buildLog(logInfo))
     );
     builder.addAllLog(logList);
 
@@ -190,27 +187,22 @@ public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {
     builder.setReceipt(traceReceipt.getReceipt());
 
     if (Args.getInstance().isSaveInternalTx() && null != programResult.getInternalTransactions()) {
-      for (InternalTransaction internalTransaction : programResult
-          .getInternalTransactions()) {
-        Protocol.InternalTransaction.Builder internalUnxBuilder = Protocol.InternalTransaction
-            .newBuilder();
+      for (InternalTransaction internalTransaction : programResult.getInternalTransactions()) {
+        Protocol.InternalTransaction.Builder internalUnxBuilder = Protocol.InternalTransaction.newBuilder();
         // set hash
         internalUnxBuilder.setHash(ByteString.copyFrom(internalTransaction.getHash()));
         // set caller
         internalUnxBuilder.setCallerAddress(ByteString.copyFrom(internalTransaction.getSender()));
         // set TransferTo
-        internalUnxBuilder
-            .setTransferToAddress(ByteString.copyFrom(internalTransaction.getTransferToAddress()));
+        internalUnxBuilder.setTransferToAddress(ByteString.copyFrom(internalTransaction.getTransferToAddress()));
         //TODO: "for loop" below in future for multiple token case, we only have one for now.
-        Protocol.InternalTransaction.CallValueInfo.Builder callValueInfoBuilder =
-            Protocol.InternalTransaction.CallValueInfo.newBuilder();
+        Protocol.InternalTransaction.CallValueInfo.Builder callValueInfoBuilder = Protocol.InternalTransaction.CallValueInfo.newBuilder();
         // unx will not be set token name
         callValueInfoBuilder.setCallValue(internalTransaction.getValue());
         // Just one transferBuilder for now.
         internalUnxBuilder.addCallValueInfo(callValueInfoBuilder);
         internalTransaction.getTokenInfo().forEach((tokenId, amount) -> {
-          Protocol.InternalTransaction.CallValueInfo.Builder tokenInfoBuilder =
-              Protocol.InternalTransaction.CallValueInfo.newBuilder();
+          Protocol.InternalTransaction.CallValueInfo.Builder tokenInfoBuilder = Protocol.InternalTransaction.CallValueInfo.newBuilder();
           tokenInfoBuilder.setTokenId(tokenId);
           tokenInfoBuilder.setCallValue(amount);
           internalUnxBuilder.addCallValueInfo(tokenInfoBuilder);

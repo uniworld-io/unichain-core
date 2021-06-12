@@ -63,8 +63,7 @@ abstract class ResourceProcessor {
     try {
       long latestOperationTime = dbManager.getHeadBlockTimeStamp();
       accountCapsule.setLatestOperationTime(latestOperationTime);
-      dbManager.adjustBalance(accountCapsule, -fee);
-      dbManager.adjustBalance(this.dbManager.getAccountStore().getBurnaccount().createDbKey(), +fee);
+      dbManager.chargeFee(accountCapsule, fee);
       return true;
     } catch (BalanceInsufficientException e) {
       return false;

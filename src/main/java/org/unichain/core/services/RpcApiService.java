@@ -192,8 +192,7 @@ public class RpcApiService implements Service {
     TransactionExtention.Builder unxExtBuilder = TransactionExtention.newBuilder();
     Return.Builder retBuilder = Return.newBuilder();
     try {
-      TransactionCapsule unxCap = createTransactionCapsule(request,
-          ContractType.TriggerSmartContract);
+      TransactionCapsule unxCap = createTransactionCapsule(request, ContractType.TriggerSmartContract);
       Transaction unx;
       if (isConstant) {
         unx = wallet.triggerConstantContract(request, unxCap, unxExtBuilder, retBuilder);

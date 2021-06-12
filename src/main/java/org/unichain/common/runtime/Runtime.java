@@ -10,7 +10,7 @@ import org.unichain.core.exception.VMIllegalException;
 
 public interface Runtime {
 
-  void execute() throws ContractValidateException, ContractExeException, VMIllegalException;
+  void setup() throws ContractValidateException, ContractExeException, VMIllegalException;
 
   void go();
 

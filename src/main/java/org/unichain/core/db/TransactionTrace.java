@@ -8,7 +8,6 @@ import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.util.StringUtils;
 import org.unichain.common.runtime.Runtime;
@@ -37,7 +36,6 @@ import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.ContractCapsule;
 import org.unichain.core.capsule.ReceiptCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
-import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -67,6 +65,8 @@ public class TransactionTrace {
 
   private long txStartTimeInMs;
 
+  private BlockCapsule blockCapsule;
+
   public TransactionCapsule getUnx() {
     return unx;
   }
@@ -83,8 +83,7 @@ public class TransactionTrace {
 
   public TransactionTrace(TransactionCapsule unx, Manager dbManager) {
     this.unx = unx;
-    Transaction.Contract.ContractType contractType = this.unx.getInstance().getRawData()
-        .getContract(0).getType();
+    Transaction.Contract.ContractType contractType = this.unx.getInstance().getRawData().getContract(0).getType();
     switch (contractType.getNumber()) {
       case ContractType.TriggerSmartContract_VALUE:
         unxType = UNW_CONTRACT_CALL_TYPE;
@@ -98,7 +97,6 @@ public class TransactionTrace {
 
     this.dbManager = dbManager;
     this.receipt = new ReceiptCapsule(Sha256Hash.ZERO_HASH);
-
     this.energyProcessor = new EnergyProcessor(this.dbManager);
   }
 
@@ -106,12 +104,9 @@ public class TransactionTrace {
     return this.unxType == UNW_CONTRACT_CALL_TYPE || this.unxType == UNW_CONTRACT_CREATION_TYPE;
   }
 
-  public void init(BlockCapsule blockCap) {
-    init(blockCap, false);
-  }
-
   //pre transaction check
   public void init(BlockCapsule blockCap, boolean eventPluginLoaded) {
+    blockCapsule = blockCap;
     txStartTimeInMs = System.currentTimeMillis();
     DepositImpl deposit = DepositImpl.createRoot(dbManager);
     runtime = new RuntimeImpl(this, blockCap, deposit, new ProgramInvokeFactoryImpl());
@@ -123,18 +118,13 @@ public class TransactionTrace {
       return;
     }
 
-    TriggerSmartContract triggerContractFromTransaction = ContractCapsule
-        .getTriggerContractFromTransaction(this.getUnx().getInstance());
+    TriggerSmartContract triggerContractFromTransaction = ContractCapsule.getTriggerContractFromTransaction(this.getUnx().getInstance());
     if (UnxType.UNW_CONTRACT_CALL_TYPE == this.unxType) {
       DepositImpl deposit = DepositImpl.createRoot(dbManager);
-      ContractCapsule contract = deposit
-          .getContract(triggerContractFromTransaction.getContractAddress().toByteArray());
+      ContractCapsule contract = deposit.getContract(triggerContractFromTransaction.getContractAddress().toByteArray());
       if (contract == null) {
-        logger.info("contract: {} is not in contract store", Wallet
-            .encode58Check(triggerContractFromTransaction.getContractAddress().toByteArray()));
-        throw new ContractValidateException("contract: " + Wallet
-            .encode58Check(triggerContractFromTransaction.getContractAddress().toByteArray())
-            + " is not in contract store");
+        logger.info("contract: {} is not in contract store", Wallet.encode58Check(triggerContractFromTransaction.getContractAddress().toByteArray()));
+        throw new ContractValidateException("contract: " + Wallet.encode58Check(triggerContractFromTransaction.getContractAddress().toByteArray()) + " is not in contract store");
       }
       ABI abi = contract.getInstance().getAbi();
       if (Wallet.isConstant(abi, triggerContractFromTransaction)) {
@@ -143,15 +133,13 @@ public class TransactionTrace {
     }
   }
 
-  //set bill
-  public void setBill(long energyUsage) {
+  public void setEnergyBill(long energyUsage) {
     if (energyUsage < 0) {
       energyUsage = 0L;
     }
     receipt.setEnergyUsageTotal(energyUsage);
   }
 
-  //set net bill
   public void setNetBill(long netUsage, long netFee) {
     receipt.setNetUsage(netUsage);
     receipt.setNetFee(netFee);
@@ -161,18 +149,15 @@ public class TransactionTrace {
     receipt.addNetFee(netFee);
   }
 
-  public void exec()
-      throws ContractExeException, ContractValidateException, VMIllegalException {
+  public void exec() throws ContractExeException, ContractValidateException, VMIllegalException {
     /*  VM execute  */
-    runtime.execute();
+    runtime.setup();
     runtime.go();
 
     if (UNW_PRECOMPILED_TYPE != runtime.getUnxType()) {
-      if (contractResult.OUT_OF_TIME
-          .equals(receipt.getResult())) {
+      if (contractResult.OUT_OF_TIME.equals(receipt.getResult())) {
         setTimeResultType(TimeResultType.OUT_OF_TIME);
-      } else if (System.currentTimeMillis() - txStartTimeInMs
-          > Args.getInstance().getLongRunningTime()) {
+      } else if (System.currentTimeMillis() - txStartTimeInMs > Args.getInstance().getLongRunningTime()) {
         setTimeResultType(TimeResultType.LONG_RUNNING);
       }
     }
@@ -180,11 +165,45 @@ public class TransactionTrace {
 
   public void finalization() throws ContractExeException {
     try {
-      pay();
+      if(useHardForkVersion())
+        payV2();
+      else
+        pay();
     } catch (BalanceInsufficientException e) {
       throw new ContractExeException(e.getMessage());
     }
     runtime.finalization();
+  }
+
+  /**
+   * @note
+   * - pay energy bill
+   * - directly charge fee from balance
+   */
+  public void payV2() throws BalanceInsufficientException {
+    byte[] originAccount;
+    byte[] callerAccount;
+    long percent = 0;
+    switch (unxType) {
+      case UNW_CONTRACT_CREATION_TYPE:
+        callerAccount = TransactionCapsule.getOwner(unx.getInstance().getRawData().getContract(0));
+        originAccount = callerAccount;
+        break;
+      case UNW_CONTRACT_CALL_TYPE:
+        TriggerSmartContract callContract = ContractCapsule.getTriggerContractFromTransaction(unx.getInstance());
+        ContractCapsule contractCapsule = dbManager.getContractStore().get(callContract.getContractAddress().toByteArray());
+        callerAccount = callContract.getOwnerAddress().toByteArray();
+        originAccount = contractCapsule.getOriginAddress();
+        percent = Math.max(Constant.ONE_HUNDRED - contractCapsule.getConsumeUserResourcePercent(), 0);
+        percent = Math.min(percent, Constant.ONE_HUNDRED);
+        break;
+      default:
+        return;
+    }
+
+    AccountCapsule origin = dbManager.getAccountStore().get(originAccount);
+    AccountCapsule caller = dbManager.getAccountStore().get(callerAccount);
+    receipt.payEnergyBillV2(dbManager, origin, caller, percent);
   }
 
   /**
@@ -201,15 +220,11 @@ public class TransactionTrace {
         originAccount = callerAccount;
         break;
       case UNW_CONTRACT_CALL_TYPE:
-        TriggerSmartContract callContract = ContractCapsule
-            .getTriggerContractFromTransaction(unx.getInstance());
-        ContractCapsule contractCapsule =
-            dbManager.getContractStore().get(callContract.getContractAddress().toByteArray());
-
+        TriggerSmartContract callContract = ContractCapsule.getTriggerContractFromTransaction(unx.getInstance());
+        ContractCapsule contractCapsule = dbManager.getContractStore().get(callContract.getContractAddress().toByteArray());
         callerAccount = callContract.getOwnerAddress().toByteArray();
         originAccount = contractCapsule.getOriginAddress();
-        percent = Math
-            .max(Constant.ONE_HUNDRED - contractCapsule.getConsumeUserResourcePercent(), 0);
+        percent = Math.max(Constant.ONE_HUNDRED - contractCapsule.getConsumeUserResourcePercent(), 0);
         percent = Math.min(percent, Constant.ONE_HUNDRED);
         originEnergyLimit = contractCapsule.getOriginEnergyLimit();
         break;
@@ -220,23 +235,21 @@ public class TransactionTrace {
     // originAccount Percent = 30%
     AccountCapsule origin = dbManager.getAccountStore().get(originAccount);
     AccountCapsule caller = dbManager.getAccountStore().get(callerAccount);
-    receipt.payEnergyBill(
-        dbManager,
-        origin,
-        caller,
-        percent, originEnergyLimit,
-        energyProcessor,
-        dbManager.getWitnessController().getHeadSlot());
+    receipt.payEnergyBill(dbManager, origin, caller, percent, originEnergyLimit, energyProcessor, dbManager.getWitnessController().getHeadSlot());
   }
 
   public boolean checkNeedRetry() {
     if (!needVM()) {
       return false;
     }
-    return unx.getContractRet() != contractResult.OUT_OF_TIME && receipt.getResult()
-        == contractResult.OUT_OF_TIME;
+    return unx.getContractRet() != contractResult.OUT_OF_TIME && receipt.getResult() == contractResult.OUT_OF_TIME;
   }
 
+  /**
+   * - if not(create, call contract) then pass
+   * - if (create, call contract), check return code
+   * @throws ReceiptCheckErrException
+   */
   public void check() throws ReceiptCheckErrException {
     if (!needVM()) {
       return;
@@ -245,9 +258,9 @@ public class TransactionTrace {
       throw new ReceiptCheckErrException("null resultCode");
     }
     if (!unx.getContractRet().equals(receipt.getResult())) {
-      logger.info(
-          "this tx id: {}, the resultCode in received block: {}, the resultCode in self: {}",
-          Hex.toHexString(unx.getTransactionId().getBytes()), unx.getContractRet(),
+      logger.info("this tx id: {}, the resultCode in received block: {}, the resultCode in self: {}",
+          Hex.toHexString(unx.getTransactionId().getBytes()),
+          unx.getContractRet(),
           receipt.getResult());
       throw new ReceiptCheckErrException("Different resultCode");
     }
@@ -262,8 +275,7 @@ public class TransactionTrace {
       return;
     }
     RuntimeException exception = runtime.getResult().getException();
-    if (Objects.isNull(exception) && StringUtils
-        .isEmpty(runtime.getRuntimeError()) && !runtime.getResult().isRevert()) {
+    if (Objects.isNull(exception) && StringUtils.isEmpty(runtime.getRuntimeError()) && !runtime.getResult().isRevert()) {
       receipt.setResult(contractResult.SUCCESS);
       return;
     }
@@ -326,5 +338,20 @@ public class TransactionTrace {
 
   public Runtime getRuntime() {
     return runtime;
+  }
+
+  //detect that it's time to play hardfork version
+  private boolean useHardForkVersion(){
+    long hardForkBlockNumber = Args.getInstance().getHardforkBlockNumber();
+    long headBlockNumber;
+    if(blockCapsule == null)
+    {
+      headBlockNumber = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber();
+      return headBlockNumber + 1 >= hardForkBlockNumber;
+    }
+    else{
+      headBlockNumber = blockCapsule.getNum();
+      return headBlockNumber >= hardForkBlockNumber;
+    }
   }
 }

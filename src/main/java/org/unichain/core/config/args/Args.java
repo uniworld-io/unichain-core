@@ -109,7 +109,7 @@ public class Args {
   @Getter
   @Setter
   @Parameter(names = {"--hardfork-block-number"})
-  private int hardforkBlockNumber = 1000000;
+  private long hardforkBlockNumber = 1000000;
 
   @Getter
   @Setter

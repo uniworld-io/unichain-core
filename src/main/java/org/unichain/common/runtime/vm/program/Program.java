@@ -830,9 +830,7 @@ public class Program {
 
   public void spendEnergy(long energyValue, String opName) {
     if (getEnergylimitLeftLong() < energyValue) {
-      throw new OutOfEnergyException(
-          "Not enough energy for '%s' operation executing: curInvokeEnergyLimit[%d],"
-              + " curOpEnergy[%d], usedEnergy[%d]",
+      throw new OutOfEnergyException("Not enough energy for '%s' operation executing: curInvokeEnergyLimit[%d]," + " curOpEnergy[%d], usedEnergy[%d]",
           opName, invoke.getEnergyLimit(), energyValue, getResult().getEnergyUsed());
     }
     getResult().spendEnergy(energyValue);

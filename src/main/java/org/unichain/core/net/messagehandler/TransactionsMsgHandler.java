@@ -91,8 +91,7 @@ public class TransactionsMsgHandler implements UnichainMsgHandler {
       if (type == ContractType.TriggerSmartContract_VALUE
           || type == ContractType.CreateSmartContract_VALUE) {
         if (!smartContractQueue.offer(new UnxEvent(peer, new TransactionMessage(unx)))) {
-          logger.warn("Add smart contract failed, queueSize {}:{}", smartContractQueue.size(),
-              queue.size());
+          logger.warn("Add smart contract failed, queueSize {}:{}", smartContractQueue.size(), queue.size());
         }
       } else {
         unxHandlePool.submit(() -> handleTransaction(peer, new TransactionMessage(unx)));

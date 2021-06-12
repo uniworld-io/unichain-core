@@ -21,7 +21,6 @@ import org.unichain.common.utils.PropUtil;
 
 @Slf4j
 public class DBConvert {
-
   static {
     RocksDB.loadLibrary();
   }

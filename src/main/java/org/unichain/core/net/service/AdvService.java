@@ -139,7 +139,6 @@ public class AdvService {
   }
 
   public void broadcast(Message msg) {
-
     if (fastForward) {
       return;
     }

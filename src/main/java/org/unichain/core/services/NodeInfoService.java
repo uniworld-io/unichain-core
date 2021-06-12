@@ -135,10 +135,8 @@ public class NodeInfoService {
       peerInfo.setHost(peerConnection.getNode().getHost());
       peerInfo.setInFlow(peerConnection.getNodeStatistics().tcpFlow.getTotalCount());
       peerInfo.setLastBlockUpdateTime(peerConnection.getBlockBothHaveUpdateTime());
-      peerInfo.setLastSyncBlock(peerConnection.getLastSyncBlockId() == null ? ""
-          : peerConnection.getLastSyncBlockId().getString());
-      ReasonCode reasonCode = peerConnection.getNodeStatistics()
-          .getUnichainLastLocalDisconnectReason();
+      peerInfo.setLastSyncBlock(peerConnection.getLastSyncBlockId() == null ? "" : peerConnection.getLastSyncBlockId().getString());
+      ReasonCode reasonCode = peerConnection.getNodeStatistics().getUnichainLastLocalDisconnectReason();
       peerInfo.setLocalDisconnectReason(reasonCode == null ? "" : reasonCode.toString());
       reasonCode = peerConnection.getNodeStatistics().getUnichainLastRemoteDisconnectReason();
       peerInfo.setRemoteDisconnectReason(reasonCode == null ? "" : reasonCode.toString());

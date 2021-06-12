@@ -20,7 +20,6 @@ import org.unichain.core.services.interfaceOnSolidity.http.solidity.HttpApiOnSol
 
 @Slf4j(topic = "app")
 public class FullNode {
-
   public static void load(String path) {
     try {
       File file = new File(path);
@@ -44,6 +43,7 @@ public class FullNode {
     logger.info("Full node running.");
     Args.setParam(args, Constant.TESTNET_CONF);
     Args cfgArgs = Args.getInstance();
+
     load(cfgArgs.getLogbackPath());
 
     if (cfgArgs.isHelp()) {

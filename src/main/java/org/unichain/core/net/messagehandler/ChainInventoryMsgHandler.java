@@ -43,11 +43,13 @@ public class ChainInventoryMsgHandler implements UnichainMsgHandler {
 
     Deque<BlockId> blockIdWeGet = new LinkedList<>(chainInventoryMessage.getBlockIds());
 
+    //if just one block & we already have > fin!
     if (blockIdWeGet.size() == 1 && unichainNetDelegate.containBlock(blockIdWeGet.peek())) {
       peer.setNeedSyncFromPeer(false);
       return;
     }
 
+    //merge blockid to fetch
     while (!peer.getSyncBlockToFetch().isEmpty()) {
       if (peer.getSyncBlockToFetch().peekLast().equals(blockIdWeGet.peekFirst())) {
         break;
@@ -57,12 +59,12 @@ public class ChainInventoryMsgHandler implements UnichainMsgHandler {
 
     blockIdWeGet.poll();
 
+    //save current block to fetch
     peer.setRemainNum(chainInventoryMessage.getRemainNum());
     peer.getSyncBlockToFetch().addAll(blockIdWeGet);
 
     synchronized (unichainNetDelegate.getBlockLock()) {
-      while (!peer.getSyncBlockToFetch().isEmpty() && unichainNetDelegate
-          .containBlock(peer.getSyncBlockToFetch().peek())) {
+      while (!peer.getSyncBlockToFetch().isEmpty() && unichainNetDelegate.containBlock(peer.getSyncBlockToFetch().peek())) {
         BlockId blockId = peer.getSyncBlockToFetch().pop();
         peer.setBlockBothHave(blockId);
         logger.info("Block {} from {} is processed", blockId.getString(), peer.getNode().getHost());
@@ -74,8 +76,8 @@ public class ChainInventoryMsgHandler implements UnichainMsgHandler {
     //}
 
     if ((chainInventoryMessage.getRemainNum() == 0 && !peer.getSyncBlockToFetch().isEmpty()) ||
-        (chainInventoryMessage.getRemainNum() != 0
-            && peer.getSyncBlockToFetch().size() > NodeConstant.SYNC_FETCH_BATCH_NUM)) {
+        (chainInventoryMessage.getRemainNum() != 0 && peer.getSyncBlockToFetch().size() > NodeConstant.SYNC_FETCH_BATCH_NUM)) {
+      //sync complete, set fetchFlag to true to begin fetch block data
       syncService.setFetchFlag(true);
     } else {
       syncService.syncNext(peer);
@@ -97,8 +99,7 @@ public class ChainInventoryMsgHandler implements UnichainMsgHandler {
     }
 
     if (msg.getRemainNum() != 0 && blockIds.size() < NodeConstant.SYNC_FETCH_BATCH_NUM) {
-      throw new P2pException(TypeEnum.BAD_MESSAGE,
-          "remain: " + msg.getRemainNum() + ", blockIds size: " + blockIds.size());
+      throw new P2pException(TypeEnum.BAD_MESSAGE, "remain: " + msg.getRemainNum() + ", blockIds size: " + blockIds.size());
     }
 
     long num = blockIds.get(0).getNum();

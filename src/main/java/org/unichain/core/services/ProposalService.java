@@ -16,8 +16,7 @@ import org.unichain.core.exception.ContractValidateException;
 public class ProposalService {
 
   private static final long LONG_VALUE = 1_000_000_000_000_000L;
-  private static final String LONG_VALUE_ERROR =
-      "Bad chain parameter value,valid range is [0," + LONG_VALUE + "]";
+  private static final String LONG_VALUE_ERROR = "Bad chain parameter value, valid range is [0," + LONG_VALUE + "]";
   private static final String BAD_PARAM_ID = "Bad chain parameter id";
 
   public enum ProposalType {
@@ -29,6 +28,7 @@ public class ProposalService {
     WITNESS_PAY_PER_BLOCK(5), //drop ,5
     WITNESS_STANDBY_ALLOWANCE(6), //drop ,6
     CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT(7), //drop ,7
+    //@todo review & remove
     CREATE_NEW_ACCOUNT_BANDWIDTH_RATE(8), // 1 ~ ,8
     ALLOW_CREATION_OF_CONTRACTS(9), // 0 / >0 ,9
     REMOVE_THE_POWER_OF_THE_GR(10),  // 1 ,10
@@ -38,8 +38,10 @@ public class ProposalService {
     ALLOW_UPDATE_ACCOUNT_NAME(14), // 1, 14
     ALLOW_SAME_TOKEN_NAME(15), // 1, 15
     ALLOW_DELEGATE_RESOURCE(16), // 0, 16
+    //@todo review and remove
     TOTAL_ENERGY_LIMIT(17), // 50,000,000,000, 17
     ALLOW_TVM_TRANSFER_UNC(18), // 1, 18
+    //@todo review and remove
     TOTAL_CURRENT_ENERGY_LIMIT(19), // 50,000,000,000, 19
     ALLOW_MULTI_SIGN(20), // 1, 20
     ALLOW_ADAPTIVE_ENERGY(21), // 1, 21
@@ -52,6 +54,7 @@ public class ProposalService {
     ALLOW_CHANGE_DELEGATION(30), //1, 30
     WITNESS_55_PAY_PER_BLOCK(31), //drop, 31
     ALLOW_TVM_SOLIDITY_059(32), // 1, 32
+    //@todo review and remove
     ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO(33); // 10, 33
 
     ProposalType(long code) {
@@ -92,14 +95,12 @@ public class ProposalService {
     }
   }
 
-  public static void validator(Manager manager, long code, long value)
-      throws ContractValidateException {
+  public static void validator(Manager manager, long code, long value) throws ContractValidateException {
     ProposalType proposalType = ProposalType.getEnum(code);
     switch (proposalType) {
       case MAINTENANCE_TIME_INTERVAL: {
         if (value < 3 * 27 * 1000 || value > 24 * 3600 * 1000) {
-          throw new ContractValidateException(
-              "Bad chain parameter value,valid range is [3 * 27 * 1000,24 * 3600 * 1000]");
+          throw new ContractValidateException("Bad chain parameter value,valid range is [3 * 27 * 1000,24 * 3600 * 1000]");
         }
         return;
       }
@@ -118,20 +119,17 @@ public class ProposalService {
       }
       case ALLOW_CREATION_OF_CONTRACTS: {
         if (value != 1) {
-          throw new ContractValidateException(
-              "This value[ALLOW_CREATION_OF_CONTRACTS] is only allowed to be 1");
+          throw new ContractValidateException("This value[ALLOW_CREATION_OF_CONTRACTS] is only allowed to be 1");
         }
         break;
       }
       case REMOVE_THE_POWER_OF_THE_GR: {
         if (manager.getDynamicPropertiesStore().getRemoveThePowerOfTheGr() == -1) {
-          throw new ContractValidateException(
-              "This proposal has been executed before and is only allowed to be executed once");
+          throw new ContractValidateException("This proposal has been executed before and is only allowed to be executed once");
         }
 
         if (value != 1) {
-          throw new ContractValidateException(
-              "This value[REMOVE_THE_POWER_OF_THE_GR] is only allowed to be 1");
+          throw new ContractValidateException("This value[REMOVE_THE_POWER_OF_THE_GR] is only allowed to be 1");
         }
         break;
       }
@@ -140,32 +138,28 @@ public class ProposalService {
         break;
       case MAX_CPU_TIME_OF_ONE_TX:
         if (value < 10 || value > 100) {
-          throw new ContractValidateException(
-              "Bad chain parameter value,valid range is [10,100]");
+          throw new ContractValidateException("Bad chain parameter value,valid range is [10,100]");
         }
         break;
       case ALLOW_UPDATE_ACCOUNT_NAME: {
         if (value != 1) {
-          throw new ContractValidateException(
-              "This value[ALLOW_UPDATE_ACCOUNT_NAME] is only allowed to be 1");
+          throw new ContractValidateException("This value[ALLOW_UPDATE_ACCOUNT_NAME] is only allowed to be 1");
         }
         break;
       }
       case ALLOW_SAME_TOKEN_NAME: {
         if (value != 1) {
-          throw new ContractValidateException(
-              "This value[ALLOW_SAME_TOKEN_NAME] is only allowed to be 1");
+          throw new ContractValidateException("This value[ALLOW_SAME_TOKEN_NAME] is only allowed to be 1");
         }
         break;
       }
       case ALLOW_DELEGATE_RESOURCE: {
         if (value != 1) {
-          throw new ContractValidateException(
-              "This value[ALLOW_DELEGATE_RESOURCE] is only allowed to be 1");
+          throw new ContractValidateException("This value[ALLOW_DELEGATE_RESOURCE] is only allowed to be 1");
         }
         break;
       }
-      case TOTAL_ENERGY_LIMIT: { // deprecated
+      case TOTAL_ENERGY_LIMIT: {
         if (value < 0 || value > LONG_VALUE) {
           throw new ContractValidateException(LONG_VALUE_ERROR);
         }
@@ -173,12 +167,10 @@ public class ProposalService {
       }
       case ALLOW_TVM_TRANSFER_UNC: {
         if (value != 1) {
-          throw new ContractValidateException(
-              "This value[ALLOW_TVM_TRANSFER_UNC] is only allowed to be 1");
+          throw new ContractValidateException("This value[ALLOW_TVM_TRANSFER_UNC] is only allowed to be 1");
         }
         if (manager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
-          throw new ContractValidateException("[ALLOW_SAME_TOKEN_NAME] proposal must be approved "
-              + "before [ALLOW_TVM_TRANSFER_UNC] can be proposed");
+          throw new ContractValidateException("[ALLOW_SAME_TOKEN_NAME] proposal must be approved before [ALLOW_TVM_TRANSFER_UNC] can be proposed");
         }
         break;
       }
@@ -190,88 +182,73 @@ public class ProposalService {
       }
       case ALLOW_MULTI_SIGN: {
         if (value != 1) {
-          throw new ContractValidateException(
-              "This value[ALLOW_MULTI_SIGN] is only allowed to be 1");
+          throw new ContractValidateException("This value[ALLOW_MULTI_SIGN] is only allowed to be 1");
         }
         break;
       }
       case ALLOW_ADAPTIVE_ENERGY: {
         if (value != 1) {
-          throw new ContractValidateException(
-              "This value[ALLOW_ADAPTIVE_ENERGY] is only allowed to be 1");
+          throw new ContractValidateException("This value[ALLOW_ADAPTIVE_ENERGY] is only allowed to be 1");
         }
         break;
       }
       case UPDATE_ACCOUNT_PERMISSION_FEE: {
         if (value < 0 || value > 1_000_000_000L) {
-          throw new ContractValidateException(
-              "Bad chain parameter value,valid range is [0,100_000_000_000L]");
+          throw new ContractValidateException("Bad chain parameter value,valid range is [0,100_000_000_000L]");
         }
         break;
       }
       case MULTI_SIGN_FEE: {
         if (value < 0 || value > 1_000_000_000L) {
-          throw new ContractValidateException(
-              "Bad chain parameter value,valid range is [0,100_000_000_000L]");
+          throw new ContractValidateException("Bad chain parameter value,valid range is [0,100_000_000_000L]");
         }
         break;
       }
       case ALLOW_PROTO_FILTER_NUM: {
         if (value != 1 && value != 0) {
-          throw new ContractValidateException(
-              "This value[ALLOW_PROTO_FILTER_NUM] is only allowed to be 1 or 0");
+          throw new ContractValidateException("This value[ALLOW_PROTO_FILTER_NUM] is only allowed to be 1 or 0");
         }
         break;
       }
       case ALLOW_ACCOUNT_STATE_ROOT: {
         if (value != 1 && value != 0) {
-          throw new ContractValidateException(
-              "This value[ALLOW_ACCOUNT_STATE_ROOT] is only allowed to be 1 or 0");
+          throw new ContractValidateException("This value[ALLOW_ACCOUNT_STATE_ROOT] is only allowed to be 1 or 0");
         }
         break;
       }
       case ALLOW_TVM_CONSTANTINOPLE: {
         if (value != 1) {
-          throw new ContractValidateException(
-              "This value[ALLOW_TVM_CONSTANTINOPLE] is only allowed to be 1");
+          throw new ContractValidateException("This value[ALLOW_TVM_CONSTANTINOPLE] is only allowed to be 1");
         }
         if (manager.getDynamicPropertiesStore().getAllowTvmTransferUnc() == 0) {
-          throw new ContractValidateException(
-              "[ALLOW_TVM_TRANSFER_UNC] proposal must be approved "
-                  + "before [ALLOW_TVM_CONSTANTINOPLE] can be proposed");
+          throw new ContractValidateException("[ALLOW_TVM_TRANSFER_UNC] proposal must be approved before [ALLOW_TVM_CONSTANTINOPLE] can be proposed");
         }
         break;
       }
       case ALLOW_TVM_SOLIDITY_059: {
         if (value != 1) {
-          throw new ContractValidateException(
-              "This value[ALLOW_TVM_SOLIDITY_059] is only allowed to be 1");
+          throw new ContractValidateException("This value[ALLOW_TVM_SOLIDITY_059] is only allowed to be 1");
         }
         if (manager.getDynamicPropertiesStore().getAllowCreationOfContracts() == 0) {
-          throw new ContractValidateException(
-              "[ALLOW_CREATION_OF_CONTRACTS] proposal must be approved "
-                  + "before [ALLOW_TVM_SOLIDITY_059] can be proposed");
+          throw new ContractValidateException("[ALLOW_CREATION_OF_CONTRACTS] proposal must be approved before [ALLOW_TVM_SOLIDITY_059] can be proposed");
         }
         break;
       }
       case ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO: {
         if (value < 1 || value > 1_000) {
-          throw new ContractValidateException(
-              "Bad chain parameter value,valid range is [1,1_000]");
+          throw new ContractValidateException("Bad chain parameter value,valid range is [1,1_000]");
         }
         break;
       }
       case ADAPTIVE_RESOURCE_LIMIT_MULTIPLIER: {
         if (value < 1 || value > 10_000L) {
-          throw new ContractValidateException(
-              "Bad chain parameter value,valid range is [1,10_000]");
+          throw new ContractValidateException("Bad chain parameter value,valid range is [1,10_000]");
         }
         break;
       }
       case ALLOW_CHANGE_DELEGATION: {
         if (value != 1 && value != 0) {
-          throw new ContractValidateException(
-              "This value[ALLOW_CHANGE_DELEGATION] is only allowed to be 1 or 0");
+          throw new ContractValidateException("This value[ALLOW_CHANGE_DELEGATION] is only allowed to be 1 or 0");
         }
         break;
       }
@@ -286,6 +263,9 @@ public class ProposalService {
     }
   }
 
+  /**
+   * @note process proposals
+   */
   public static boolean process(Manager manager, ProposalCapsule proposalCapsule) {
     Map<Long, Long> map = proposalCapsule.getInstance().getParametersMap();
     boolean find = true;

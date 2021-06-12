@@ -15,7 +15,6 @@ import org.unichain.common.utils.ByteArraySet;
 import org.unichain.core.capsule.TransactionResultCapsule;
 
 public class ProgramResult {
-
   private long energyUsed = 0;
   private long futureRefund = 0;
 

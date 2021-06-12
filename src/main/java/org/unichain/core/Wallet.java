@@ -729,7 +729,6 @@ public class Wallet {
   public ExchangeList getExchangeList() {
     ExchangeList.Builder builder = ExchangeList.newBuilder();
     List<ExchangeCapsule> exchangeCapsuleList = dbManager.getExchangeStoreFinal().getAllExchanges();
-
     exchangeCapsuleList.forEach(exchangeCapsule -> builder.addExchanges(exchangeCapsule.getInstance()));
     return builder.build();
   }
@@ -965,6 +964,7 @@ public class Wallet {
     }
 
     List<AssetIssueCapsule> assetIssueCapsuleList = dbManager.getAssetIssueStoreFinal().getAllAssetIssues();
+
     AssetIssueList.Builder builder = AssetIssueList.newBuilder();
     assetIssueCapsuleList.stream()
         .filter(assetIssueCapsule -> assetIssueCapsule.getOwnerAddress().equals(accountAddress))

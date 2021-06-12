@@ -90,21 +90,30 @@ public class UnichainNetService {
   protected void onMessage(PeerConnection peer, UnichainMessage msg) {
     try {
       switch (msg.getType()) {
+        //handle chain summary of peer, send back confirmed block graph
         case SYNC_BLOCK_CHAIN:
           syncBlockChainMsgHandler.processMessage(peer, msg);
           break;
+        //handle confirmed block graph, filter it again, buffer and send it to remote peer using other thread
         case BLOCK_CHAIN_INVENTORY:
           chainInventoryMsgHandler.processMessage(peer, msg);
           break;
+        //handle inventory msg, ex: fast forward of block & tx
         case INVENTORY:
           inventoryMsgHandler.processMessage(peer, msg);
           break;
+
+        //handle real block request graph that send back block data
         case FETCH_INV_DATA:
           fetchInvDataMsgHandler.processMessage(peer, msg);
           break;
+
+        //handle any block broadcast includes sync block & fresh blocks generated from remote peer
         case BLOCK:
           blockMsgHandler.processMessage(peer, msg);
           break;
+
+        //handle tx broadcasting
         case UNWS:
           transactionsMsgHandler.processMessage(peer, msg);
           break;

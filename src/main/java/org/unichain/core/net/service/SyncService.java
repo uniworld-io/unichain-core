@@ -36,7 +36,6 @@ import org.unichain.protos.Protocol.ReasonCode;
 @Slf4j(topic = "net")
 @Component
 public class SyncService {
-
   @Autowired
   private UnichainNetDelegate unichainNetDelegate;
 
@@ -50,8 +49,7 @@ public class SyncService {
 
   private ScheduledExecutorService fetchExecutor = Executors.newSingleThreadScheduledExecutor();
 
-  private ScheduledExecutorService blockHandleExecutor = Executors
-      .newSingleThreadScheduledExecutor();
+  private ScheduledExecutorService blockHandleExecutor = Executors.newSingleThreadScheduledExecutor();
 
   private volatile boolean handleFlag = false;
 
@@ -96,6 +94,7 @@ public class SyncService {
     syncNext(peer);
   }
 
+  //@note build chain sync summary & send request sync of blocks to peer
   public void syncNext(PeerConnection peer) {
     try {
       if (peer.getSyncChainRequested() != null) {
@@ -117,8 +116,7 @@ public class SyncService {
     }
     handleFlag = true;
     if (peer.isIdle()) {
-      if (peer.getRemainNum() > 0
-          && peer.getSyncBlockToFetch().size() <= NodeConstant.SYNC_FETCH_BATCH_NUM) {
+      if (peer.getRemainNum() > 0 && peer.getSyncBlockToFetch().size() <= NodeConstant.SYNC_FETCH_BATCH_NUM) {
         syncNext(peer);
       } else {
         fetchFlag = true;
@@ -156,8 +154,7 @@ public class SyncService {
       } else {
         forkList = unichainNetDelegate.getBlockChainHashesOnFork(beginBlockId);
         if (forkList.isEmpty()) {
-          throw new P2pException(TypeEnum.SYNC_FAILED,
-              "can't find blockId: " + beginBlockId.getString());
+          throw new P2pException(TypeEnum.SYNC_FAILED, "can't find blockId: " + beginBlockId.getString());
         }
         highNoFork = forkList.peekLast().getNum();
         forkList.pollLast();
@@ -172,8 +169,7 @@ public class SyncService {
 
     long realHigh = high + blockIds.size();
 
-    logger.info("Get block chain summary, low: {}, highNoFork: {}, high: {}, realHigh: {}",
-        low, highNoFork, high, realHigh);
+    logger.info("Get block chain summary, low: {}, highNoFork: {}, high: {}, realHigh: {}", low, highNoFork, high, realHigh);
 
     while (low <= realHigh) {
       if (low <= highNoFork) {
@@ -218,7 +214,6 @@ public class SyncService {
   }
 
   private synchronized void handleSyncBlock() {
-
     synchronized (blockJustReceived) {
       blockWaitToProcess.putAll(blockJustReceived);
       blockJustReceived.clear();
@@ -227,9 +222,7 @@ public class SyncService {
     final boolean[] isProcessed = {true};
 
     while (isProcessed[0]) {
-
       isProcessed[0] = false;
-
       synchronized (unichainNetDelegate.getBlockLock()) {
         blockWaitToProcess.forEach((msg, peerConnection) -> {
           if (peerConnection.isDisconnect()) {
@@ -241,7 +234,9 @@ public class SyncService {
           unichainNetDelegate.getActivePeer().stream()
               .filter(peer -> msg.getBlockId().equals(peer.getSyncBlockToFetch().peek()))
               .forEach(peer -> {
+                //remove block id to fetch
                 peer.getSyncBlockToFetch().pop();
+                //mark as in-process
                 peer.getSyncBlockInProcess().add(msg.getBlockId());
                 isFound[0] = true;
               });
@@ -269,6 +264,7 @@ public class SyncService {
         if (flag) {
           peer.setBlockBothHave(blockId);
           if (peer.getSyncBlockToFetch().isEmpty()) {
+            //ignite new sync round
             syncNext(peer);
           }
         } else {
@@ -277,5 +273,4 @@ public class SyncService {
       }
     }
   }
-
 }

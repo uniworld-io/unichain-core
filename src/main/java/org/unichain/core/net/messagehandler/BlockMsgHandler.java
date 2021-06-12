@@ -43,9 +43,13 @@ public class BlockMsgHandler implements UnichainMsgHandler {
 
   private boolean fastForward = Args.getInstance().isFastForward();
 
+  /**
+   * @note handle block from peers
+   * - include fresh generated blocks & sync-request block
+   * - process sync block or fresh blocks
+   */
   @Override
   public void processMessage(PeerConnection peer, UnichainMessage msg) throws P2pException {
-
     BlockMessage blockMessage = (BlockMessage) msg;
     BlockId blockId = blockMessage.getBlockId();
 
@@ -54,6 +58,7 @@ public class BlockMsgHandler implements UnichainMsgHandler {
     }
 
     if (peer.getSyncBlockRequested().containsKey(blockId)) {
+      //if sync block: queue up block to process later & ignite next turn
       peer.getSyncBlockRequested().remove(blockId);
       syncService.processBlock(peer, blockMessage);
     } else {
@@ -61,8 +66,7 @@ public class BlockMsgHandler implements UnichainMsgHandler {
       long now = System.currentTimeMillis();
       long interval = blockId.getNum() - unichainNetDelegate.getHeadBlockId().getNum();
       processBlock(peer, blockMessage.getBlockCapsule());
-      logger.info(
-          "Receive block/interval {}/{} from {} fetch/delay {}/{}ms, txs/process {}/{}ms, witness: {}",
+      logger.info("Receive block/interval {}/{} from {} fetch/delay {}/{}ms, txs/process {}/{}ms, witness: {}",
           blockId.getNum(),
           interval,
           peer.getInetAddress(),
@@ -76,8 +80,7 @@ public class BlockMsgHandler implements UnichainMsgHandler {
 
   private void check(PeerConnection peer, BlockMessage msg) throws P2pException {
     Item item = new Item(msg.getBlockId(), InventoryType.BLOCK);
-    if (!peer.getSyncBlockRequested().containsKey(msg.getBlockId()) && !peer.getAdvInvRequest()
-        .containsKey(item)) {
+    if (!peer.getSyncBlockRequested().containsKey(msg.getBlockId()) && !peer.getAdvInvRequest().containsKey(item)) {
       throw new P2pException(TypeEnum.BAD_MESSAGE, "no request");
     }
     BlockCapsule blockCapsule = msg.getBlockCapsule();
@@ -93,8 +96,7 @@ public class BlockMsgHandler implements UnichainMsgHandler {
   private void processBlock(PeerConnection peer, BlockCapsule block) throws P2pException {
     BlockId blockId = block.getBlockId();
     if (!unichainNetDelegate.containBlock(block.getParentBlockId())) {
-      logger.warn("Get unlink block {} from {}, head is {}.", blockId.getString(),
-          peer.getInetAddress(), unichainNetDelegate.getHeadBlockId().getString());
+      logger.warn("Get unlink block {} from {}, head is {}.", blockId.getString(), peer.getInetAddress(), unichainNetDelegate.getHeadBlockId().getString());
       syncService.startSync(peer);
       return;
     }
@@ -107,8 +109,7 @@ public class BlockMsgHandler implements UnichainMsgHandler {
 
     if (fastForward) {
       if (block.getNum() < unichainNetDelegate.getHeadBlockId().getNum()) {
-        logger.warn("Receive a low block {}, head {}",
-            blockId.getString(), unichainNetDelegate.getHeadBlockId().getString());
+        logger.warn("Receive a low block {}, head {}", blockId.getString(), unichainNetDelegate.getHeadBlockId().getString());
         return;
       }
       if (unichainNetDelegate.validBlock(block)) {
@@ -129,5 +130,4 @@ public class BlockMsgHandler implements UnichainMsgHandler {
       advService.broadcast(new BlockMessage(block));
     }
   }
-
 }

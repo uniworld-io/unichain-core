@@ -219,19 +219,22 @@ public class KhaosDatabase extends UnichainDatabase {
   }
 
   /**
-   * Push the block in the KhoasDB.
+   * Push the block in the khaosDB:
+   * - never see unlink block in this db, or else throw exception
+   * - link this blocks, insert to db:
+   *  * map of khaos block
+   *  * map of [block# , list of blocks] due to diverged chain
+   * - return block that have higher#
    */
-  public BlockCapsule push(BlockCapsule blk)
-      throws UnLinkedBlockException, BadNumberBlockException {
+  public BlockCapsule push(BlockCapsule blk) throws UnLinkedBlockException, BadNumberBlockException {
     KhaosBlock block = new KhaosBlock(blk);
     if (head != null && block.getParentHash() != Sha256Hash.ZERO_HASH) {
-      KhaosBlock kblock = miniStore.getByHash(block.getParentHash());
-      if (kblock != null) {
-        if (blk.getNum() != kblock.num + 1) {
-          throw new BadNumberBlockException(
-              "parent number :" + kblock.num + ",block number :" + blk.getNum());
+      KhaosBlock parentKBlock = miniStore.getByHash(block.getParentHash());
+      if (parentKBlock != null) {
+        if (blk.getNum() != parentKBlock.num + 1) {
+          throw new BadNumberBlockException("parent number :" + parentKBlock.num + ",block number :" + blk.getNum());
         }
-        block.setParent(kblock);
+        block.setParent(parentKBlock);
       } else {
         miniUnlinkedStore.insert(block);
         throw new UnLinkedBlockException();
@@ -268,7 +271,9 @@ public class KhaosDatabase extends UnichainDatabase {
   }
 
   /**
-   * Find two block's most recent common parent block.
+   * Find 2 branches having common parent in PAIR<chain1, chain2>
+   *     - in KHAOS DB that manage all available blocks include block in main chain or fork chain
+   *     - the ONLY case that return empty branch is when 2 hashes are equal.
    */
   public Pair<LinkedList<KhaosBlock>, LinkedList<KhaosBlock>> getBranch(Sha256Hash block1,
       Sha256Hash block2)

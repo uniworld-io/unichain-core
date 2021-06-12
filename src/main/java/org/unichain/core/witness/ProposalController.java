@@ -37,17 +37,14 @@ public class ProposalController {
 
     while (proposalNum > 0) {
       try {
-        proposalCapsule = manager.getProposalStore()
-            .get(ProposalCapsule.calculateDbKey(proposalNum));
+        proposalCapsule = manager.getProposalStore().get(ProposalCapsule.calculateDbKey(proposalNum));
       } catch (Exception ex) {
         logger.error("", ex);
         continue;
       }
 
       if (proposalCapsule.hasProcessed()) {
-        logger
-            .info("Proposal has processed，id:[{}],skip it and before it",
-                proposalCapsule.getID());
+        logger.info("Proposal has processed，id:[{}],skip it and before it", proposalCapsule.getID());
         //proposals with number less than this one, have been processed before
         break;
       }
@@ -72,30 +69,20 @@ public class ProposalController {
   }
 
   public void processProposal(ProposalCapsule proposalCapsule) {
-
     List<ByteString> activeWitnesses = this.manager.getWitnessScheduleStore().getActiveWitnesses();
     if (proposalCapsule.hasMostApprovals(activeWitnesses)) {
-      logger.info(
-          "Processing proposal,id:{},it has received most approvals, "
-              + "begin to set dynamic parameter:{}, "
-              + "and set proposal state as APPROVED",
-          proposalCapsule.getID(), proposalCapsule.getParameters());
+      logger.info("Processing proposal,id:{}, it has received most approvals, begin to set dynamic parameter:{}, and set proposal state as APPROVED", proposalCapsule.getID(), proposalCapsule.getParameters());
       setDynamicParameters(proposalCapsule);
       proposalCapsule.setState(State.APPROVED);
       manager.getProposalStore().put(proposalCapsule.createDbKey(), proposalCapsule);
     } else {
-      logger.info(
-          "Processing proposal,id:{}, "
-              + "it has not received enough approvals, set proposal state as DISAPPROVED",
-          proposalCapsule.getID());
+      logger.info("Processing proposal,id:{}, it has not received enough approvals, set proposal state as DISAPPROVED", proposalCapsule.getID());
       proposalCapsule.setState(State.DISAPPROVED);
       manager.getProposalStore().put(proposalCapsule.createDbKey(), proposalCapsule);
     }
-
   }
 
   public void setDynamicParameters(ProposalCapsule proposalCapsule) {
     ProposalService.process(manager, proposalCapsule);
   }
-
 }

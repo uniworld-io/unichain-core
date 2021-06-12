@@ -120,9 +120,8 @@ public class DelegationService {
     delegationStore.setBeginCycle(address, endCycle);
     delegationStore.setEndCycle(address, endCycle + 1);
     delegationStore.setAccountVote(endCycle, address, accountCapsule);
-    logger.info("adjust {} allowance {}, now currentCycle {}, beginCycle {}, endCycle {}, "
-            + "account vote {},", Hex.toHexString(address), reward, currentCycle,
-        beginCycle, endCycle, accountCapsule.getVotesList());
+    logger.info("adjust {} allowance {}, now currentCycle {}, beginCycle {}, endCycle {}, account vote {},",
+            Hex.toHexString(address), reward, currentCycle, beginCycle, endCycle, accountCapsule.getVotesList());
   }
 
   public long queryReward(byte[] address) {

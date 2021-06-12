@@ -15,10 +15,10 @@ public class PendingManager implements AutoCloseable {
   private Manager dbManager;
 
   public PendingManager(Manager db) {
-
     this.dbManager = db;
     tmpTransactions.addAll(db.getPendingTransactions());
     db.getPendingTransactions().clear();
+    //@note when called by block generation, the session already reset so this step have no effect
     db.getSession().reset();
   }
 

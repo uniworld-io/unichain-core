@@ -157,9 +157,7 @@ public class StorageMarket {
     logger.info("newBalance： " + newBalance);
 
     long newStorageLimit = currentStorageLimit + storageBought;
-    logger.info(
-        "storageBought: " + storageBought + "  newStorageLimit: "
-            + newStorageLimit);
+    logger.info("storageBought: " + storageBought + "  newStorageLimit: " + newStorageLimit);
 
     accountCapsule.setLatestExchangeStorageTime(now);
     accountCapsule.setStorageLimit(newStorageLimit);
@@ -167,8 +165,7 @@ public class StorageMarket {
     dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
 
     long newTotalPool = dbManager.getDynamicPropertiesStore().getTotalStoragePool() + quant;
-    long newTotalReserved = dbManager.getDynamicPropertiesStore().getTotalStorageReserved()
-        - storageBought;
+    long newTotalReserved = dbManager.getDynamicPropertiesStore().getTotalStorageReserved() - storageBought;
     logger.info("newTotalPool: " + newTotalPool + "  newTotalReserved: " + newTotalReserved);
     dbManager.getDynamicPropertiesStore().saveTotalStoragePool(newTotalPool);
     dbManager.getDynamicPropertiesStore().saveTotalStorageReserved(newTotalReserved);
@@ -185,9 +182,7 @@ public class StorageMarket {
 
     long storageBought = exchange(quant, true);
     long newStorageLimit = currentStorageLimit + storageBought;
-    logger.info(
-        "storageBought: " + storageBought + "  newStorageLimit: "
-            + newStorageLimit);
+    logger.info("storageBought: " + storageBought + "  newStorageLimit: " + newStorageLimit);
 
     accountCapsule.setLatestExchangeStorageTime(now);
     accountCapsule.setStorageLimit(newStorageLimit);
@@ -195,12 +190,10 @@ public class StorageMarket {
     dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
 
     long newTotalPool = dbManager.getDynamicPropertiesStore().getTotalStoragePool() + quant;
-    long newTotalReserved = dbManager.getDynamicPropertiesStore().getTotalStorageReserved()
-        - storageBought;
+    long newTotalReserved = dbManager.getDynamicPropertiesStore().getTotalStorageReserved() - storageBought;
     logger.info("newTotalPool: " + newTotalPool + "  newTotalReserved: " + newTotalReserved);
     dbManager.getDynamicPropertiesStore().saveTotalStoragePool(newTotalPool);
     dbManager.getDynamicPropertiesStore().saveTotalStorageReserved(newTotalReserved);
-
   }
 
   public void sellStorage(AccountCapsule accountCapsule, long bytes) {
@@ -219,8 +212,7 @@ public class StorageMarket {
     dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
 
     long newTotalPool = dbManager.getDynamicPropertiesStore().getTotalStoragePool() - quant;
-    long newTotalReserved = dbManager.getDynamicPropertiesStore().getTotalStorageReserved()
-        + bytes;
+    long newTotalReserved = dbManager.getDynamicPropertiesStore().getTotalStorageReserved() + bytes;
     logger.info("newTotalPool: " + newTotalPool + "  newTotalReserved: " + newTotalReserved);
     dbManager.getDynamicPropertiesStore().saveTotalStoragePool(newTotalPool);
     dbManager.getDynamicPropertiesStore().saveTotalStorageReserved(newTotalReserved);

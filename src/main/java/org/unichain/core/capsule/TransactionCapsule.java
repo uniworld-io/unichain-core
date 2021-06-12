@@ -117,8 +117,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   @Setter
   private TransactionTrace unxTrace;
 
-  private static final ExecutorService executorService = Executors
-      .newFixedThreadPool(Args.getInstance().getValidContractProtoThreadNum());
+  private static final ExecutorService executorService = Executors.newFixedThreadPool(Args.getInstance().getValidContractProtoThreadNum());
 
   /**
    * constructor TransactionCapsule.

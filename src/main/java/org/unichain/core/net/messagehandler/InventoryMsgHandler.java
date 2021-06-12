@@ -48,8 +48,7 @@ public class InventoryMsgHandler implements UnichainMsgHandler {
     int size = inventoryMessage.getHashList().size();
 
     if (peer.isNeedSyncFromPeer() || peer.isNeedSyncFromUs()) {
-      logger.warn("Drop inv: {} size: {} from Peer {}, syncFromUs: {}, syncFromPeer: {}.",
-          type, size, peer.getInetAddress(), peer.isNeedSyncFromUs(), peer.isNeedSyncFromPeer());
+      logger.warn("Drop inv: {} size: {} from Peer {}, syncFromUs: {}, syncFromPeer: {}.", type, size, peer.getInetAddress(), peer.isNeedSyncFromUs(), peer.isNeedSyncFromPeer());
       return false;
     }
 

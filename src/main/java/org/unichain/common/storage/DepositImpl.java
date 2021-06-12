@@ -81,12 +81,9 @@ public class DepositImpl implements Deposit {
 
   @Override
   public AccountCapsule createNormalAccount(byte[] address) {
-    boolean withDefaultPermission =
-        dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
+    boolean withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
     Key key = new Key(address);
-    AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address), AccountType.Normal,
-        dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-
+    AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
     accountCache.put(key, new Value(account.getData(), Type.VALUE_TYPE_CREATE));
     return account;
   }

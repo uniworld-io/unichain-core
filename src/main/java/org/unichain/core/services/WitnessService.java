@@ -130,8 +130,7 @@ public class WitnessService implements Service {
                 timeToNextSecond = timeToNextSecond + ChainConstant.BLOCK_PRODUCED_INTERVAL;
               }
               DateTime nextTime = time.plus(timeToNextSecond);
-              logger.debug(
-                  "ProductionLoop sleep : " + timeToNextSecond + " ms,next time:" + nextTime);
+              logger.debug("ProductionLoop sleep : " + timeToNextSecond + " ms,next time:" + nextTime);
               Thread.sleep(timeToNextSecond);
             }
             this.blockProductionLoop();
@@ -146,7 +145,6 @@ public class WitnessService implements Service {
    */
   private void blockProductionLoop() throws InterruptedException {
     BlockProductionCondition result = this.tryProduceBlock();
-
     if (result == null) {
       logger.warn("Result is null");
       return;
@@ -163,19 +161,18 @@ public class WitnessService implements Service {
    * Generate and broadcast blocks
    */
   private BlockProductionCondition tryProduceBlock() throws InterruptedException {
-    logger.info("Try Produce Block");
+    logger.info("try to produce block");
     long now = DateTime.now().getMillis() + 50L;
     if (this.needSyncCheck) {
       long nexSlotTime = controller.getSlotTime(1);
-      if (nexSlotTime > now) { // check sync during first loop
+      if (nexSlotTime > now) { //check sync during first loop
         needSyncCheck = false;
         Thread.sleep(nexSlotTime - now); //Processing Time Drift later
         now = DateTime.now().getMillis();
       } else {
         logger.debug("Not sync ,now:{},headBlockTime:{},headBlockNumber:{},headBlockId:{}",
             new DateTime(now),
-            new DateTime(this.unichainApp.getDbManager().getDynamicPropertiesStore()
-                .getLatestBlockHeaderTimestamp()),
+            new DateTime(this.unichainApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderTimestamp()),
             this.unichainApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderNumber(),
             this.unichainApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderHash());
         return BlockProductionCondition.NOT_SYNCED;
@@ -192,9 +189,7 @@ public class WitnessService implements Service {
 
     final int participation = this.controller.calculateParticipationRate();
     if (participation < MIN_PARTICIPATION_RATE) {
-      logger.warn(
-          "Participation[" + participation + "] <  MIN_PARTICIPATION_RATE[" + MIN_PARTICIPATION_RATE
-              + "]");
+      logger.warn("Participation[" + participation + "] <  MIN_PARTICIPATION_RATE[" + MIN_PARTICIPATION_RATE + "]");
 
       if (logger.isDebugEnabled()) {
         this.controller.dumpParticipationLog();
@@ -204,35 +199,26 @@ public class WitnessService implements Service {
     }
 
     if (!controller.activeWitnessesContain(this.getLocalWitnessStateMap().keySet())) {
-      logger.info("Unelected. Elected Witnesses: {}",
-          StringUtil.getAddressStringList(controller.getActiveWitnesses()));
+      logger.info("Unelected. Elected Witnesses: {}", StringUtil.getAddressStringList(controller.getActiveWitnesses()));
       return BlockProductionCondition.UNELECTED;
     }
 
     try {
-
       BlockCapsule block;
-
       synchronized (unichainApp.getDbManager()) {
         long slot = controller.getSlotAtTime(now);
         logger.debug("Slot:" + slot);
         if (slot == 0) {
           logger.info("Not time yet,now:{},headBlockTime:{},headBlockNumber:{},headBlockId:{}",
               new DateTime(now),
-              new DateTime(
-                  this.unichainApp.getDbManager().getDynamicPropertiesStore()
-                      .getLatestBlockHeaderTimestamp()),
+              new DateTime(this.unichainApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderTimestamp()),
               this.unichainApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderNumber(),
               this.unichainApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderHash());
           return BlockProductionCondition.NOT_TIME_YET;
         }
 
-        if (now < controller.getManager().getDynamicPropertiesStore()
-            .getLatestBlockHeaderTimestamp()) {
-          logger.warn("have a timestamp:{} less than or equal to the previous block:{}",
-              new DateTime(now), new DateTime(
-                  this.unichainApp.getDbManager().getDynamicPropertiesStore()
-                      .getLatestBlockHeaderTimestamp()));
+        if (now < controller.getManager().getDynamicPropertiesStore().getLatestBlockHeaderTimestamp()) {
+          logger.warn("have a timestamp:{} less than or equal to the previous block:{}", new DateTime(now), new DateTime(this.unichainApp.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderTimestamp()));
           return BlockProductionCondition.EXCEPTION_PRODUCING_BLOCK;
         }
 
@@ -259,8 +245,7 @@ public class WitnessService implements Service {
 
         controller.setGeneratingBlock(true);
 
-        block = generateBlock(scheduledTime, scheduledWitness,
-            controller.lastHeadBlockIsMaintenance());
+        block = generateBlock(scheduledTime, scheduledWitness, controller.lastHeadBlockIsMaintenance());
 
         if (block == null) {
           logger.warn("exception when generate block");
@@ -269,12 +254,9 @@ public class WitnessService implements Service {
 
         int blockProducedTimeOut = Args.getInstance().getBlockProducedTimeOut();
 
-        long timeout = Math
-            .min(ChainConstant.BLOCK_PRODUCED_INTERVAL * blockProducedTimeOut / 100 + 500,
-                ChainConstant.BLOCK_PRODUCED_INTERVAL);
+        long timeout = Math.min(ChainConstant.BLOCK_PRODUCED_INTERVAL * blockProducedTimeOut / 100 + 500, ChainConstant.BLOCK_PRODUCED_INTERVAL);
         if (DateTime.now().getMillis() - now > timeout) {
-          logger.warn("Task timeout ( > {}ms)，startTime:{},endTime:{}", timeout, new DateTime(now),
-              DateTime.now());
+          logger.warn("Task timeout ( > {}ms)，startTime:{},endTime:{}", timeout, new DateTime(now), DateTime.now());
           unichainApp.getDbManager().eraseBlock();
           return BlockProductionCondition.TIME_OUT;
         }
@@ -320,12 +302,10 @@ public class WitnessService implements Service {
     }
   }
 
-  private BlockCapsule generateBlock(long when, ByteString witnessAddress,
-      Boolean lastHeadBlockIsMaintenance)
+  private BlockCapsule generateBlock(long when, ByteString witnessAddress, Boolean lastHeadBlockIsMaintenance)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException {
-    return unichainApp.getDbManager().generateBlock(this.localWitnessStateMap.get(witnessAddress), when,
-        this.privateKeyMap.get(witnessAddress), lastHeadBlockIsMaintenance, true);
+    return unichainApp.getDbManager().generateBlock(this.localWitnessStateMap.get(witnessAddress), when, this.privateKeyMap.get(witnessAddress), lastHeadBlockIsMaintenance, true);
   }
 
   private boolean dupWitnessCheck() {

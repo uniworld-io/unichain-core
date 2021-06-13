@@ -23,7 +23,8 @@ public class Parameter {
     public static final int BLOCK_FILLED_SLOTS_NUMBER = 56; 
     public static final int MAX_VOTE_NUMBER = 30;
     public static final int MAX_FROZEN_NUMBER = 1;
-    public static final int BLOCK_VERSION = 1;//@note @todo declare new fork version
+    public static final int BLOCK_VERSION = 1;
+    public static final int BLOCK_VERSION_2 = 2;
   }
 
   public class NodeConstant {
@@ -76,7 +77,8 @@ public class Parameter {
 
   //@note @todo declare new fork block version
   public enum ForkBlockVersionEnum {
-    VERSION_1_0(1);
+    VERSION_1_0(1),
+    VERSION_2_0(2);
 
     @Getter
     private int value;

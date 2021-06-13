@@ -513,12 +513,15 @@ public class Manager {
   public void initGenesis() {
     this.genesisBlock = BlockUtil.newGenesisBlockCapsule();
     if (this.containBlock(this.genesisBlock.getBlockId())) {
+      //if genesis block exist > set chain id as common genesis block
       Args.getInstance().setChainId(this.genesisBlock.getBlockId().toString());
     } else {
       if (this.hasBlocks()) {
+        //block tree diverged > must reset current chain dbs
         logger.error("genesis block modify, please delete database directory({}) and restart", Args.getInstance().getOutputDirectory());
         System.exit(1);
       } else {
+        //empty node
         logger.info("create genesis block");
         Args.getInstance().setChainId(this.genesisBlock.getBlockId().toString());
 
@@ -808,6 +811,10 @@ public class Manager {
       headBlockNumber = blockCapsule.getNum();
       return headBlockNumber >= hardForkBlockNumber;
     }
+  }
+
+  private boolean useHardForkVersionWhenGenerateBlock(long blockNumber){
+    return blockNumber >= Args.getInstance().getHardforkBlockNumber();
   }
 
 
@@ -1331,8 +1338,8 @@ public class Manager {
     }
 
     long postponedUnxCount = 0;
-
-    final BlockCapsule blockCapsule = new BlockCapsule(number + 1, preHash, when, witnessCapsule.getAddress());
+    int blockVersion = useHardForkVersionWhenGenerateBlock(number + 1) ? ChainConstant.BLOCK_VERSION_2 : ChainConstant.BLOCK_VERSION;
+    final BlockCapsule blockCapsule = new BlockCapsule(blockVersion, number + 1, preHash, when, witnessCapsule.getAddress());
     blockCapsule.generatedByMyself = true;
     /*
       @note

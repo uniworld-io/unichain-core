@@ -34,31 +34,25 @@ public class BlockUtil {
    * create genesis block from transactions.
    */
   public static BlockCapsule newGenesisBlockCapsule() {
-
     Args args = Args.getInstance();
     GenesisBlock genesisBlockArg = args.getGenesisBlock();
-    List<Transaction> transactionList =
-        genesisBlockArg.getAssets().stream()
-            .map(key -> {
-              byte[] address = key.getAddress();
-              long balance = key.getBalance();
-              return TransactionUtil.newGenesisTransaction(address, balance);
-            })
-            .collect(Collectors.toList());
+    List<Transaction> transactionList = genesisBlockArg.getAssets().stream()
+                                                        .map(key -> {
+                                                          byte[] address = key.getAddress();
+                                                          long balance = key.getBalance();
+                                                          return TransactionUtil.newGenesisTransaction(address, balance);
+                                                        })
+                                                        .collect(Collectors.toList());
 
     long timestamp = Long.parseLong(genesisBlockArg.getTimestamp());
-    ByteString parentHash =
-        ByteString.copyFrom(ByteArray.fromHexString(genesisBlockArg.getParentHash()));
+    ByteString parentHash = ByteString.copyFrom(ByteArray.fromHexString(genesisBlockArg.getParentHash()));
     long number = Long.parseLong(genesisBlockArg.getNumber());
 
     BlockCapsule blockCapsule = new BlockCapsule(timestamp, parentHash, number, transactionList);
 
     blockCapsule.setMerkleRoot();
-    blockCapsule.setWitness(
-        "A new system must allow existing systems to be linked together without "
-            + "requiring any central control or coordination");
+    blockCapsule.setWitness("A new system must allow existing systems to be linked together without " + "requiring any central control or coordination");
     blockCapsule.generatedByMyself = true;
-
     return blockCapsule;
   }
 
@@ -69,13 +63,10 @@ public class BlockUtil {
     return blockCapsule1.getBlockId().equals(blockCapsule2.getParentHash());
   }
 
-  public static BlockCapsule createTestBlockCapsule(Manager dbManager, long time,
-      long number, ByteString hash, Map<ByteString, String> addressToProvateKeys) {
+  public static BlockCapsule createTestBlockCapsule(Manager dbManager, long time, int version, long number, ByteString hash, Map<ByteString, String> addressToProvateKeys) {
     WitnessController witnessController = dbManager.getWitnessController();
-    ByteString witnessAddress =
-        witnessController.getScheduledWitness(witnessController.getSlotAtTime(time));
-    BlockCapsule blockCapsule = new BlockCapsule(number, Sha256Hash.wrap(hash), time,
-        witnessAddress);
+    ByteString witnessAddress = witnessController.getScheduledWitness(witnessController.getSlotAtTime(time));
+    BlockCapsule blockCapsule = new BlockCapsule(version, number, Sha256Hash.wrap(hash), time, witnessAddress);
     blockCapsule.generatedByMyself = true;
     blockCapsule.setMerkleRoot();
     blockCapsule.sign(ByteArray.fromHexString(addressToProvateKeys.get(witnessAddress)));

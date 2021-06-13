@@ -129,14 +129,13 @@ public class BlockCapsule implements ProtoCapsule<Block> {
   public boolean generatedByMyself = false;
   private List<TransactionCapsule> transactions = new ArrayList<>();
 
-  public BlockCapsule(long number, Sha256Hash hash, long when, ByteString witnessAddress) {
-    // blockheader raw
+  public BlockCapsule(int version, long number, Sha256Hash hash, long when, ByteString witnessAddress) {
     BlockHeader.raw.Builder blockHeaderRawBuild = BlockHeader.raw.newBuilder();
     BlockHeader.raw blockHeaderRaw = blockHeaderRawBuild
         .setNumber(number)
         .setParentHash(hash.getByteString())
         .setTimestamp(when)
-        .setVersion(ChainConstant.BLOCK_VERSION)
+        .setVersion(version)
         .setWitnessAddress(witnessAddress)
         .build();
 
@@ -150,10 +149,10 @@ public class BlockCapsule implements ProtoCapsule<Block> {
     initTxs();
   }
 
-
-  public BlockCapsule(long timestamp, ByteString parentHash, long number,
-      List<Transaction> transactionList) {
-    // blockheader raw
+  /*
+    used when create genesis block
+   */
+  public BlockCapsule(long timestamp, ByteString parentHash, long number, List<Transaction> transactionList) {
     BlockHeader.raw.Builder blockHeaderRawBuild = BlockHeader.raw.newBuilder();
     BlockHeader.raw blockHeaderRaw = blockHeaderRawBuild
         .setTimestamp(timestamp)

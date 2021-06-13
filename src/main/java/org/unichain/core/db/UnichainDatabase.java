@@ -1,9 +1,6 @@
 package org.unichain.core.db;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.nio.file.Paths;
-import java.util.Iterator;
-import java.util.Map.Entry;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +12,10 @@ import org.unichain.core.db.api.IndexHelper;
 import org.unichain.core.db2.core.IUnichainChainBase;
 import org.unichain.core.exception.BadItemException;
 import org.unichain.core.exception.ItemNotFoundException;
+
+import java.nio.file.Paths;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 @Slf4j(topic = "DB")
 public abstract class UnichainDatabase<T> implements IUnichainChainBase<T> {

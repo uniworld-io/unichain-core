@@ -8,28 +8,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.unichain.common.application.Service;
 import org.unichain.core.config.args.Args;
-import org.unichain.core.services.interfaceOnSolidity.http.GetAccountByIdOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetAccountOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetAssetIssueByIdOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetAssetIssueByNameOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetAssetIssueListByNameOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetAssetIssueListOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetBlockByIdOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetBlockByLatestNumOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetBlockByLimitNextOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetBlockByNumOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetBrokerageOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetDelegatedResourceAccountIndexOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetDelegatedResourceOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetExchangeByIdOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetNodeInfoOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetNowBlockOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetPaginatedAssetIssueListOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetRewardOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.GetTransactionCountByBlockNumOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.ListExchangesOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.ListWitnessesOnSolidityServlet;
-import org.unichain.core.services.interfaceOnSolidity.http.TriggerConstantContractOnSolidityServlet;
+import org.unichain.core.services.interfaceOnSolidity.http.*;
 
 @Slf4j(topic = "API")
 public class HttpApiOnSolidityService implements Service {
@@ -62,15 +41,13 @@ public class HttpApiOnSolidityService implements Service {
   @Autowired
   private GetDelegatedResourceOnSolidityServlet getDelegatedResourceOnSolidityServlet;
   @Autowired
-  private GetDelegatedResourceAccountIndexOnSolidityServlet
-      getDelegatedResourceAccountIndexOnSolidityServlet;
+  private GetDelegatedResourceAccountIndexOnSolidityServlet getDelegatedResourceAccountIndexOnSolidityServlet;
   @Autowired
   private GetExchangeByIdOnSolidityServlet getExchangeByIdOnSolidityServlet;
   @Autowired
   private ListExchangesOnSolidityServlet listExchangesOnSolidityServlet;
   @Autowired
-  private GetTransactionCountByBlockNumOnSolidityServlet
-      getTransactionCountByBlockNumOnSolidityServlet;
+  private GetTransactionCountByBlockNumOnSolidityServlet getTransactionCountByBlockNumOnSolidityServlet;
   @Autowired
   private GetAssetIssueByNameOnSolidityServlet getAssetIssueByNameOnSolidityServlet;
   @Autowired

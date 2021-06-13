@@ -17,10 +17,11 @@
  */
 package org.unichain.common.runtime.vm.program;
 
-import java.util.Objects;
 import org.unichain.common.runtime.vm.DataWord;
 import org.unichain.common.runtime.vm.program.listener.ProgramListener;
 import org.unichain.common.runtime.vm.program.listener.ProgramListenerAware;
+
+import java.util.Objects;
 
 public class Stack extends java.util.Stack<DataWord> implements ProgramListenerAware {
 

@@ -17,8 +17,9 @@
  */
 package org.unichain.common.net.udp.handler;
 
-import java.net.InetSocketAddress;
 import org.unichain.common.net.udp.message.Message;
+
+import java.net.InetSocketAddress;
 
 public class UdpEvent {
 

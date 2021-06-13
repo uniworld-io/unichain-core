@@ -1,8 +1,9 @@
 package org.unichain.core.db2.common;
 
-import java.util.Arrays;
 import lombok.EqualsAndHashCode;
 import org.unichain.core.db.common.WrappedByteArray;
+
+import java.util.Arrays;
 
 @EqualsAndHashCode
 public final class Key {

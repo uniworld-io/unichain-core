@@ -1,9 +1,6 @@
 package org.unichain.program;
 
 import com.beust.jcommander.JCommander;
-import java.io.File;
-import java.io.IOException;
-import java.util.Scanner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.unichain.common.crypto.ECKey;
@@ -14,6 +11,10 @@ import org.unichain.core.config.args.Args;
 import org.unichain.keystore.CipherException;
 import org.unichain.keystore.Credentials;
 import org.unichain.keystore.WalletUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Scanner;
 
 @Slf4j(topic = "app")
 public class KeystoreFactory {

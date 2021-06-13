@@ -1,17 +1,6 @@
 package org.unichain.common.backup;
 
-import static org.unichain.common.backup.BackupManager.BackupStatusEnum.INIT;
-import static org.unichain.common.backup.BackupManager.BackupStatusEnum.MASTER;
-import static org.unichain.common.backup.BackupManager.BackupStatusEnum.SLAVER;
-import static org.unichain.common.net.udp.message.UdpMessageTypeEnum.BACKUP_KEEP_ALIVE;
-
 import io.netty.util.internal.ConcurrentSet;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.unichain.common.net.udp.handler.EventHandler;
@@ -20,6 +9,16 @@ import org.unichain.common.net.udp.handler.UdpEvent;
 import org.unichain.common.net.udp.message.Message;
 import org.unichain.common.net.udp.message.backup.KeepAliveMessage;
 import org.unichain.core.config.args.Args;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static org.unichain.common.backup.BackupManager.BackupStatusEnum.*;
+import static org.unichain.common.net.udp.message.UdpMessageTypeEnum.BACKUP_KEEP_ALIVE;
 
 @Slf4j(topic = "backup")
 @Component

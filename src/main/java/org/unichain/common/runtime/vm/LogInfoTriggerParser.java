@@ -1,9 +1,5 @@
 package org.unichain.common.runtime.vm;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +10,11 @@ import org.unichain.common.storage.Deposit;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.ContractCapsule;
 import org.unichain.protos.Protocol.SmartContract.ABI;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class LogInfoTriggerParser {

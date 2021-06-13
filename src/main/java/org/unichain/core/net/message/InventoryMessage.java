@@ -1,13 +1,14 @@
 package org.unichain.core.net.message;
 
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.unichain.common.utils.Sha256Hash;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Inventory;
 import org.unichain.protos.Protocol.Inventory.InventoryType;
+
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class InventoryMessage extends UnichainMessage {

@@ -18,17 +18,18 @@
 
 package org.unichain.common.crypto;
 
-import static java.util.Arrays.copyOfRange;
-import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
+import lombok.extern.slf4j.Slf4j;
+import org.unichain.common.crypto.jce.UnichainCastleProvider;
+import org.unichain.core.Wallet;
+import org.unichain.core.capsule.utils.RLP;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.Security;
-import lombok.extern.slf4j.Slf4j;
-import org.unichain.common.crypto.jce.UnichainCastleProvider;
-import org.unichain.core.Wallet;
-import org.unichain.core.capsule.utils.RLP;
+
+import static java.util.Arrays.copyOfRange;
+import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
 
 @Slf4j(topic = "crypto")
 public class Hash {

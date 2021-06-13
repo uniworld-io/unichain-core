@@ -18,11 +18,12 @@
 
 package org.unichain.common.overlay.discover;
 
+import org.unichain.common.overlay.discover.node.NodeManager;
+import org.unichain.common.overlay.discover.table.KademliaOptions;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import org.unichain.common.overlay.discover.node.NodeManager;
-import org.unichain.common.overlay.discover.table.KademliaOptions;
 
 public class DiscoveryExecutor {
 

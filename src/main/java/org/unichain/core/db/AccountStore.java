@@ -1,9 +1,6 @@
 package org.unichain.core.db;
 
 import com.typesafe.config.ConfigObject;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +10,10 @@ import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.db.accountstate.callback.AccountStateCallBack;
 import org.unichain.core.db.accountstate.storetrie.AccountStateStoreTrie;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j(topic = "DB")
 @Component

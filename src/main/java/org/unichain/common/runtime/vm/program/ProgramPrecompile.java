@@ -17,12 +17,13 @@
  */
 package org.unichain.common.runtime.vm.program;
 
-import java.util.HashSet;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.runtime.vm.DataWord;
 import org.unichain.common.runtime.vm.OpCode;
+
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Slf4j(topic = "VM")

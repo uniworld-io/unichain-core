@@ -3,13 +3,14 @@ package org.unichain.common.overlay.message;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import java.util.List;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.unichain.common.overlay.server.Channel;
 import org.unichain.core.exception.P2pException;
 import org.unichain.core.net.message.MessageTypes;
 import org.unichain.core.net.message.UnichainMessageFactory;
+
+import java.util.List;
 
 @Component
 @Scope("prototype")

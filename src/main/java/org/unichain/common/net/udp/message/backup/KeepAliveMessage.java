@@ -1,10 +1,10 @@
 package org.unichain.common.net.udp.message.backup;
 
-import static org.unichain.common.net.udp.message.UdpMessageTypeEnum.BACKUP_KEEP_ALIVE;
-
 import org.unichain.common.net.udp.message.Message;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.protos.Discover;
+
+import static org.unichain.common.net.udp.message.UdpMessageTypeEnum.BACKUP_KEEP_ALIVE;
 
 public class KeepAliveMessage extends Message {
 

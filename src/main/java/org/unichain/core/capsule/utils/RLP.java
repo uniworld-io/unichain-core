@@ -1,25 +1,19 @@
 
 package org.unichain.core.capsule.utils;
 
-import static java.util.Arrays.copyOfRange;
-import static org.spongycastle.util.Arrays.concatenate;
-import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
-import static org.unichain.common.utils.ByteUtil.byteArrayToInt;
-import static org.unichain.common.utils.ByteUtil.intToBytesNoLeadZeroes;
-import static org.unichain.common.utils.ByteUtil.isNullOrZeroArray;
-import static org.unichain.common.utils.ByteUtil.isSingleZero;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.unichain.common.utils.ByteUtil;
 import org.unichain.common.utils.Value;
+
+import java.math.BigInteger;
+import java.util.*;
+
+import static java.util.Arrays.copyOfRange;
+import static org.spongycastle.util.Arrays.concatenate;
+import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
+import static org.unichain.common.utils.ByteUtil.*;
 
 /**
  * Recursive Length Prefix (RLP) encoding.

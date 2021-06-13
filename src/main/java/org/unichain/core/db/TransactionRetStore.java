@@ -1,7 +1,6 @@
 package org.unichain.core.db;
 
 import com.google.protobuf.ByteString;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +12,8 @@ import org.unichain.core.capsule.TransactionRetCapsule;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.exception.BadItemException;
 import org.unichain.protos.Protocol.TransactionInfo;
+
+import java.util.Objects;
 
 @Slf4j(topic = "DB")
 @Component

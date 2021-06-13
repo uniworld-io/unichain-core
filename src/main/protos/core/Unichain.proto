@@ -73,6 +73,12 @@ message Account {
     int64 frozen_balance = 1; // the frozen unx balance
     int64 expire_time = 2; // the expire time
   }
+
+  /* future transfer balance */
+    message Future {
+      int64 future_balance = 1; // the future unx balance
+      int64 expire_time = 2; // the expire time
+    }
   // account nick name
   bytes account_name = 1;
   AccountType type = 2;
@@ -148,6 +154,9 @@ message Account {
   Permission owner_permission = 31;
   Permission witness_permission = 32;
   repeated Permission active_permission = 33;
+
+  // frozen asset(for asset issuer)
+  repeated Future future_supply = 34;
 }
 
 
@@ -274,6 +283,8 @@ message Transaction {
       AccountPermissionUpdateContract = 46;
       ClearABIContract = 48;
       UpdateBrokerageContract = 49;
+      FutureTransferContract = 50;
+      FutureWithdrawContract = 51;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;

@@ -1,7 +1,5 @@
 package org.unichain.core.net.messagehandler;
 
-import java.util.LinkedList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +13,9 @@ import org.unichain.core.net.message.ChainInventoryMessage;
 import org.unichain.core.net.message.SyncBlockChainMessage;
 import org.unichain.core.net.message.UnichainMessage;
 import org.unichain.core.net.peer.PeerConnection;
+
+import java.util.LinkedList;
+import java.util.List;
 
 @Slf4j(topic = "net")
 @Component

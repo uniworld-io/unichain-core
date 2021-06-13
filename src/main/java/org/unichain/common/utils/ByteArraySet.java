@@ -19,11 +19,12 @@
 package org.unichain.common.utils;
 
 
+import org.unichain.core.db.ByteArrayWrapper;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import org.unichain.core.db.ByteArrayWrapper;
 
 
 public class ByteArraySet implements Set<byte[]> {

@@ -2,9 +2,6 @@ package org.unichain.core.capsule;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.unichain.common.runtime.vm.LogInfo;
@@ -17,6 +14,10 @@ import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.TransactionInfo;
 import org.unichain.protos.Protocol.TransactionInfo.Log;
 import org.unichain.protos.Protocol.TransactionInfo.code;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Slf4j(topic = "capsule")
 public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {

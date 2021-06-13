@@ -1,9 +1,5 @@
 package org.unichain.core.net.messagehandler;
 
-import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
-import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_SIZE;
-
-import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +18,9 @@ import org.unichain.core.net.service.AdvService;
 import org.unichain.core.net.service.SyncService;
 import org.unichain.core.services.WitnessProductBlockService;
 import org.unichain.protos.Protocol.Inventory.InventoryType;
+
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_SIZE;
 
 @Slf4j(topic = "net")
 @Component

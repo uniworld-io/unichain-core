@@ -18,16 +18,16 @@
 
 package org.unichain.common.utils;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 import static java.util.Arrays.copyOf;
 import static java.util.Arrays.copyOfRange;
 import static org.spongycastle.util.Arrays.concatenate;
 import static org.spongycastle.util.encoders.Hex.encode;
 import static org.unichain.common.utils.ByteUtil.appendByte;
-
-import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class CompactEncoder {

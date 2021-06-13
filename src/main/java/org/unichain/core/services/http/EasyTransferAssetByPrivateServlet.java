@@ -1,13 +1,6 @@
 package org.unichain.core.services.http;
 
 import com.google.protobuf.ByteString;
-
-import java.io.IOException;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,6 +13,12 @@ import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.protos.Contract.TransferAssetContract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.stream.Collectors;
 
 
 @Component

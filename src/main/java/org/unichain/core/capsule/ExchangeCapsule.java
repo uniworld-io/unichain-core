@@ -2,12 +2,13 @@ package org.unichain.core.capsule;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.capsule.utils.ExchangeProcessor;
 import org.unichain.core.db.Manager;
 import org.unichain.protos.Protocol.Exchange;
+
+import java.util.Arrays;
 
 @Slf4j(topic = "capsule")
 public class ExchangeCapsule implements ProtoCapsule<Exchange> {

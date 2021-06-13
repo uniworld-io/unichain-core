@@ -18,10 +18,6 @@
 
 package org.unichain.common.overlay.discover.node;
 
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.net.udp.handler.UdpEvent;
 import org.unichain.common.net.udp.message.Message;
@@ -30,7 +26,11 @@ import org.unichain.common.net.udp.message.discover.NeighborsMessage;
 import org.unichain.common.net.udp.message.discover.PingMessage;
 import org.unichain.common.net.udp.message.discover.PongMessage;
 import org.unichain.common.overlay.discover.node.statistics.NodeStatistics;
-import org.unichain.core.config.args.Args;
+
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j(topic = "discover")
 public class NodeHandler {

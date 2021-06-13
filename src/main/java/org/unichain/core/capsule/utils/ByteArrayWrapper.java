@@ -1,10 +1,10 @@
 
 package org.unichain.core.capsule.utils;
 
-import static org.unichain.common.utils.ByteUtil.toHexString;
-
 import java.io.Serializable;
 import java.util.Arrays;
+
+import static org.unichain.common.utils.ByteUtil.toHexString;
 
 /**
  */

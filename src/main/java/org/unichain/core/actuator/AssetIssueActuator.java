@@ -18,9 +18,6 @@ package org.unichain.core.actuator;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
@@ -36,7 +33,10 @@ import org.unichain.protos.Contract.AssetIssueContract.FrozenSupply;
 import org.unichain.protos.Protocol.Account.Frozen;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-//@todo review new fee policy affect
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 @Slf4j(topic = "actuator")
 public class AssetIssueActuator extends AbstractActuator {
 
@@ -120,7 +120,6 @@ public class AssetIssueActuator extends AbstractActuator {
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-
     return true;
   }
 

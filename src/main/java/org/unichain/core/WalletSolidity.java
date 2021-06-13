@@ -1,21 +1,15 @@
 package org.unichain.core;
 
 import com.google.protobuf.ByteString;
-import java.util.List;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.api.GrpcAPI.TransactionList;
 import org.unichain.common.utils.ByteArray;
-import org.unichain.core.capsule.TransactionInfoCapsule;
-import org.unichain.core.db.Manager;
 import org.unichain.core.db.api.StoreAPI;
-import org.unichain.core.exception.BadItemException;
-import org.unichain.core.exception.NonUniqueObjectException;
-import org.unichain.core.exception.StoreException;
 import org.unichain.protos.Protocol.Transaction;
-import org.unichain.protos.Protocol.TransactionInfo;
+
+import java.util.List;
 
 @Slf4j
 @Component

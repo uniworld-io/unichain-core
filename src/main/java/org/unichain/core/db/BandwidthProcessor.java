@@ -1,10 +1,6 @@
 package org.unichain.core.db;
 
-import static org.unichain.protos.Protocol.Transaction.Contract.ContractType.TransferAssetContract;
-
 import com.google.protobuf.ByteString;
-import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.Constant;
@@ -17,6 +13,11 @@ import org.unichain.core.exception.TooBigTransactionResultException;
 import org.unichain.protos.Contract.TransferAssetContract;
 import org.unichain.protos.Contract.TransferContract;
 import org.unichain.protos.Protocol.Transaction.Contract;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.unichain.protos.Protocol.Transaction.Contract.ContractType.TransferAssetContract;
 
 @Slf4j(topic = "DB")
 public class BandwidthProcessor extends ResourceProcessor {

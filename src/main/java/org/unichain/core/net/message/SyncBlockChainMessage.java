@@ -1,8 +1,9 @@
 package org.unichain.core.net.message;
 
-import java.util.List;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
 import org.unichain.protos.Protocol.BlockInventory.Type;
+
+import java.util.List;
 
 public class SyncBlockChainMessage extends BlockInventoryMessage {
 

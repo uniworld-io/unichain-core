@@ -19,22 +19,19 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.db.Manager;
 import org.unichain.protos.Contract.AccountCreateContract;
 import org.unichain.protos.Contract.AccountUpdateContract;
-import org.unichain.protos.Protocol.Account;
+import org.unichain.protos.Protocol.*;
 import org.unichain.protos.Protocol.Account.AccountResource;
 import org.unichain.protos.Protocol.Account.Builder;
 import org.unichain.protos.Protocol.Account.Frozen;
-import org.unichain.protos.Protocol.AccountType;
-import org.unichain.protos.Protocol.Key;
-import org.unichain.protos.Protocol.Permission;
 import org.unichain.protos.Protocol.Permission.PermissionType;
-import org.unichain.protos.Protocol.Vote;
+
+import java.util.List;
+import java.util.Map;
 
 @Slf4j(topic = "capsule")
 public class AccountCapsule implements ProtoCapsule<Account>, Comparable<AccountCapsule> {
@@ -692,8 +689,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public long getFrozenBalance() {
     List<Frozen> frozenList = getFrozenList();
     final long[] frozenBalance = {0};
-    frozenList.forEach(frozen -> frozenBalance[0] = Long.sum(frozenBalance[0],
-        frozen.getFrozenBalance()));
+    frozenList.forEach(frozen -> frozenBalance[0] = Long.sum(frozenBalance[0], frozen.getFrozenBalance()));
     return frozenBalance[0];
   }
 
@@ -709,12 +705,26 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return getInstance().getFrozenSupplyList();
   }
 
+  public int getFutureSupplyCount() {
+    return getInstance().getFutureSupplyCount();
+  }
+
+  public List<Account.Future> getFutureSupplyList() {
+    return getInstance().getFutureSupplyList();
+  }
+
   public long getFrozenSupplyBalance() {
     List<Frozen> frozenSupplyList = getFrozenSupplyList();
     final long[] frozenSupplyBalance = {0};
-    frozenSupplyList.forEach(frozen -> frozenSupplyBalance[0] = Long.sum(frozenSupplyBalance[0],
-        frozen.getFrozenBalance()));
+    frozenSupplyList.forEach(frozen -> frozenSupplyBalance[0] = Long.sum(frozenSupplyBalance[0], frozen.getFrozenBalance()));
     return frozenSupplyBalance[0];
+  }
+
+  public long getFutureSupplyBalance() {
+    List<Account.Future> futureSupplyList = getFutureSupplyList();
+    final long[] futureSupplyBalance = {0};
+    futureSupplyList.forEach(future -> futureSupplyBalance[0] = Long.sum(futureSupplyBalance[0], future.getFutureBalance()));
+    return futureSupplyBalance[0];
   }
 
   public ByteString getAssetIssuedName() {

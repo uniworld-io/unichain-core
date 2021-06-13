@@ -15,10 +15,6 @@
 
 package org.unichain.core.db;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +23,11 @@ import org.unichain.common.utils.Sha256Hash;
 import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
 import org.unichain.core.exception.BadItemException;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j(topic = "DB")
 @Component

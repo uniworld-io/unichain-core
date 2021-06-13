@@ -1,9 +1,10 @@
 package org.unichain.core.net.message;
 
-import java.util.List;
 import org.unichain.common.utils.Sha256Hash;
 import org.unichain.protos.Protocol.Inventory;
 import org.unichain.protos.Protocol.Inventory.InventoryType;
+
+import java.util.List;
 
 public class TransactionInventoryMessage extends InventoryMessage {
 

@@ -1,8 +1,9 @@
 
 package org.unichain.core.capsule.utils;
 
-import java.util.ArrayList;
 import org.unichain.common.utils.ByteUtil;
+
+import java.util.ArrayList;
 
 /**
  */

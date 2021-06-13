@@ -17,13 +17,7 @@
  */
 package org.unichain.common.runtime.vm.program;
 
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
-
 import com.google.common.primitives.Longs;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.unichain.common.crypto.Hash;
@@ -34,6 +28,13 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.CreateSmartContract;
 import org.unichain.protos.Contract.TriggerSmartContract;
 import org.unichain.protos.Protocol.Transaction;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
 
 public class InternalTransaction {
 

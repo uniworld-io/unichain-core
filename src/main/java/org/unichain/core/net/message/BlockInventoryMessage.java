@@ -1,11 +1,12 @@
 package org.unichain.core.net.message;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.BlockInventory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class BlockInventoryMessage extends UnichainMessage {
 

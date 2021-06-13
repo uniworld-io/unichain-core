@@ -1,15 +1,15 @@
 package org.unichain.core.db2.common;
 
 import com.google.common.collect.Maps;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
-import org.iq80.leveldb.WriteOptions;
 import org.unichain.common.storage.WriteOptionsWrapper;
 import org.unichain.common.storage.leveldb.LevelDbDataSourceImpl;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.common.WrappedByteArray;
 import org.unichain.core.db.common.iterator.DBIterator;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class LevelDB implements DB<byte[], byte[]>, Flusher {
 

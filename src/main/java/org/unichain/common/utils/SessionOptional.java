@@ -1,8 +1,8 @@
 package org.unichain.common.utils;
 
-import java.util.Optional;
-
 import org.unichain.core.db2.core.ISession;
+
+import java.util.Optional;
 
 public final class SessionOptional {
 

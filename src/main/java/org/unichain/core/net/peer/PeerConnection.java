@@ -2,15 +2,6 @@ package org.unichain.core.net.peer;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.TimeUnit;
 import javafx.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.unichain.common.overlay.discover.node.statistics.NodeStatistics.SimpleStatter;
 import org.unichain.common.overlay.message.HelloMessage;
 import org.unichain.common.overlay.message.Message;
 import org.unichain.common.overlay.server.Channel;
@@ -28,6 +18,14 @@ import org.unichain.core.config.Parameter.NodeConstant;
 import org.unichain.core.net.UnichainNetDelegate;
 import org.unichain.core.net.service.AdvService;
 import org.unichain.core.net.service.SyncService;
+
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j(topic = "net")
 @Component

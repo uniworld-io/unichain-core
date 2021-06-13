@@ -1,7 +1,8 @@
 package org.unichain.core.db2.common;
 
-import java.util.Map;
 import org.unichain.core.db.common.WrappedByteArray;
+
+import java.util.Map;
 
 public interface Flusher {
 

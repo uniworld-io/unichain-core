@@ -1,10 +1,5 @@
 package org.unichain.core.net.messagehandler;
 
-import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
-
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +14,12 @@ import org.unichain.core.net.message.ChainInventoryMessage;
 import org.unichain.core.net.message.UnichainMessage;
 import org.unichain.core.net.peer.PeerConnection;
 import org.unichain.core.net.service.SyncService;
+
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
+
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
 
 @Slf4j(topic = "net")
 @Component

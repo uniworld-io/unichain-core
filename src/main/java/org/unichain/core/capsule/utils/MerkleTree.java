@@ -1,11 +1,12 @@
 package org.unichain.core.capsule.utils;
 
+import lombok.Getter;
+import org.unichain.common.utils.Sha256Hash;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import lombok.Getter;
-import org.unichain.common.utils.Sha256Hash;
 
 @Getter
 public class MerkleTree {

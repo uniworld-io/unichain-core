@@ -1,10 +1,6 @@
 package org.unichain.common.net.udp.message.discover;
 
-import static org.unichain.common.net.udp.message.UdpMessageTypeEnum.DISCOVER_NEIGHBORS;
-
 import com.google.protobuf.ByteString;
-import java.util.ArrayList;
-import java.util.List;
 import org.unichain.common.net.udp.message.Message;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.common.utils.ByteArray;
@@ -12,6 +8,11 @@ import org.unichain.protos.Discover;
 import org.unichain.protos.Discover.Endpoint;
 import org.unichain.protos.Discover.Neighbours;
 import org.unichain.protos.Discover.Neighbours.Builder;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.unichain.common.net.udp.message.UdpMessageTypeEnum.DISCOVER_NEIGHBORS;
 
 public class NeighborsMessage extends Message {
 

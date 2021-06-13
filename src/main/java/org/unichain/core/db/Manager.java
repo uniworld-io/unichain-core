@@ -1,8 +1,5 @@
 package org.unichain.core.db;
 
-import static org.unichain.core.config.Parameter.ChainConstant.SOLIDIFIED_THRESHOLD;
-import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PENDING;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
@@ -13,30 +10,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 import javafx.util.Pair;
-import javax.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -55,21 +29,10 @@ import org.unichain.common.logsfilter.trigger.ContractTrigger;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.common.overlay.message.Message;
 import org.unichain.common.runtime.config.VMConfig;
-import org.unichain.common.utils.ByteArray;
-import org.unichain.common.utils.ForkController;
-import org.unichain.common.utils.SessionOptional;
-import org.unichain.common.utils.Sha256Hash;
-import org.unichain.common.utils.StringUtil;
+import org.unichain.common.utils.*;
 import org.unichain.core.Constant;
-import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.BlockCapsule;
+import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
-import org.unichain.core.capsule.BytesCapsule;
-import org.unichain.core.capsule.ExchangeCapsule;
-import org.unichain.core.capsule.TransactionCapsule;
-import org.unichain.core.capsule.TransactionInfoCapsule;
-import org.unichain.core.capsule.TransactionRetCapsule;
-import org.unichain.core.capsule.WitnessCapsule;
 import org.unichain.core.capsule.utils.BlockUtil;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.config.args.Args;
@@ -81,37 +44,29 @@ import org.unichain.core.db.api.AssetUpdateHelper;
 import org.unichain.core.db2.core.ISession;
 import org.unichain.core.db2.core.IUnichainChainBase;
 import org.unichain.core.db2.core.SnapshotManager;
-import org.unichain.core.exception.AccountResourceInsufficientException;
-import org.unichain.core.exception.BadBlockException;
-import org.unichain.core.exception.BadItemException;
-import org.unichain.core.exception.BadNumberBlockException;
-import org.unichain.core.exception.BalanceInsufficientException;
-import org.unichain.core.exception.ContractExeException;
-import org.unichain.core.exception.ContractSizeNotEqualToOneException;
-import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.exception.DupTransactionException;
-import org.unichain.core.exception.HeaderNotFound;
-import org.unichain.core.exception.ItemNotFoundException;
-import org.unichain.core.exception.NonCommonBlockException;
-import org.unichain.core.exception.ReceiptCheckErrException;
-import org.unichain.core.exception.TaposException;
-import org.unichain.core.exception.TooBigTransactionException;
-import org.unichain.core.exception.TooBigTransactionResultException;
-import org.unichain.core.exception.TransactionExpirationException;
-import org.unichain.core.exception.UnLinkedBlockException;
-import org.unichain.core.exception.VMIllegalException;
-import org.unichain.core.exception.ValidateScheduleException;
-import org.unichain.core.exception.ValidateSignatureException;
+import org.unichain.core.exception.*;
 import org.unichain.core.net.UnichainNetService;
 import org.unichain.core.net.message.BlockMessage;
 import org.unichain.core.services.DelegationService;
 import org.unichain.core.services.WitnessService;
 import org.unichain.core.witness.ProposalController;
 import org.unichain.core.witness.WitnessController;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract;
 import org.unichain.protos.Protocol.TransactionInfo;
+
+import javax.annotation.PostConstruct;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
+
+import static org.unichain.core.Constant.ONE_HOUR_TIMESTAMP_DIFF;
+import static org.unichain.core.config.Parameter.ChainConstant.SOLIDIFIED_THRESHOLD;
+import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PENDING;
 
 
 @Slf4j(topic = "DB")
@@ -651,6 +606,16 @@ public class Manager {
   public void adjustBalance(byte[] accountAddress, long amount) throws BalanceInsufficientException {
     AccountCapsule account = getAccountStore().getUnchecked(accountAddress);
     adjustBalance(account, amount);
+  }
+
+  public void addFutureBalance(byte[] accountAddress, long amount, long expireTimeAsHours) throws BalanceInsufficientException {
+    AccountCapsule account = getAccountStore().getUnchecked(accountAddress);
+    long availableTimestamp = expireTimeAsHours * ONE_HOUR_TIMESTAMP_DIFF + getHeadBlockTimeStamp();
+    account.getFutureSupplyList().add(Protocol.Account.Future.newBuilder()
+            .setFutureBalance(amount)
+            .setExpireTime(availableTimestamp)
+            .build());
+    this.getAccountStore().put(account.getAddress().toByteArray(), account);
   }
 
   /**
@@ -1721,7 +1686,6 @@ public class Manager {
     logger.debug("updateSignedWitness. witness address:{}, blockNum:{}, totalProduced:{}", witnessCapsule.createReadableString(), block.getNum(), witnessCapsule.getTotalProduced());
   }
 
-  //@todo unveil how to payReward
   private void payReward(BlockCapsule block) {
     WitnessCapsule witnessCapsule = witnessStore.getUnchecked(block.getInstance().getBlockHeader().getRawData().getWitnessAddress().toByteArray());
     try {

@@ -1,6 +1,5 @@
 package org.unichain.common.logsfilter.capsule;
 
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.ArrayUtils;
@@ -17,6 +16,8 @@ import org.unichain.common.runtime.vm.DataWord;
 import org.unichain.common.runtime.vm.LogInfo;
 import org.unichain.core.config.args.Args;
 import org.unichain.protos.Protocol.SmartContract.ABI;
+
+import java.util.List;
 
 public class ContractTriggerCapsule extends TriggerCapsule {
 

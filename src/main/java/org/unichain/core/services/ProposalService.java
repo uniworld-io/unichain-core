@@ -1,10 +1,11 @@
 package org.unichain.core.services;
 
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.capsule.ProposalCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractValidateException;
+
+import java.util.Map;
 
 /**
  * Notice:

@@ -1,7 +1,5 @@
 package org.unichain.common.net.udp.message.discover;
 
-import static org.unichain.common.net.udp.message.UdpMessageTypeEnum.DISCOVER_PING;
-
 import com.google.protobuf.ByteString;
 import org.unichain.common.net.udp.message.Message;
 import org.unichain.common.overlay.discover.node.Node;
@@ -9,6 +7,8 @@ import org.unichain.common.utils.ByteArray;
 import org.unichain.core.config.args.Args;
 import org.unichain.protos.Discover;
 import org.unichain.protos.Discover.Endpoint;
+
+import static org.unichain.common.net.udp.message.UdpMessageTypeEnum.DISCOVER_PING;
 
 public class PingMessage extends Message {
 

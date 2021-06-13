@@ -1,12 +1,6 @@
 package org.unichain.common.overlay.server;
 
 import com.google.protobuf.ByteString;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -16,8 +10,14 @@ import org.unichain.common.backup.BackupManager.BackupStatusEnum;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.WitnessScheduleStore;
-import org.unichain.core.services.WitnessService;
 import org.unichain.protos.Protocol.ReasonCode;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j(topic = "net")
 @Component

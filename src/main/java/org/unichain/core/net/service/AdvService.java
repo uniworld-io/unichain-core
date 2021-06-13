@@ -1,22 +1,7 @@
 package org.unichain.core.net.service;
 
-import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
-import static org.unichain.core.config.Parameter.NetConstants.MAX_UNW_FETCH_PER_PEER;
-import static org.unichain.core.config.Parameter.NetConstants.MSG_CACHE_DURATION_IN_BLOCKS;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +20,18 @@ import org.unichain.core.net.message.TransactionMessage;
 import org.unichain.core.net.peer.Item;
 import org.unichain.core.net.peer.PeerConnection;
 import org.unichain.protos.Protocol.Inventory.InventoryType;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
+import static org.unichain.core.config.Parameter.NetConstants.MAX_UNW_FETCH_PER_PEER;
+import static org.unichain.core.config.Parameter.NetConstants.MSG_CACHE_DURATION_IN_BLOCKS;
 
 @Slf4j(topic = "net")
 @Component

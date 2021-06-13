@@ -1,9 +1,10 @@
 package org.unichain.core.db2.common;
 
-import java.util.Arrays;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.unichain.core.db.common.WrappedByteArray;
+
+import java.util.Arrays;
 
 @EqualsAndHashCode(exclude = "operator")
 public final class Value {

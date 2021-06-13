@@ -3,15 +3,9 @@ package org.unichain.core.actuator;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
-import org.unichain.common.runtime.config.VMConfig;
-import org.unichain.common.utils.StringUtil;
-import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.ContractCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.db.AccountStore;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -19,7 +13,6 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.UpdateEnergyLimitContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-//@note confirmed new fee policy
 @Slf4j(topic = "actuator")
   public class UpdateEnergyLimitContractActuator extends AbstractActuator {
 

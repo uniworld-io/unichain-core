@@ -4,12 +4,6 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.google.common.reflect.TypeToken;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
-import javax.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +19,13 @@ import org.unichain.core.db2.core.RevokingDBWithCachingNewValue;
 import org.unichain.core.db2.core.RevokingDBWithCachingOldValue;
 import org.unichain.core.exception.BadItemException;
 import org.unichain.core.exception.ItemNotFoundException;
+
+import javax.annotation.PostConstruct;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Objects;
 
 @Slf4j(topic = "DB")
 public abstract class UnichainStoreWithRevoking<T extends ProtoCapsule> implements IUnichainChainBase<T> {

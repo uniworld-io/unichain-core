@@ -2,34 +2,10 @@ package org.unichain.common.storage.leveldb;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.iq80.leveldb.DBIterator;
 import org.apache.commons.lang3.StringUtils;
-import org.rocksdb.BlockBasedTableConfig;
-import org.rocksdb.BloomFilter;
-import org.rocksdb.Checkpoint;
-import org.rocksdb.Options;
-import org.rocksdb.ReadOptions;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.Statistics;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
+import org.rocksdb.*;
 import org.unichain.common.storage.DbSourceInter;
 import org.unichain.common.storage.RocksDbSettings;
 import org.unichain.common.storage.WriteOptionsWrapper;
@@ -37,6 +13,15 @@ import org.unichain.common.utils.ByteUtil;
 import org.unichain.common.utils.FileUtil;
 import org.unichain.common.utils.PropUtil;
 import org.unichain.core.db.common.iterator.RockStoreIterator;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 @NoArgsConstructor

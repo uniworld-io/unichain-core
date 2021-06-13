@@ -1,13 +1,5 @@
 package org.unichain.core.net.messagehandler;
 
-import com.googlecode.cqengine.query.simple.In;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +12,14 @@ import org.unichain.core.net.message.TransactionMessage;
 import org.unichain.core.net.message.TransactionsMessage;
 import org.unichain.core.net.message.UnichainMessage;
 import org.unichain.core.net.peer.Item;
-import org.unichain.core.net.service.AdvService;
 import org.unichain.core.net.peer.PeerConnection;
+import org.unichain.core.net.service.AdvService;
 import org.unichain.protos.Protocol.Inventory.InventoryType;
 import org.unichain.protos.Protocol.ReasonCode;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
+
+import java.util.concurrent.*;
 
 @Slf4j(topic = "net")
 @Component

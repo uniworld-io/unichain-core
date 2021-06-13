@@ -17,18 +17,19 @@
  */
 package org.unichain.common.runtime.vm.trace;
 
-import static java.lang.String.format;
-import static org.unichain.common.runtime.utils.MUtil.convertToUnichainAddress;
-import static org.unichain.common.runtime.vm.trace.Serializers.serializeFieldsOnly;
-import static org.unichain.common.utils.ByteUtil.toHexString;
-
-import java.util.ArrayList;
-import java.util.List;
 import org.spongycastle.util.encoders.Hex;
 import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.runtime.vm.DataWord;
 import org.unichain.common.runtime.vm.OpCode;
 import org.unichain.common.runtime.vm.program.invoke.ProgramInvoke;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.lang.String.format;
+import static org.unichain.common.runtime.utils.MUtil.convertToUnichainAddress;
+import static org.unichain.common.runtime.vm.trace.Serializers.serializeFieldsOnly;
+import static org.unichain.common.utils.ByteUtil.toHexString;
 
 public class ProgramTrace {
 

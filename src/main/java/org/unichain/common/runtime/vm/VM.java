@@ -1,25 +1,5 @@
 package org.unichain.common.runtime.vm;
 
-import static org.unichain.common.crypto.Hash.sha3;
-import static org.unichain.common.runtime.utils.MUtil.convertToUnichainAddress;
-import static org.unichain.common.runtime.vm.OpCode.CALL;
-import static org.unichain.common.runtime.vm.OpCode.CALLTOKEN;
-import static org.unichain.common.runtime.vm.OpCode.CALLTOKENID;
-import static org.unichain.common.runtime.vm.OpCode.CALLTOKENVALUE;
-import static org.unichain.common.runtime.vm.OpCode.CREATE2;
-import static org.unichain.common.runtime.vm.OpCode.EXTCODEHASH;
-import static org.unichain.common.runtime.vm.OpCode.ISCONTRACT;
-import static org.unichain.common.runtime.vm.OpCode.PUSH1;
-import static org.unichain.common.runtime.vm.OpCode.REVERT;
-import static org.unichain.common.runtime.vm.OpCode.SAR;
-import static org.unichain.common.runtime.vm.OpCode.SHL;
-import static org.unichain.common.runtime.vm.OpCode.SHR;
-import static org.unichain.common.runtime.vm.OpCode.TOKENBALANCE;
-import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.util.StringUtils;
@@ -30,6 +10,15 @@ import org.unichain.common.runtime.vm.program.Program.OutOfEnergyException;
 import org.unichain.common.runtime.vm.program.Program.OutOfTimeException;
 import org.unichain.common.runtime.vm.program.Program.TransferException;
 import org.unichain.common.runtime.vm.program.Stack;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.unichain.common.crypto.Hash.sha3;
+import static org.unichain.common.runtime.utils.MUtil.convertToUnichainAddress;
+import static org.unichain.common.runtime.vm.OpCode.*;
+import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
 
 @Slf4j(topic = "VM")
 public class VM {

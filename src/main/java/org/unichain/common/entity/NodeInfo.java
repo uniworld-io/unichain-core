@@ -1,12 +1,13 @@
 package org.unichain.common.entity;
 
+import org.unichain.common.entity.NodeInfo.MachineInfo.DeadLockThreadInfo;
+import org.unichain.common.entity.NodeInfo.MachineInfo.MemoryDescInfo;
+import org.unichain.protos.Protocol;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.unichain.common.entity.NodeInfo.MachineInfo.DeadLockThreadInfo;
-import org.unichain.common.entity.NodeInfo.MachineInfo.MemoryDescInfo;
-import org.unichain.protos.Protocol;
 
 public class NodeInfo {
 

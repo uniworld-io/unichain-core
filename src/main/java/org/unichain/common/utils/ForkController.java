@@ -3,11 +3,6 @@ package org.unichain.common.utils;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.google.protobuf.ByteString;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,8 +12,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.config.Parameter.ForkBlockVersionEnum;
-import org.unichain.core.config.args.Args;
 import org.unichain.core.db.Manager;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j(topic = "utils")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

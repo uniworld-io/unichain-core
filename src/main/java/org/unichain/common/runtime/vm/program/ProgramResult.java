@@ -1,11 +1,5 @@
 package org.unichain.common.runtime.vm.program;
 
-import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.apache.commons.collections4.CollectionUtils.size;
-import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
-
-import java.util.*;
-
 import lombok.Setter;
 import org.unichain.common.logsfilter.trigger.ContractTrigger;
 import org.unichain.common.runtime.vm.CallCreate;
@@ -13,6 +7,12 @@ import org.unichain.common.runtime.vm.DataWord;
 import org.unichain.common.runtime.vm.LogInfo;
 import org.unichain.common.utils.ByteArraySet;
 import org.unichain.core.capsule.TransactionResultCapsule;
+
+import java.util.*;
+
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.size;
+import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
 
 public class ProgramResult {
   private long energyUsed = 0;

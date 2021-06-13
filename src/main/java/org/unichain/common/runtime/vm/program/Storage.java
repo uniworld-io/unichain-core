@@ -1,15 +1,16 @@
 package org.unichain.common.runtime.vm.program;
 
-import static java.lang.System.arraycopy;
-
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import org.unichain.common.crypto.Hash;
 import org.unichain.common.runtime.vm.DataWord;
 import org.unichain.common.utils.ByteUtil;
 import org.unichain.core.capsule.StorageRowCapsule;
 import org.unichain.core.db.StorageRowStore;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.lang.System.arraycopy;
 
 public class Storage {
 

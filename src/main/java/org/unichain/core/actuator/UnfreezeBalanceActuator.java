@@ -4,19 +4,11 @@ import com.google.common.collect.Lists;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.DelegatedResourceAccountIndexCapsule;
-import org.unichain.core.capsule.DelegatedResourceCapsule;
-import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.VotesCapsule;
+import org.unichain.core.capsule.*;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -27,9 +19,15 @@ import org.unichain.protos.Protocol.Account.Frozen;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-//@todo review new fee policy affect
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * @todo when switched to new fee policy, consider to ignore this interface
+ */
 @Slf4j(topic = "actuator")
-//@todo review unfree balance that effect energy, net usage
 public class UnfreezeBalanceActuator extends AbstractActuator {
 
   UnfreezeBalanceActuator(Any contract, Manager dbManager) {

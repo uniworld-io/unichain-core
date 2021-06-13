@@ -1,6 +1,5 @@
 package org.unichain.common.logsfilter.capsule;
 
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.unichain.common.logsfilter.ContractEventParserAbi;
@@ -9,6 +8,8 @@ import org.unichain.common.logsfilter.FilterQuery;
 import org.unichain.common.logsfilter.trigger.ContractEventTrigger;
 import org.unichain.common.runtime.vm.LogEventWrapper;
 import org.unichain.protos.Protocol.SmartContract.ABI.Entry;
+
+import java.util.List;
 
 public class ContractEventTriggerCapsule extends TriggerCapsule {
 

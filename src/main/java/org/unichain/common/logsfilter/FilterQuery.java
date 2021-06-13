@@ -1,10 +1,5 @@
 package org.unichain.common.logsfilter;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +7,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.unichain.common.logsfilter.trigger.ContractEventTrigger;
 import org.unichain.common.logsfilter.trigger.ContractLogTrigger;
 import org.unichain.common.logsfilter.trigger.ContractTrigger;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class FilterQuery {

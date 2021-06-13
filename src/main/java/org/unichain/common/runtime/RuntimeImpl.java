@@ -1,18 +1,6 @@
 package org.unichain.common.runtime;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static org.apache.commons.lang3.ArrayUtils.getLength;
-import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
-import static org.unichain.common.runtime.utils.MUtil.convertToUnichainAddress;
-import static org.unichain.common.runtime.utils.MUtil.transfer;
-import static org.unichain.common.runtime.utils.MUtil.transferToken;
-
 import com.google.protobuf.ByteString;
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -21,12 +9,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.unichain.common.logsfilter.EventPluginLoader;
 import org.unichain.common.logsfilter.trigger.ContractTrigger;
 import org.unichain.common.runtime.config.VMConfig;
-import org.unichain.common.runtime.vm.DataWord;
-import org.unichain.common.runtime.vm.EnergyCost;
-import org.unichain.common.runtime.vm.LogInfoTriggerParser;
-import org.unichain.common.runtime.vm.VM;
-import org.unichain.common.runtime.vm.VMConstant;
-import org.unichain.common.runtime.vm.VMUtils;
+import org.unichain.common.runtime.vm.*;
 import org.unichain.common.runtime.vm.program.InternalTransaction;
 import org.unichain.common.runtime.vm.program.InternalTransaction.ExecutorType;
 import org.unichain.common.runtime.vm.program.InternalTransaction.UnxType;
@@ -63,6 +46,17 @@ import org.unichain.protos.Protocol.SmartContract;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 import org.unichain.protos.Protocol.Transaction.Result.contractResult;
+
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static org.apache.commons.lang3.ArrayUtils.getLength;
+import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
+import static org.unichain.common.runtime.utils.MUtil.*;
 
 @Slf4j(topic = "VM")
 public class RuntimeImpl implements Runtime {
@@ -478,7 +472,6 @@ public class RuntimeImpl implements Runtime {
       long energyLimit;
 
       if (isConstantCall) {
-        //@todo unveil constant eneryLimit that not depends on balance ?
         energyLimit = Constant.ENERGY_LIMIT_IN_CONSTANT_TX;
       } else {
         // @note estimate affordable energy limit

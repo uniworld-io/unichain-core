@@ -1,11 +1,6 @@
 package org.unichain.core.services.http.solidity;
 
 import com.google.protobuf.ByteString;
-import java.io.IOException;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,6 +9,12 @@ import org.unichain.api.GrpcAPI.TransactionList;
 import org.unichain.core.WalletSolidity;
 import org.unichain.core.services.http.JsonFormat;
 import org.unichain.core.services.http.Util;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.stream.Collectors;
 
 
 @Component

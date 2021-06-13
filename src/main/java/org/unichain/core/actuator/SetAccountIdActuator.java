@@ -17,7 +17,6 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.SetAccountIdContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-//@todo review new fee policy affect
 @Slf4j(topic = "actuator")
 public class SetAccountIdActuator extends AbstractActuator {
 

@@ -1,14 +1,8 @@
 package org.unichain.core.actuator;
 
-import static org.unichain.core.actuator.ActuatorConstant.ACCOUNT_EXCEPTION_STR;
-import static org.unichain.core.actuator.ActuatorConstant.NOT_EXIST_STR;
-import static org.unichain.core.actuator.ActuatorConstant.WITNESS_EXCEPTION_STR;
-
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Map;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
@@ -23,7 +17,11 @@ import org.unichain.core.services.ProposalService;
 import org.unichain.protos.Contract.ProposalCreateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-//@todo review new fee policy affect
+import java.util.Map;
+import java.util.Objects;
+
+import static org.unichain.core.actuator.ActuatorConstant.*;
+
 @Slf4j(topic = "actuator")
 public class ProposalCreateActuator extends AbstractActuator {
 

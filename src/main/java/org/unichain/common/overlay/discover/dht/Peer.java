@@ -18,10 +18,11 @@
 
 package org.unichain.common.overlay.discover.dht;
 
-import java.math.BigInteger;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 import org.unichain.common.utils.Utils;
+
+import java.math.BigInteger;
 
 public class Peer {
 

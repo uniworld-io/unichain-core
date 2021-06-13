@@ -1,10 +1,11 @@
 package org.unichain.common.overlay.discover.node.statistics;
 
-import static java.lang.Math.min;
+import org.unichain.protos.Protocol.ReasonCode;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.unichain.protos.Protocol.ReasonCode;
+
+import static java.lang.Math.min;
 
 public class Reputation {
 

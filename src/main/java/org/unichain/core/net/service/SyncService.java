@@ -1,19 +1,7 @@
 package org.unichain.core.net.service;
 
-import static org.unichain.core.config.Parameter.NetConstants.MAX_BLOCK_FETCH_PER_PEER;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import javafx.util.Pair;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +20,14 @@ import org.unichain.core.net.message.SyncBlockChainMessage;
 import org.unichain.core.net.peer.PeerConnection;
 import org.unichain.protos.Protocol.Inventory.InventoryType;
 import org.unichain.protos.Protocol.ReasonCode;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static org.unichain.core.config.Parameter.NetConstants.MAX_BLOCK_FETCH_PER_PEER;
 
 @Slf4j(topic = "net")
 @Component

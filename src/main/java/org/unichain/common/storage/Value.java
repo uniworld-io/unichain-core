@@ -1,21 +1,13 @@
 package org.unichain.common.storage;
 
-import static org.unichain.common.storage.Type.VALUE_TYPE_UNKNOWN;
-
-import java.util.Arrays;
 import org.apache.commons.lang3.ArrayUtils;
 import org.unichain.common.runtime.config.VMConfig;
-import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.AssetIssueCapsule;
-import org.unichain.core.capsule.BlockCapsule;
-import org.unichain.core.capsule.BytesCapsule;
-import org.unichain.core.capsule.CodeCapsule;
-import org.unichain.core.capsule.ContractCapsule;
-import org.unichain.core.capsule.ProposalCapsule;
-import org.unichain.core.capsule.TransactionCapsule;
-import org.unichain.core.capsule.VotesCapsule;
-import org.unichain.core.capsule.WitnessCapsule;
+import org.unichain.core.capsule.*;
 import org.unichain.core.exception.BadItemException;
+
+import java.util.Arrays;
+
+import static org.unichain.common.storage.Type.VALUE_TYPE_UNKNOWN;
 
 public class Value {
 

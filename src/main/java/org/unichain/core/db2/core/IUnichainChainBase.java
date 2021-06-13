@@ -1,10 +1,11 @@
 package org.unichain.core.db2.core;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Map.Entry;
 import org.unichain.common.utils.Quitable;
 import org.unichain.core.exception.BadItemException;
 import org.unichain.core.exception.ItemNotFoundException;
+
+import java.util.Map.Entry;
 
 public interface IUnichainChainBase<T> extends Iterable<Entry<byte[], T>>, Quitable {
 

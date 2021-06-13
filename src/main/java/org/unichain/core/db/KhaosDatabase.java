@@ -1,17 +1,5 @@
 package org.unichain.core.db;
 
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javafx.util.Pair;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -24,6 +12,12 @@ import org.unichain.core.capsule.BlockCapsule.BlockId;
 import org.unichain.core.exception.BadNumberBlockException;
 import org.unichain.core.exception.NonCommonBlockException;
 import org.unichain.core.exception.UnLinkedBlockException;
+
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 public class KhaosDatabase extends UnichainDatabase {

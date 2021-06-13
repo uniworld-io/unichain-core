@@ -2,15 +2,7 @@ package org.unichain.common.storage;
 
 import org.unichain.common.runtime.vm.DataWord;
 import org.unichain.common.runtime.vm.program.Storage;
-import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.AssetIssueCapsule;
-import org.unichain.core.capsule.BlockCapsule;
-import org.unichain.core.capsule.BytesCapsule;
-import org.unichain.core.capsule.ContractCapsule;
-import org.unichain.core.capsule.ProposalCapsule;
-import org.unichain.core.capsule.TransactionCapsule;
-import org.unichain.core.capsule.VotesCapsule;
-import org.unichain.core.capsule.WitnessCapsule;
+import org.unichain.core.capsule.*;
 import org.unichain.core.db.Manager;
 import org.unichain.protos.Protocol.AccountType;
 

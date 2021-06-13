@@ -1,14 +1,15 @@
 package org.unichain.core.db;
 
 import com.google.common.collect.Streams;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.unichain.core.capsule.ProposalCapsule;
 import org.unichain.core.exception.ItemNotFoundException;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class ProposalStore extends UnichainStoreWithRevoking<ProposalCapsule> {

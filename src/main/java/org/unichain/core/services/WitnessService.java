@@ -1,17 +1,9 @@
 package org.unichain.core.services;
 
-import static org.unichain.core.witness.BlockProductionCondition.NOT_MY_TURN;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
@@ -30,18 +22,19 @@ import org.unichain.core.capsule.WitnessCapsule;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.Manager;
-import org.unichain.core.exception.AccountResourceInsufficientException;
-import org.unichain.core.exception.ContractExeException;
-import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.exception.UnichainException;
-import org.unichain.core.exception.UnLinkedBlockException;
-import org.unichain.core.exception.ValidateScheduleException;
-import org.unichain.core.exception.ValidateSignatureException;
+import org.unichain.core.exception.*;
 import org.unichain.core.net.UnichainNetService;
 import org.unichain.core.net.message.BlockMessage;
-import org.unichain.core.net.peer.Item;
 import org.unichain.core.witness.BlockProductionCondition;
 import org.unichain.core.witness.WitnessController;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static org.unichain.core.witness.BlockProductionCondition.NOT_MY_TURN;
 
 @Slf4j(topic = "witness")
 public class WitnessService implements Service {

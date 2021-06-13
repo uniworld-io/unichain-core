@@ -1,7 +1,6 @@
 package org.unichain.core.net.messagehandler;
 
 import com.google.common.collect.Lists;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,12 +13,7 @@ import org.unichain.core.config.Parameter.NodeConstant;
 import org.unichain.core.exception.P2pException;
 import org.unichain.core.exception.P2pException.TypeEnum;
 import org.unichain.core.net.UnichainNetDelegate;
-import org.unichain.core.net.message.BlockMessage;
-import org.unichain.core.net.message.FetchInvDataMessage;
-import org.unichain.core.net.message.MessageTypes;
-import org.unichain.core.net.message.TransactionMessage;
-import org.unichain.core.net.message.TransactionsMessage;
-import org.unichain.core.net.message.UnichainMessage;
+import org.unichain.core.net.message.*;
 import org.unichain.core.net.peer.Item;
 import org.unichain.core.net.peer.PeerConnection;
 import org.unichain.core.net.service.AdvService;
@@ -27,6 +21,8 @@ import org.unichain.core.net.service.SyncService;
 import org.unichain.protos.Protocol.Inventory.InventoryType;
 import org.unichain.protos.Protocol.ReasonCode;
 import org.unichain.protos.Protocol.Transaction;
+
+import java.util.List;
 
 @Slf4j(topic = "net")
 @Component

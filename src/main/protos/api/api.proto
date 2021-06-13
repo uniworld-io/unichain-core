@@ -46,6 +46,26 @@ service Wallet {
   rpc CreateTransaction2 (TransferContract) returns (TransactionExtention) {
   };
 
+  rpc WithdrawFutureTransaction (FutureWithdrawContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/withdrawfuturetransaction"
+      body: "*"
+        additional_bindings {
+          get: "/wallet/withdrawfuturetransaction"
+      }
+    };
+  };
+
+    rpc CreateFutureTransferTransaction (FutureTransferContract) returns (Transaction) {
+      option (google.api.http) = {
+        post: "/wallet/createfuturetransaction"
+        body: "*"
+          additional_bindings {
+            get: "/wallet/createfuturetransaction"
+        }
+      };
+    };
+
   rpc BroadcastTransaction (Transaction) returns (Return) {
     option (google.api.http) = {
       post: "/wallet/broadcasttransaction"

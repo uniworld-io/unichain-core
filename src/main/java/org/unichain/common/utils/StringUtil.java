@@ -16,10 +16,11 @@
 package org.unichain.common.utils;
 
 import com.google.protobuf.ByteString;
+import org.unichain.core.Wallet;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.unichain.core.Wallet;
 
 public class StringUtil {
 

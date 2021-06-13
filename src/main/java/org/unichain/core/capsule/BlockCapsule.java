@@ -19,12 +19,6 @@ import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.security.SignatureException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Vector;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,13 +29,19 @@ import org.unichain.common.utils.ByteUtil;
 import org.unichain.common.utils.Sha256Hash;
 import org.unichain.common.utils.Time;
 import org.unichain.core.capsule.utils.MerkleTree;
-import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BadItemException;
 import org.unichain.core.exception.ValidateSignatureException;
 import org.unichain.protos.Protocol.Block;
 import org.unichain.protos.Protocol.BlockHeader;
 import org.unichain.protos.Protocol.Transaction;
+
+import java.security.SignatureException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Vector;
+import java.util.stream.Collectors;
 
 @Slf4j(topic = "capsule")
 public class BlockCapsule implements ProtoCapsule<Block> {

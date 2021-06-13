@@ -1,14 +1,15 @@
 package org.unichain.core.net.peer;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.config.Parameter.NetConstants;
 import org.unichain.core.net.UnichainNetDelegate;
 import org.unichain.protos.Protocol.ReasonCode;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j(topic = "net")
 @Component

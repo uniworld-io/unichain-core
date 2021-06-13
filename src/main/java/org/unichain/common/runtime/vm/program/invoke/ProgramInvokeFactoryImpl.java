@@ -17,9 +17,6 @@
  */
 package org.unichain.common.runtime.vm.program.invoke;
 
-import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_CONTRACT_CALL_TYPE;
-import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_CONTRACT_CREATION_TYPE;
-
 import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.Arrays;
 import org.springframework.stereotype.Component;
@@ -36,6 +33,9 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.CreateSmartContract;
 import org.unichain.protos.Protocol.Block;
 import org.unichain.protos.Protocol.Transaction;
+
+import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_CONTRACT_CALL_TYPE;
+import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_CONTRACT_CREATION_TYPE;
 
 /**
  * @author Roman Mandeleil

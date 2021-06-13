@@ -17,12 +17,13 @@
  */
 package org.unichain.common.logsfilter.capsule;
 
-import java.util.ArrayList;
-import java.util.List;
 import lombok.Data;
 import lombok.Getter;
 import org.spongycastle.util.encoders.Hex;
 import org.unichain.common.runtime.vm.DataWord;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class RawData {

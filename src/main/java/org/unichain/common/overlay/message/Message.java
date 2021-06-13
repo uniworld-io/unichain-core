@@ -1,12 +1,8 @@
 package org.unichain.common.overlay.message;
 
-import static org.unichain.core.exception.P2pException.TypeEnum.PROTOBUF_ERROR;
-
 import com.google.protobuf.CodedInputStream;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import java.lang.reflect.Field;
-import java.util.Arrays;
 import lombok.Setter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -16,6 +12,11 @@ import org.unichain.common.utils.Sha256Hash;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.P2pException;
 import org.unichain.core.net.message.MessageTypes;
+
+import java.lang.reflect.Field;
+import java.util.Arrays;
+
+import static org.unichain.core.exception.P2pException.TypeEnum.PROTOBUF_ERROR;
 
 public abstract class Message {
 

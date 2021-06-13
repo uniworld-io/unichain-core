@@ -3,7 +3,6 @@ package org.unichain.core.actuator;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
@@ -18,7 +17,8 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.ExchangeCreateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-//@todo review new fee policy affect
+import java.util.Arrays;
+
 @Slf4j(topic = "actuator")
 public class ExchangeCreateActuator extends AbstractActuator {
 

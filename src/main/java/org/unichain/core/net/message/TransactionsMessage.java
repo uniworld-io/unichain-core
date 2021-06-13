@@ -1,9 +1,10 @@
 package org.unichain.core.net.message;
 
-import java.util.List;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction;
+
+import java.util.List;
 
 public class TransactionsMessage extends UnichainMessage {
 

@@ -1,9 +1,10 @@
 package org.unichain.core.db.common.iterator;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.exception.BadItemException;
+
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 public class TransactionIterator extends AbstractIterator<TransactionCapsule> {
 

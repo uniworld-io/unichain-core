@@ -18,7 +18,6 @@ package org.unichain.core.capsule.utils;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.unichain.core.Constant;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.protos.Contract.TransferContract;

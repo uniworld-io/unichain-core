@@ -1,11 +1,5 @@
 package org.unichain.core.db2.core;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.unichain.common.storage.leveldb.LevelDbDataSourceImpl;
@@ -15,6 +9,9 @@ import org.unichain.core.db.RevokingStore;
 import org.unichain.core.db.common.WrappedByteArray;
 import org.unichain.core.db2.common.IRevokingDB;
 import org.unichain.core.exception.ItemNotFoundException;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class RevokingDBWithCachingOldValue implements IRevokingDB {
 

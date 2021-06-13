@@ -1,18 +1,7 @@
 package org.unichain.common.overlay.server;
 
-import static org.unichain.protos.Protocol.ReasonCode.DUPLICATE_PEER;
-import static org.unichain.protos.Protocol.ReasonCode.TOO_MANY_PEERS;
-import static org.unichain.protos.Protocol.ReasonCode.TOO_MANY_PEERS_WITH_SAME_IP;
-import static org.unichain.protos.Protocol.ReasonCode.UNKNOWN;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +11,15 @@ import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.ByteArrayWrapper;
 import org.unichain.protos.Protocol.ReasonCode;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import static org.unichain.protos.Protocol.ReasonCode.*;
 
 @Slf4j(topic = "net")
 @Component

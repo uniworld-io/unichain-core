@@ -3,7 +3,6 @@ package org.unichain.core.actuator;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.storage.Deposit;
 import org.unichain.core.Wallet;
@@ -18,7 +17,8 @@ import org.unichain.protos.Contract.TransferContract;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-//@todo review new fee policy affect
+import java.util.Arrays;
+
 @Slf4j(topic = "actuator")
 public class TransferActuator extends AbstractActuator {
 
@@ -125,7 +125,6 @@ public class TransferActuator extends AbstractActuator {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-
     return true;
   }
 

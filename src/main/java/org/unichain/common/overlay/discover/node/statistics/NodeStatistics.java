@@ -18,13 +18,11 @@
 
 package org.unichain.common.overlay.discover.node.statistics;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
-import lombok.Setter;
-import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.core.config.args.Args;
 import org.unichain.protos.Protocol.ReasonCode;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 public class NodeStatistics {
 

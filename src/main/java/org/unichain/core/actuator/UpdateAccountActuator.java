@@ -17,8 +17,6 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.AccountUpdateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-
-//@note confirmed new fee policy
 @Slf4j(topic = "actuator")
 public class UpdateAccountActuator extends AbstractActuator {
 

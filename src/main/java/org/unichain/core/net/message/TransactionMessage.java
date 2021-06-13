@@ -3,8 +3,6 @@ package org.unichain.core.net.message;
 import org.unichain.common.overlay.message.Message;
 import org.unichain.common.utils.Sha256Hash;
 import org.unichain.core.capsule.TransactionCapsule;
-import org.unichain.core.exception.BadItemException;
-import org.unichain.core.exception.P2pException;
 import org.unichain.protos.Protocol.Transaction;
 
 public class TransactionMessage extends UnichainMessage {

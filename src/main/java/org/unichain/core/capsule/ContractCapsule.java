@@ -15,9 +15,6 @@
 
 package org.unichain.core.capsule;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -28,6 +25,9 @@ import org.unichain.protos.Contract.TriggerSmartContract;
 import org.unichain.protos.Protocol.SmartContract;
 import org.unichain.protos.Protocol.SmartContract.ABI;
 import org.unichain.protos.Protocol.Transaction;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 @Slf4j(topic = "capsule")
 public class ContractCapsule implements ProtoCapsule<SmartContract> {

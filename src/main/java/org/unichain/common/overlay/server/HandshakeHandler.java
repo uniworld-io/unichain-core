@@ -20,10 +20,6 @@ package org.unichain.common.overlay.server;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.Arrays;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +34,11 @@ import org.unichain.core.config.args.Args;
 import org.unichain.core.db.Manager;
 import org.unichain.core.net.peer.PeerConnection;
 import org.unichain.protos.Protocol.ReasonCode;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j(topic = "net")
 @Component

@@ -1,13 +1,9 @@
 package org.unichain.core.actuator;
 
-import static org.unichain.core.actuator.ActuatorConstant.ACCOUNT_EXCEPTION_STR;
-
 import com.google.common.math.LongMath;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Arrays;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
@@ -20,13 +16,17 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.WithdrawBalanceContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import java.util.Arrays;
+import java.util.Objects;
+
+import static org.unichain.core.actuator.ActuatorConstant.ACCOUNT_EXCEPTION_STR;
+
 @Slf4j(topic = "actuator")
 public class WithdrawBalanceActuator extends AbstractActuator {
 
   WithdrawBalanceActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
-
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
@@ -40,12 +40,11 @@ public class WithdrawBalanceActuator extends AbstractActuator {
       throw new ContractExeException(e.getMessage());
     }
 
-    dbManager.getDelegationService().withdrawReward(withdrawBalanceContract.getOwnerAddress()
-        .toByteArray(), getDeposit());
+    dbManager.getDelegationService().withdrawReward(withdrawBalanceContract.getOwnerAddress().toByteArray(), getDeposit());
 
-    AccountCapsule accountCapsule = (Objects.isNull(getDeposit())) ? dbManager.getAccountStore().
-        get(withdrawBalanceContract.getOwnerAddress().toByteArray())
-        : getDeposit().getAccount(withdrawBalanceContract.getOwnerAddress().toByteArray());
+    AccountCapsule accountCapsule = (Objects.isNull(getDeposit())) ?
+            dbManager.getAccountStore().get(withdrawBalanceContract.getOwnerAddress().toByteArray())
+            : getDeposit().getAccount(withdrawBalanceContract.getOwnerAddress().toByteArray());
     long oldBalance = accountCapsule.getBalance();
     long allowance = accountCapsule.getAllowance();
 
@@ -77,9 +76,7 @@ public class WithdrawBalanceActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (!this.contract.is(WithdrawBalanceContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [WithdrawBalanceContract],real type[" + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [WithdrawBalanceContract],real type[" + contract.getClass() + "]");
     }
     final WithdrawBalanceContract withdrawBalanceContract;
     try {
@@ -93,23 +90,21 @@ public class WithdrawBalanceActuator extends AbstractActuator {
       throw new ContractValidateException("Invalid address");
     }
 
-    AccountCapsule accountCapsule =
-        Objects.isNull(getDeposit()) ? dbManager.getAccountStore().get(ownerAddress)
-            : getDeposit().getAccount(ownerAddress);
+    AccountCapsule accountCapsule = Objects.isNull(getDeposit()) ? dbManager.getAccountStore().get(ownerAddress) : getDeposit().getAccount(ownerAddress);
     if (accountCapsule == null) {
       String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-      throw new ContractValidateException(
-          ACCOUNT_EXCEPTION_STR + readableOwnerAddress + "] not exists");
+      throw new ContractValidateException(ACCOUNT_EXCEPTION_STR + readableOwnerAddress + "] not exists");
     }
 
     String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
 
-    boolean isGP = Args.getInstance().getGenesisBlock().getWitnesses().stream().anyMatch(witness ->
-        Arrays.equals(ownerAddress, witness.getAddress()));
+    boolean isGP = Args.getInstance()
+                      .getGenesisBlock()
+                      .getWitnesses()
+                      .stream()
+                      .anyMatch(witness -> Arrays.equals(ownerAddress, witness.getAddress()));
     if (isGP) {
-      throw new ContractValidateException(
-          ACCOUNT_EXCEPTION_STR + readableOwnerAddress
-              + "] is a guard representative and is not allowed to withdraw Balance");
+      throw new ContractValidateException(ACCOUNT_EXCEPTION_STR + readableOwnerAddress + "] is a guard representative and is not allowed to withdraw Balance");
     }
 
     long latestWithdrawTime = accountCapsule.getLatestWithdrawTime();
@@ -119,12 +114,10 @@ public class WithdrawBalanceActuator extends AbstractActuator {
         getDeposit().getWitnessAllowanceFrozenTime() * 86_400_000L;
 
     if (now - latestWithdrawTime < witnessAllowanceFrozenTime) {
-      throw new ContractValidateException("The last withdraw time is "
-          + latestWithdrawTime + ",less than 24 hours");
+      throw new ContractValidateException("The last withdraw time is " + latestWithdrawTime + ",less than 24 hours");
     }
 
-    if (accountCapsule.getAllowance() <= 0 &&
-        dbManager.getDelegationService().queryReward(ownerAddress) <= 0) {
+    if (accountCapsule.getAllowance() <= 0 && dbManager.getDelegationService().queryReward(ownerAddress) <= 0) {
       throw new ContractValidateException("witnessAccount does not have any reward");
     }
     try {
@@ -146,5 +139,4 @@ public class WithdrawBalanceActuator extends AbstractActuator {
   public long calcFee() {
     return 0;
   }
-
 }

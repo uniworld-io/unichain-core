@@ -16,15 +16,14 @@
 package org.unichain.core.config.args;
 
 import com.google.protobuf.ByteString;
-import java.io.Serializable;
-import java.util.Arrays;
-
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.protos.Protocol.AccountType;
+
+import java.io.Serializable;
 
 public class Account implements Serializable {
 

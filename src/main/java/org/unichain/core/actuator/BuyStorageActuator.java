@@ -16,7 +16,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.BuyStorageContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-//@todo review new fee policy affect
+@Deprecated
 @Slf4j(topic = "actuator")
 public class BuyStorageActuator extends AbstractActuator {
 

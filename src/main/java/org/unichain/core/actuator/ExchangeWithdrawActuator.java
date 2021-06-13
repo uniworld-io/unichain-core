@@ -3,9 +3,6 @@ package org.unichain.core.actuator;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.StringUtil;
@@ -22,7 +19,10 @@ import org.unichain.core.exception.ItemNotFoundException;
 import org.unichain.protos.Contract.ExchangeWithdrawContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-//@todo review new fee policy affect
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Arrays;
+
 @Slf4j(topic = "actuator")
 public class ExchangeWithdrawActuator extends AbstractActuator {
 

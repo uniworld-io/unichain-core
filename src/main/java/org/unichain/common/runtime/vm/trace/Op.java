@@ -17,8 +17,9 @@
  */
 package org.unichain.common.runtime.vm.trace;
 
-import java.math.BigInteger;
 import org.unichain.common.runtime.vm.OpCode;
+
+import java.math.BigInteger;
 
 public class Op {
 

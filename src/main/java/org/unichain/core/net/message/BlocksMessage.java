@@ -1,11 +1,11 @@
 package org.unichain.core.net.message;
 
-import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 import org.unichain.core.capsule.TransactionCapsule;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Block;
 import org.unichain.protos.Protocol.Items;
+
+import java.util.List;
 
 public class BlocksMessage extends UnichainMessage {
 

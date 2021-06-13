@@ -2,7 +2,6 @@ package org.unichain.common.application;
 
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.unichain.common.logsfilter.EventPluginLoader;
 import org.unichain.common.overlay.discover.DiscoverServer;
 import org.unichain.common.overlay.discover.node.NodeManager;
 import org.unichain.common.overlay.server.ChannelManager;

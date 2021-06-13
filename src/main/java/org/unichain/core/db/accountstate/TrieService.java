@@ -2,7 +2,6 @@ package org.unichain.core.db.accountstate;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Internal;
-import java.util.Arrays;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -10,6 +9,8 @@ import org.unichain.common.crypto.Hash;
 import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.db.accountstate.storetrie.AccountStateStoreTrie;
+
+import java.util.Arrays;
 
 @Slf4j(topic = "AccountState")
 @Component

@@ -18,7 +18,6 @@
 package org.unichain.common.runtime.config;
 
 import lombok.Setter;
-import org.unichain.common.utils.ForkController;
 import org.unichain.core.config.args.Args;
 
 /**

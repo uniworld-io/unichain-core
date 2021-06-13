@@ -1,6 +1,5 @@
 package org.unichain.core.db;
 
-import java.util.Arrays;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +9,8 @@ import org.unichain.common.utils.Sha256Hash;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
 import org.unichain.core.capsule.BytesCapsule;
 import org.unichain.core.exception.ItemNotFoundException;
+
+import java.util.Arrays;
 
 @Component
 public class BlockIndexStore extends UnichainStoreWithRevoking<BytesCapsule> {

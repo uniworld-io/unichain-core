@@ -1,20 +1,16 @@
 package org.unichain.core.db.api;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.AssetIssueCapsule;
-import org.unichain.core.capsule.BlockCapsule;
-import org.unichain.core.capsule.TransactionCapsule;
-import org.unichain.core.capsule.WitnessCapsule;
+import org.unichain.core.capsule.*;
 import org.unichain.core.db.api.index.Index;
 import org.unichain.protos.Contract.AssetIssueContract;
 import org.unichain.protos.Protocol.Account;
 import org.unichain.protos.Protocol.Block;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Witness;
+
+import javax.annotation.Resource;
 
 @Slf4j(topic = "DB")
 public class IndexHelper {

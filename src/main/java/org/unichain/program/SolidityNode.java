@@ -1,14 +1,7 @@
 package org.unichain.program;
 
-import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
-
-import ch.qos.logback.classic.Level;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.StringUtils;
 import org.unichain.common.application.Application;
@@ -26,6 +19,11 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.services.RpcApiService;
 import org.unichain.core.services.http.solidity.SolidityNodeHttpApiService;
 import org.unichain.protos.Protocol.Block;
+
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_PRODUCED_INTERVAL;
 
 @Slf4j(topic = "app")
 public class SolidityNode {
@@ -56,11 +54,9 @@ public class SolidityNode {
     try {
       new Thread(() -> getBlock()).start();
       new Thread(() -> processBlock()).start();
-      logger.info("Success to start solid node, ID: {}, remoteBlockNum: {}.", ID.get(),
-          remoteBlockNum);
+      logger.info("Success to start solid node, ID: {}, remoteBlockNum: {}.", ID.get(), remoteBlockNum);
     } catch (Exception e) {
-      logger
-          .error("Failed to start solid node, address: {}.", Args.getInstance().getTrustNodeAddr());
+      logger.error("Failed to start solid node, address: {}.", Args.getInstance().getTrustNodeAddr());
       System.exit(0);
     }
   }
@@ -139,12 +135,10 @@ public class SolidityNode {
       try {
         long time = System.currentTimeMillis();
         long blockNum = databaseGrpcClient.getDynamicProperties().getLastSolidityBlockNum();
-        logger.info("Get last remote solid blockNum: {}, remoteBlockNum: {}, cost: {}.",
-            blockNum, remoteBlockNum, System.currentTimeMillis() - time);
+        logger.info("Get last remote solid blockNum: {}, remoteBlockNum: {}, cost: {}.", blockNum, remoteBlockNum, System.currentTimeMillis() - time);
         return blockNum;
       } catch (Exception e) {
-        logger.error("Failed to get last solid blockNum: {}, reason: {}.", remoteBlockNum.get(),
-            e.getMessage());
+        logger.error("Failed to get last solid blockNum: {}, reason: {}.", remoteBlockNum.get(), e.getMessage());
         sleep(exceptionSleepTime);
       }
     }
@@ -160,11 +154,9 @@ public class SolidityNode {
   private void resolveCompatibilityIssueIfUsingFullNodeDatabase() {
     long lastSolidityBlockNum = dbManager.getDynamicPropertiesStore().getLatestSolidifiedBlockNum();
     long headBlockNum = dbManager.getHeadBlockNum();
-    logger.info("headBlockNum:{}, solidityBlockNum:{}, diff:{}",
-        headBlockNum, lastSolidityBlockNum, headBlockNum - lastSolidityBlockNum);
+    logger.info("headBlockNum:{}, solidityBlockNum:{}, diff:{}", headBlockNum, lastSolidityBlockNum, headBlockNum - lastSolidityBlockNum);
     if (lastSolidityBlockNum < headBlockNum) {
-      logger.info("use fullNode database, headBlockNum:{}, solidityBlockNum:{}, diff:{}",
-          headBlockNum, lastSolidityBlockNum, headBlockNum - lastSolidityBlockNum);
+      logger.info("use fullNode database, headBlockNum:{}, solidityBlockNum:{}, diff:{}", headBlockNum, lastSolidityBlockNum, headBlockNum - lastSolidityBlockNum);
       dbManager.getDynamicPropertiesStore().saveLatestSolidifiedBlockNum(headBlockNum);
     }
   }
@@ -177,8 +169,7 @@ public class SolidityNode {
     Args.setParam(args, Constant.TESTNET_CONF);
     Args cfgArgs = Args.getInstance();
 
-    logger.info("index switch is {}",
-        BooleanUtils.toStringOnOff(BooleanUtils.toBoolean(cfgArgs.getStorage().getIndexSwitch())));
+    logger.info("index switch is {}", BooleanUtils.toStringOnOff(BooleanUtils.toBoolean(cfgArgs.getStorage().getIndexSwitch())));
 
     if (StringUtils.isEmpty(cfgArgs.getTrustNodeAddr())) {
       logger.error("Trust node not set.");

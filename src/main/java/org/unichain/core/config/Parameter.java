@@ -5,8 +5,10 @@ import lombok.Getter;
 public class Parameter {
 
   public class ChainConstant {
-
     public static final long TRANSFER_FEE = 0; // free
+    //@todo update future transfer, withdraw fee
+    public static final long FUTURE_TRANSFER_FEE = 0; // free
+    public static final long FUTURE_WITHDRAW_FEE = 0; // free
     public static final int WITNESS_STANDBY_LENGTH = 55;
     public static final int SOLIDIFIED_THRESHOLD = 70; // 70%
     public static final int PRIVATE_KEY_LENGTH = 64;
@@ -75,7 +77,6 @@ public class Parameter {
     public static final int ENERGY_LIMIT = 5;
   }
 
-  //@note @todo declare new fork block version
   public enum ForkBlockVersionEnum {
     VERSION_1_0(1),
     VERSION_2_0(2);

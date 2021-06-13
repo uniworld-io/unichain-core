@@ -6,13 +6,6 @@ import com.google.protobuf.Message;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
@@ -20,40 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.api.DatabaseGrpc.DatabaseImplBase;
 import org.unichain.api.GrpcAPI;
-import org.unichain.api.GrpcAPI.AccountNetMessage;
-import org.unichain.api.GrpcAPI.AccountPaginated;
-import org.unichain.api.GrpcAPI.AccountResourceMessage;
-import org.unichain.api.GrpcAPI.Address;
-import org.unichain.api.GrpcAPI.AddressPrKeyPairMessage;
-import org.unichain.api.GrpcAPI.AssetIssueList;
-import org.unichain.api.GrpcAPI.BlockExtention;
-import org.unichain.api.GrpcAPI.BlockLimit;
-import org.unichain.api.GrpcAPI.BlockList;
-import org.unichain.api.GrpcAPI.BlockListExtention;
-import org.unichain.api.GrpcAPI.BlockReference;
-import org.unichain.api.GrpcAPI.BytesMessage;
-import org.unichain.api.GrpcAPI.DelegatedResourceList;
-import org.unichain.api.GrpcAPI.DelegatedResourceMessage;
-import org.unichain.api.GrpcAPI.EasyTransferAssetByPrivateMessage;
-import org.unichain.api.GrpcAPI.EasyTransferAssetMessage;
-import org.unichain.api.GrpcAPI.EasyTransferByPrivateMessage;
-import org.unichain.api.GrpcAPI.EasyTransferMessage;
-import org.unichain.api.GrpcAPI.EasyTransferResponse;
-import org.unichain.api.GrpcAPI.EmptyMessage;
-import org.unichain.api.GrpcAPI.ExchangeList;
-import org.unichain.api.GrpcAPI.Node;
-import org.unichain.api.GrpcAPI.NodeList;
-import org.unichain.api.GrpcAPI.NumberMessage;
-import org.unichain.api.GrpcAPI.PaginatedMessage;
-import org.unichain.api.GrpcAPI.ProposalList;
-import org.unichain.api.GrpcAPI.Return;
+import org.unichain.api.GrpcAPI.*;
 import org.unichain.api.GrpcAPI.Return.response_code;
-import org.unichain.api.GrpcAPI.TransactionApprovedList;
-import org.unichain.api.GrpcAPI.TransactionExtention;
-import org.unichain.api.GrpcAPI.TransactionList;
-import org.unichain.api.GrpcAPI.TransactionListExtention;
-import org.unichain.api.GrpcAPI.TransactionSignWeight;
-import org.unichain.api.GrpcAPI.WitnessList;
 import org.unichain.api.WalletExtensionGrpc;
 import org.unichain.api.WalletGrpc.WalletImplBase;
 import org.unichain.api.WalletSolidityGrpc.WalletSolidityImplBase;
@@ -78,30 +39,18 @@ import org.unichain.core.exception.NonUniqueObjectException;
 import org.unichain.core.exception.StoreException;
 import org.unichain.core.exception.VMIllegalException;
 import org.unichain.protos.Contract;
-import org.unichain.protos.Contract.AccountCreateContract;
-import org.unichain.protos.Contract.AccountPermissionUpdateContract;
-import org.unichain.protos.Contract.AssetIssueContract;
-import org.unichain.protos.Contract.ClearABIContract;
-import org.unichain.protos.Contract.ParticipateAssetIssueContract;
-import org.unichain.protos.Contract.TransferAssetContract;
-import org.unichain.protos.Contract.TransferContract;
-import org.unichain.protos.Contract.UnfreezeAssetContract;
-import org.unichain.protos.Contract.UpdateBrokerageContract;
-import org.unichain.protos.Contract.UpdateEnergyLimitContract;
-import org.unichain.protos.Contract.UpdateSettingContract;
-import org.unichain.protos.Contract.VoteWitnessContract;
-import org.unichain.protos.Contract.WitnessCreateContract;
+import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol;
-import org.unichain.protos.Protocol.Account;
-import org.unichain.protos.Protocol.Block;
-import org.unichain.protos.Protocol.DynamicProperties;
-import org.unichain.protos.Protocol.Exchange;
-import org.unichain.protos.Protocol.NodeInfo;
-import org.unichain.protos.Protocol.Proposal;
-import org.unichain.protos.Protocol.Transaction;
+import org.unichain.protos.Protocol.*;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
-import org.unichain.protos.Protocol.TransactionInfo;
-import org.unichain.protos.Protocol.TransactionSign;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j(topic = "API")
@@ -144,14 +93,12 @@ public class RpcApiService implements Service {
   @Override
   public void start() {
     try {
-      NettyServerBuilder serverBuilder = NettyServerBuilder.forPort(port)
-          .addService(databaseApi);
+      NettyServerBuilder serverBuilder = NettyServerBuilder.forPort(port).addService(databaseApi);
 
       Args args = Args.getInstance();
 
       if (args.getRpcThreadNum() > 0) {
-        serverBuilder = serverBuilder
-            .executor(Executors.newFixedThreadPool(args.getRpcThreadNum()));
+        serverBuilder = serverBuilder.executor(Executors.newFixedThreadPool(args.getRpcThreadNum()));
       }
 
       if (args.isSolidityNode()) {
@@ -187,13 +134,11 @@ public class RpcApiService implements Service {
   }
 
 
-  private void callContract(Contract.TriggerSmartContract request,
-      StreamObserver<TransactionExtention> responseObserver, boolean isConstant) {
+  private void callContract(Contract.TriggerSmartContract request, StreamObserver<TransactionExtention> responseObserver, boolean isConstant) {
     TransactionExtention.Builder unxExtBuilder = TransactionExtention.newBuilder();
     Return.Builder retBuilder = Return.newBuilder();
     try {
-      TransactionCapsule unxCap = createTransactionCapsule(request,
-          ContractType.TriggerSmartContract);
+      TransactionCapsule unxCap = createTransactionCapsule(request, ContractType.TriggerSmartContract);
       Transaction unx;
       if (isConstant) {
         unx = wallet.triggerConstantContract(request, unxCap, unxExtBuilder, retBuilder);
@@ -205,18 +150,15 @@ public class RpcApiService implements Service {
       retBuilder.setResult(true).setCode(response_code.SUCCESS);
       unxExtBuilder.setResult(retBuilder);
     } catch (ContractValidateException | VMIllegalException e) {
-      retBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
-          .setMessage(ByteString.copyFromUtf8(CONTRACT_VALIDATE_ERROR + e.getMessage()));
+      retBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR).setMessage(ByteString.copyFromUtf8(CONTRACT_VALIDATE_ERROR + e.getMessage()));
       unxExtBuilder.setResult(retBuilder);
       logger.warn(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
     } catch (RuntimeException e) {
-      retBuilder.setResult(false).setCode(response_code.CONTRACT_EXE_ERROR)
-          .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
+      retBuilder.setResult(false).setCode(response_code.CONTRACT_EXE_ERROR).setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
       unxExtBuilder.setResult(retBuilder);
       logger.warn("When run constant call in VM, have RuntimeException: " + e.getMessage());
     } catch (Exception e) {
-      retBuilder.setResult(false).setCode(response_code.OTHER_ERROR)
-          .setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
+      retBuilder.setResult(false).setCode(response_code.OTHER_ERROR).setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
       unxExtBuilder.setResult(retBuilder);
       logger.warn("unknown exception caught: " + e.getMessage(), e);
     } finally {
@@ -225,8 +167,7 @@ public class RpcApiService implements Service {
     }
   }
 
-  private TransactionCapsule createTransactionCapsule(com.google.protobuf.Message message,
-      ContractType contractType) throws ContractValidateException {
+  private TransactionCapsule createTransactionCapsule(com.google.protobuf.Message message, ContractType contractType) throws ContractValidateException {
     return wallet.createTransactionCapsule(message, contractType);
   }
 
@@ -304,11 +245,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void getDynamicProperties(EmptyMessage request,
-        StreamObserver<DynamicProperties> responseObserver) {
+    public void getDynamicProperties(EmptyMessage request, StreamObserver<DynamicProperties> responseObserver) {
       DynamicProperties.Builder builder = DynamicProperties.newBuilder();
-      builder.setLastSolidityBlockNum(
-          dbManager.getDynamicPropertiesStore().getLatestSolidifiedBlockNum());
+      builder.setLastSolidityBlockNum(dbManager.getDynamicPropertiesStore().getLatestSolidifiedBlockNum());
       DynamicProperties dynamicProperties = builder.build();
       responseObserver.onNext(dynamicProperties);
       responseObserver.onCompleted();
@@ -701,15 +640,11 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void createTransaction(TransferContract request,
-        StreamObserver<Transaction> responseObserver) {
+    public void createTransaction(TransferContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver
-            .onNext(
-                createTransactionCapsule(request, ContractType.TransferContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.TransferContract).getInstance());
       } catch (ContractValidateException e) {
-        responseObserver
-            .onNext(null);
+        responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
       }
       responseObserver.onCompleted();
@@ -1194,15 +1129,37 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void withdrawBalance(Contract.WithdrawBalanceContract request,
-        StreamObserver<Transaction> responseObserver) {
+    public void withdrawBalance(Contract.WithdrawBalanceContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(
-            createTransactionCapsule(request, ContractType.WithdrawBalanceContract)
-                .getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.WithdrawBalanceContract).getInstance());
       } catch (ContractValidateException e) {
-        responseObserver
-            .onNext(null);
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void createFutureTransferTransaction(org.unichain.protos.Contract.FutureTransferContract request, io.grpc.stub.StreamObserver<org.unichain.protos.Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.FutureTransferContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void withdrawFutureTransaction(org.unichain.protos.Contract.FutureWithdrawContract request, io.grpc.stub.StreamObserver<org.unichain.protos.Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.FutureWithdrawContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
       }
       responseObserver.onCompleted();

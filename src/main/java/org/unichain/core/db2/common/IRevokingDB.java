@@ -1,9 +1,10 @@
 package org.unichain.core.db2.common;
 
-import java.util.Map;
-import java.util.Set;
 import org.unichain.core.db.common.WrappedByteArray;
 import org.unichain.core.exception.ItemNotFoundException;
+
+import java.util.Map;
+import java.util.Set;
 
 public interface IRevokingDB extends Iterable<Map.Entry<byte[], byte[]>> {
 

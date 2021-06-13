@@ -1,11 +1,12 @@
 package org.unichain.common.overlay.discover;
 
-import java.util.ArrayList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.common.overlay.discover.node.NodeManager;
 import org.unichain.common.overlay.discover.table.KademliaOptions;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j(topic = "discover")
 public class DiscoverTask implements Runnable {

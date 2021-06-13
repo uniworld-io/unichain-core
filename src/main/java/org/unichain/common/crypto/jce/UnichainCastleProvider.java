@@ -18,11 +18,12 @@
 
 package org.unichain.common.crypto.jce;
 
-import java.security.Provider;
-import java.security.Security;
 import org.spongycastle.jce.provider.BouncyCastleProvider;
 import org.unichain.common.crypto.cryptohash.Keccak256;
 import org.unichain.common.crypto.cryptohash.Keccak512;
+
+import java.security.Provider;
+import java.security.Security;
 
 public final class UnichainCastleProvider {
 

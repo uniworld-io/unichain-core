@@ -1,10 +1,5 @@
 package org.unichain.core.db;
 
-import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_CONTRACT_CALL_TYPE;
-import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_CONTRACT_CREATION_TYPE;
-import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.UNW_PRECOMPILED_TYPE;
-
-import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,38 +10,25 @@ import org.unichain.common.runtime.RuntimeImpl;
 import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.runtime.vm.program.InternalTransaction;
 import org.unichain.common.runtime.vm.program.InternalTransaction.UnxType;
-import org.unichain.common.runtime.vm.program.Program.BadJumpDestinationException;
-import org.unichain.common.runtime.vm.program.Program.IllegalOperationException;
-import org.unichain.common.runtime.vm.program.Program.JVMStackOverFlowException;
-import org.unichain.common.runtime.vm.program.Program.OutOfEnergyException;
-import org.unichain.common.runtime.vm.program.Program.OutOfMemoryException;
-import org.unichain.common.runtime.vm.program.Program.OutOfTimeException;
-import org.unichain.common.runtime.vm.program.Program.PrecompiledContractException;
-import org.unichain.common.runtime.vm.program.Program.StackTooLargeException;
-import org.unichain.common.runtime.vm.program.Program.StackTooSmallException;
-import org.unichain.common.runtime.vm.program.Program.TransferException;
+import org.unichain.common.runtime.vm.program.Program.*;
 import org.unichain.common.runtime.vm.program.ProgramResult;
 import org.unichain.common.runtime.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.unichain.common.storage.DepositImpl;
 import org.unichain.common.utils.Sha256Hash;
 import org.unichain.core.Constant;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.BlockCapsule;
-import org.unichain.core.capsule.ContractCapsule;
-import org.unichain.core.capsule.ReceiptCapsule;
-import org.unichain.core.capsule.TransactionCapsule;
+import org.unichain.core.capsule.*;
 import org.unichain.core.config.args.Args;
-import org.unichain.core.exception.BalanceInsufficientException;
-import org.unichain.core.exception.ContractExeException;
-import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.exception.ReceiptCheckErrException;
-import org.unichain.core.exception.VMIllegalException;
+import org.unichain.core.exception.*;
 import org.unichain.protos.Contract.TriggerSmartContract;
 import org.unichain.protos.Protocol.SmartContract.ABI;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 import org.unichain.protos.Protocol.Transaction.Result.contractResult;
+
+import java.util.Objects;
+
+import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.*;
 
 @Slf4j(topic = "TransactionTrace")
 public class TransactionTrace {

@@ -18,29 +18,6 @@
 
 package org.unichain.common.runtime.vm;
 
-import static org.unichain.common.runtime.utils.MUtil.convertToUnichainAddress;
-import static org.unichain.common.runtime.vm.DataWord.WORD_SIZE;
-import static org.unichain.common.utils.BIUtil.addSafely;
-import static org.unichain.common.utils.BIUtil.isLessThan;
-import static org.unichain.common.utils.BIUtil.isZero;
-import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.unichain.common.utils.ByteUtil.bytesToBigInteger;
-import static org.unichain.common.utils.ByteUtil.numberOfLeadingZeros;
-import static org.unichain.common.utils.ByteUtil.parseBytes;
-import static org.unichain.common.utils.ByteUtil.parseWord;
-import static org.unichain.common.utils.ByteUtil.stripLeadingZeroes;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -48,12 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.unichain.common.crypto.ECKey;
-import org.unichain.common.crypto.zksnark.BN128;
-import org.unichain.common.crypto.zksnark.BN128Fp;
-import org.unichain.common.crypto.zksnark.BN128G1;
-import org.unichain.common.crypto.zksnark.BN128G2;
-import org.unichain.common.crypto.zksnark.Fp;
-import org.unichain.common.crypto.zksnark.PairingCheck;
+import org.unichain.common.crypto.zksnark.*;
 import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.runtime.utils.MUtil;
 import org.unichain.common.runtime.vm.program.Program;
@@ -67,6 +39,17 @@ import org.unichain.core.Constant;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.protos.Protocol.Permission;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.*;
+
+import static org.unichain.common.runtime.utils.MUtil.convertToUnichainAddress;
+import static org.unichain.common.runtime.vm.DataWord.WORD_SIZE;
+import static org.unichain.common.utils.BIUtil.*;
+import static org.unichain.common.utils.ByteUtil.*;
 
 /**
  * @author Roman Mandeleil

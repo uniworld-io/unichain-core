@@ -20,10 +20,11 @@ package org.unichain.common.utils;
 
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedBytes;
+import org.spongycastle.util.encoders.Hex;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import org.spongycastle.util.encoders.Hex;
 
 public class ByteUtil {
 

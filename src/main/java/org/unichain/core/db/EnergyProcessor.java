@@ -1,7 +1,5 @@
 package org.unichain.core.db;
 
-import static java.lang.Long.max;
-
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
@@ -9,6 +7,8 @@ import org.unichain.core.config.Parameter.AdaptiveResourceLimitConstants;
 import org.unichain.core.exception.AccountResourceInsufficientException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Protocol.Account.AccountResource;
+
+import static java.lang.Long.max;
 
 @Slf4j(topic = "DB")
 public class EnergyProcessor extends ResourceProcessor {

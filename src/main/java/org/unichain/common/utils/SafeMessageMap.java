@@ -1,10 +1,11 @@
 package org.unichain.common.utils;
 
+import org.unichain.common.overlay.message.Message;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.unichain.common.overlay.message.Message;
 
 public class SafeMessageMap {
 

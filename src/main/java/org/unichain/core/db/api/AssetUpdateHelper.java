@@ -1,22 +1,14 @@
 package org.unichain.core.db.api;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.ByteArray;
-import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.AssetIssueCapsule;
-import org.unichain.core.capsule.BlockCapsule;
-import org.unichain.core.capsule.ExchangeCapsule;
-import org.unichain.core.capsule.TransactionCapsule;
+import org.unichain.core.capsule.*;
 import org.unichain.core.db.Manager;
 import org.unichain.protos.Contract.AssetIssueContract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 @Slf4j(topic = "DB")
 public class AssetUpdateHelper {

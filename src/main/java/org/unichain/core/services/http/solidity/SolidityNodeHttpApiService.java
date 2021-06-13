@@ -9,28 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.common.application.Service;
 import org.unichain.core.config.args.Args;
-import org.unichain.core.services.http.GetAccountByIdServlet;
-import org.unichain.core.services.http.GetAccountServlet;
-import org.unichain.core.services.http.GetAssetIssueByIdServlet;
-import org.unichain.core.services.http.GetAssetIssueByNameServlet;
-import org.unichain.core.services.http.GetAssetIssueListByNameServlet;
-import org.unichain.core.services.http.GetAssetIssueListServlet;
-import org.unichain.core.services.http.GetBlockByIdServlet;
-import org.unichain.core.services.http.GetBlockByLatestNumServlet;
-import org.unichain.core.services.http.GetBlockByLimitNextServlet;
-import org.unichain.core.services.http.GetBlockByNumServlet;
-import org.unichain.core.services.http.GetBrokerageServlet;
-import org.unichain.core.services.http.GetDelegatedResourceAccountIndexServlet;
-import org.unichain.core.services.http.GetDelegatedResourceServlet;
-import org.unichain.core.services.http.GetExchangeByIdServlet;
-import org.unichain.core.services.http.GetNodeInfoServlet;
-import org.unichain.core.services.http.GetNowBlockServlet;
-import org.unichain.core.services.http.GetPaginatedAssetIssueListServlet;
-import org.unichain.core.services.http.GetRewardServlet;
-import org.unichain.core.services.http.GetTransactionCountByBlockNumServlet;
-import org.unichain.core.services.http.ListExchangesServlet;
-import org.unichain.core.services.http.ListWitnessesServlet;
-import org.unichain.core.services.http.TriggerConstantContractServlet;
+import org.unichain.core.services.http.*;
 
 
 @Component

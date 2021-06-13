@@ -16,9 +16,6 @@
 package org.unichain.core.capsule.utils;
 
 import com.google.protobuf.ByteString;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.Sha256Hash;
 import org.unichain.core.capsule.BlockCapsule;
@@ -27,6 +24,10 @@ import org.unichain.core.config.args.GenesisBlock;
 import org.unichain.core.db.Manager;
 import org.unichain.core.witness.WitnessController;
 import org.unichain.protos.Protocol.Transaction;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class BlockUtil {
 

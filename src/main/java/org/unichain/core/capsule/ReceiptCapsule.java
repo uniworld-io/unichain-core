@@ -1,20 +1,17 @@
 package org.unichain.core.capsule;
 
-import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.utils.Sha256Hash;
 import org.unichain.common.utils.StringUtil;
-import org.unichain.core.Constant;
-import org.unichain.core.config.Parameter;
 import org.unichain.core.db.EnergyProcessor;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.protos.Protocol.ResourceReceipt;
 import org.unichain.protos.Protocol.Transaction.Result.contractResult;
 
-import static java.lang.Math.max;
+import java.util.Objects;
 
 public class ReceiptCapsule {
   private ResourceReceipt receipt;

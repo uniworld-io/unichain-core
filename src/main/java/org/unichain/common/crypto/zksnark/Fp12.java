@@ -17,7 +17,6 @@
  */
 package org.unichain.common.crypto.zksnark;
 
-import com.googlecode.cqengine.query.simple.In;
 import java.math.BigInteger;
 
 /**

@@ -18,9 +18,6 @@
 
 package org.unichain.core;
 
-import static org.unichain.core.config.Parameter.DatabaseConstants.EXCHANGE_COUNT_LIMIT_MAX;
-import static org.unichain.core.config.Parameter.DatabaseConstants.PROPOSAL_COUNT_LIMIT_MAX;
-
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ContiguousSet;
 import com.google.common.collect.DiscreteDomain;
@@ -28,13 +25,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
-import java.security.SignatureException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -43,25 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.unichain.api.GrpcAPI;
-import org.unichain.api.GrpcAPI.AccountNetMessage;
-import org.unichain.api.GrpcAPI.AccountResourceMessage;
-import org.unichain.api.GrpcAPI.Address;
-import org.unichain.api.GrpcAPI.AssetIssueList;
-import org.unichain.api.GrpcAPI.BlockList;
-import org.unichain.api.GrpcAPI.DelegatedResourceList;
-import org.unichain.api.GrpcAPI.ExchangeList;
-import org.unichain.api.GrpcAPI.Node;
-import org.unichain.api.GrpcAPI.NodeList;
-import org.unichain.api.GrpcAPI.NumberMessage;
-import org.unichain.api.GrpcAPI.ProposalList;
-import org.unichain.api.GrpcAPI.Return;
+import org.unichain.api.GrpcAPI.*;
 import org.unichain.api.GrpcAPI.Return.response_code;
-import org.unichain.api.GrpcAPI.TransactionApprovedList;
-import org.unichain.api.GrpcAPI.TransactionExtention;
 import org.unichain.api.GrpcAPI.TransactionExtention.Builder;
-import org.unichain.api.GrpcAPI.TransactionSignWeight;
 import org.unichain.api.GrpcAPI.TransactionSignWeight.Result;
-import org.unichain.api.GrpcAPI.WitnessList;
 import org.unichain.common.crypto.ECKey;
 import org.unichain.common.crypto.Hash;
 import org.unichain.common.overlay.discover.node.NodeHandler;
@@ -73,49 +48,15 @@ import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.runtime.vm.program.ProgramResult;
 import org.unichain.common.runtime.vm.program.invoke.ProgramInvokeFactoryImpl;
 import org.unichain.common.storage.DepositImpl;
-import org.unichain.common.utils.Base58;
-import org.unichain.common.utils.ByteArray;
-import org.unichain.common.utils.ByteUtil;
-import org.unichain.common.utils.Sha256Hash;
-import org.unichain.common.utils.Utils;
+import org.unichain.common.utils.*;
 import org.unichain.core.actuator.Actuator;
 import org.unichain.core.actuator.ActuatorFactory;
-import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.AssetIssueCapsule;
-import org.unichain.core.capsule.BlockCapsule;
+import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
-import org.unichain.core.capsule.ContractCapsule;
-import org.unichain.core.capsule.DelegatedResourceAccountIndexCapsule;
-import org.unichain.core.capsule.DelegatedResourceCapsule;
-import org.unichain.core.capsule.ExchangeCapsule;
-import org.unichain.core.capsule.ProposalCapsule;
-import org.unichain.core.capsule.TransactionCapsule;
-import org.unichain.core.capsule.TransactionInfoCapsule;
-import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.WitnessCapsule;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.config.args.Args;
-import org.unichain.core.db.AccountIdIndexStore;
-import org.unichain.core.db.AccountStore;
-import org.unichain.core.db.BandwidthProcessor;
-import org.unichain.core.db.ContractStore;
-import org.unichain.core.db.EnergyProcessor;
-import org.unichain.core.db.Manager;
-import org.unichain.core.exception.AccountResourceInsufficientException;
-import org.unichain.core.exception.BadItemException;
-import org.unichain.core.exception.ContractExeException;
-import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.exception.DupTransactionException;
-import org.unichain.core.exception.HeaderNotFound;
-import org.unichain.core.exception.NonUniqueObjectException;
-import org.unichain.core.exception.PermissionException;
-import org.unichain.core.exception.SignatureFormatException;
-import org.unichain.core.exception.StoreException;
-import org.unichain.core.exception.TaposException;
-import org.unichain.core.exception.TooBigTransactionException;
-import org.unichain.core.exception.TransactionExpirationException;
-import org.unichain.core.exception.VMIllegalException;
-import org.unichain.core.exception.ValidateSignatureException;
+import org.unichain.core.db.*;
+import org.unichain.core.exception.*;
 import org.unichain.core.net.UnichainNetDelegate;
 import org.unichain.core.net.UnichainNetService;
 import org.unichain.core.net.message.TransactionMessage;
@@ -124,22 +65,19 @@ import org.unichain.protos.Contract.CreateSmartContract;
 import org.unichain.protos.Contract.TransferContract;
 import org.unichain.protos.Contract.TriggerSmartContract;
 import org.unichain.protos.Protocol;
-import org.unichain.protos.Protocol.Account;
-import org.unichain.protos.Protocol.Block;
-import org.unichain.protos.Protocol.DelegatedResourceAccountIndex;
-import org.unichain.protos.Protocol.Exchange;
-import org.unichain.protos.Protocol.Permission;
+import org.unichain.protos.Protocol.*;
 import org.unichain.protos.Protocol.Permission.PermissionType;
-import org.unichain.protos.Protocol.Proposal;
-import org.unichain.protos.Protocol.SmartContract;
 import org.unichain.protos.Protocol.SmartContract.ABI;
 import org.unichain.protos.Protocol.SmartContract.ABI.Entry.StateMutabilityType;
-import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
-import org.unichain.protos.Protocol.TransactionInfo;
-import org.unichain.protos.Protocol.TransactionSign;
+
+import java.security.SignatureException;
+import java.util.*;
+
+import static org.unichain.core.config.Parameter.DatabaseConstants.EXCHANGE_COUNT_LIMIT_MAX;
+import static org.unichain.core.config.Parameter.DatabaseConstants.PROPOSAL_COUNT_LIMIT_MAX;
 
 @Slf4j
 @Component
@@ -380,11 +318,9 @@ public class Wallet {
   }
 
 
-  public TransactionCapsule createTransactionCapsule(com.google.protobuf.Message message,
-      ContractType contractType) throws ContractValidateException {
+  public TransactionCapsule createTransactionCapsule(com.google.protobuf.Message message, ContractType contractType) throws ContractValidateException {
     TransactionCapsule unx = new TransactionCapsule(message, contractType);
-    if (contractType != ContractType.CreateSmartContract
-        && contractType != ContractType.TriggerSmartContract) {
+    if (contractType != ContractType.CreateSmartContract && contractType != ContractType.TriggerSmartContract) {
       List<Actuator> actList = ActuatorFactory.createActuator(unx, dbManager);
       for (Actuator act : actList) {
         act.validate();
@@ -392,9 +328,7 @@ public class Wallet {
     }
 
     if (contractType == ContractType.CreateSmartContract) {
-
-      CreateSmartContract contract = ContractCapsule
-          .getSmartContractFromTransaction(unx.getInstance());
+      CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(unx.getInstance());
       long percent = contract.getNewContract().getConsumeUserResourcePercent();
       if (percent < 0 || percent > 100) {
         throw new ContractValidateException("percent must be >= 0 and <= 100");
@@ -407,9 +341,7 @@ public class Wallet {
         blockId = dbManager.getSolidBlockId();
       }
       unx.setReference(blockId.getNum(), blockId.getBytes());
-      long expiration =
-          dbManager.getHeadBlockTimeStamp() + Args.getInstance()
-              .getUnxExpirationTimeInMilliseconds();
+      long expiration = dbManager.getHeadBlockTimeStamp() + Args.getInstance().getUnxExpirationTimeInMilliseconds();
       unx.setExpiration(expiration);
       unx.setTimestamp();
     } catch (Exception e) {

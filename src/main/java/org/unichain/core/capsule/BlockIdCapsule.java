@@ -1,8 +1,9 @@
 package org.unichain.core.capsule;
 
 import com.google.protobuf.ByteString;
-import java.util.Arrays;
 import org.unichain.common.utils.Sha256Hash;
+
+import java.util.Arrays;
 
 public class BlockIdCapsule extends Sha256Hash implements ProtoCapsule {
 

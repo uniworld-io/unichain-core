@@ -14,10 +14,10 @@
  */
 package org.unichain.common.application;
 
-import java.util.ArrayList;
-
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.config.args.Args;
+
+import java.util.ArrayList;
 
 @Slf4j(topic = "app")
 public class ServiceContainer {

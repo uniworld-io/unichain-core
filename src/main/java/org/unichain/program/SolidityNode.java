@@ -98,8 +98,7 @@ public class SolidityNode {
       try {
         dbManager.pushVerifiedBlock(new BlockCapsule(block));
         dbManager.getDynamicPropertiesStore().saveLatestSolidifiedBlockNum(blockNum);
-        logger
-            .info("Success to process block: {}, blockQueueSize: {}.", blockNum, blockQueue.size());
+        logger.info("Success to process block: {}, blockQueueSize: {}.", blockNum, blockQueue.size());
         return;
       } catch (Exception e) {
         logger.error("Failed to process block {}.", new BlockCapsule(block), e);
@@ -183,6 +182,9 @@ public class SolidityNode {
       logger.info("Here is the help message.");
       return;
     }
+
+    logger.info("use hardfork block number " + Args.getInstance().getHardforkBlockNumber());
+
     Application appT = ApplicationFactory.create(context);
     FullNode.shutdown(appT);
 

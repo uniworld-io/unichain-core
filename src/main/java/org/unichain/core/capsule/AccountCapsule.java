@@ -313,6 +313,13 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     this.account = this.account.toBuilder().setBalance(balance).build();
   }
 
+  public void setFutureSupply(List<Account.Future> futures){
+    this.account = account.toBuilder()
+            .clearFutureSupply()
+            .addAllFutureSupply(futures)
+            .build();
+  }
+
   public void addDelegatedFrozenBalanceForBandwidth(long balance) {
     this.account = this.account.toBuilder().setDelegatedFrozenBalanceForBandwidth(
         this.account.getDelegatedFrozenBalanceForBandwidth() + balance).build();
@@ -711,6 +718,10 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
 
   public List<Account.Future> getFutureSupplyList() {
     return getInstance().getFutureSupplyList();
+  }
+
+  public void addFuture(Account.Future future){
+    this.account = account.toBuilder().addFutureSupply(future).build();
   }
 
   public long getFrozenSupplyBalance() {

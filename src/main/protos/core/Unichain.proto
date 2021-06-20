@@ -284,7 +284,7 @@ message Transaction {
       ClearABIContract = 48;
       UpdateBrokerageContract = 49;
       FutureTransferContract = 50;
-      FutureWithdrawContract = 51;
+      FutureWithdrawContract = 52;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;

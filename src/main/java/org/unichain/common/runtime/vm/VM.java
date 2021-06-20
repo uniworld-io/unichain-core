@@ -1443,22 +1443,19 @@ public class VM {
       throw e;
     } catch (RuntimeException e) {
       if (StringUtils.isEmpty(e.getMessage())) {
-        logger.warn("Unknown Exception occurred, tx id: {}",
-            Hex.toHexString(program.getRootTransactionId()), e);
+        logger.warn("Unknown Exception occurred, tx id: {}", Hex.toHexString(program.getRootTransactionId()), e);
         program.setRuntimeFailure(new RuntimeException("Unknown Exception"));
       } else {
         program.setRuntimeFailure(e);
       }
     } catch (StackOverflowError soe) {
-      logger
-          .info("\n !!! StackOverflowError: update your java run command with -Xss !!!\n", soe);
+      logger.info("\n !!! StackOverflowError: update your java run command with -Xss !!!\n", soe);
       throw new JVMStackOverFlowException();
     }
   }
 
   private boolean isDeadAccount(Program program, DataWord address) {
-    return program.getContractState().getAccount(convertToUnichainAddress(address.getLast20Bytes()))
-        == null;
+    return program.getContractState().getAccount(convertToUnichainAddress(address.getLast20Bytes())) == null;
   }
 
   /**

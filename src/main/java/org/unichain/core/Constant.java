@@ -45,7 +45,7 @@ public class Constant {
   public static final long TRANSACTION_MAX_BYTE_SIZE = 500 * 1_024L;
   public static final long MAXIMUM_TIME_UNTIL_EXPIRATION = 24 * 60 * 60 * 1_000L; //one day
   public static final long TRANSACTION_DEFAULT_EXPIRATION_TIME = 60 * 1_000L; //60 seconds
-  public static final long ONE_HOUR_TIMESTAMP_DIFF = 60 * 60 * 1_000L; //one hour
+  public static final long ONE_MINUTE_TIMESTAMP_DIFF = 60 * 1_000L; //one minutes
   // config for smart contract
   public static final long GINZA_PER_ENERGY = 1; // 1 Ginza/enery
   public static final long ENERGY_LIMIT_IN_CONSTANT_TX = 3_000_000L; // ref: 1 us = 1 energy

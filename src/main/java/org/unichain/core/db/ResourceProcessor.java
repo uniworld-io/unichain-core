@@ -20,8 +20,7 @@ abstract class ResourceProcessor {
     this.dbManager = manager;
     this.precision = ChainConstant.PRECISION;
     this.windowSize = ChainConstant.WINDOW_SIZE_MS / ChainConstant.BLOCK_PRODUCED_INTERVAL;
-    this.averageWindowSize =
-        AdaptiveResourceLimitConstants.PERIODS_MS / ChainConstant.BLOCK_PRODUCED_INTERVAL;
+    this.averageWindowSize = AdaptiveResourceLimitConstants.PERIODS_MS / ChainConstant.BLOCK_PRODUCED_INTERVAL;
   }
 
   abstract void updateUsage(AccountCapsule accountCapsule);

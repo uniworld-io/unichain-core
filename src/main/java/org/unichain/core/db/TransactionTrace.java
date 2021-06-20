@@ -148,7 +148,10 @@ public class TransactionTrace {
   public void finalization() throws ContractExeException {
     try {
       if(useHardForkVersion())
+      {
+        logger.info("pay with hardfork version!");
         payV2();
+      }
       else
         pay();
     } catch (BalanceInsufficientException e) {

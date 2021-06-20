@@ -64,7 +64,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
-import static org.unichain.core.Constant.ONE_HOUR_TIMESTAMP_DIFF;
+import static org.unichain.core.Constant.ONE_MINUTE_TIMESTAMP_DIFF;
 import static org.unichain.core.config.Parameter.ChainConstant.SOLIDIFIED_THRESHOLD;
 import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PENDING;
 
@@ -608,10 +608,10 @@ public class Manager {
     adjustBalance(account, amount);
   }
 
-  public void addFutureBalance(byte[] accountAddress, long amount, long expireTimeAsHours) throws BalanceInsufficientException {
+  public void addFutureBalance(byte[] accountAddress, long amount, long expireTimeAsMinutes) throws BalanceInsufficientException {
     AccountCapsule account = getAccountStore().getUnchecked(accountAddress);
-    long availableTimestamp = expireTimeAsHours * ONE_HOUR_TIMESTAMP_DIFF + getHeadBlockTimeStamp();
-    account.getFutureSupplyList().add(Protocol.Account.Future.newBuilder()
+    long availableTimestamp = expireTimeAsMinutes * ONE_MINUTE_TIMESTAMP_DIFF + getHeadBlockTimeStamp();
+    account.addFuture(Protocol.Account.Future.newBuilder()
             .setFutureBalance(amount)
             .setExpireTime(availableTimestamp)
             .build());
@@ -757,8 +757,10 @@ public class Manager {
   }
 
   public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule blockCapsule) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    if(useHardForkVersion(blockCapsule))
+    if(useHardForkVersion(blockCapsule)){
+      logger.info("consume bw use hardfork version!");
       (new BandwidthProcessorV2(this)).consume(unx, trace);
+    }
     else
       (new BandwidthProcessor(this)).consume(unx, trace);
   }

@@ -162,6 +162,7 @@ service Wallet {
   //Use this function instead of CreateAccount.
   rpc CreateAccount2 (AccountCreateContract) returns (TransactionExtention) {
   }
+
   //Please use CreateWitness2 instead of this function.
   rpc CreateWitness (WitnessCreateContract) returns (Transaction) {
     option (google.api.http) = {
@@ -634,7 +635,6 @@ service Wallet {
     };
   }
 
-
   rpc AddSign (TransactionSign) returns (TransactionExtention) {
 
   }
@@ -660,7 +660,6 @@ service Wallet {
 
   };
 };
-
 
 service WalletSolidity {
 

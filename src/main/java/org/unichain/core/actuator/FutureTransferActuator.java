@@ -35,7 +35,6 @@ public class FutureTransferActuator extends AbstractActuator {
       long amount = transferContract.getAmount();
       byte[] toAddress = transferContract.getToAddress().toByteArray();
       byte[] ownerAddress = transferContract.getOwnerAddress().toByteArray();
-
       AccountCapsule toAccount = dbManager.getAccountStore().get(toAddress);
       if (toAccount == null) {
         boolean withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
@@ -46,7 +45,6 @@ public class FutureTransferActuator extends AbstractActuator {
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       dbManager.adjustBalance(ownerAddress, -amount);
-      //expire time is number of hours from header block timestamp
       dbManager.addFutureBalance(toAddress, amount, transferContract.getExpireTime());
       return true;
     } catch (BalanceInsufficientException | ArithmeticException | InvalidProtocolBufferException e) {
@@ -76,10 +74,10 @@ public class FutureTransferActuator extends AbstractActuator {
       throw new ContractValidateException(e.getMessage());
     }
 
+
     byte[] toAddress = transferContract.getToAddress().toByteArray();
     byte[] ownerAddress = transferContract.getOwnerAddress().toByteArray();
     long amount = transferContract.getAmount();
-
     if (!Wallet.addressValid(ownerAddress)) {
       throw new ContractValidateException("Invalid ownerAddress");
     }

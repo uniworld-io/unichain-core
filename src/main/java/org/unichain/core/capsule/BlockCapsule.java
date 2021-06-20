@@ -251,6 +251,10 @@ public class BlockCapsule implements ProtoCapsule<Block> {
     return blockId;
   }
 
+  public int getBlockVersion(){
+    return block.getBlockHeader().getRawData().getVersion();
+  }
+
   public Sha256Hash calcMerkleRoot() {
     List<Transaction> transactionsList = this.block.getTransactionsList();
 
@@ -345,8 +349,8 @@ public class BlockCapsule implements ProtoCapsule<Block> {
   @Override
   public String toString() {
     toStringBuff.setLength(0);
-
     toStringBuff.append("BlockCapsule \n[ ");
+    toStringBuff.append("blockVersion=").append(getBlockVersion()).append("\n");
     toStringBuff.append("hash=").append(getBlockId()).append("\n");
     toStringBuff.append("number=").append(getNum()).append("\n");
     toStringBuff.append("parentId=").append(getParentHash()).append("\n");

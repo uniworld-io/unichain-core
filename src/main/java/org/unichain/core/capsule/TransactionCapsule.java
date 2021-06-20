@@ -446,6 +446,12 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case UpdateBrokerageContract:
           owner = contractParameter.unpack(UpdateBrokerageContract.class).getOwnerAddress();
           break;
+        case FutureTransferContract:
+          owner = contractParameter.unpack(FutureTransferContract.class).getOwnerAddress();
+          break;
+        case FutureWithdrawContract:
+          owner = contractParameter.unpack(FutureWithdrawContract.class).getOwnerAddress();
+          break;
         // todo add other contract
         default:
           return null;

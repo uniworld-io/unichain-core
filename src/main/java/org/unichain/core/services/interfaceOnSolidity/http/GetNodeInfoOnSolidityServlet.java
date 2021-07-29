@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.common.entity.NodeInfo;
-import org.unichain.core.services.http.Util;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.services.interfaceOnSolidity.NodeInfoOnSolidityService;
 
 import javax.servlet.http.HttpServlet;

@@ -9,7 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.common.application.Service;
 import org.unichain.core.config.args.Args;
-import org.unichain.core.services.http.*;
+import org.unichain.core.services.http.fullnode.servlet.*;
+import org.unichain.core.services.http.solidity.servlet.GetTransactionByIdSolidityServlet;
+import org.unichain.core.services.http.solidity.servlet.GetTransactionInfoByIdSolidityServlet;
+import org.unichain.core.services.http.solidity.servlet.GetTransactionsFromThisServlet;
+import org.unichain.core.services.http.solidity.servlet.GetTransactionsToThisServlet;
 
 
 @Component

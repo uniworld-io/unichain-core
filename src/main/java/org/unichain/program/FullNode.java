@@ -13,7 +13,7 @@ import org.unichain.core.config.DefaultConfig;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.services.RpcApiService;
 import org.unichain.core.services.WitnessService;
-import org.unichain.core.services.http.FullNodeHttpApiService;
+import org.unichain.core.services.http.fullnode.FullNodeHttpApiService;
 import org.unichain.core.services.interfaceOnSolidity.RpcApiServiceOnSolidity;
 import org.unichain.core.services.interfaceOnSolidity.http.solidity.HttpApiOnSolidityService;
 

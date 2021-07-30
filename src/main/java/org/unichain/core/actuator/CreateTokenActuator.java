@@ -19,31 +19,21 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.AssetIssueCapsule;
 import org.unichain.core.capsule.CreateTokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
+import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.AssetIssueContract;
-import org.unichain.protos.Contract.AssetIssueContract.FrozenSupply;
 import org.unichain.protos.Contract.CreateTokenContract;
-import org.unichain.protos.Protocol.Account.Frozen;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Objects;
 
-/**
- * @fixme update bizz
- * - update bizz
- * - charge fee to pool fee
- */
 @Slf4j(topic = "actuator")
 public class CreateTokenActuator extends AbstractActuator {
 
@@ -53,32 +43,33 @@ public class CreateTokenActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
-      CreateTokenContract subContract = contract.unpack(CreateTokenContract.class);
-      byte[] ownerAddress = subContract.getOwnerAddress().toByteArray();
-      CreateTokenCapsule capsule = new CreateTokenCapsule(subContract);
+      var subContract = contract.unpack(CreateTokenContract.class);
+      var ownerAddress = subContract.getOwnerAddress().toByteArray();
+      var tokenCapsule = new CreateTokenCapsule(subContract);
+
       //gen token id
-      long tokenIdNum = dbManager.getDynamicPropertiesStore().getTokenIdNum();
+      var tokenIdNum = dbManager.getDynamicPropertiesStore().getTokenIdNum();
       tokenIdNum++;
-      capsule.setId(Long.toString(tokenIdNum));
+      tokenCapsule.setId(Long.toString(tokenIdNum));
       dbManager.getDynamicPropertiesStore().saveTokenIdNum(tokenIdNum);
 
+      //make sure init burned amount
+      tokenCapsule.setBurnedToken(0L);
+
       //dont allow same name
-      capsule.setPrecision(0);
-      dbManager.getTokenStore().put(capsule.createDbKey(), capsule);
+      tokenCapsule.setPrecision(0);
+      dbManager.getTokenStore().put(tokenCapsule.createDbKey(), tokenCapsule);
 
       chargeFee(ownerAddress, fee);
       //dont move pool fee to burned unx account
       dbManager.adjustBalance(ownerAddress, -subContract.getFeePool());
 
-      AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      //add token issued list, we never allow the same token name
-      accountCapsule.addTokenIssued(capsule.createDbKey(), capsule.getTotalSupply());
+      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      //add token issued list, dont allow the same name
+      accountCapsule.addToken(tokenCapsule.createDbKey(), tokenCapsule.getTotalSupply());
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
-
-      //then add new token pool info
-      dbManager.getTokenStore().put(capsule.createDbKey(), capsule);
 
       ret.setAssetIssueID(Long.toString(tokenIdNum));
       ret.setStatus(fee, code.SUCESS);
@@ -100,12 +91,12 @@ public class CreateTokenActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
+    if (Objects.isNull(contract))
       throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
+
+    if (Objects.isNull(dbManager))
       throw new ContractValidateException("No dbManager!");
-    }
+
     if (!this.contract.is(CreateTokenContract.class)) {
       throw new ContractValidateException("contract type error, expected type [CreateTokenContract],real type[" + contract.getClass() + "]");
     }
@@ -118,22 +109,18 @@ public class CreateTokenActuator extends AbstractActuator {
       throw new ContractValidateException(e.getMessage());
     }
 
-    byte[] ownerAddress = createTokenContract.getOwnerAddress().toByteArray();
-    if (!Wallet.addressValid(ownerAddress)) {
+    var ownerAddress = createTokenContract.getOwnerAddress().toByteArray();
+    if (!Wallet.addressValid(ownerAddress))
       throw new ContractValidateException("Invalid ownerAddress");
-    }
 
-    if (!TransactionUtil.validTokenName(createTokenContract.getName().toByteArray())) {
+    if (!TransactionUtil.validTokenName(createTokenContract.getName().toByteArray()))
       throw new ContractValidateException("Invalid tokenName");
-    }
 
-    //token name unx reserved
-    String name = createTokenContract.getName().toStringUtf8().toLowerCase();
-    if (name.equals("unx")) {
+    var tokenName = createTokenContract.getName().toStringUtf8().toLowerCase();
+    if (tokenName.toLowerCase().equals("unx"))
       throw new ContractValidateException("assetName can't be unx");
-    }
 
-    int precision = createTokenContract.getPrecision();
+    var precision = createTokenContract.getPrecision();
     if (precision != 0 && dbManager.getDynamicPropertiesStore().getAllowSameTokenName() != 0) {
       if (precision < 0 || precision > 6) {
         throw new ContractValidateException("precision cannot exceed 6");
@@ -144,63 +131,54 @@ public class CreateTokenActuator extends AbstractActuator {
       throw new ContractValidateException("Invalid abbreviation for token");
     }
 
-    if (!TransactionUtil.validUrl(createTokenContract.getUrl().toByteArray())) {
+    if (!TransactionUtil.validUrl(createTokenContract.getUrl().toByteArray()))
       throw new ContractValidateException("Invalid url");
-    }
 
-    if (!TransactionUtil.validAssetDescription(createTokenContract.getDescription().toByteArray())) {
+    if (!TransactionUtil.validAssetDescription(createTokenContract.getDescription().toByteArray()))
       throw new ContractValidateException("Invalid description");
-    }
 
-    if (createTokenContract.getStartTime() == 0) {
+    if (createTokenContract.getStartTime() == 0)
       throw new ContractValidateException("Start time should be not empty");
-    }
-    if (createTokenContract.getEndTime() == 0) {
+
+    if (createTokenContract.getEndTime() == 0)
       throw new ContractValidateException("End time should be not empty");
-    }
-    if (createTokenContract.getEndTime() <= createTokenContract.getStartTime()) {
+
+    if (createTokenContract.getEndTime() <= createTokenContract.getStartTime())
       throw new ContractValidateException("End time should be greater than start time");
-    }
-    if (createTokenContract.getStartTime() <= dbManager.getHeadBlockTimeStamp()) {
+
+    if (createTokenContract.getStartTime() <= dbManager.getHeadBlockTimeStamp())
       throw new ContractValidateException("Start time should be greater than HeadBlockTime");
-    }
 
     //don't allow conflict with
-    byte[] tokenNameArr = createTokenContract.getName().toByteArray();
+    var tokenNameArr = createTokenContract.getName().toByteArray();
     if (this.dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0
         && (this.dbManager.getAssetIssueStore().get(tokenNameArr) != null
            || this.dbManager.getTokenStore().get(tokenNameArr) != null)) {
       throw new ContractValidateException("Token exists");
     }
 
-    if (createTokenContract.getTotalSupply() <= 0) {
+    if (createTokenContract.getTotalSupply() <= 0)
       throw new ContractValidateException("TotalSupply must greater than 0!");
-    }
 
-    if (createTokenContract.getMaxSupply() <= 0) {
+    if (createTokenContract.getMaxSupply() <= 0)
       throw new ContractValidateException("MaxSupply must greater than 0!");
-    }
 
-    if (createTokenContract.getMaxSupply() < createTokenContract.getTotalSupply()) {
+    if (createTokenContract.getMaxSupply() < createTokenContract.getTotalSupply())
       throw new ContractValidateException("MaxSupply must greater or equal than TotalSupply!");
-    }
 
-    if (createTokenContract.getFee() < 0) {
+    if (createTokenContract.getFee() < 0)
       throw new ContractValidateException("Token transfer fee as token must greater or equal than 0!");
-    }
 
-    if (createTokenContract.getFeePool() < 0) {
+    if (createTokenContract.getFeePool() < 0)
       throw new ContractValidateException("pre-transfer pool fee as UNW must greater or equal than 0!");
-    }
 
-    AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-    if (accountCapsule == null) {
+    var accountCap = dbManager.getAccountStore().get(ownerAddress);
+    if (Objects.isNull(accountCap))
       throw new ContractValidateException("Account not exists");
-    }
 
-    if (accountCapsule.getBalance() < calcFee() + createTokenContract.getFeePool()) {
+    if (accountCap.getBalance() < calcFee() + createTokenContract.getFeePool())
       throw new ContractValidateException("No enough balance for fee & pre-transfer pool fee");
-    }
+
     return true;
   }
 
@@ -211,7 +189,6 @@ public class CreateTokenActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    //use the same asset issue fee, default to 500 UNW
-    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();
+    return Parameter.ChainConstant.TOKEN_CREATE_FEE;
   }
 }

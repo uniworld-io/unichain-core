@@ -619,14 +619,49 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   /**
    * add token issued by this account.
    */
-  public boolean addTokenIssued(byte[] key, long value) {
-    Map<String, Long> tokenIssuedMap = this.account.getTokenIssuedMap();
+  public boolean addToken(byte[] key, long value) {
+    Map<String, Long> tokenMap = this.account.getTokenMap();
     String nameKey = ByteArray.toStr(key);
-    if (!tokenIssuedMap.isEmpty() && tokenIssuedMap.containsKey(nameKey)) {
+    if (!tokenMap.isEmpty() && tokenMap.containsKey(nameKey)) {
       return false;
     }
-    this.account = this.account.toBuilder().putTokenIssued(nameKey, value).build();
+    this.account = this.account.toBuilder().putToken(nameKey, value).build();
     return true;
+  }
+
+  /**
+   * mine more token issued by this account.
+   */
+  public void mineToken(byte[] key, long amount) {
+    Map<String, Long> tokenMap = this.account.getTokenMap();
+    String nameKey = ByteArray.toStr(key);
+    long current = tokenMap.containsKey(nameKey) ? tokenMap.get(nameKey) : 0L;
+    this.account = this.account.toBuilder().putToken(nameKey, current + amount).build();
+  }
+
+  /**
+   * burn more token issued by this account
+   */
+  public boolean burnToken(byte[] key, long amount) {
+    Map<String, Long> tokenMap = this.account.getTokenMap();
+    String nameKey = ByteArray.toStr(key);
+    if (!tokenMap.containsKey(nameKey) || tokenMap.get(key) < amount) {
+      logger.warn("missing token {} or not enough token balance at least {}", nameKey, amount);
+      return false;
+    }
+
+    long current = tokenMap.get(nameKey);
+    this.account = this.account.toBuilder().putToken(nameKey, current - amount).build();
+    return true;
+  }
+
+  /**
+   * get token info by name
+   */
+  public Long getTokenAvailable(byte[] key) {
+    Map<String, Long> tokenMap = this.account.getTokenMap();
+    String nameKey = ByteArray.toStr(key);
+    return tokenMap.containsKey(nameKey) ? tokenMap.get(nameKey) : 0L;
   }
 
   public boolean addAssetV2(byte[] key, long value) {

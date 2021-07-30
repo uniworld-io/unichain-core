@@ -3,11 +3,13 @@ package org.unichain.core.db;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.Constant;
 import org.unichain.core.capsule.AccountCapsule;
+import org.unichain.core.capsule.CreateTokenCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.exception.AccountResourceInsufficientException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.exception.TooBigTransactionResultException;
 import org.unichain.protos.Contract.TransferAssetContract;
+import org.unichain.protos.Contract.TransferTokenContract;
 import org.unichain.protos.Contract.TransferContract;
 import org.unichain.protos.Protocol.Transaction.Contract;
 
@@ -83,21 +85,24 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         throw new ContractValidateException("account not exists");
       }
 
-      //if create new account, just charge create acc fee, don't charge bw fee
-      /*
-        @todo if transfer token:
-          - and if create new account due to transfer to non-existing account
-          - just charge create account fee to owner token
-       */
+      //if create new account, just use create new account fee
       if (isContractCreateNewAccount(contract)){
-        consumeForCreateNewAccount(ownerAccountCap, trace);
+        if(contract.getType() == Contract.ContractType.TransferTokenContract)
+          consumeForCreateNewAccount4TokenTransfer(contract, trace);
+        else
+          consumeForCreateNewAccount(ownerAccountCap, trace);
         continue;
       }
 
       //or else charge bw fee
-      //@todo if transfer token: charge token pool fee
-      if (useTransactionFee(ownerAccountCap, bytesSize, trace)) {
-        continue;
+      if(contract.getType() == Contract.ContractType.TransferTokenContract){
+          if(useTransactionFee4TokenPool(contract, bytesSize, trace))
+            continue;
+      }
+      else {
+        if (useTransactionFee(ownerAccountCap, bytesSize, trace)) {
+          continue;
+        }
       }
 
       long fee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytesSize;
@@ -116,9 +121,49 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
     }
   }
 
+  private boolean useTransactionFee4TokenPool(Contract _contract, long bytes, TransactionTrace trace) {
+    TransferTokenContract contract;
+    try {
+      contract = _contract.getParameter().unpack(TransferTokenContract.class);
+    }
+    catch (Exception ex) {
+      throw new RuntimeException(ex.getMessage());
+    }
+
+    long bwFee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytes;
+    if (consumeFeeTokenPool(contract.getTokenName().toByteArray(), bwFee)) {
+      trace.setNetBill(0, bwFee);
+      dbManager.getDynamicPropertiesStore().addTotalTransactionCost(bwFee);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+
   private void consumeForCreateNewAccount(AccountCapsule accountCapsule, TransactionTrace trace) throws AccountResourceInsufficientException {
     long fee = dbManager.getDynamicPropertiesStore().getCreateAccountFee();
     if (consumeFee(accountCapsule, fee)) {
+      trace.setNetBill(0, fee);
+      dbManager.getDynamicPropertiesStore().addTotalCreateAccountCost(fee);
+      return;
+    } else {
+      throw new AccountResourceInsufficientException();
+    }
+  }
+
+  private void consumeForCreateNewAccount4TokenTransfer(Contract _contract, TransactionTrace trace) throws AccountResourceInsufficientException {
+    TransferTokenContract contract;
+    try {
+      contract = _contract.getParameter().unpack(TransferTokenContract.class);
+    }
+     catch (Exception ex) {
+      logger.error("consumeForCreateNewAccount4TokenTransfer got error -->", ex);
+      throw new RuntimeException(ex.getMessage());
+    }
+
+    long fee = dbManager.getDynamicPropertiesStore().getCreateAccountFee();
+    if (consumeFeeTokenPool(contract.getTokenName().toByteArray(), fee)) {
       trace.setNetBill(0, fee);
       dbManager.getDynamicPropertiesStore().addTotalCreateAccountCost(fee);
       return;
@@ -149,6 +194,15 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
           throw new RuntimeException(ex.getMessage());
         }
         toAccount = dbManager.getAccountStore().get(transferAssetContract.getToAddress().toByteArray());
+        return toAccount == null;
+      case TransferTokenContract:
+        TransferTokenContract transferTokenContract;
+        try {
+          transferTokenContract = contract.getParameter().unpack(TransferTokenContract.class);
+        } catch (Exception ex) {
+          throw new RuntimeException(ex.getMessage());
+        }
+        toAccount = dbManager.getAccountStore().get(transferTokenContract.getToAddress().toByteArray());
         return toAccount == null;
       default:
         return false;

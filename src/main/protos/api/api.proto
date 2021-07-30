@@ -147,6 +147,67 @@ service Wallet {
     };
   };
 
+  rpc ContributeTokenFee (ContributeTokenPoolFeeContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/contributetokenfee"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/contributetokenfee"
+      }
+    };
+  };
+
+  rpc UpdateTokenFee (BytesMessage) returns (UpdateTokenFeeContract) {
+    option (google.api.http) = {
+      post: "/wallet/updatetokenfee"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/updatetokenfee"
+      }
+    };
+  }
+
+  rpc UpdateTokenUrl (BytesMessage) returns (UpdateTokenUrlContract) {
+    option (google.api.http) = {
+      post: "/wallet/updatetokenurl"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/updatetokenurl"
+      }
+    };
+  }
+
+  rpc MineToken (BytesMessage) returns (MineTokenContract) {
+    option (google.api.http) = {
+      post: "/wallet/minetoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/minetoken"
+      }
+    };
+  }
+
+
+  rpc BurnToken (BytesMessage) returns (BurnTokenContract) {
+    option (google.api.http) = {
+      post: "/wallet/burntoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/burntoken"
+      }
+    };
+  }
+
+  rpc TransferToken (BytesMessage) returns (TransferTokenContract) {
+    option (google.api.http) = {
+      post: "/wallet/transfertoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/transfertoken"
+      }
+    };
+  }
+
   //Please use UpdateWitness2 instead of this function.
   rpc UpdateWitness (WitnessUpdateContract) returns (Transaction) {
     option (google.api.http) = {

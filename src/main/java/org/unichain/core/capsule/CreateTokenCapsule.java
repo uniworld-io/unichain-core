@@ -28,7 +28,6 @@ import org.unichain.protos.Contract.CreateTokenContract;
 @Slf4j(topic = "capsule")
 public class CreateTokenCapsule implements ProtoCapsule<Contract.CreateTokenContract> {
   private CreateTokenContract createTokenContract;
-  private long burnedToken;
 
   /**
    * get asset issue contract from bytes data.
@@ -36,7 +35,6 @@ public class CreateTokenCapsule implements ProtoCapsule<Contract.CreateTokenCont
   public CreateTokenCapsule(byte[] data) {
     try {
       this.createTokenContract = CreateTokenContract.parseFrom(data);
-      this.burnedToken = 0L;
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
@@ -44,7 +42,6 @@ public class CreateTokenCapsule implements ProtoCapsule<Contract.CreateTokenCont
 
   public CreateTokenCapsule(CreateTokenContract createTokenContract) {
     this.createTokenContract = createTokenContract;
-    this.burnedToken = 0L;
   }
 
   public byte[] getData() {
@@ -135,6 +132,17 @@ public class CreateTokenCapsule implements ProtoCapsule<Contract.CreateTokenCont
             .setTotalSupply(amount).build();
   }
 
+  public void burnToken(long amount) throws ContractExeException {
+    if(amount <= 0)
+      throw  new ContractExeException("mined token amount must greater than ZERO");
+    this.createTokenContract = this.createTokenContract.toBuilder()
+            .setBurned(createTokenContract.getBurned() + amount).build();
+  }
+
+  public void setLatestOperationTime(long latest_time) {
+    this.createTokenContract = this.createTokenContract.toBuilder().setLatestOperationTime(latest_time).build();
+  }
+
   public void setFeePool(long feePool) {
     this.createTokenContract = this.createTokenContract.toBuilder()
             .setFeePool(feePool).build();
@@ -163,20 +171,19 @@ public class CreateTokenCapsule implements ProtoCapsule<Contract.CreateTokenCont
         .setDescription(description).build();
   }
 
-  public long getBurnedToken() {
-    return burnedToken;
+  public void setBurnedToken(long amount){
+    this.createTokenContract = this.createTokenContract.toBuilder()
+            .setBurned(amount).build();
   }
 
-  public void burnToken(long amount) throws ContractExeException {
-    if(amount <= 0)
-      throw  new ContractExeException("burned token amount must greater than ZERO");
-    this.burnedToken += amount;
+  public long getBurnedToken() {
+    return createTokenContract.getBurned();
   }
 
   public void mineToken(long amount) throws ContractExeException{
     if(amount <= 0)
       throw  new ContractExeException("mined token amount must greater than ZERO");
-    if(getMaxSupply() - burnedToken - getTotalSupply() < amount)
+    if(getMaxSupply() - getBurnedToken() - getTotalSupply() < amount)
       throw  new ContractExeException("mined token amount exceed amount available");
     setTotalSupply(getTotalSupply() + amount);
   }

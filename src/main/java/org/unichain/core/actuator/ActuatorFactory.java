@@ -62,6 +62,19 @@ public class ActuatorFactory {
         return new AssetIssueActuator(contract.getParameter(), manager);
       case CreateTokenContract:
         return new CreateTokenActuator(contract.getParameter(), manager);
+      case ContributeTokenPoolFeeContract:
+        return new ContributeTokenPoolFeeActuator(contract.getParameter(), manager);
+      case UpdateTokenFeeContract:
+        return new UpdateTokenFeeActuator(contract.getParameter(), manager);
+      case UpdateTokenUrlContract:
+        return new UpdateTokenUrlActuator(contract.getParameter(), manager);
+      case MineTokenContract:
+        return new MineTokenActuator(contract.getParameter(), manager);
+      case BurnTokenContract:
+        return new BurnTokenActuator(contract.getParameter(), manager);
+      case TransferTokenContract:
+        return new TransferTokenActuator(contract.getParameter(), manager);
+
       case UnfreezeAssetContract:
         return new UnfreezeAssetActuator(contract.getParameter(), manager);
       case WitnessUpdateContract:

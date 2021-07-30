@@ -120,6 +120,48 @@ message CreateTokenContract {
   bytes url = 11;
   int64 fee = 12;
   int64 fee_pool = 13;
+  int64 burned = 14;
+  int64 latest_operation_time = 15;
+}
+
+message ContributeTokenPoolFeeContract {
+  bytes owner_address = 1;
+  bytes token_name = 2;
+  int64 amount = 3;
+}
+
+message UpdateTokenFeeContract {
+  bytes owner_address = 1;
+  bytes token_name = 2;
+  int64 amount = 3;
+}
+
+message UpdateTokenUrlContract {
+  bytes owner_address = 1;
+  bytes token_name = 2;
+  bytes url = 3;
+  bytes description = 4;
+}
+
+message MineTokenContract {
+  bytes owner_address = 1;
+  bytes token_name = 2;
+  int64 amount = 3;
+}
+
+
+message BurnTokenContract {
+  bytes owner_address = 1;
+  bytes token_name = 2;
+  int64 amount = 3;
+}
+
+message TransferTokenContract {
+  bytes owner_address = 1;
+  bytes to_address = 2;
+  bytes token_name = 3;
+  int64 amount = 4;
+  int64 expire_time = 5;
 }
 
 message AssetIssueContract {

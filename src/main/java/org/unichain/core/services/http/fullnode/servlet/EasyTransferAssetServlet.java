@@ -55,8 +55,7 @@ public class EasyTransferAssetServlet extends HttpServlet {
       builder.setAmount(build.getAmount());
 
       TransactionCapsule transactionCapsule;
-      transactionCapsule = wallet
-          .createTransactionCapsule(builder.build(), ContractType.TransferAssetContract);
+      transactionCapsule = wallet.createTransactionCapsule(builder.build(), ContractType.TransferAssetContract);
       transactionCapsule.sign(privateKey);
       GrpcAPI.Return retur = wallet.broadcastTransaction(transactionCapsule.getInstance());
       responseBuild.setTransaction(transactionCapsule.getInstance());

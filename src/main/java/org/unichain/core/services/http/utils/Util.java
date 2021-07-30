@@ -348,11 +348,46 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), assetIssueContractBuilder, selfType);
             any = Any.pack(assetIssueContractBuilder.build());
             break;
+
+          /**
+           *  token economy
+           */
           case "CreateTokenContract":
             CreateTokenContract.Builder createTokenContractBuilder = CreateTokenContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), createTokenContractBuilder, selfType);
             any = Any.pack(createTokenContractBuilder.build());
             break;
+          case "ContributeTokenPoolFeeContract":
+            ContributeTokenPoolFeeContract.Builder contributeTokenPoolContractBuilder = ContributeTokenPoolFeeContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), contributeTokenPoolContractBuilder, selfType);
+            any = Any.pack(contributeTokenPoolContractBuilder.build());
+            break;
+          case "UpdateTokenFeeContract":
+            UpdateTokenFeeContract.Builder updateTokenFeeContractBuilder = UpdateTokenFeeContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateTokenFeeContractBuilder, selfType);
+            any = Any.pack(updateTokenFeeContractBuilder.build());
+            break;
+          case "UpdateTokenUrlContract":
+            UpdateTokenUrlContract.Builder updateTokenUrlContractBuilder = UpdateTokenUrlContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateTokenUrlContractBuilder, selfType);
+            any = Any.pack(updateTokenUrlContractBuilder.build());
+            break;
+          case "MineTokenContract":
+            MineTokenContract.Builder mineContractBuilder = MineTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), mineContractBuilder, selfType);
+            any = Any.pack(mineContractBuilder.build());
+            break;
+          case "BurnTokenContract":
+            BurnTokenContract.Builder burnTokenContractBuilder = BurnTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), burnTokenContractBuilder, selfType);
+            any = Any.pack(burnTokenContractBuilder.build());
+            break;
+          case "TransferTokenContract":
+            TransferTokenContract.Builder transferTokenContractBuilder = TransferTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferTokenContractBuilder, selfType);
+            any = Any.pack(transferTokenContractBuilder.build());
+            break;
+
           case "WitnessUpdateContract":
             WitnessUpdateContract.Builder witnessUpdateContractBuilder = WitnessUpdateContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), witnessUpdateContractBuilder, selfType);

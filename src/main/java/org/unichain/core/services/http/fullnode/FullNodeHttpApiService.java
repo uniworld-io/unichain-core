@@ -37,8 +37,22 @@ public class FullNodeHttpApiService implements Service {
   private VoteWitnessAccountServlet voteWitnessAccountServlet;
   @Autowired
   private CreateAssetIssueServlet createAssetIssueServlet;
+
   @Autowired
   private CreateTokenServlet createTokenServlet;
+  @Autowired
+  private ContributeTokenPoolFeeServlet contributeTokenPoolFeeServlet;
+  @Autowired
+  private UpdateTokenFeeServlet updateTokenFeeServlet;
+  @Autowired
+  private UpdateTokenUrlServlet updateTokenUrlServlet;
+  @Autowired
+  private MineTokenServlet mineTokenServlet;
+  @Autowired
+  private BurnTokenServlet burnTokenServlet;
+  @Autowired
+  private TransferTokenServlet transferTokenServlet;
+
   @Autowired
   private UpdateWitnessServlet updateWitnessServlet;
   @Autowired
@@ -207,7 +221,18 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(updateAccountServlet), "/updateaccount");
       context.addServlet(new ServletHolder(voteWitnessAccountServlet), "/votewitnessaccount");
       context.addServlet(new ServletHolder(createAssetIssueServlet), "/createassetissue");
+
+
+
       context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
+      context.addServlet(new ServletHolder(contributeTokenPoolFeeServlet), "/contributetokenfee");
+      context.addServlet(new ServletHolder(updateTokenFeeServlet), "/updatetokenfee");
+      context.addServlet(new ServletHolder(updateTokenUrlServlet), "/updatetokenurl");
+      context.addServlet(new ServletHolder(mineTokenServlet), "/minetoken");
+      context.addServlet(new ServletHolder(burnTokenServlet), "/burntoken");
+      context.addServlet(new ServletHolder(transferTokenServlet), "/transfertoken");
+
+
       context.addServlet(new ServletHolder(updateWitnessServlet), "/updatewitness");
       context.addServlet(new ServletHolder(createAccountServlet), "/createaccount");
       context.addServlet(new ServletHolder(createWitnessServlet), "/createwitness");

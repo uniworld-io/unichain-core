@@ -67,6 +67,7 @@ import java.util.stream.LongStream;
 import static org.unichain.core.Constant.ONE_MINUTE_TIMESTAMP_DIFF;
 import static org.unichain.core.config.Parameter.ChainConstant.SOLIDIFIED_THRESHOLD;
 import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PENDING;
+import org.unichain.protos.Contract.TransferTokenContract;
 
 
 @Slf4j(topic = "DB")
@@ -740,18 +741,30 @@ public class Manager {
     return true;
   }
 
-  //@todo if transfer token: charge fee pool instead of owner
   public void consumeMultiSignFee(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException {
     if (unx.getInstance().getSignatureCount() > 1) {
       long fee = getDynamicPropertiesStore().getMultiSignFee();
 
       List<Contract> contracts = unx.getInstance().getRawData().getContractList();
       for (Contract contract : contracts) {
-        AccountCapsule accountCapsule = getAccountStore().get(TransactionCapsule.getOwner(contract));
-        try {
-          chargeFee(accountCapsule, fee);
-        } catch (BalanceInsufficientException e) {
-          throw new AccountResourceInsufficientException("Account Insufficient  balance[" + fee + "] to MultiSign");
+        if(contract.getType() == Contract.ContractType.TransferTokenContract){
+          TransferTokenContract tContract;
+          try {
+            tContract = contract.getParameter().unpack(TransferTokenContract.class);
+            chargeFee4TokenPool(tContract.getTokenName().toByteArray(), fee);
+          }
+          catch (Exception ex) {
+            logger.error("consumeForCreateNewAccount4TokenTransfer got error -->", ex);
+            throw new RuntimeException(ex.getMessage());
+          }
+        }
+        else {
+          AccountCapsule accountCapsule = getAccountStore().get(TransactionCapsule.getOwner(contract));
+          try {
+            chargeFee(accountCapsule, fee);
+          } catch (BalanceInsufficientException e) {
+            throw new AccountResourceInsufficientException("Account Insufficient  balance[" + fee + "] to MultiSign");
+          }
         }
       }
       trace.getReceipt().setMultiSignFee(fee);
@@ -1217,9 +1230,7 @@ public class Manager {
     TransactionTrace trace = new TransactionTrace(txCap, this);
     txCap.setUnxTrace(trace);
 
-    //@todo charging token pool fee
     consumeBandwidth(txCap, trace, blockCap);
-    //@todo charging token pool fee
     consumeMultiSignFee(txCap, trace);
 
     VMConfig.initVmHardFork();
@@ -1230,12 +1241,9 @@ public class Manager {
 
     trace.init(blockCap, eventPluginLoaded);
     trace.checkIsConstant();
-    /*
-      - run level 1 with actuator: charge fee in bizz, just set bill
-        + @todo with create token, transfer token charge pool fee, don't play opcode > don't charge energy
-        + @todo make sure that simple tx don't need vm > energy = 0
-        + save fee info to build tx info
-      - run level 2: play smart contract , save contract code > charge energy
+    /**
+     * + setup simple tx that call actuator to do bizz & charge fee
+     * + play op code & charge energy
      */
     trace.exec();
 
@@ -1255,9 +1263,9 @@ public class Manager {
       }
     }
 
-    /**
-     * charge energy fee
-     * @todo create token, transfer token don't have any effect
+    /** @note
+     * + charge energy fee with smart contract call or deply
+     * + with token transfer, dont use energy so don't charge fee
      */
 
     trace.finalization();
@@ -1277,7 +1285,6 @@ public class Manager {
     postContractTrigger(trace, false);
     Contract contract = txCap.getInstance().getRawData().getContract(0);
     if (isMultSignTransaction(txCap.getInstance())) {
-      //@todo review when transfer token
       ownerAddressSet.add(ByteArray.toHexString(TransactionCapsule.getOwner(contract)));
     }
 
@@ -2005,6 +2012,19 @@ public class Manager {
 
   protected void chargeFee(AccountCapsule accountCapsule, long fee) throws BalanceInsufficientException {
     adjustBalance(accountCapsule, -fee);
+    adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
+  }
+
+  protected void chargeFee4TokenPool(byte[] tokenName, long fee) throws BalanceInsufficientException {
+    CreateTokenCapsule tokenPool = getTokenStore().get(tokenName);
+    if(tokenPool.getFeePool() < fee)
+      throw new BalanceInsufficientException("not enough token pool fee");
+
+    long latestOperationTime = getHeadBlockTimeStamp();
+    tokenPool.setLatestOperationTime(latestOperationTime);
+    tokenPool.setFeePool(tokenPool.getFeePool() - fee);
+    getTokenStore().put(tokenName, tokenPool);
+
     adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
   }
 

@@ -1,6 +1,8 @@
 package org.unichain.core.db;
 
+import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.capsule.AccountCapsule;
+import org.unichain.core.capsule.CreateTokenCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.config.Parameter.AdaptiveResourceLimitConstants;
 import org.unichain.core.config.Parameter.ChainConstant;
@@ -8,7 +10,9 @@ import org.unichain.core.exception.AccountResourceInsufficientException;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.exception.TooBigTransactionResultException;
+import org.unichain.protos.Contract;
 
+@Slf4j(topic = "DB")
 abstract class ResourceProcessor {
 
   protected Manager dbManager;
@@ -67,5 +71,27 @@ abstract class ResourceProcessor {
     } catch (BalanceInsufficientException e) {
       return false;
     }
+  }
+
+  protected boolean consumeFeeTokenPool(byte[] tokenName, long fee) {
+      long latestOperationTime = dbManager.getHeadBlockTimeStamp();
+      CreateTokenCapsule tokenPool = dbManager.getTokenStore().get(tokenName);
+      tokenPool.setLatestOperationTime(latestOperationTime);
+
+      if(tokenPool.getFeePool() < fee)
+      {
+        logger.error("not enough token pool fee for token {} available {} require", tokenPool.getName(), tokenPool.getFeePool(), fee);
+        return false;
+      }
+
+      try {
+        dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
+        tokenPool.setFeePool(tokenPool.getFeePool() - fee);
+        dbManager.getTokenStore().put(tokenName, tokenPool);
+      }
+      catch (Exception e){
+        return false;
+      }
+      return true;
   }
 }

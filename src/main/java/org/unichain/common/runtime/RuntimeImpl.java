@@ -151,8 +151,8 @@ public class RuntimeImpl implements Runtime {
   }
 
   private void setupPrecompiled() throws ContractValidateException, ContractExeException {
-    TransactionCapsule unxCap = new TransactionCapsule(unx);
-    for (Actuator act : ActuatorFactory.createActuator(unxCap, deposit.getDbManager())) {
+    TransactionCapsule txCap = new TransactionCapsule(unx);
+    for (Actuator act : ActuatorFactory.createActuator(txCap, deposit.getDbManager())) {
       act.validate();
       act.execute(result.getRet());
     }
@@ -514,10 +514,11 @@ public class RuntimeImpl implements Runtime {
 
 
   /*
-    @note execute or save contract
+    @note execute/play or save contract
+    - play smart contract
+    - save contract if needed
     - if error: spend all energy
     - if create contract: charge energy of saving code
-    - play smart contract
    */
   @Override
   public void go() {

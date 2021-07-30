@@ -38,6 +38,8 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private CreateAssetIssueServlet createAssetIssueServlet;
   @Autowired
+  private CreateTokenServlet createTokenServlet;
+  @Autowired
   private UpdateWitnessServlet updateWitnessServlet;
   @Autowired
   private CreateAccountServlet createAccountServlet;
@@ -205,6 +207,7 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(updateAccountServlet), "/updateaccount");
       context.addServlet(new ServletHolder(voteWitnessAccountServlet), "/votewitnessaccount");
       context.addServlet(new ServletHolder(createAssetIssueServlet), "/createassetissue");
+      context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
       context.addServlet(new ServletHolder(updateWitnessServlet), "/updatewitness");
       context.addServlet(new ServletHolder(createAccountServlet), "/createaccount");
       context.addServlet(new ServletHolder(createWitnessServlet), "/createwitness");
@@ -216,12 +219,10 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(withdrawBalanceServlet), "/withdrawbalance");
       context.addServlet(new ServletHolder(updateAssetServlet), "/updateasset");
       context.addServlet(new ServletHolder(listNodesServlet), "/listnodes");
-      context.addServlet(
-          new ServletHolder(getAssetIssueByAccountServlet), "/getassetissuebyaccount");
+      context.addServlet(new ServletHolder(getAssetIssueByAccountServlet), "/getassetissuebyaccount");
       context.addServlet(new ServletHolder(getAccountNetServlet), "/getaccountnet");
       context.addServlet(new ServletHolder(getAssetIssueByNameServlet), "/getassetissuebyname");
-      context.addServlet(new ServletHolder(getAssetIssueListByNameServlet),
-          "/getassetissuelistbyname");
+      context.addServlet(new ServletHolder(getAssetIssueListByNameServlet), "/getassetissuelistbyname");
       context.addServlet(new ServletHolder(getAssetIssueByIdServlet), "/getassetissuebyid");
       context.addServlet(new ServletHolder(getNowBlockServlet), "/getnowblock");
       context.addServlet(new ServletHolder(getBlockByNumServlet), "/getblockbynum");
@@ -230,34 +231,25 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getBlockByLatestNumServlet), "/getblockbylatestnum");
       context.addServlet(new ServletHolder(getTransactionByIdServlet), "/gettransactionbyid");
 
-      context.addServlet(
-          new ServletHolder(getTransactionInfoByIdServlet), "/gettransactioninfobyid");
-      context.addServlet(
-          new ServletHolder(getTransactionCountByBlockNumServlet),
-          "/gettransactioncountbyblocknum");
+      context.addServlet(new ServletHolder(getTransactionInfoByIdServlet), "/gettransactioninfobyid");
+      context.addServlet(new ServletHolder(getTransactionCountByBlockNumServlet), "/gettransactioncountbyblocknum");
       context.addServlet(new ServletHolder(listWitnessesServlet), "/listwitnesses");
       context.addServlet(new ServletHolder(getAssetIssueListServlet), "/getassetissuelist");
-      context.addServlet(
-          new ServletHolder(getPaginatedAssetIssueListServlet), "/getpaginatedassetissuelist");
-      context.addServlet(
-          new ServletHolder(getPaginatedProposalListServlet), "/getpaginatedproposallist");
-      context.addServlet(
-          new ServletHolder(getPaginatedExchangeListServlet), "/getpaginatedexchangelist");
+      context.addServlet(new ServletHolder(getPaginatedAssetIssueListServlet), "/getpaginatedassetissuelist");
+      context.addServlet(new ServletHolder(getPaginatedProposalListServlet), "/getpaginatedproposallist");
+      context.addServlet(new ServletHolder(getPaginatedExchangeListServlet), "/getpaginatedexchangelist");
       context.addServlet(new ServletHolder(totalTransactionServlet), "/totaltransaction");
-      context.addServlet(
-          new ServletHolder(getNextMaintenanceTimeServlet), "/getnextmaintenancetime");
+      context.addServlet(new ServletHolder(getNextMaintenanceTimeServlet), "/getnextmaintenancetime");
       context.addServlet(new ServletHolder(createAddressServlet), "/createaddress");
       context.addServlet(new ServletHolder(easyTransferServlet), "/easytransfer");
       context.addServlet(new ServletHolder(easyTransferByPrivateServlet), "/easytransferbyprivate");
       context.addServlet(new ServletHolder(easyTransferAssetServlet), "/easytransferasset");
-      context.addServlet(new ServletHolder(easyTransferAssetByPrivateServlet),
-          "/easytransferassetbyprivate");
+      context.addServlet(new ServletHolder(easyTransferAssetByPrivateServlet), "/easytransferassetbyprivate");
       context.addServlet(new ServletHolder(generateAddressServlet), "/generateaddress");
       context.addServlet(new ServletHolder(validateAddressServlet), "/validateaddress");
       context.addServlet(new ServletHolder(deployContractServlet), "/deploycontract");
       context.addServlet(new ServletHolder(triggerSmartContractServlet), "/triggersmartcontract");
-      context.addServlet(new ServletHolder(triggerConstantContractServlet),
-          "/triggerconstantcontract");
+      context.addServlet(new ServletHolder(triggerConstantContractServlet), "/triggerconstantcontract");
       context.addServlet(new ServletHolder(getContractServlet), "/getcontract");
       context.addServlet(new ServletHolder(clearABIServlet), "/clearabi");
       context.addServlet(new ServletHolder(proposalCreateServlet), "/proposalcreate");
@@ -276,15 +268,12 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(addTransactionSignServlet), "/addtransactionsign");
       context.addServlet(new ServletHolder(getTransactionSignWeightServlet), "/getsignweight");
       context.addServlet(new ServletHolder(getTransactionApprovedListServlet), "/getapprovedlist");
-      context.addServlet(new ServletHolder(accountPermissionUpdateServlet),
-          "/accountpermissionupdate");
+      context.addServlet(new ServletHolder(accountPermissionUpdateServlet), "/accountpermissionupdate");
       context.addServlet(new ServletHolder(getNodeInfoServlet), "/getnodeinfo");
       context.addServlet(new ServletHolder(updateSettingServlet), "/updatesetting");
       context.addServlet(new ServletHolder(updateEnergyLimitServlet), "/updateenergylimit");
       context.addServlet(new ServletHolder(getDelegatedResourceServlet), "/getdelegatedresource");
-      context.addServlet(
-          new ServletHolder(getDelegatedResourceAccountIndexServlet),
-          "/getdelegatedresourceaccountindex");
+      context.addServlet(new ServletHolder(getDelegatedResourceAccountIndexServlet), "/getdelegatedresourceaccountindex");
       context.addServlet(new ServletHolder(setAccountServlet), "/setaccountid");
       context.addServlet(new ServletHolder(getAccountByIdServlet), "/getaccountbyid");
       context.addServlet(new ServletHolder(getBrokerageServlet), "/getBrokerage");

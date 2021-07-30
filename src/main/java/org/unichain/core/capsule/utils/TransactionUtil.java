@@ -94,6 +94,25 @@ public class TransactionUtil {
     return true;
   }
 
+  public static boolean validTokenName(byte[] tokenName) {
+    if (ArrayUtils.isEmpty(tokenName)) {
+      return false;
+    }
+    if (tokenName.length > 32) {
+      return false;
+    }
+    // b must read able.
+    for (byte b : tokenName) {
+      if (b < 0x21) {
+        return false; // 0x21 = '!'
+      }
+      if (b > 0x7E) {
+        return false; // 0x7E = '~'
+      }
+    }
+    return true;
+  }
+
   public static boolean validTokenAbbrName(byte[] abbrName) {
     if (ArrayUtils.isEmpty(abbrName)) {
       return false;

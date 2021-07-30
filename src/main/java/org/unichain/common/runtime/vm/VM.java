@@ -46,8 +46,7 @@ public class VM {
     }
   }
 
-  private long calcMemEnergy(EnergyCost energyCosts, long oldMemSize, BigInteger newMemSize,
-      long copySize, OpCode op) {
+  private long calcMemEnergy(EnergyCost energyCosts, long oldMemSize, BigInteger newMemSize, long copySize, OpCode op) {
     long energyCost = 0;
 
     checkMemorySize(op, newMemSize);
@@ -283,8 +282,7 @@ public class VM {
 
           DataWord exp = stack.get(stack.size() - 2);
           int bytesOccupied = exp.bytesOccupied();
-          energyCost =
-              (long) energyCosts.getEXP_ENERGY() + energyCosts.getEXP_BYTE_ENERGY() * bytesOccupied;
+          energyCost = (long) energyCosts.getEXP_ENERGY() + energyCosts.getEXP_BYTE_ENERGY() * bytesOccupied;
           break;
         default:
           break;

@@ -94,6 +94,12 @@ message Account {
   // the other asset owned by this account，key is assetId
   map<string, int64> assetV2 = 56;
 
+  //token issue list, key is token name, value is total_supply remain
+  map<string, int64> tokenIssued = 60;
+
+  //any token that belong to account, exclude from total_supply
+  map<string, int64> token = 61;
+
   // the frozen balance for bandwidth
   repeated Frozen frozen = 7;
   // bandwidth, get from frozen
@@ -285,6 +291,7 @@ message Transaction {
       UpdateBrokerageContract = 49;
       FutureTransferContract = 50;
       FutureWithdrawContract = 52;
+      CreateTokenContract = 53;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;

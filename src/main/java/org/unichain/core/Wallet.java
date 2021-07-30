@@ -355,12 +355,12 @@ public class Wallet {
    */
   public GrpcAPI.Return broadcastTransaction(Transaction signedTransaction) {
     GrpcAPI.Return.Builder builder = GrpcAPI.Return.newBuilder();
-    TransactionCapsule unx = new TransactionCapsule(signedTransaction);
+    TransactionCapsule tx = new TransactionCapsule(signedTransaction);
     try {
       Message message = new TransactionMessage(signedTransaction.toByteArray());
       if (minEffectiveConnection != 0) {
         if (unichainNetDelegate.getActivePeer().isEmpty()) {
-          logger.warn("Broadcast transaction {} failed, no connection.", unx.getTransactionId());
+          logger.warn("Broadcast transaction {} failed, no connection.", tx.getTransactionId());
           return builder.setResult(false).setCode(response_code.NO_CONNECTION)
               .setMessage(ByteString.copyFromUtf8("no connection"))
               .build();
@@ -373,7 +373,7 @@ public class Wallet {
         //@note if active peer < min: don't broadcast
         if (count < minEffectiveConnection) {
           String info = "effective connection:" + count + " lt minEffectiveConnection:" + minEffectiveConnection;
-          logger.warn("Broadcast transaction {} failed, {}.", unx.getTransactionId(), info);
+          logger.warn("Broadcast transaction {} failed, {}.", tx.getTransactionId(), info);
           return builder.setResult(false).setCode(response_code.NOT_ENOUGH_EFFECTIVE_CONNECTION)
               .setMessage(ByteString.copyFromUtf8(info))
               .build();
@@ -381,74 +381,74 @@ public class Wallet {
       }
 
       if (dbManager.isTooManyPending()) {
-        logger.warn("Broadcast transaction {} failed, too many pending.", unx.getTransactionId());
+        logger.warn("Broadcast transaction {} failed, too many pending.", tx.getTransactionId());
         return builder.setResult(false).setCode(response_code.SERVER_BUSY).build();
       }
 
       if (dbManager.isGeneratingBlock()) {
-        logger.warn("Broadcast transaction {} failed, is generating block.", unx.getTransactionId());
+        logger.warn("Broadcast transaction {} failed, is generating block.", tx.getTransactionId());
         return builder.setResult(false).setCode(response_code.SERVER_BUSY).build();
       }
 
-      if (dbManager.getTransactionIdCache().getIfPresent(unx.getTransactionId()) != null) {
-        logger.warn("Broadcast transaction {} failed, is already exist.", unx.getTransactionId());
+      if (dbManager.getTransactionIdCache().getIfPresent(tx.getTransactionId()) != null) {
+        logger.warn("Broadcast transaction {} failed, is already exist.", tx.getTransactionId());
         return builder.setResult(false).setCode(response_code.DUP_TRANSACTION_ERROR).build();
       } else {
-        dbManager.getTransactionIdCache().put(unx.getTransactionId(), true);
+        dbManager.getTransactionIdCache().put(tx.getTransactionId(), true);
       }
       if (dbManager.getDynamicPropertiesStore().supportVM()) {
-        unx.resetResult();
+        tx.resetResult();
       }
 
       //push tx
-      dbManager.pushTransaction(unx);
+      dbManager.pushTransaction(tx);
 
-      //broadcast origin tx
+      //broadcast to other nodes with origin tx
       unichainNetService.broadcast(message);
-      logger.info("Broadcast transaction {} successfully.", unx.getTransactionId());
+      logger.info("Broadcast transaction {} successfully.", tx.getTransactionId());
       return builder.setResult(true).setCode(response_code.SUCCESS).build();
     } catch (ValidateSignatureException e) {
-      logger.error("Broadcast transaction {} failed, {}.", unx.getTransactionId(), e.getMessage());
+      logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
       return builder.setResult(false).setCode(response_code.SIGERROR)
           .setMessage(ByteString.copyFromUtf8("validate signature error " + e.getMessage()))
           .build();
     } catch (ContractValidateException e) {
-      logger.error("Broadcast transaction {} failed, {}.", unx.getTransactionId(), e.getMessage());
+      logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
       return builder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR)
           .setMessage(ByteString.copyFromUtf8("contract validate error : " + e.getMessage()))
           .build();
     } catch (ContractExeException e) {
-      logger.error("Broadcast transaction {} failed, {}.", unx.getTransactionId(), e.getMessage());
+      logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
       return builder.setResult(false).setCode(response_code.CONTRACT_EXE_ERROR)
           .setMessage(ByteString.copyFromUtf8("contract execute error : " + e.getMessage()))
           .build();
     } catch (AccountResourceInsufficientException e) {
-      logger.error("Broadcast transaction {} failed, {}.", unx.getTransactionId(), e.getMessage());
+      logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
       return builder.setResult(false).setCode(response_code.BANDWITH_ERROR)
           .setMessage(ByteString.copyFromUtf8("AccountResourceInsufficient error"))
           .build();
     } catch (DupTransactionException e) {
-      logger.error("Broadcast transaction {} failed, {}.", unx.getTransactionId(), e.getMessage());
+      logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
       return builder.setResult(false).setCode(response_code.DUP_TRANSACTION_ERROR)
           .setMessage(ByteString.copyFromUtf8("dup transaction"))
           .build();
     } catch (TaposException e) {
-      logger.error("Broadcast transaction {} failed, {}.", unx.getTransactionId(), e.getMessage());
+      logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
       return builder.setResult(false).setCode(response_code.TAPOS_ERROR)
           .setMessage(ByteString.copyFromUtf8("Tapos check error"))
           .build();
     } catch (TooBigTransactionException e) {
-      logger.error("Broadcast transaction {} failed, {}.", unx.getTransactionId(), e.getMessage());
+      logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
       return builder.setResult(false).setCode(response_code.TOO_BIG_TRANSACTION_ERROR)
           .setMessage(ByteString.copyFromUtf8("transaction size is too big"))
           .build();
     } catch (TransactionExpirationException e) {
-      logger.error("Broadcast transaction {} failed, {}.", unx.getTransactionId(), e.getMessage());
+      logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
       return builder.setResult(false).setCode(response_code.TRANSACTION_EXPIRATION_ERROR)
           .setMessage(ByteString.copyFromUtf8("transaction expired"))
           .build();
     } catch (Exception e) {
-      logger.error("Broadcast transaction {} failed, {}.", unx.getTransactionId(), e.getMessage());
+      logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
       return builder.setResult(false).setCode(response_code.OTHER_ERROR)
           .setMessage(ByteString.copyFromUtf8("other error : " + e.getMessage()))
           .build();

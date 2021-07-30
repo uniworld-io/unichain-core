@@ -55,19 +55,19 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
   }
 
   @Override
-  public void consume(TransactionCapsule unx, TransactionTrace trace) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    List<Contract> contracts = unx.getInstance().getRawData().getContractList();
+  public void consume(TransactionCapsule tx, TransactionTrace trace) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
+    List<Contract> contracts = tx.getInstance().getRawData().getContractList();
 
-    if (unx.getResultSerializedSize() > Constant.MAX_RESULT_SIZE_IN_TX * contracts.size()) {
+    if (tx.getResultSerializedSize() > Constant.MAX_RESULT_SIZE_IN_TX * contracts.size()) {
       throw new TooBigTransactionResultException();
     }
 
     long bytesSize;
 
     if (dbManager.getDynamicPropertiesStore().supportVM()) {
-      bytesSize = unx.getInstance().toBuilder().clearRet().build().getSerializedSize();
+      bytesSize = tx.getInstance().toBuilder().clearRet().build().getSerializedSize();
     } else {
-      bytesSize = unx.getSerializedSize();
+      bytesSize = tx.getSerializedSize();
     }
 
     for (Contract contract : contracts) {
@@ -75,20 +75,28 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         bytesSize += Constant.MAX_RESULT_SIZE_IN_TX;
       }
 
-      logger.debug("unxId {}, bandwidth cost :{}", unx.getTransactionId(), bytesSize);
+      logger.debug("unxId {}, bandwidth cost :{}", tx.getTransactionId(), bytesSize);
       trace.setNetBill(bytesSize, 0);
       byte[] address = TransactionCapsule.getOwner(contract);
-      AccountCapsule accountCapsule = dbManager.getAccountStore().get(address);
-      if (accountCapsule == null) {
+      AccountCapsule ownerAccountCap = dbManager.getAccountStore().get(address);
+      if (ownerAccountCap == null) {
         throw new ContractValidateException("account not exists");
       }
 
+      //if create new account, just charge create acc fee, don't charge bw fee
+      /*
+        @todo if transfer token:
+          - and if create new account due to transfer to non-existing account
+          - just charge create account fee to owner token
+       */
       if (isContractCreateNewAccount(contract)){
-        consumeForCreateNewAccount(accountCapsule, trace);
+        consumeForCreateNewAccount(ownerAccountCap, trace);
         continue;
       }
 
-      if (useTransactionFee(accountCapsule, bytesSize, trace)) {
+      //or else charge bw fee
+      //@todo if transfer token: charge token pool fee
+      if (useTransactionFee(ownerAccountCap, bytesSize, trace)) {
         continue;
       }
 
@@ -98,10 +106,10 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
   }
 
   private boolean useTransactionFee(AccountCapsule accountCapsule, long bytes, TransactionTrace trace) {
-    long fee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytes;
-    if (consumeFee(accountCapsule, fee)) {
-      trace.setNetBill(0, fee);
-      dbManager.getDynamicPropertiesStore().addTotalTransactionCost(fee);
+    long bwFee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytes;
+    if (consumeFee(accountCapsule, bwFee)) {
+      trace.setNetBill(0, bwFee);
+      dbManager.getDynamicPropertiesStore().addTotalTransactionCost(bwFee);
       return true;
     } else {
       return false;

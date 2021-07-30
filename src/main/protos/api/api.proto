@@ -136,6 +136,17 @@ service Wallet {
   //Use this function instead of CreateAssetIssue.
   rpc CreateAssetIssue2 (AssetIssueContract) returns (TransactionExtention) {
   };
+
+  rpc CreateToken (CreateTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/createtoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/createtoken"
+      }
+    };
+  };
+
   //Please use UpdateWitness2 instead of this function.
   rpc UpdateWitness (WitnessUpdateContract) returns (Transaction) {
     option (google.api.http) = {
@@ -337,6 +348,17 @@ service Wallet {
       }
     };
   }
+
+  rpc GetTokenByName (BytesMessage) returns (CreateTokenContract) {
+    option (google.api.http) = {
+      post: "/wallet/gettokenbyname"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/gettokenbyname"
+      }
+    };
+  }
+
   rpc GetAssetIssueListByName (BytesMessage) returns (AssetIssueList) {
   }
   rpc GetAssetIssueById (BytesMessage) returns (AssetIssueContract) {
@@ -892,6 +914,11 @@ message ExchangeList {
 message AssetIssueList {
   repeated AssetIssueContract assetIssue = 1;
 }
+
+message TokenList {
+  repeated CreateTokenContract token = 1;
+}
+
 message BlockList {
   repeated Block block = 1;
 }

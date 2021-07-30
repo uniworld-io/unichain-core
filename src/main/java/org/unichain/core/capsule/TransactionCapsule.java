@@ -256,31 +256,26 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     return 0;
   }
 
-  public static long checkWeight(Permission permission, List<ByteString> sigs, byte[] hash,
-      List<ByteString> approveList)
+  public static long checkWeight(Permission permission, List<ByteString> sigs, byte[] hash, List<ByteString> approveList)
       throws SignatureException, PermissionException, SignatureFormatException {
     long currentWeight = 0;
     //    if (signature.size() % 65 != 0) {
     //      throw new SignatureFormatException("Signature size is " + signature.size());
     //    }
     if (sigs.size() > permission.getKeysCount()) {
-      throw new PermissionException(
-          "Signature count is " + (sigs.size()) + " more than key counts of permission : "
-              + permission.getKeysCount());
+      throw new PermissionException("Signature count is " + (sigs.size()) + " more than key counts of permission : " + permission.getKeysCount());
     }
     HashMap addMap = new HashMap();
     for (ByteString sig : sigs) {
       if (sig.size() < 65) {
-        throw new SignatureFormatException(
-            "Signature size is " + sig.size());
+        throw new SignatureFormatException("Signature size is " + sig.size());
       }
       String base64 = TransactionCapsule.getBase64FromByteString(sig);
       byte[] address = ECKey.signatureToAddress(hash, base64);
       long weight = getWeight(permission, address);
       if (weight == 0) {
         throw new PermissionException(
-            ByteArray.toHexString(sig.toByteArray()) + " is signed by " + Wallet
-                .encode58Check(address) + " but it is not contained of permission.");
+            ByteArray.toHexString(sig.toByteArray()) + " is signed by " + Wallet.encode58Check(address) + " but it is not contained of permission.");
       }
       if (addMap.containsKey(base64)) {
         throw new PermissionException(Wallet.encode58Check(address) + " has signed twice!");
@@ -311,7 +306,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       if (permission.getType() != PermissionType.Active) {
         throw new PermissionException("Permission type is error");
       }
-      //check oprations
       if (!Wallet.checkPermissionOprations(permission, contract)) {
         throw new PermissionException("Permission denied");
       }
@@ -320,8 +314,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     ECKey ecKey = ECKey.fromPrivate(privateKey);
     byte[] address = ecKey.getAddress();
     if (this.transaction.getSignatureCount() > 0) {
-      checkWeight(permission, this.transaction.getSignatureList(), this.getRawHash().getBytes(),
-          approveList);
+      checkWeight(permission, this.transaction.getSignatureList(), this.getRawHash().getBytes(), approveList);
       if (approveList.contains(ByteString.copyFrom(address))) {
         throw new PermissionException(Wallet.encode58Check(address) + " had signed!");
       }
@@ -329,16 +322,16 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
     long weight = getWeight(permission, address);
     if (weight == 0) {
-      throw new PermissionException(
-          ByteArray.toHexString(privateKey) + "'s address is " + Wallet
-              .encode58Check(address) + " but it is not contained of permission.");
+      throw new PermissionException(ByteArray.toHexString(privateKey) + "'s address is " + Wallet.encode58Check(address) + " but it is not contained of permission.");
     }
     ECDSASignature signature = ecKey.sign(getRawHash().getBytes());
     ByteString sig = ByteString.copyFrom(signature.toByteArray());
     this.transaction = this.transaction.toBuilder().addSignature(sig).build();
   }
 
-  // todo mv this static function to capsule util
+  /**
+   * @todo add new process for new TX
+   */
   public static byte[] getOwner(Transaction.Contract contract) {
     ByteString owner;
     try {
@@ -452,7 +445,10 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case FutureWithdrawContract:
           owner = contractParameter.unpack(FutureWithdrawContract.class).getOwnerAddress();
           break;
-        // todo add other contract
+        case CreateTokenContract:
+          owner = contractParameter.unpack(CreateTokenContract.class).getOwnerAddress();
+          break;
+
         default:
           return null;
       }
@@ -846,8 +842,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
   public void setResult(Runtime runtime) {
     RuntimeException exception = runtime.getResult().getException();
-    if (Objects.isNull(exception) && StringUtils
-        .isEmpty(runtime.getRuntimeError()) && !runtime.getResult().isRevert()) {
+    if (Objects.isNull(exception) && StringUtils.isEmpty(runtime.getRuntimeError()) && !runtime.getResult().isRevert()) {
       this.setResultCode(contractResult.SUCCESS);
       return;
     }

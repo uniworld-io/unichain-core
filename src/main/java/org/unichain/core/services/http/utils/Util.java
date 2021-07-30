@@ -348,6 +348,11 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), assetIssueContractBuilder, selfType);
             any = Any.pack(assetIssueContractBuilder.build());
             break;
+          case "CreateTokenContract":
+            CreateTokenContract.Builder createTokenContractBuilder = CreateTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), createTokenContractBuilder, selfType);
+            any = Any.pack(createTokenContractBuilder.build());
+            break;
           case "WitnessUpdateContract":
             WitnessUpdateContract.Builder witnessUpdateContractBuilder = WitnessUpdateContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), witnessUpdateContractBuilder, selfType);
@@ -527,8 +532,7 @@ public class Util {
     return ByteArray.toHexString(ByteString.copyFromUtf8(string).toByteArray());
   }
 
-  public static Transaction setTransactionPermissionId(JSONObject jsonObject,
-      Transaction transaction) {
+  public static Transaction setTransactionPermissionId(JSONObject jsonObject, Transaction transaction) {
     if (jsonObject.containsKey(PERMISSION_ID)) {
       int permissionId = jsonObject.getInteger(PERMISSION_ID);
       if (permissionId > 0) {

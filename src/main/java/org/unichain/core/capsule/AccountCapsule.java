@@ -616,6 +616,19 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return true;
   }
 
+  /**
+   * add token issued by this account.
+   */
+  public boolean addTokenIssued(byte[] key, long value) {
+    Map<String, Long> tokenIssuedMap = this.account.getTokenIssuedMap();
+    String nameKey = ByteArray.toStr(key);
+    if (!tokenIssuedMap.isEmpty() && tokenIssuedMap.containsKey(nameKey)) {
+      return false;
+    }
+    this.account = this.account.toBuilder().putTokenIssued(nameKey, value).build();
+    return true;
+  }
+
   public boolean addAssetV2(byte[] key, long value) {
     String tokenID = ByteArray.toStr(key);
     Map<String, Long> assetV2Map = this.account.getAssetV2Map();

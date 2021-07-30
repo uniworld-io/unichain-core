@@ -88,6 +88,8 @@ public class Manager {
   @Autowired
   private AssetIssueStore assetIssueStore;
   @Autowired
+  private TokenStore tokenStore;
+  @Autowired
   private AssetIssueV2Store assetIssueV2Store;
   @Autowired
   private DynamicPropertiesStore dynamicPropertiesStore;
@@ -672,8 +674,7 @@ public class Manager {
     }
   }
 
-  void validateCommon(TransactionCapsule transactionCapsule)
-      throws TransactionExpirationException, TooBigTransactionException {
+  void validateCommon(TransactionCapsule transactionCapsule) throws TransactionExpirationException, TooBigTransactionException {
     if (transactionCapsule.getData().length > Constant.TRANSACTION_MAX_BYTE_SIZE) {
       throw new TooBigTransactionException("too big transaction, the size is " + transactionCapsule.getData().length + " bytes");
     }
@@ -703,18 +704,18 @@ public class Manager {
   /**
    * push transaction into pending.
    */
-  public boolean pushTransaction(final TransactionCapsule unx)
+  public boolean pushTransaction(final TransactionCapsule tx)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       AccountResourceInsufficientException, DupTransactionException, TaposException,
       TooBigTransactionException, TransactionExpirationException,
       ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException {
 
     synchronized (pushTransactionQueue) {
-      pushTransactionQueue.add(unx);
+      pushTransactionQueue.add(tx);
     }
     
     try {
-      if (!unx.validateSignature(this)) {
+      if (!tx.validateSignature(this)) {
         throw new ValidateSignatureException("trans sig validate failed");
       }
 
@@ -728,17 +729,18 @@ public class Manager {
         }
 
         try (ISession tmpSession = revokingStore.buildSession()) {
-          processTransaction(unx, null);
-          pendingTransactions.add(unx);
+          processTransaction(tx, null);
+          pendingTransactions.add(tx);
           tmpSession.merge();
         }
       }
     } finally {
-      pushTransactionQueue.remove(unx);
+      pushTransactionQueue.remove(tx);
     }
     return true;
   }
 
+  //@todo if transfer token: charge fee pool instead of owner
   public void consumeMultiSignFee(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException {
     if (unx.getInstance().getSignatureCount() > 1) {
       long fee = getDynamicPropertiesStore().getMultiSignFee();
@@ -1190,32 +1192,35 @@ public class Manager {
   /**
    * Process transaction.
    */
-  public TransactionInfo processTransaction(final TransactionCapsule unxCap, BlockCapsule blockCap)
+  public TransactionInfo processTransaction(final TransactionCapsule txCap, BlockCapsule blockCap)
           throws ValidateSignatureException, ContractValidateException, ContractExeException,
-      AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException, TooBigTransactionResultException,
-      DupTransactionException, TaposException, ReceiptCheckErrException, VMIllegalException {
-    if (unxCap == null) {
+                  AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException,
+                  TooBigTransactionResultException, DupTransactionException, TaposException, ReceiptCheckErrException,
+                  VMIllegalException {
+    if (txCap == null) {
       return null;
     }
 
-    validateTapos(unxCap);
-    validateCommon(unxCap);
+    validateTapos(txCap);
+    validateCommon(txCap);
 
-    if (unxCap.getInstance().getRawData().getContractList().size() != 1) {
+    if (txCap.getInstance().getRawData().getContractList().size() != 1) {
       throw new ContractSizeNotEqualToOneException("act size should be exactly 1, this is extend feature");
     }
 
-    validateDup(unxCap);
+    validateDup(txCap);
 
-    if (!unxCap.validateSignature(this)) {
+    if (!txCap.validateSignature(this)) {
       throw new ValidateSignatureException("trans sig validate failed");
     }
 
-    TransactionTrace trace = new TransactionTrace(unxCap, this);
-    unxCap.setUnxTrace(trace);
+    TransactionTrace trace = new TransactionTrace(txCap, this);
+    txCap.setUnxTrace(trace);
 
-    consumeBandwidth(unxCap, trace, blockCap);
-    consumeMultiSignFee(unxCap, trace);
+    //@todo charging token pool fee
+    consumeBandwidth(txCap, trace, blockCap);
+    //@todo charging token pool fee
+    consumeMultiSignFee(txCap, trace);
 
     VMConfig.initVmHardFork();
     VMConfig.initAllowMultiSign(dynamicPropertiesStore.getAllowMultiSign());
@@ -1225,13 +1230,20 @@ public class Manager {
 
     trace.init(blockCap, eventPluginLoaded);
     trace.checkIsConstant();
+    /*
+      - run level 1 with actuator: charge fee in bizz, just set bill
+        + @todo with create token, transfer token charge pool fee, don't play opcode > don't charge energy
+        + @todo make sure that simple tx don't need vm > energy = 0
+        + save fee info to build tx info
+      - run level 2: play smart contract , save contract code > charge energy
+     */
     trace.exec();
 
     if (Objects.nonNull(blockCap)) {
       trace.setResult();
       if (!blockCap.getInstance().getBlockHeader().getWitnessSignature().isEmpty()) {
         if (trace.checkNeedRetry()) {
-          String txId = Hex.toHexString(unxCap.getTransactionId().getBytes());
+          String txId = Hex.toHexString(txCap.getTransactionId().getBytes());
           logger.info("Retry for tx id: {}", txId);
           trace.init(blockCap, eventPluginLoaded);
           trace.checkIsConstant();
@@ -1243,22 +1255,29 @@ public class Manager {
       }
     }
 
+    /**
+     * charge energy fee
+     * @todo create token, transfer token don't have any effect
+     */
+
     trace.finalization();
 
     if (Objects.nonNull(blockCap) && getDynamicPropertiesStore().supportVM()) {
-      unxCap.setResult(trace.getRuntime());
+      txCap.setResult(trace.getRuntime());
     }
-    transactionStore.put(unxCap.getTransactionId().getBytes(), unxCap);
+    transactionStore.put(txCap.getTransactionId().getBytes(), txCap);
 
     Optional.ofNullable(transactionCache)
-          .ifPresent(t -> t.put(unxCap.getTransactionId().getBytes(), new BytesCapsule(ByteArray.fromLong(unxCap.getBlockNum()))));
+          .ifPresent(t -> t.put(txCap.getTransactionId().getBytes(), new BytesCapsule(ByteArray.fromLong(txCap.getBlockNum()))));
 
-    TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(unxCap, blockCap, trace);
+    //build tx exec info
+    TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, blockCap, trace);
 
-    // if event subscribe is enabled, post contract triggers to queue
+    //post contract triggers to queue if event subs enabled
     postContractTrigger(trace, false);
-    Contract contract = unxCap.getInstance().getRawData().getContract(0);
-    if (isMultSignTransaction(unxCap.getInstance())) {
+    Contract contract = txCap.getInstance().getRawData().getContract(0);
+    if (isMultSignTransaction(txCap.getInstance())) {
+      //@todo review when transfer token
       ownerAddressSet.add(ByteArray.toHexString(TransactionCapsule.getOwner(contract)));
     }
 
@@ -1281,8 +1300,8 @@ public class Manager {
    * Generate a block.
    */
   public synchronized BlockCapsule generateBlock(
-      final WitnessCapsule witnessCapsule, final long when, final byte[] privateKey,
-      Boolean lastHeadBlockIsMaintenanceBefore, Boolean needCheckWitnessPermission)
+          final WitnessCapsule witnessCapsule, final long when, final byte[] privateKey,
+          Boolean lastHeadBlockIsMaintenanceBefore, Boolean needCheckWitnessPermission)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
       UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException {
 
@@ -1328,12 +1347,12 @@ public class Manager {
     Iterator<TransactionCapsule> iterator = pendingTransactions.iterator();
     while (iterator.hasNext() || repushTransactions.size() > 0) {
       boolean fromPending = false;
-      TransactionCapsule unx;
+      TransactionCapsule tx;
       if (iterator.hasNext()) {
         fromPending = true;
-        unx = (TransactionCapsule) iterator.next();
+        tx = iterator.next();
       } else {
-        unx = repushTransactions.poll();
+        tx = repushTransactions.poll();
       }
 
       if (DateTime.now().getMillis() - when > ChainConstant.BLOCK_PRODUCED_INTERVAL * 0.5 * Args.getInstance().getBlockProducedTimeOut() / 100) {
@@ -1342,23 +1361,23 @@ public class Manager {
       }
 
       // check the block size
-      if ((blockCapsule.getInstance().getSerializedSize() + unx.getSerializedSize() + 3) > ChainConstant.BLOCK_SIZE) {
+      if ((blockCapsule.getInstance().getSerializedSize() + tx.getSerializedSize() + 3) > ChainConstant.BLOCK_SIZE) {
         postponedUnxCount++;
         continue;
       }
 
-      Contract contract = unx.getInstance().getRawData().getContract(0);
+      Contract contract = tx.getInstance().getRawData().getContract(0);
       byte[] owner = TransactionCapsule.getOwner(contract);
       String ownerAddress = ByteArray.toHexString(owner);
       if (accountSet.contains(ownerAddress)) {
         continue;
       } else {
-        if (isMultSignTransaction(unx.getInstance())) {
+        if (isMultSignTransaction(tx.getInstance())) {
           accountSet.add(ownerAddress);
         }
       }
       if (ownerAddressSet.contains(ownerAddress)) {
-        unx.setVerified(false);
+        tx.setVerified(false);
       }
       /*
         @note
@@ -1368,11 +1387,11 @@ public class Manager {
        */
       try (ISession tmpSeesion = revokingStore.buildSession()) {
         accountStateCallBack.preExeTrans();
-        TransactionInfo result = processTransaction(unx, blockCapsule);
+        TransactionInfo result = processTransaction(tx, blockCapsule);
         accountStateCallBack.exeTransFinish();
         tmpSeesion.merge();
         // push into block
-        blockCapsule.addTransaction(unx);
+        blockCapsule.addTransaction(tx);
 
         if (Objects.nonNull(result)) {
           transationRetCapsule.addTransactionInfo(result);
@@ -1511,7 +1530,7 @@ public class Manager {
       AccountResourceInsufficientException, TaposException, TooBigTransactionException,
       DupTransactionException, TransactionExpirationException, ValidateScheduleException,
       ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException, BadBlockException {
-    // todo set revoking db max size.
+    //@todo set revoking db max size.
     if (!witnessController.validateWitnessSchedule(block)) {
       throw new ValidateScheduleException("validateWitnessSchedule error");
     }
@@ -1723,6 +1742,10 @@ public class Manager {
     return assetIssueStore;
   }
 
+  public TokenStore getTokenStore() {
+    return tokenStore;
+  }
+
   public AssetIssueV2Store getAssetIssueV2Store() {
     return assetIssueV2Store;
   }
@@ -1737,6 +1760,10 @@ public class Manager {
 
   public void setAssetIssueStore(AssetIssueStore assetIssueStore) {
     this.assetIssueStore = assetIssueStore;
+  }
+
+  public void setTokenStore(TokenStore tokenStore) {
+    this.tokenStore = tokenStore;
   }
 
   public void setBlockIndexStore(BlockIndexStore indexStore) {

@@ -20,6 +20,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.joda.time.LocalDateTime;
 import org.unichain.core.capsule.CreateTokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
@@ -107,6 +108,9 @@ public class UpdateTokenFeeActuator extends AbstractActuator {
       var tokenPool = dbManager.getTokenStore().get(tokenName);
       if (Objects.isNull(tokenPool))
         throw new ContractValidateException("TokenName not exist");
+
+      if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
+          throw new ContractValidateException("Token expired at: "+ (new LocalDateTime(tokenPool.getEndTime())));
 
       if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
           throw new ContractValidateException("only owner of token pool allowed to update fee policy");

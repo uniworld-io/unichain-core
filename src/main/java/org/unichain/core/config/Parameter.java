@@ -8,6 +8,7 @@ public class Parameter {
     /**
      * token fees
      */
+    public static final long TOKEN_FUTURE_WITHDRAW_FEE = 0; // free
     public static final long TOKEN_TRANSFER_FEE = 0; // free
     public static final long TOKEN_BURN_FEE = 0; // free
     public static final long TOKEN_MINE_FEE = 0; // free

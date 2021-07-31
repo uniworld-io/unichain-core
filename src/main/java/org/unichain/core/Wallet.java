@@ -27,6 +27,7 @@ import com.google.common.primitives.Longs;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,10 +61,7 @@ import org.unichain.core.exception.*;
 import org.unichain.core.net.UnichainNetDelegate;
 import org.unichain.core.net.UnichainNetService;
 import org.unichain.core.net.message.TransactionMessage;
-import org.unichain.protos.Contract.AssetIssueContract;
-import org.unichain.protos.Contract.CreateSmartContract;
-import org.unichain.protos.Contract.TransferContract;
-import org.unichain.protos.Contract.TriggerSmartContract;
+import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.*;
 import org.unichain.protos.Protocol.Permission.PermissionType;
@@ -269,16 +267,34 @@ public class Wallet {
     energyProcessor.updateUsage(accountCapsule);
 
     long genesisTimeStamp = dbManager.getGenesisBlock().getTimeStamp();
-    accountCapsule.setLatestConsumeTime(genesisTimeStamp
-        + ChainConstant.BLOCK_PRODUCED_INTERVAL * accountCapsule.getLatestConsumeTime());
-    accountCapsule.setLatestConsumeFreeTime(genesisTimeStamp
-        + ChainConstant.BLOCK_PRODUCED_INTERVAL * accountCapsule.getLatestConsumeFreeTime());
-    accountCapsule.setLatestConsumeTimeForEnergy(genesisTimeStamp
-        + ChainConstant.BLOCK_PRODUCED_INTERVAL * accountCapsule.getLatestConsumeTimeForEnergy());
+    accountCapsule.setLatestConsumeTime(genesisTimeStamp + ChainConstant.BLOCK_PRODUCED_INTERVAL * accountCapsule.getLatestConsumeTime());
+    accountCapsule.setLatestConsumeFreeTime(genesisTimeStamp + ChainConstant.BLOCK_PRODUCED_INTERVAL * accountCapsule.getLatestConsumeFreeTime());
+    accountCapsule.setLatestConsumeTimeForEnergy(genesisTimeStamp + ChainConstant.BLOCK_PRODUCED_INTERVAL * accountCapsule.getLatestConsumeTimeForEnergy());
 
     return accountCapsule.getInstance();
   }
 
+  public CreateTokenContract getTokenPool(CreateTokenContract filter) {
+    var tokenStore = dbManager.getTokenStore();
+    CreateTokenCapsule tokenPoolCap = tokenStore.get(filter.getName().toByteArray());
+    return CreateTokenContract.newBuilder()
+            .setId(tokenPoolCap.getId())
+            .setAbbr(tokenPoolCap.getAbbr())
+            .setName(tokenPoolCap.getName())
+            .setPrecision(tokenPoolCap.getPrecision())
+            .setDescription(tokenPoolCap.getDescription())
+            .setUrl(tokenPoolCap.getUrl())
+            .setStartTime(tokenPoolCap.getStartTime())
+            .setEndTime(tokenPoolCap.getEndTime())
+            .setMaxSupply(tokenPoolCap.getMaxSupply())
+            .setTotalSupply(tokenPoolCap.getTotalSupply())
+            .setFee(tokenPoolCap.getFee())
+            .setFeePool(tokenPoolCap.getFeePool())
+            .setBurned(tokenPoolCap.getBurnedToken())
+            .setOwnerAddress(tokenPoolCap.getOwnerAddress())
+            .setLatestOperationTime(tokenPoolCap.getLatestOperationTime())
+            .build();
+  }
 
   public Account getAccountById(Account account) {
     AccountStore accountStore = dbManager.getAccountStore();

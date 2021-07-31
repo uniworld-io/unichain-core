@@ -51,6 +51,8 @@ import org.unichain.core.services.DelegationService;
 import org.unichain.core.services.WitnessService;
 import org.unichain.core.witness.ProposalController;
 import org.unichain.core.witness.WitnessController;
+import org.unichain.protos.Contract.TransferTokenContract;
+import org.unichain.protos.Contract.WithdrawFutureTokenContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction;
@@ -67,7 +69,6 @@ import java.util.stream.LongStream;
 import static org.unichain.core.Constant.ONE_MINUTE_TIMESTAMP_DIFF;
 import static org.unichain.core.config.Parameter.ChainConstant.SOLIDIFIED_THRESHOLD;
 import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PENDING;
-import org.unichain.protos.Contract.TransferTokenContract;
 
 
 @Slf4j(topic = "DB")
@@ -747,26 +748,40 @@ public class Manager {
 
       List<Contract> contracts = unx.getInstance().getRawData().getContractList();
       for (Contract contract : contracts) {
-        if(contract.getType() == Contract.ContractType.TransferTokenContract){
-          TransferTokenContract tContract;
-          try {
-            tContract = contract.getParameter().unpack(TransferTokenContract.class);
-            chargeFee4TokenPool(tContract.getTokenName().toByteArray(), fee);
-          }
-          catch (Exception ex) {
-            logger.error("consumeForCreateNewAccount4TokenTransfer got error -->", ex);
-            throw new RuntimeException(ex.getMessage());
-          }
-        }
-        else {
-          AccountCapsule accountCapsule = getAccountStore().get(TransactionCapsule.getOwner(contract));
-          try {
-            chargeFee(accountCapsule, fee);
-          } catch (BalanceInsufficientException e) {
-            throw new AccountResourceInsufficientException("Account Insufficient  balance[" + fee + "] to MultiSign");
-          }
+        switch (contract.getType()){
+          case TransferTokenContract:
+            TransferTokenContract tContract;
+            try {
+              tContract = contract.getParameter().unpack(TransferTokenContract.class);
+              chargeFee4TokenPool(tContract.getTokenName().toByteArray(), fee);
+            }
+            catch (Exception ex) {
+              logger.error("chargeFee4TokenPool got error -->", ex);
+              throw new RuntimeException(ex.getMessage());
+            }
+            break;
+          case WithdrawFutureTokenContract:
+            WithdrawFutureTokenContract wContract;
+            try {
+              wContract = contract.getParameter().unpack(WithdrawFutureTokenContract.class);
+              chargeFee4TokenPool(wContract.getTokenName().toByteArray(), fee);
+            }
+            catch (Exception ex) {
+              logger.error("consumeForCreateNewAccount4TokenTransfer got error -->", ex);
+              throw new RuntimeException(ex.getMessage());
+            }
+            break;
+          default:
+            AccountCapsule accountCapsule = getAccountStore().get(TransactionCapsule.getOwner(contract));
+            try {
+              chargeFee(accountCapsule, fee);
+            } catch (BalanceInsufficientException e) {
+              throw new AccountResourceInsufficientException("Account Insufficient  balance[" + fee + "] to MultiSign");
+            }
+            break;
         }
       }
+
       trace.getReceipt().setMultiSignFee(fee);
     }
   }

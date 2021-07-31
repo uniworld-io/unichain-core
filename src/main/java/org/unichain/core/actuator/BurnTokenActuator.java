@@ -20,14 +20,13 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
-import org.unichain.core.capsule.CreateTokenCapsule;
+import org.joda.time.LocalDateTime;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.BurnTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -107,11 +106,17 @@ public class BurnTokenActuator extends AbstractActuator {
       throw new ContractValidateException("Fee exceeded balance");
 
     var tokenName = subContract.getTokenName().toByteArray();
-    var tokenCap = dbManager.getTokenStore().get(tokenName);
-    if(Objects.isNull(tokenCap))
+    var tokenPool = dbManager.getTokenStore().get(tokenName);
+    if(Objects.isNull(tokenPool))
       throw new ContractValidateException("Token not exist :"+ subContract.getTokenName());
 
-    if(!Arrays.equals(ownerAddress, tokenCap.getOwnerAddress().toByteArray()))
+    if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
+      throw new ContractValidateException("Token expired at: "+ (new LocalDateTime(tokenPool.getEndTime())));
+
+    if(tokenPool.getStartTime() < dbManager.getHeadBlockTimeStamp())
+      throw new ContractValidateException("Token pending to start at: "+ (new LocalDateTime(tokenPool.getStartTime())));
+
+    if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
       throw new ContractValidateException("Mismatched token owner not allowed to mine");
 
     if(ownerAccountCap.getTokenAvailable(tokenName) < subContract.getAmount())

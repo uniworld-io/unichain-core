@@ -3,14 +3,13 @@ package org.unichain.core.db;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.Constant;
 import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.CreateTokenCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.exception.AccountResourceInsufficientException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.exception.TooBigTransactionResultException;
 import org.unichain.protos.Contract.TransferAssetContract;
-import org.unichain.protos.Contract.TransferTokenContract;
 import org.unichain.protos.Contract.TransferContract;
+import org.unichain.protos.Contract.TransferTokenContract;
 import org.unichain.protos.Protocol.Transaction.Contract;
 
 import java.util.List;
@@ -95,14 +94,17 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
       }
 
       //or else charge bw fee
-      if(contract.getType() == Contract.ContractType.TransferTokenContract){
+      switch (contract.getType()){
+        case TransferTokenContract:
+        case WithdrawFutureTokenContract:
           if(useTransactionFee4TokenPool(contract, bytesSize, trace))
             continue;
-      }
-      else {
-        if (useTransactionFee(ownerAccountCap, bytesSize, trace)) {
-          continue;
-        }
+          break;
+        default:
+          if (useTransactionFee(ownerAccountCap, bytesSize, trace)) {
+            continue;
+          }
+          break;
       }
 
       long fee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytesSize;

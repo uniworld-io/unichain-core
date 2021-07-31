@@ -161,7 +161,13 @@ message TransferTokenContract {
   bytes to_address = 2;
   bytes token_name = 3;
   int64 amount = 4;
-  int64 expire_time = 5;
+  int64 available_time = 5;
+  TokenTransferType type = 6;
+}
+
+message WithdrawFutureTokenContract {
+  bytes owner_address = 1;
+  bytes token_name = 2;
 }
 
 message AssetIssueContract {

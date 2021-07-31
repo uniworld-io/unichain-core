@@ -387,6 +387,11 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferTokenContractBuilder, selfType);
             any = Any.pack(transferTokenContractBuilder.build());
             break;
+          case "WithdrawFutureTokenContract":
+            WithdrawFutureTokenContract.Builder withdrawFutureTokenContractBuilder = WithdrawFutureTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), withdrawFutureTokenContractBuilder, selfType);
+            any = Any.pack(withdrawFutureTokenContractBuilder.build());
+            break;
 
           case "WitnessUpdateContract":
             WitnessUpdateContract.Builder witnessUpdateContractBuilder = WitnessUpdateContract.newBuilder();

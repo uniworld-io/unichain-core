@@ -18,7 +18,6 @@ package org.unichain.core.capsule;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.Assert;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -62,6 +61,10 @@ public class CreateTokenCapsule implements ProtoCapsule<Contract.CreateTokenCont
     return this.createTokenContract.getName();
   }
 
+  public ByteString getDescription() {
+    return this.createTokenContract.getDescription();
+  }
+
   public String getId() {
     return this.createTokenContract.getId();
   }
@@ -100,6 +103,14 @@ public class CreateTokenCapsule implements ProtoCapsule<Contract.CreateTokenCont
 
   public ByteString getOwnerAddress() {
     return this.createTokenContract.getOwnerAddress();
+  }
+
+  public Long getLatestOperationTime() {
+    return this.createTokenContract.getLatestOperationTime();
+  }
+
+  public ByteString getUrl() {
+    return this.createTokenContract.getUrl();
   }
 
   public long getTotalSupply() {

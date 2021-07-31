@@ -260,6 +260,18 @@ public class RpcApiService implements Service {
   public class WalletSolidityApi extends WalletSolidityImplBase {
 
     @Override
+    public void getTokenPool(CreateTokenContract request, StreamObserver<CreateTokenContract> responseObserver) {
+      ByteString tokenName = request.getName();
+      if ( tokenName != null) {
+        CreateTokenContract reply = wallet.getTokenPool(request);
+        responseObserver.onNext(reply);
+      } else {
+        responseObserver.onNext(null);
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
     public void getAccount(Account request, StreamObserver<Account> responseObserver) {
       ByteString addressBs = request.getAddress();
       if (addressBs != null) {
@@ -613,6 +625,18 @@ public class RpcApiService implements Service {
         builder.addBlock(block2Extention(block));
       }
       return builder.build();
+    }
+
+    @Override
+    public void getTokenPool(CreateTokenContract request, StreamObserver<CreateTokenContract> responseObserver) {
+      ByteString tokenName = request.getName();
+      if ( tokenName != null) {
+        CreateTokenContract reply = wallet.getTokenPool(request);
+        responseObserver.onNext(reply);
+      } else {
+        responseObserver.onNext(null);
+      }
+      responseObserver.onCompleted();
     }
 
     @Override

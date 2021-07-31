@@ -12,6 +12,16 @@ option go_package = "github.com/unichainprotocol/grpc-gateway/api";
 
 service Wallet {
 
+  rpc GetTokenPool (CreateTokenContract) returns (CreateTokenContract) {
+    option (google.api.http) = {
+      post: "/wallet/gettokenpool"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/gettokenpool"
+      }
+    };
+  };
+
   rpc GetAccount (Account) returns (Account) {
     option (google.api.http) = {
       post: "/wallet/getaccount"
@@ -204,6 +214,16 @@ service Wallet {
       body: "*"
       additional_bindings {
         get: "/wallet/transfertoken"
+      }
+    };
+  }
+
+  rpc WithdrawTokenFuture (BytesMessage) returns (WithdrawFutureTokenContract) {
+    option (google.api.http) = {
+      post: "/wallet/withdrawfuturetoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/withdrawfuturetoken"
       }
     };
   }
@@ -745,6 +765,15 @@ service Wallet {
 };
 
 service WalletSolidity {
+  rpc GetTokenPool (CreateTokenContract) returns (CreateTokenContract) {
+    option (google.api.http) = {
+      post: "/walletsolidity/gettokenpool"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/gettokenpool"
+      }
+    };
+  };
 
   rpc GetAccount (Account) returns (Account) {
     option (google.api.http) = {
@@ -755,6 +784,8 @@ service WalletSolidity {
       }
     };
   };
+
+
   rpc GetAccountById (Account) returns (Account) {
     option (google.api.http) = {
       post: "/walletsolidity/getaccountbyid"

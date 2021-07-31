@@ -24,19 +24,22 @@ import org.joda.time.LocalDateTime;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
-import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.MineTokenContract;
+import org.unichain.protos.Contract.WithdrawFutureTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * @todo:
+ * what happen if some one constantly make withdraw tx that not in account ?
+ * - pool spam because fee is on pool
+ */
 @Slf4j(topic = "actuator")
-public class MineTokenActuator extends AbstractActuator {
+public class WithdrawFutureTokenActuator extends AbstractActuator {
 
-  MineTokenActuator(Any contract, Manager dbManager) {
+  WithdrawFutureTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -44,33 +47,29 @@ public class MineTokenActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      var subContract = contract.unpack(MineTokenContract.class);
-      logger.info("MineTokenContract  {} ...", subContract);
-
-      //update total supply
-      var tokenName = subContract.getTokenName().toByteArray();
-      var tokenCapsule = dbManager.getTokenStore().get(tokenName);
-      tokenCapsule.setTotalSupply(tokenCapsule.getTotalSupply() + subContract.getAmount());
-      dbManager.getTokenStore().put(tokenName, tokenCapsule);
-
-      //mine on owner account
+      WithdrawFutureTokenContract subContract = contract.unpack(WithdrawFutureTokenContract.class);
       var ownerAddress = subContract.getOwnerAddress().toByteArray();
-      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      accountCapsule.mineToken(tokenName, subContract.getAmount());
-      dbManager.getAccountStore().put(ownerAddress, accountCapsule);
+      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
+      var tokenName = subContract.getTokenName().toByteArray();
+      var tokenPool = dbManager.getTokenStore().get(tokenName);
 
-      chargeFee(ownerAddress, fee);
+      //withdraw future
+      if(!ownerAccountCap.withdrawTokenFuture(tokenName, dbManager.getHeadBlockTimeStamp()))
+        throw new ContractExeException("failed to withdraw token from account");
+      dbManager.getAccountStore().put(ownerAddress, ownerAccountCap);
+
+      //if success, charge pool fee
+      tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      tokenPool.setFeePool(tokenPool.getFeePool() - fee);
+      dbManager.getTokenStore().put(tokenName, tokenPool);
+
       ret.setStatus(fee, code.SUCESS);
-      logger.info("MineTokenContract  {} ...DONE!", subContract);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
-    } catch (BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (ArithmeticException e) {
+    }
+    catch (ArithmeticException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
@@ -80,34 +79,36 @@ public class MineTokenActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (Objects.isNull(contract))
+    if (this.contract == null) {
       throw new ContractValidateException("No contract!");
-
-    if (Objects.isNull(dbManager))
+    }
+    if (this.dbManager == null) {
       throw new ContractValidateException("No dbManager!");
+    }
+    if (!this.contract.is(WithdrawFutureTokenContract.class)) {
+      throw new ContractValidateException("contract type error, expected type [WithdrawFutureTokenContract],real type[" + contract.getClass() + "]");
+    }
 
-    if (!this.contract.is(MineTokenContract.class))
-      throw new ContractValidateException("contract type error, expected type [MineTokenContract],real type[" + contract.getClass() + "]");
+    long fee = calcFee();
 
-    final MineTokenContract subContract;
+    final WithdrawFutureTokenContract subContract;
     try {
-      subContract = this.contract.unpack(MineTokenContract.class);
+      subContract = this.contract.unpack(WithdrawFutureTokenContract.class);
     } catch (InvalidProtocolBufferException e) {
+      logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
 
     var ownerAddress = subContract.getOwnerAddress().toByteArray();
     var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
     if(Objects.isNull(ownerAccountCap))
-      throw new ContractValidateException("Owner address not exist");
+      throw new ContractValidateException("Owner account not found");
 
-    if (ownerAccountCap.getBalance() < calcFee())
-      throw new ContractValidateException("Fee exceed balance");
-
+    //detect available token to withdraw
     var tokenName = subContract.getTokenName().toByteArray();
     var tokenPool = dbManager.getTokenStore().get(tokenName);
     if(Objects.isNull(tokenPool))
-      throw new ContractValidateException("Token not exist :"+ subContract.getTokenName());
+      throw new ContractValidateException("Token pool not found: " + subContract.getTokenName());
 
     if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
       throw new ContractValidateException("Token expired at: "+ (new LocalDateTime(tokenPool.getEndTime())));
@@ -115,24 +116,23 @@ public class MineTokenActuator extends AbstractActuator {
     if(tokenPool.getStartTime() < dbManager.getHeadBlockTimeStamp())
       throw new ContractValidateException("Token pending to start at: "+ (new LocalDateTime(tokenPool.getStartTime())));
 
-    if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
-      throw new ContractValidateException("Mismatched token owner not allowed to mine");
+    long available = ownerAccountCap.getTokenFutureAvailable(tokenName, dbManager.getHeadBlockTimeStamp());
+    if(available <= 0)
+      throw new ContractValidateException("Not found future token or unavailable to withdraw");
 
-    // avail to mine = max - total - burned
-    var availableToMine = tokenPool.getMaxSupply() - tokenPool.getTotalSupply() - tokenPool.getBurnedToken();
-    if(subContract.getAmount() > availableToMine)
-      throw new ContractValidateException("not enough frozen token to mine, maximum allowed: " + availableToMine);
+    if(tokenPool.getFeePool() < fee)
+      throw new ContractValidateException("not enough token pool fee balance");
 
     return true;
   }
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(MineTokenContract.class).getOwnerAddress();
+    return contract.unpack(WithdrawFutureTokenContract.class).getOwnerAddress();
   }
 
   @Override
   public long calcFee() {
-    return Parameter.ChainConstant.TOKEN_MINE_FEE;
+    return Parameter.ChainConstant.TOKEN_FUTURE_WITHDRAW_FEE;
   }
 }

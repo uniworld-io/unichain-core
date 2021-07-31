@@ -35,7 +35,6 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.db.TransactionTrace;
 import org.unichain.core.exception.*;
 import org.unichain.protos.Contract;
-import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol.Key;
 import org.unichain.protos.Protocol.Permission;
 import org.unichain.protos.Protocol.Permission.PermissionType;
@@ -46,6 +45,7 @@ import org.unichain.protos.Protocol.Transaction.Result.contractResult;
 import org.unichain.protos.Protocol.Transaction.raw;
 
 import java.io.IOException;
+import java.lang.Exception;
 import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,8 +58,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.unichain.core.exception.P2pException.TypeEnum.PROTOBUF_ERROR;
 import static org.unichain.protos.Contract.*;
-
-import java.lang.Exception;
 
 @Slf4j(topic = "capsule")
 public class TransactionCapsule implements ProtoCapsule<Transaction> {

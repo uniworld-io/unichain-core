@@ -20,19 +20,17 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.joda.time.LocalDateTime;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.CreateTokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
-import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.TransferTokenContract;
 import org.unichain.protos.Protocol;
+import org.unichain.protos.Protocol.TokenTransferType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -70,13 +68,19 @@ public class TransferTokenActuator extends AbstractActuator {
       tokenPool.setFeePool(tokenPool.getFeePool() - fee);
       dbManager.getTokenStore().put(tokenName, tokenPool);
 
+      TokenTransferType transferType = subContract.getType();
       //charge token
       if(Arrays.equals(ownerAddress, subContract.getOwnerAddress().toByteArray())){
         //just transfer from owner: free token
         ownerAccountCap.burnToken(tokenName, subContract.getAmount());
         dbManager.getAccountStore().put(ownerAddress, ownerAccountCap);
         var toAccountCap = dbManager.getAccountStore().get(toAddress);
-        toAccountCap.addToken(tokenName, subContract.getAmount());
+        if(transferType == TokenTransferType.Instant){
+          toAccountCap.addToken(tokenName, subContract.getAmount());
+        }
+        else {
+          toAccountCap.addTokenFuture(tokenName, subContract.getAmount(), subContract.getAvailableTime());
+        }
         dbManager.getAccountStore().put(toAddress, toAccountCap);
       }
       else {
@@ -89,7 +93,14 @@ public class TransferTokenActuator extends AbstractActuator {
         dbManager.getAccountStore().put(ownerAddress, ownerAccountCap);
 
         var toAccountCap = dbManager.getAccountStore().get(toAddress);
-        toAccountCap.addToken(tokenName, subContract.getAmount() - tokenPool.getFee());
+        if(transferType == TokenTransferType.Instant){
+          toAccountCap.addToken(tokenName, subContract.getAmount() - tokenPool.getFee());
+        }
+        else
+        {
+          toAccountCap.addTokenFuture(tokenName, subContract.getAmount() - tokenPool.getFee(), subContract.getAvailableTime());
+        }
+
         dbManager.getAccountStore().put(toAddress, toAccountCap);
       }
 
@@ -139,6 +150,12 @@ public class TransferTokenActuator extends AbstractActuator {
     if(Objects.isNull(tokenPool))
       throw new ContractValidateException("Token pool not found: " + subContract.getTokenName());
 
+    if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
+      throw new ContractValidateException("Token expired at: "+ (new LocalDateTime(tokenPool.getEndTime())));
+
+    if(tokenPool.getStartTime() < dbManager.getHeadBlockTimeStamp())
+      throw new ContractValidateException("Token pending to start at: "+ (new LocalDateTime(tokenPool.getStartTime())));
+
     var toAddress = subContract.getToAddress().toByteArray();
     if (!Wallet.addressValid(toAddress)) {
       throw new ContractValidateException("Invalid toAddress");
@@ -155,9 +172,13 @@ public class TransferTokenActuator extends AbstractActuator {
     if(subContract.getAmount() <= 0)
       throw new ContractValidateException("invalid transfer amount, expect positive number");
 
-    //@todo should reserve block time
-    if(subContract.getExpireTime() <= dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("invalid expire time, head block timestamp exceeded");
+    if(subContract.getType() == Protocol.TokenTransferType.Future){
+      if(subContract.getAvailableTime() <= dbManager.getHeadBlockTimeStamp())
+        throw new ContractValidateException("block time passed available time");
+
+      if(subContract.getAvailableTime() >= tokenPool.getEndTime())
+        throw new ContractValidateException("available time exceeded token expired time");
+    }
 
     if(ownerAccountCap.getTokenAvailable(tokenName) < subContract.getAmount())
       throw new ContractValidateException("not enough token balance");

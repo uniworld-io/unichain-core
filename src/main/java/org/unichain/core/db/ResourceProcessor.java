@@ -10,7 +10,6 @@ import org.unichain.core.exception.AccountResourceInsufficientException;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.exception.TooBigTransactionResultException;
-import org.unichain.protos.Contract;
 
 @Slf4j(topic = "DB")
 abstract class ResourceProcessor {

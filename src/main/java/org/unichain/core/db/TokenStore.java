@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.unichain.core.capsule.CreateTokenCapsule;
+import org.unichain.core.capsule.TokenPoolCapsule;
 
 import java.util.Comparator;
 import java.util.List;
@@ -16,7 +16,7 @@ import static org.unichain.core.config.Parameter.DatabaseConstants.TOKEN_ISSUE_C
 
 @Slf4j(topic = "DB")
 @Component
-public class TokenStore extends UnichainStoreWithRevoking<CreateTokenCapsule> {
+public class TokenStore extends UnichainStoreWithRevoking<TokenPoolCapsule> {
 
   @Autowired
   protected TokenStore(@Value("token-issue") String dbName) {
@@ -24,17 +24,17 @@ public class TokenStore extends UnichainStoreWithRevoking<CreateTokenCapsule> {
   }
 
   @Override
-  public CreateTokenCapsule get(byte[] key) {
+  public TokenPoolCapsule get(byte[] key) {
     return super.getUnchecked(key);
   }
 
-  public List<CreateTokenCapsule> getAllTokens() {
+  public List<TokenPoolCapsule> getAllTokens() {
     return Streams.stream(iterator())
         .map(Entry::getValue)
         .collect(Collectors.toList());
   }
 
-  private List<CreateTokenCapsule> getTokenPaginated(List<CreateTokenCapsule> tokenList, long offset, long limit) {
+  private List<TokenPoolCapsule> getTokenPaginated(List<TokenPoolCapsule> tokenList, long offset, long limit) {
     if (limit < 0 || offset < 0) {
       return null;
     }
@@ -49,7 +49,7 @@ public class TokenStore extends UnichainStoreWithRevoking<CreateTokenCapsule> {
     return tokenList.subList((int) offset, (int) end);
   }
 
-  public List<CreateTokenCapsule> getTokenPaginated(long offset, long limit) {
+  public List<TokenPoolCapsule> getTokenPaginated(long offset, long limit) {
     return getTokenPaginated(getAllTokens(), offset, limit);
   }
 }

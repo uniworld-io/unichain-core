@@ -1145,5 +1145,4 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     builder.setAcquiredDelegatedFrozenBalanceForBandwidth(0L);
     this.account = builder.build();
   }
-
 }

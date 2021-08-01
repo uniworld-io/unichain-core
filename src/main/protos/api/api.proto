@@ -66,15 +66,15 @@ service Wallet {
     };
   };
 
-    rpc CreateFutureTransferTransaction (FutureTransferContract) returns (Transaction) {
-      option (google.api.http) = {
-        post: "/wallet/createfuturetransaction"
-        body: "*"
-          additional_bindings {
-            get: "/wallet/createfuturetransaction"
-        }
-      };
+  rpc CreateFutureTransferTransaction (FutureTransferContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/createfuturetransaction"
+      body: "*"
+        additional_bindings {
+          get: "/wallet/createfuturetransaction"
+      }
     };
+  };
 
   rpc BroadcastTransaction (Transaction) returns (Return) {
     option (google.api.http) = {
@@ -167,7 +167,7 @@ service Wallet {
     };
   };
 
-  rpc UpdateTokenFee (BytesMessage) returns (UpdateTokenFeeContract) {
+  rpc UpdateTokenFee (UpdateTokenFeeContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/updatetokenfee"
       body: "*"
@@ -177,7 +177,7 @@ service Wallet {
     };
   }
 
-  rpc UpdateTokenUrl (BytesMessage) returns (UpdateTokenUrlContract) {
+  rpc UpdateTokenUrl (UpdateTokenUrlContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/updatetokenurl"
       body: "*"
@@ -187,7 +187,7 @@ service Wallet {
     };
   }
 
-  rpc MineToken (BytesMessage) returns (MineTokenContract) {
+  rpc MineToken (MineTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/minetoken"
       body: "*"
@@ -198,7 +198,7 @@ service Wallet {
   }
 
 
-  rpc BurnToken (BytesMessage) returns (BurnTokenContract) {
+  rpc BurnToken (BurnTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/burntoken"
       body: "*"
@@ -208,7 +208,7 @@ service Wallet {
     };
   }
 
-  rpc TransferToken (BytesMessage) returns (TransferTokenContract) {
+  rpc TransferToken (TransferTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/transfertoken"
       body: "*"
@@ -218,7 +218,7 @@ service Wallet {
     };
   }
 
-  rpc WithdrawTokenFuture (BytesMessage) returns (WithdrawFutureTokenContract) {
+  rpc WithdrawTokenFuture (WithdrawFutureTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/withdrawfuturetoken"
       body: "*"

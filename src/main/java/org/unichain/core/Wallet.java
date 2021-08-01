@@ -276,7 +276,7 @@ public class Wallet {
 
   public CreateTokenContract getTokenPool(CreateTokenContract filter) {
     var tokenStore = dbManager.getTokenStore();
-    CreateTokenCapsule tokenPoolCap = tokenStore.get(filter.getName().toByteArray());
+    TokenPoolCapsule tokenPoolCap = tokenStore.get(filter.getName().toByteArray());
     return CreateTokenContract.newBuilder()
             .setId(tokenPoolCap.getId())
             .setAbbr(tokenPoolCap.getAbbr())

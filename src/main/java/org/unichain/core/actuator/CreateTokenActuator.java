@@ -21,7 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.CreateTokenCapsule;
+import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.config.Parameter;
@@ -47,7 +47,7 @@ public class CreateTokenActuator extends AbstractActuator {
     try {
       var subContract = contract.unpack(CreateTokenContract.class);
       var ownerAddress = subContract.getOwnerAddress().toByteArray();
-      var tokenCapsule = new CreateTokenCapsule(subContract);
+      var tokenCapsule = new TokenPoolCapsule(subContract);
 
       //gen token id
       var tokenIdNum = dbManager.getDynamicPropertiesStore().getTokenIdNum();

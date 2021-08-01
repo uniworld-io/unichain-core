@@ -25,13 +25,13 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.CreateTokenContract;
 
 @Slf4j(topic = "capsule")
-public class CreateTokenCapsule implements ProtoCapsule<Contract.CreateTokenContract> {
+public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContract> {
   private CreateTokenContract createTokenContract;
 
   /**
    * get asset issue contract from bytes data.
    */
-  public CreateTokenCapsule(byte[] data) {
+  public TokenPoolCapsule(byte[] data) {
     try {
       this.createTokenContract = CreateTokenContract.parseFrom(data);
     } catch (InvalidProtocolBufferException e) {
@@ -39,7 +39,7 @@ public class CreateTokenCapsule implements ProtoCapsule<Contract.CreateTokenCont
     }
   }
 
-  public CreateTokenCapsule(CreateTokenContract createTokenContract) {
+  public TokenPoolCapsule(CreateTokenContract createTokenContract) {
     this.createTokenContract = createTokenContract;
   }
 

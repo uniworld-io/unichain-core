@@ -30,7 +30,6 @@ public class GetTokenPoolServlet extends HttpServlet {
       var start_time = tokenPool.getStartTime();
       var end_time = tokenPool.getEndTime();
       var lastOpTime = tokenPool.getLatestOperationTime();
-      String assetId = tokenPoolJson.get("asset_issued_ID").toString();
       tokenPoolJson.put("start_time", LocalDateTime.ofInstant(Instant.ofEpochMilli(start_time), TimeZone.getDefault().toZoneId()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
       tokenPoolJson.put("end_time", LocalDateTime.ofInstant(Instant.ofEpochMilli(end_time), TimeZone.getDefault().toZoneId()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
       tokenPoolJson.put("latest_operation_time", LocalDateTime.ofInstant(Instant.ofEpochMilli(lastOpTime), TimeZone.getDefault().toZoneId()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));

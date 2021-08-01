@@ -2,7 +2,7 @@ package org.unichain.core.db;
 
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.CreateTokenCapsule;
+import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.config.Parameter.AdaptiveResourceLimitConstants;
 import org.unichain.core.config.Parameter.ChainConstant;
@@ -74,7 +74,7 @@ abstract class ResourceProcessor {
 
   protected boolean consumeFeeTokenPool(byte[] tokenName, long fee) {
       long latestOperationTime = dbManager.getHeadBlockTimeStamp();
-      CreateTokenCapsule tokenPool = dbManager.getTokenStore().get(tokenName);
+      TokenPoolCapsule tokenPool = dbManager.getTokenStore().get(tokenName);
       tokenPool.setLatestOperationTime(latestOperationTime);
 
       if(tokenPool.getFeePool() < fee)

@@ -2031,7 +2031,7 @@ public class Manager {
   }
 
   protected void chargeFee4TokenPool(byte[] tokenName, long fee) throws BalanceInsufficientException {
-    CreateTokenCapsule tokenPool = getTokenStore().get(tokenName);
+    TokenPoolCapsule tokenPool = getTokenStore().get(tokenName);
     if(tokenPool.getFeePool() < fee)
       throw new BalanceInsufficientException("not enough token pool fee");
 

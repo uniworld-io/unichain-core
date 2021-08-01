@@ -21,7 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.joda.time.LocalDateTime;
-import org.unichain.core.capsule.CreateTokenCapsule;
+import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -54,7 +54,7 @@ public class UpdateTokenFeeActuator extends AbstractActuator {
       var tokenName = subContract.getTokenName().toByteArray();
 
       //update token fee
-      CreateTokenCapsule tokenCap = dbManager.getTokenStore().get(tokenName);
+      TokenPoolCapsule tokenCap = dbManager.getTokenStore().get(tokenName);
       tokenCap.setFee(subContract.getAmount());
       dbManager.getTokenStore().put(tokenName, tokenCap);
 

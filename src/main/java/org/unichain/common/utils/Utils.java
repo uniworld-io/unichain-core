@@ -22,7 +22,9 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 public interface Utils {
 
@@ -73,6 +75,13 @@ public interface Utils {
       return String.format("%dMb", size / (1L << 20));
     }
     return String.format("%dGb", size / (1L << 30));
+  }
+
+  static String formatDateLong(long time){
+    Date date = new Date(time);
+    String pattern = "yyyy-MM-dd";
+    SimpleDateFormat format = new SimpleDateFormat(pattern);
+    return format.format(date);
   }
 
   static String align(String s, char fillChar, int targetLen, boolean alignRight) {

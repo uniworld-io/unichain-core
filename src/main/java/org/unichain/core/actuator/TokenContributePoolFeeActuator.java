@@ -20,25 +20,22 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
-import org.joda.time.LocalDateTime;
+import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract;
-import org.unichain.protos.Contract.UpdateTokenUrlContract;
+import org.unichain.protos.Contract.ContributeTokenPoolFeeContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 @Slf4j(topic = "actuator")
-public class UpdateTokenUrlActuator extends AbstractActuator {
+public class TokenContributePoolFeeActuator extends AbstractActuator {
 
-  UpdateTokenUrlActuator(Any contract, Manager dbManager) {
+  TokenContributePoolFeeActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -46,18 +43,18 @@ public class UpdateTokenUrlActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      var subContract = contract.unpack(Contract.UpdateTokenUrlContract.class);
-      logger.info("UpdateTokenUrl  {} ...", subContract);
+      var subContract = contract.unpack(ContributeTokenPoolFeeContract.class);
+      logger.info("ContributeTokenPoolFee  {} ...", subContract);
+      var ownerAddress = subContract.getOwnerAddress().toByteArray();
       var tokenName = subContract.getTokenName().toByteArray();
+      var tokenCapsule = dbManager.getTokenStore().get(tokenName);
+      tokenCapsule.setFeePool(tokenCapsule.getFeePool() + subContract.getAmount());
+      dbManager.getTokenStore().put(tokenName, tokenCapsule);
 
-      var tokenCap = dbManager.getTokenStore().get(tokenName);
-      tokenCap.setUrl(subContract.getUrl());
-      tokenCap.setDescription(subContract.getDescription());
-      dbManager.getTokenStore().put(tokenName, tokenCap);
-
-      chargeFee(subContract.getOwnerAddress().toByteArray(), fee);
+      chargeFee(ownerAddress, fee);
+      dbManager.adjustBalance(ownerAddress, subContract.getAmount());
       ret.setStatus(fee, code.SUCESS);
-      logger.info("UpdateTokenUrl  {} ...DONE!", subContract);
+      logger.info("ContributeTokenPoolFee  {} ...DONE!", subContract);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
@@ -77,29 +74,25 @@ public class UpdateTokenUrlActuator extends AbstractActuator {
   @Override
   public boolean validate() throws ContractValidateException {
       if (Objects.isNull(contract))
-          throw new ContractValidateException("No contract!");
+        throw new ContractValidateException("No contract!");
 
       if (Objects.isNull(dbManager))
-          throw new ContractValidateException("No dbManager!");
+        throw new ContractValidateException("No dbManager!");
 
-      if (!this.contract.is(UpdateTokenUrlContract.class))
-        throw new ContractValidateException("contract type error, expected type [UpdateTokenUrlContract],real type[" + contract.getClass() + "]");
+      if (!this.contract.is(ContributeTokenPoolFeeContract.class))
+        throw new ContractValidateException("contract type error, expected type [ContributeTokenPoolFeeContract],real type[" + contract.getClass() + "]");
 
-      final UpdateTokenUrlContract subContract;
+      final ContributeTokenPoolFeeContract subContract;
       try {
-        subContract = this.contract.unpack(UpdateTokenUrlContract.class);
+        subContract = this.contract.unpack(ContributeTokenPoolFeeContract.class);
       } catch (InvalidProtocolBufferException e) {
         logger.debug(e.getMessage(), e);
         throw new ContractValidateException(e.getMessage());
       }
 
-      var ownerAddress = subContract.getOwnerAddress().toByteArray();
-      var accountCap = dbManager.getAccountStore().get(ownerAddress);
+      var accountCap = dbManager.getAccountStore().get(subContract.getOwnerAddress().toByteArray());
       if (Objects.isNull(accountCap))
         throw new ContractValidateException("Invalid ownerAddress");
-
-      if(accountCap.getBalance() < calcFee())
-          throw new ContractValidateException("Not enough balance");
 
       var tokenName = subContract.getTokenName().toByteArray();
       var tokenPool = dbManager.getTokenStore().get(tokenName);
@@ -107,23 +100,21 @@ public class UpdateTokenUrlActuator extends AbstractActuator {
         throw new ContractValidateException("TokenName not exist");
 
       if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
-          throw new ContractValidateException("Token expired at: "+ (new LocalDateTime(tokenPool.getEndTime())));
+          throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
 
-      if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
-          throw new ContractValidateException("only owner of token pool allowed to update url description");
+      if(tokenPool.getStartTime() < dbManager.getHeadBlockTimeStamp())
+          throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
-      if (!TransactionUtil.validUrl(subContract.getUrl().toByteArray()))
-          throw new ContractValidateException("Invalid url");
-
-      if (!TransactionUtil.validAssetDescription(subContract.getDescription().toByteArray()))
-          throw new ContractValidateException("Invalid description");
+      var contributeAmount = subContract.getAmount();
+      if (accountCap.getBalance() < contributeAmount + calcFee())
+        throw new ContractValidateException("Not enough balance");
 
       return true;
   }
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(UpdateTokenUrlContract.class).getOwnerAddress();
+    return contract.unpack(ContributeTokenPoolFeeContract.class).getOwnerAddress();
   }
 
   @Override

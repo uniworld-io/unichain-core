@@ -35,9 +35,9 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Objects;
 
 @Slf4j(topic = "actuator")
-public class CreateTokenActuator extends AbstractActuator {
+public class TokenCreateActuator extends AbstractActuator {
 
-  CreateTokenActuator(Any contract, Manager dbManager) {
+  TokenCreateActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

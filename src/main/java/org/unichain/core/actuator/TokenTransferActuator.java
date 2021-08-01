@@ -20,7 +20,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
-import org.joda.time.LocalDateTime;
+import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -37,9 +37,9 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @Slf4j(topic = "actuator")
-public class TransferTokenActuator extends AbstractActuator {
+public class TokenTransferActuator extends AbstractActuator {
 
-  TransferTokenActuator(Any contract, Manager dbManager) {
+  TokenTransferActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -151,10 +151,10 @@ public class TransferTokenActuator extends AbstractActuator {
       throw new ContractValidateException("Token pool not found: " + subContract.getTokenName());
 
     if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("Token expired at: "+ (new LocalDateTime(tokenPool.getEndTime())));
+      throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
 
     if(tokenPool.getStartTime() < dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("Token pending to start at: "+ (new LocalDateTime(tokenPool.getStartTime())));
+      throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
     var toAddress = subContract.getToAddress().toByteArray();
     if (!Wallet.addressValid(toAddress)) {

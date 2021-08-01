@@ -20,7 +20,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
-import org.joda.time.LocalDateTime;
+import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -34,9 +34,9 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @Slf4j(topic = "actuator")
-public class MineTokenActuator extends AbstractActuator {
+public class TokenMineActuator extends AbstractActuator {
 
-  MineTokenActuator(Any contract, Manager dbManager) {
+  TokenMineActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -110,10 +110,10 @@ public class MineTokenActuator extends AbstractActuator {
       throw new ContractValidateException("Token not exist :"+ subContract.getTokenName());
 
     if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("Token expired at: "+ (new LocalDateTime(tokenPool.getEndTime())));
+      throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
 
     if(tokenPool.getStartTime() < dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("Token pending to start at: "+ (new LocalDateTime(tokenPool.getStartTime())));
+      throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
     if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
       throw new ContractValidateException("Mismatched token owner not allowed to mine");

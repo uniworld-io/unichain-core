@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
@@ -14,10 +15,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.TimeZone;
 
 @Component
 @Slf4j(topic = "API")
@@ -30,9 +27,9 @@ public class GetTokenPoolServlet extends HttpServlet {
       var start_time = tokenPool.getStartTime();
       var end_time = tokenPool.getEndTime();
       var lastOpTime = tokenPool.getLatestOperationTime();
-      tokenPoolJson.put("start_time", LocalDateTime.ofInstant(Instant.ofEpochMilli(start_time), TimeZone.getDefault().toZoneId()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-      tokenPoolJson.put("end_time", LocalDateTime.ofInstant(Instant.ofEpochMilli(end_time), TimeZone.getDefault().toZoneId()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-      tokenPoolJson.put("latest_operation_time", LocalDateTime.ofInstant(Instant.ofEpochMilli(lastOpTime), TimeZone.getDefault().toZoneId()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+      tokenPoolJson.put("start_time", Utils.formatDateLong(start_time));
+      tokenPoolJson.put("end_time", Utils.formatDateLong(end_time));
+      tokenPoolJson.put("latest_operation_time", Utils.formatDateLong(lastOpTime));
       return tokenPoolJson.toJSONString();
   }
 

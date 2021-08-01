@@ -20,7 +20,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
-import org.joda.time.LocalDateTime;
+import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -111,10 +111,10 @@ public class WithdrawFutureTokenActuator extends AbstractActuator {
       throw new ContractValidateException("Token pool not found: " + subContract.getTokenName());
 
     if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("Token expired at: "+ (new LocalDateTime(tokenPool.getEndTime())));
+      throw new ContractValidateException("Token expired at: "+ (Utils.formatDateLong(tokenPool.getEndTime())));
 
     if(tokenPool.getStartTime() < dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("Token pending to start at: "+ (new LocalDateTime(tokenPool.getStartTime())));
+      throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
     long available = ownerAccountCap.getTokenFutureAvailable(tokenName, dbManager.getHeadBlockTimeStamp());
     if(available <= 0)

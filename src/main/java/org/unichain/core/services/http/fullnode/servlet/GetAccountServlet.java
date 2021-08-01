@@ -29,7 +29,6 @@ public class GetAccountServlet extends HttpServlet {
   private Manager dbManager;
 
   private String convertOutput(Account account) {
-    // convert asset id
     if (account.getAssetIssuedID().isEmpty()) {
       return JsonFormat.printToString(account, false);
     } else {

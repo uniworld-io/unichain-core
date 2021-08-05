@@ -26,7 +26,8 @@ public class SolidityNodeHttpApiService implements Service {
 
   @Autowired
   private GetAccountServlet getAccountServlet;
-
+  @Autowired
+  private GetTokenPoolServlet getTokenPoolServlet;
   @Autowired
   private GetTransactionByIdSolidityServlet getTransactionByIdServlet;
   @Autowired
@@ -100,58 +101,34 @@ public class SolidityNodeHttpApiService implements Service {
 
       // same as FullNode
       context.addServlet(new ServletHolder(getAccountServlet), "/walletsolidity/getaccount");
+      context.addServlet(new ServletHolder(getAccountServlet), "/walletsolidity/gettokenpool");
       context.addServlet(new ServletHolder(listWitnessesServlet), "/walletsolidity/listwitnesses");
-      context.addServlet(new ServletHolder(getAssetIssueListServlet),
-          "/walletsolidity/getassetissuelist");
-      context.addServlet(new ServletHolder(getPaginatedAssetIssueListServlet),
-          "/walletsolidity/getpaginatedassetissuelist");
-      context.addServlet(new ServletHolder(getAssetIssueByNameServlet),
-          "/walletsolidity/getassetissuebyname");
-      context.addServlet(new ServletHolder(getAssetIssueByIdServlet),
-          "/walletsolidity/getassetissuebyid");
-      context.addServlet(new ServletHolder(getAssetIssueListByNameServlet),
-          "/walletsolidity/getassetissuelistbyname");
+      context.addServlet(new ServletHolder(getAssetIssueListServlet), "/walletsolidity/getassetissuelist");
+      context.addServlet(new ServletHolder(getPaginatedAssetIssueListServlet), "/walletsolidity/getpaginatedassetissuelist");
+      context.addServlet(new ServletHolder(getAssetIssueByNameServlet), "/walletsolidity/getassetissuebyname");
+      context.addServlet(new ServletHolder(getAssetIssueByIdServlet), "/walletsolidity/getassetissuebyid");
+      context.addServlet(new ServletHolder(getAssetIssueListByNameServlet), "/walletsolidity/getassetissuelistbyname");
       context.addServlet(new ServletHolder(getNowBlockServlet), "/walletsolidity/getnowblock");
       context.addServlet(new ServletHolder(getBlockByNumServlet), "/walletsolidity/getblockbynum");
-      context.addServlet(new ServletHolder(getDelegatedResourceServlet),
-          "/walletsolidity/getdelegatedresource");
-      context.addServlet(new ServletHolder(getDelegatedResourceAccountIndexServlet),
-          "/walletsolidity/getdelegatedresourceaccountindex");
-      context
-          .addServlet(new ServletHolder(getExchangeByIdServlet),
-              "/walletsolidity/getexchangebyid");
-      context.addServlet(new ServletHolder(listExchangesServlet),
-          "/walletsolidity/listexchanges");
-
-      context.addServlet(new ServletHolder(getAccountByIdServlet),
-          "/walletsolidity/getaccountbyid");
-      context.addServlet(new ServletHolder(getBlockByIdServlet),
-          "/walletsolidity/getblockbyid");
-      context.addServlet(new ServletHolder(getBlockByLimitNextServlet),
-          "/walletsolidity/getblockbylimitnext");
-      context.addServlet(new ServletHolder(getBlockByLatestNumServlet),
-          "/walletsolidity/getblockbylatestnum");
+      context.addServlet(new ServletHolder(getDelegatedResourceServlet), "/walletsolidity/getdelegatedresource");
+      context.addServlet(new ServletHolder(getDelegatedResourceAccountIndexServlet), "/walletsolidity/getdelegatedresourceaccountindex");
+      context.addServlet(new ServletHolder(getExchangeByIdServlet), "/walletsolidity/getexchangebyid");
+      context.addServlet(new ServletHolder(listExchangesServlet), "/walletsolidity/listexchanges");
+      context.addServlet(new ServletHolder(getAccountByIdServlet), "/walletsolidity/getaccountbyid");
+      context.addServlet(new ServletHolder(getBlockByIdServlet), "/walletsolidity/getblockbyid");
+      context.addServlet(new ServletHolder(getBlockByLimitNextServlet), "/walletsolidity/getblockbylimitnext");
+      context.addServlet(new ServletHolder(getBlockByLatestNumServlet), "/walletsolidity/getblockbylatestnum");
 
       // only for SolidityNode
-      context.addServlet(new ServletHolder(getTransactionByIdServlet),
-          "/walletsolidity/gettransactionbyid");
-
-      context
-          .addServlet(new ServletHolder(getTransactionInfoByIdServlet),
-              "/walletsolidity/gettransactioninfobyid");
-      context
-          .addServlet(new ServletHolder(getTransactionCountByBlockNumServlet),
-              "/walletsolidity/gettransactioncountbyblocknum");
-      context.addServlet(new ServletHolder(triggerConstantContractServlet),
-          "/walletsolidity/triggerconstantcontract");
+      context.addServlet(new ServletHolder(getTransactionByIdServlet), "/walletsolidity/gettransactionbyid");
+      context.addServlet(new ServletHolder(getTransactionInfoByIdServlet), "/walletsolidity/gettransactioninfobyid");
+      context.addServlet(new ServletHolder(getTransactionCountByBlockNumServlet), "/walletsolidity/gettransactioncountbyblocknum");
+      context.addServlet(new ServletHolder(triggerConstantContractServlet), "/walletsolidity/triggerconstantcontract");
 
       // for extension api
       if (args.isWalletExtensionApi()) {
-        context.addServlet(new ServletHolder(getTransactionsFromThisServlet),
-            "/walletextension/gettransactionsfromthis");
-        context
-            .addServlet(new ServletHolder(getTransactionsToThisServlet),
-                "/walletextension/gettransactionstothis");
+        context.addServlet(new ServletHolder(getTransactionsFromThisServlet), "/walletextension/gettransactionsfromthis");
+        context.addServlet(new ServletHolder(getTransactionsToThisServlet), "/walletextension/gettransactionstothis");
       }
 
       context.addServlet(new ServletHolder(getNodeInfoServlet), "/wallet/getnodeinfo");

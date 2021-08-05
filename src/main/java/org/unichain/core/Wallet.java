@@ -278,10 +278,8 @@ public class Wallet {
     var tokenStore = dbManager.getTokenStore();
     TokenPoolCapsule tokenPoolCap = tokenStore.get(filter.getName().toByteArray());
     return CreateTokenContract.newBuilder()
-            .setId(tokenPoolCap.getId())
-            .setAbbr(tokenPoolCap.getAbbr())
             .setName(tokenPoolCap.getName())
-            .setPrecision(tokenPoolCap.getPrecision())
+            .setAbbr(tokenPoolCap.getAbbr())
             .setDescription(tokenPoolCap.getDescription())
             .setUrl(tokenPoolCap.getUrl())
             .setStartTime(tokenPoolCap.getStartTime())

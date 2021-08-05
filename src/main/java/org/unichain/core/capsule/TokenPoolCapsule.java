@@ -18,8 +18,6 @@ package org.unichain.core.capsule;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import org.unichain.common.utils.ByteArray;
-import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.CreateTokenContract;
@@ -65,28 +63,8 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.getDescription();
   }
 
-  public String getId() {
-    return this.createTokenContract.getId();
-  }
-
-  public int getPrecision() {
-    return this.createTokenContract.getPrecision();
-  }
-
-  public byte[] createDbV2Key() {
-    return ByteArray.fromString(this.createTokenContract.getId());
-  }
-
   public byte[] createDbKey() {
     return getName().toByteArray();
-  }
-
-  public byte[] createDbKeyFinal(Manager manager) {
-    if (manager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
-      return createDbKey();
-    } else {
-      return createDbV2Key();
-    }
   }
 
   public static String createDbKeyString(String name, long order) {
@@ -117,6 +95,10 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.getTotalSupply();
   }
 
+  public ByteString getTokenName(){
+    return this.createTokenContract.getName();
+  }
+
   public long getMaxSupply() {
     return this.createTokenContract.getMaxSupply();
   }
@@ -143,6 +125,11 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
             .setTotalSupply(amount).build();
   }
 
+  public void setTokenName(ByteString name) {
+    this.createTokenContract = this.createTokenContract.toBuilder()
+            .setName(name).build();
+  }
+
   public void burnToken(long amount) throws ContractExeException {
     if(amount <= 0)
       throw  new ContractExeException("mined token amount must greater than ZERO");
@@ -157,19 +144,6 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
   public void setFeePool(long feePool) {
     this.createTokenContract = this.createTokenContract.toBuilder()
             .setFeePool(feePool).build();
-  }
-
-
-  public void setId(String id) {
-    this.createTokenContract = this.createTokenContract.toBuilder()
-            .setId(id)
-            .build();
-  }
-
-  public void setPrecision(int precision) {
-    this.createTokenContract = this.createTokenContract.toBuilder()
-            .setPrecision(precision)
-            .build();
   }
 
   public void setUrl(ByteString newUrl) {

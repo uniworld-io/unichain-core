@@ -15,7 +15,7 @@ import org.unichain.core.services.RpcApiService;
 import org.unichain.core.services.WitnessService;
 import org.unichain.core.services.http.fullnode.FullNodeHttpApiService;
 import org.unichain.core.services.interfaceOnSolidity.RpcApiServiceOnSolidity;
-import org.unichain.core.services.interfaceOnSolidity.http.solidity.HttpApiOnSolidityService;
+import org.unichain.core.services.interfaceOnSolidity.HttpApiOnSolidityService;
 
 import java.io.File;
 

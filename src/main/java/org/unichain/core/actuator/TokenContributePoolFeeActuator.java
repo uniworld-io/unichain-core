@@ -46,7 +46,7 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
       var subContract = contract.unpack(ContributeTokenPoolFeeContract.class);
       logger.info("ContributeTokenPoolFee  {} ...", subContract);
       var ownerAddress = subContract.getOwnerAddress().toByteArray();
-      var tokenName = subContract.getTokenName().toByteArray();
+      var tokenName = subContract.getTokenName().toStringUtf8().toUpperCase().getBytes();
       var tokenCapsule = dbManager.getTokenStore().get(tokenName);
       tokenCapsule.setFeePool(tokenCapsule.getFeePool() + subContract.getAmount());
       dbManager.getTokenStore().put(tokenName, tokenCapsule);
@@ -82,22 +82,22 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
       if (!this.contract.is(ContributeTokenPoolFeeContract.class))
         throw new ContractValidateException("contract type error, expected type [ContributeTokenPoolFeeContract],real type[" + contract.getClass() + "]");
 
-      final ContributeTokenPoolFeeContract subContract;
+      final ContributeTokenPoolFeeContract ctx;
       try {
-        subContract = this.contract.unpack(ContributeTokenPoolFeeContract.class);
+        ctx = this.contract.unpack(ContributeTokenPoolFeeContract.class);
       } catch (InvalidProtocolBufferException e) {
         logger.debug(e.getMessage(), e);
         throw new ContractValidateException(e.getMessage());
       }
 
-      var accountCap = dbManager.getAccountStore().get(subContract.getOwnerAddress().toByteArray());
+      var accountCap = dbManager.getAccountStore().get(ctx.getOwnerAddress().toByteArray());
       if (Objects.isNull(accountCap))
         throw new ContractValidateException("Invalid ownerAddress");
 
-      var tokenName = subContract.getTokenName().toByteArray();
+      var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
       var tokenPool = dbManager.getTokenStore().get(tokenName);
       if (Objects.isNull(tokenPool))
-        throw new ContractValidateException("TokenName not exist");
+        throw new ContractValidateException("TokenName not exist: " + ctx.getTokenName().toStringUtf8());
 
       if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
           throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
@@ -105,7 +105,7 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
       if(tokenPool.getStartTime() < dbManager.getHeadBlockTimeStamp())
           throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
-      var contributeAmount = subContract.getAmount();
+      var contributeAmount = ctx.getAmount();
       if (accountCap.getBalance() < contributeAmount + calcFee())
         throw new ContractValidateException("Not enough balance");
 

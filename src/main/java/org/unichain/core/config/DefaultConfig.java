@@ -18,7 +18,7 @@ import org.unichain.core.db.backup.BackupRocksDBAspect;
 import org.unichain.core.db.backup.NeedBeanCondition;
 import org.unichain.core.db2.core.SnapshotManager;
 import org.unichain.core.services.interfaceOnSolidity.RpcApiServiceOnSolidity;
-import org.unichain.core.services.interfaceOnSolidity.http.solidity.HttpApiOnSolidityService;
+import org.unichain.core.services.interfaceOnSolidity.HttpApiOnSolidityService;
 
 @Slf4j(topic = "app")
 @Configuration

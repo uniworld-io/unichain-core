@@ -107,21 +107,19 @@ message WitnessUpdateContract {
 }
 
 message CreateTokenContract {
-  string id = 1;
-  bytes owner_address = 2;
-  bytes name = 3;
-  bytes abbr = 4;
-  int64 max_supply = 5;
-  int64 total_supply = 6;
-  int32 precision = 7;
-  int64 start_time = 8;
-  int64 end_time = 9;
-  bytes description = 10;
-  bytes url = 11;
-  int64 fee = 12;
-  int64 fee_pool = 13;
-  int64 burned = 14;
-  int64 latest_operation_time = 15;
+  bytes owner_address = 1;
+  bytes name = 2;
+  bytes abbr = 3;
+  int64 max_supply = 4;
+  int64 total_supply = 5;
+  int64 start_time = 6;
+  int64 end_time = 7;
+  bytes description = 8;
+  bytes url = 9;
+  int64 fee = 10;
+  int64 fee_pool = 11;
+  int64 burned = 12;
+  int64 latest_operation_time = 13;
 }
 
 message ContributeTokenPoolFeeContract {

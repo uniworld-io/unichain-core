@@ -44,24 +44,22 @@ public class TokenBurnActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      var subContract = contract.unpack(BurnTokenContract.class);
-      logger.info("BurnTokenContract  {} ...", subContract);
-      var tokenName = subContract.getTokenName().toByteArray();
-
-      //update token pool
+      var ctx = contract.unpack(BurnTokenContract.class);
+      logger.info("BurnTokenContract  {} ...", ctx);
+      var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
       var tokenCap = dbManager.getTokenStore().get(tokenName);
-      tokenCap.burnToken(subContract.getAmount());
+      tokenCap.burnToken(ctx.getAmount());
       dbManager.getTokenStore().put(tokenName, tokenCap);
 
       //burn on owner account
-      var ownerAddress = subContract.getOwnerAddress().toByteArray();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCap = dbManager.getAccountStore().get(ownerAddress);
-      accountCap.burnToken(tokenName, subContract.getAmount());
+      accountCap.burnToken(tokenName, ctx.getAmount());
       dbManager.getAccountStore().put(ownerAddress, accountCap);
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-      logger.info("BurnTokenContract  {} ...DONE!", subContract);
+      logger.info("BurnTokenContract  {} ...DONE!", ctx);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
@@ -89,15 +87,15 @@ public class TokenBurnActuator extends AbstractActuator {
     if (!this.contract.is(BurnTokenContract.class))
       throw new ContractValidateException("contract type error, expected type [BurnTokenContract],real type[" + contract.getClass() + "]");
 
-    final BurnTokenContract subContract;
+    final BurnTokenContract ctx;
     try {
-      subContract = this.contract.unpack(BurnTokenContract.class);
+      ctx = this.contract.unpack(BurnTokenContract.class);
     } catch (InvalidProtocolBufferException e) {
       logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
 
-    var ownerAddress = subContract.getOwnerAddress().toByteArray();
+    var ownerAddress = ctx.getOwnerAddress().toByteArray();
     var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
     if(Objects.isNull(ownerAccountCap))
       throw new ContractValidateException("Owner address not exist");
@@ -105,10 +103,10 @@ public class TokenBurnActuator extends AbstractActuator {
     if (ownerAccountCap.getBalance() < calcFee())
       throw new ContractValidateException("Fee exceeded balance");
 
-    var tokenName = subContract.getTokenName().toByteArray();
+    var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
     var tokenPool = dbManager.getTokenStore().get(tokenName);
     if(Objects.isNull(tokenPool))
-      throw new ContractValidateException("Token not exist :"+ subContract.getTokenName());
+      throw new ContractValidateException("Token not exist :"+ ctx.getTokenName());
 
     if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
       throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
@@ -119,8 +117,8 @@ public class TokenBurnActuator extends AbstractActuator {
     if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
       throw new ContractValidateException("Mismatched token owner not allowed to mine");
 
-    if(ownerAccountCap.getTokenAvailable(tokenName) < subContract.getAmount())
-      throw new ContractValidateException("Not enough token balance of" + subContract.getTokenName() + "at least " + subContract.getAmount());
+    if(ownerAccountCap.getTokenAvailable(tokenName) < ctx.getAmount())
+      throw new ContractValidateException("Not enough token balance of" + ctx.getTokenName() + "at least " + ctx.getAmount());
 
     return true;
   }

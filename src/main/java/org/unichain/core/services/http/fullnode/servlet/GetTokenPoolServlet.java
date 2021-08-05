@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
@@ -27,21 +28,23 @@ public class GetTokenPoolServlet extends HttpServlet {
       var start_time = tokenPool.getStartTime();
       var end_time = tokenPool.getEndTime();
       var lastOpTime = tokenPool.getLatestOperationTime();
-      tokenPoolJson.put("start_time", Utils.formatDateLong(start_time));
-      tokenPoolJson.put("end_time", Utils.formatDateLong(end_time));
+      tokenPoolJson.put("start_time", Utils.formatDateTimeLong(start_time));
+      tokenPoolJson.put("end_time", Utils.formatDateTimeLong(end_time));
       tokenPoolJson.put("latest_operation_time", Utils.formatDateTimeLong(lastOpTime));
       return tokenPoolJson.toJSONString();
   }
 
-  //@fixme add post method
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+
+  }
+
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      boolean visible = Util.getVisible(request);
-      String tokenName = request.getParameter("token_name");
+      String tokenFilter = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+      Util.checkBodySize(tokenFilter);
+      boolean visible = Util.getVisiblePost(tokenFilter);
       CreateTokenContract.Builder build = CreateTokenContract.newBuilder();
-      JSONObject jsonObject = new JSONObject();
-      jsonObject.put("token_name", tokenName);
-      JsonFormat.merge(jsonObject.toJSONString(), build, visible);
+      JsonFormat.merge(tokenFilter, build, visible);
 
       CreateTokenContract reply = wallet.getTokenPool(build.build());
       if (reply != null) {
@@ -61,8 +64,5 @@ public class GetTokenPoolServlet extends HttpServlet {
         logger.debug("IOException: {}", ioe.getMessage());
       }
     }
-  }
-
-  protected void doPost(HttpServletRequest request, HttpServletResponse response) {
   }
 }

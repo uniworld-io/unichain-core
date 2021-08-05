@@ -31,10 +31,10 @@ public class TransferFutureActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      FutureTransferContract transferContract = contract.unpack(FutureTransferContract.class);
-      long amount = transferContract.getAmount();
-      byte[] toAddress = transferContract.getToAddress().toByteArray();
-      byte[] ownerAddress = transferContract.getOwnerAddress().toByteArray();
+      FutureTransferContract ctx = contract.unpack(FutureTransferContract.class);
+      long amount = ctx.getAmount();
+      byte[] toAddress = ctx.getToAddress().toByteArray();
+      byte[] ownerAddress = ctx.getOwnerAddress().toByteArray();
       AccountCapsule toAccount = dbManager.getAccountStore().get(toAddress);
       if (toAccount == null) {
         boolean withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
@@ -45,7 +45,7 @@ public class TransferFutureActuator extends AbstractActuator {
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       dbManager.adjustBalance(ownerAddress, -amount);
-      dbManager.addFutureBalance(toAddress, amount, transferContract.getExpireTime());
+      dbManager.addFutureBalance(toAddress, amount, ctx.getExpireTime());
       return true;
     } catch (BalanceInsufficientException | ArithmeticException | InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
@@ -66,17 +66,23 @@ public class TransferFutureActuator extends AbstractActuator {
       throw new ContractValidateException("contract type error,expected type [FutureTransferContract],real type[" + contract.getClass() + "]");
     }
     long fee = calcFee();
-    final FutureTransferContract transferContract;
+    final FutureTransferContract ctx;
     try {
-      transferContract = contract.unpack(FutureTransferContract.class);
+      ctx = contract.unpack(FutureTransferContract.class);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
 
-    byte[] toAddress = transferContract.getToAddress().toByteArray();
-    byte[] ownerAddress = transferContract.getOwnerAddress().toByteArray();
-    long amount = transferContract.getAmount();
+    byte[] toAddress = ctx.getToAddress().toByteArray();
+    byte[] ownerAddress = ctx.getOwnerAddress().toByteArray();
+    long amount = ctx.getAmount();
+    if (amount <= 0)
+      throw new ContractValidateException("Amount must greater than 0.");
+
+    if (ctx.getExpireTime() <= dbManager.getHeadBlockTimeStamp())
+      throw new ContractValidateException("expire time should be greater than HeadBlockTime");
+
     if (!Wallet.addressValid(ownerAddress)) {
       throw new ContractValidateException("Invalid ownerAddress");
     }
@@ -88,21 +94,11 @@ public class TransferFutureActuator extends AbstractActuator {
       throw new ContractValidateException("Cannot transfer unw to yourself.");
     }
 
-    if (transferContract.getExpireTime() <= dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("expire time should be greater than HeadBlockTime");
-
     AccountCapsule ownerAccount = dbManager.getAccountStore().get(ownerAddress);
-
-    if (ownerAccount == null) {
+    if (ownerAccount == null)
       throw new ContractValidateException("Validate TransferContract error, no OwnerAccount.");
-    }
 
     long balance = ownerAccount.getBalance();
-
-    if (amount <= 0) {
-      throw new ContractValidateException("Amount must greater than 0.");
-    }
-
     try {
       AccountCapsule toAccount = dbManager.getAccountStore().get(toAddress);
       if (toAccount == null) {

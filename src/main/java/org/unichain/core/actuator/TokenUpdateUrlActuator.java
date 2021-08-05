@@ -46,18 +46,17 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      var subContract = contract.unpack(Contract.UpdateTokenUrlContract.class);
-      logger.info("UpdateTokenUrl  {} ...", subContract);
-      var tokenName = subContract.getTokenName().toByteArray();
-
+      var ctx = contract.unpack(Contract.UpdateTokenUrlContract.class);
+      logger.info("UpdateTokenUrl  {} ...", ctx);
+      var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
       var tokenCap = dbManager.getTokenStore().get(tokenName);
-      tokenCap.setUrl(subContract.getUrl());
-      tokenCap.setDescription(subContract.getDescription());
+      tokenCap.setUrl(ctx.getUrl());
+      tokenCap.setDescription(ctx.getDescription());
       dbManager.getTokenStore().put(tokenName, tokenCap);
 
-      chargeFee(subContract.getOwnerAddress().toByteArray(), fee);
+      chargeFee(ctx.getOwnerAddress().toByteArray(), fee);
       ret.setStatus(fee, code.SUCESS);
-      logger.info("UpdateTokenUrl  {} ...DONE!", subContract);
+      logger.info("UpdateTokenUrl  {} ...DONE!", ctx);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
@@ -85,15 +84,15 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
       if (!this.contract.is(UpdateTokenUrlContract.class))
         throw new ContractValidateException("contract type error, expected type [UpdateTokenUrlContract],real type[" + contract.getClass() + "]");
 
-      final UpdateTokenUrlContract subContract;
+      final UpdateTokenUrlContract ctx;
       try {
-        subContract = this.contract.unpack(UpdateTokenUrlContract.class);
+        ctx = this.contract.unpack(UpdateTokenUrlContract.class);
       } catch (InvalidProtocolBufferException e) {
         logger.debug(e.getMessage(), e);
         throw new ContractValidateException(e.getMessage());
       }
 
-      var ownerAddress = subContract.getOwnerAddress().toByteArray();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCap = dbManager.getAccountStore().get(ownerAddress);
       if (Objects.isNull(accountCap))
         throw new ContractValidateException("Invalid ownerAddress");
@@ -101,7 +100,7 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
       if(accountCap.getBalance() < calcFee())
           throw new ContractValidateException("Not enough balance");
 
-      var tokenName = subContract.getTokenName().toByteArray();
+      var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
       var tokenPool = dbManager.getTokenStore().get(tokenName);
       if (Objects.isNull(tokenPool))
         throw new ContractValidateException("TokenName not exist");
@@ -112,10 +111,10 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
       if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
           throw new ContractValidateException("only owner of token pool allowed to update url description");
 
-      if (!TransactionUtil.validUrl(subContract.getUrl().toByteArray()))
+      if (!TransactionUtil.validUrl(ctx.getUrl().toByteArray()))
           throw new ContractValidateException("Invalid url");
 
-      if (!TransactionUtil.validAssetDescription(subContract.getDescription().toByteArray()))
+      if (!TransactionUtil.validAssetDescription(ctx.getDescription().toByteArray()))
           throw new ContractValidateException("Invalid description");
 
       return true;

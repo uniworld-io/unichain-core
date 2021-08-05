@@ -22,10 +22,12 @@ import org.unichain.core.services.RpcApiService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.AssetIssueContract;
 import org.unichain.protos.Protocol.*;
-
+import org.unichain.protos.Contract.CreateTokenContract;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 @Slf4j(topic = "API")
 public class RpcApiServiceOnSolidity implements Service {
@@ -143,6 +145,12 @@ public class RpcApiServiceOnSolidity implements Service {
    * WalletSolidityApi.
    */
   private class WalletSolidityApi extends WalletSolidityImplBase {
+
+    @Override
+    public void getTokenPool(CreateTokenContract request, StreamObserver<CreateTokenContract> responseObserver) {
+      walletOnSolidity.futureGet(() -> rpcApiService.getWalletSolidityApi().getTokenPool(request, responseObserver)
+      );
+    }
 
     @Override
     public void getAccount(Account request, StreamObserver<Account> responseObserver) {

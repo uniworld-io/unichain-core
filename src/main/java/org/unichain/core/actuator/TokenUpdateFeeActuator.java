@@ -88,15 +88,15 @@ public class TokenUpdateFeeActuator extends AbstractActuator {
       if (!this.contract.is(UpdateTokenFeeContract.class))
         throw new ContractValidateException("contract type error, expected type [UpdateTokenFeeContract],real type[" + contract.getClass() + "]");
 
-      final UpdateTokenFeeContract subContract;
+      final UpdateTokenFeeContract ctx;
       try {
-        subContract = this.contract.unpack(UpdateTokenFeeContract.class);
+        ctx = this.contract.unpack(UpdateTokenFeeContract.class);
       } catch (InvalidProtocolBufferException e) {
         logger.debug(e.getMessage(), e);
         throw new ContractValidateException(e.getMessage());
       }
 
-      var ownerAddress = subContract.getOwnerAddress().toByteArray();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCap = dbManager.getAccountStore().get(ownerAddress);
       if (Objects.isNull(accountCap))
         throw new ContractValidateException("Invalid ownerAddress");
@@ -104,7 +104,7 @@ public class TokenUpdateFeeActuator extends AbstractActuator {
       if(accountCap.getBalance() < calcFee())
           throw new ContractValidateException("Not enough balance");
 
-      var tokenName = subContract.getTokenName().toByteArray();
+      var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
       var tokenPool = dbManager.getTokenStore().get(tokenName);
       if (Objects.isNull(tokenPool))
         throw new ContractValidateException("TokenName not exist");
@@ -115,7 +115,7 @@ public class TokenUpdateFeeActuator extends AbstractActuator {
       if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
           throw new ContractValidateException("only owner of token pool allowed to update fee policy");
 
-      var amount = subContract.getAmount();
+      var amount = ctx.getAmount();
       if (amount < 0 || amount > TOKEN_MAX_TRANSFER_FEE)
         throw new ContractValidateException("invalid fee amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE + "]");
 

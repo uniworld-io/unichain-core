@@ -659,13 +659,16 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public boolean burnToken(byte[] key, long amount) {
     Map<String, Long> tokenMap = this.account.getTokenMap();
     String nameKey = ByteArray.toStr(key);
-    if (!tokenMap.containsKey(nameKey) || tokenMap.get(key) < amount) {
+    if (!tokenMap.containsKey(nameKey) || tokenMap.get(nameKey) < amount) {
       logger.warn("missing token {} or not enough token balance at least {}", nameKey, amount);
       return false;
     }
 
-    long current = tokenMap.get(nameKey);
-    this.account = this.account.toBuilder().putToken(nameKey, current - amount).build();
+    long remain = tokenMap.get(nameKey) - amount;
+    if(remain > 0)
+      this.account = this.account.toBuilder().putToken(nameKey, remain).build();
+    else
+      this.account = this.account.toBuilder().removeToken(nameKey).build();
     return true;
   }
 

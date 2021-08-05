@@ -45,33 +45,24 @@ public class TokenCreateActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var subContract = contract.unpack(CreateTokenContract.class);
-      var ownerAddress = subContract.getOwnerAddress().toByteArray();
-      var tokenCapsule = new TokenPoolCapsule(subContract);
-
-      //gen token id
-      var tokenIdNum = dbManager.getDynamicPropertiesStore().getTokenIdNum();
-      tokenIdNum++;
-      tokenCapsule.setId(Long.toString(tokenIdNum));
-      dbManager.getDynamicPropertiesStore().saveTokenIdNum(tokenIdNum);
+      var ctx = contract.unpack(CreateTokenContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var capsule = new TokenPoolCapsule(ctx);
 
       //make sure init burned amount
-      tokenCapsule.setBurnedToken(0L);
-
-      //dont allow same name
-      tokenCapsule.setPrecision(0);
-      dbManager.getTokenStore().put(tokenCapsule.createDbKey(), tokenCapsule);
-
+      capsule.setBurnedToken(0L);
+      //set token name as uppercase
+      var tokenName = ByteString.copyFrom(capsule.getTokenName().toStringUtf8().toUpperCase().getBytes());
+      capsule.setTokenName(tokenName);
+      capsule.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      dbManager.getTokenStore().put(capsule.createDbKey(), capsule);
       chargeFee(ownerAddress, fee);
       //dont move pool fee to burned unx account
-      dbManager.adjustBalance(ownerAddress, -subContract.getFeePool());
-
+      dbManager.adjustBalance(ownerAddress, -ctx.getFeePool());
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
       //add token issued list, dont allow the same name
-      accountCapsule.addToken(tokenCapsule.createDbKey(), tokenCapsule.getTotalSupply());
+      accountCapsule.addToken(capsule.createDbKey(), capsule.getTotalSupply());
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
-
-      ret.setAssetIssueID(Long.toString(tokenIdNum));
       ret.setStatus(fee, code.SUCESS);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
@@ -101,82 +92,75 @@ public class TokenCreateActuator extends AbstractActuator {
       throw new ContractValidateException("contract type error, expected type [CreateTokenContract],real type[" + contract.getClass() + "]");
     }
 
-    final CreateTokenContract createTokenContract;
+    final CreateTokenContract ctx;
     try {
-      createTokenContract = this.contract.unpack(CreateTokenContract.class);
+      ctx = this.contract.unpack(CreateTokenContract.class);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
 
-    var ownerAddress = createTokenContract.getOwnerAddress().toByteArray();
+    var ownerAddress = ctx.getOwnerAddress().toByteArray();
     if (!Wallet.addressValid(ownerAddress))
       throw new ContractValidateException("Invalid ownerAddress");
 
-    if (!TransactionUtil.validTokenName(createTokenContract.getName().toByteArray()))
+    if (!TransactionUtil.validTokenName(ctx.getName().toByteArray()))
       throw new ContractValidateException("Invalid tokenName");
 
-    var tokenName = createTokenContract.getName().toStringUtf8().toLowerCase();
-    if (tokenName.toLowerCase().equals("unx"))
-      throw new ContractValidateException("assetName can't be unx");
-
-    var precision = createTokenContract.getPrecision();
-    if (precision != 0 && dbManager.getDynamicPropertiesStore().getAllowSameTokenName() != 0) {
-      if (precision < 0 || precision > 6) {
-        throw new ContractValidateException("precision cannot exceed 6");
-      }
+    if (ctx.getName().isEmpty() || !TransactionUtil.validTokenName(ctx.getName().toByteArray())) {
+      throw new ContractValidateException("Invalid token name");
     }
 
-    if ((!createTokenContract.getAbbr().isEmpty()) && !TransactionUtil.validTokenName(createTokenContract.getAbbr().toByteArray())) {
-      throw new ContractValidateException("Invalid abbreviation for token");
-    }
+    var tokenName = ctx.getName().toStringUtf8();
+    if (tokenName.equalsIgnoreCase("UNX"))
+      throw new ContractValidateException("Token name can't be UNX");
 
-    if (!TransactionUtil.validUrl(createTokenContract.getUrl().toByteArray()))
-      throw new ContractValidateException("Invalid url");
-
-    if (!TransactionUtil.validAssetDescription(createTokenContract.getDescription().toByteArray()))
-      throw new ContractValidateException("Invalid description");
-
-    if (createTokenContract.getStartTime() == 0)
-      throw new ContractValidateException("Start time should be not empty");
-
-    if (createTokenContract.getEndTime() == 0)
-      throw new ContractValidateException("End time should be not empty");
-
-    if (createTokenContract.getEndTime() <= createTokenContract.getStartTime())
-      throw new ContractValidateException("End time should be greater than start time");
-
-    if (createTokenContract.getStartTime() <= dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("Start time should be greater than HeadBlockTime");
-
-    //don't allow conflict with
-    var tokenNameArr = createTokenContract.getName().toByteArray();
-    if (this.dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0
-        && (this.dbManager.getAssetIssueStore().get(tokenNameArr) != null
-           || this.dbManager.getTokenStore().get(tokenNameArr) != null)) {
+    if (this.dbManager.getTokenStore().get(tokenName.getBytes()) != null) {
       throw new ContractValidateException("Token exists");
     }
 
-    if (createTokenContract.getTotalSupply() <= 0)
+    if ((!ctx.getAbbr().isEmpty()) && !TransactionUtil.validTokenName(ctx.getAbbr().toByteArray())) {
+      throw new ContractValidateException("Invalid token abbreviation");
+    }
+
+    if (!TransactionUtil.validUrl(ctx.getUrl().toByteArray()))
+      throw new ContractValidateException("Invalid url");
+
+    if (!TransactionUtil.validAssetDescription(ctx.getDescription().toByteArray()))
+      throw new ContractValidateException("Invalid description");
+
+    if (ctx.getStartTime() == 0)
+      throw new ContractValidateException("Start time should be not empty");
+
+    if (ctx.getEndTime() == 0)
+      throw new ContractValidateException("End time should be not empty");
+
+    if (ctx.getEndTime() <= ctx.getStartTime())
+      throw new ContractValidateException("End time should be greater than start time");
+
+    if (ctx.getStartTime() <= dbManager.getHeadBlockTimeStamp())
+      throw new ContractValidateException("Start time should be greater than HeadBlockTime");
+
+    if (ctx.getTotalSupply() <= 0)
       throw new ContractValidateException("TotalSupply must greater than 0!");
 
-    if (createTokenContract.getMaxSupply() <= 0)
+    if (ctx.getMaxSupply() <= 0)
       throw new ContractValidateException("MaxSupply must greater than 0!");
 
-    if (createTokenContract.getMaxSupply() < createTokenContract.getTotalSupply())
+    if (ctx.getMaxSupply() < ctx.getTotalSupply())
       throw new ContractValidateException("MaxSupply must greater or equal than TotalSupply!");
 
-    if (createTokenContract.getFee() < 0)
+    if (ctx.getFee() < 0)
       throw new ContractValidateException("Token transfer fee as token must greater or equal than 0!");
 
-    if (createTokenContract.getFeePool() < 0)
+    if (ctx.getFeePool() < 0)
       throw new ContractValidateException("pre-transfer pool fee as UNW must greater or equal than 0!");
 
     var accountCap = dbManager.getAccountStore().get(ownerAddress);
     if (Objects.isNull(accountCap))
       throw new ContractValidateException("Account not exists");
 
-    if (accountCap.getBalance() < calcFee() + createTokenContract.getFeePool())
+    if (accountCap.getBalance() < calcFee() + ctx.getFeePool())
       throw new ContractValidateException("No enough balance for fee & pre-transfer pool fee");
 
     return true;

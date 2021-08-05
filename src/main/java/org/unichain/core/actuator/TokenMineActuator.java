@@ -44,24 +44,24 @@ public class TokenMineActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      var subContract = contract.unpack(MineTokenContract.class);
-      logger.info("MineTokenContract  {} ...", subContract);
+      var ctx = contract.unpack(MineTokenContract.class);
+      logger.info("MineTokenContract  {} ...", ctx);
 
       //update total supply
-      var tokenName = subContract.getTokenName().toByteArray();
+      var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
       var tokenCapsule = dbManager.getTokenStore().get(tokenName);
-      tokenCapsule.setTotalSupply(tokenCapsule.getTotalSupply() + subContract.getAmount());
+      tokenCapsule.setTotalSupply(tokenCapsule.getTotalSupply() + ctx.getAmount());
       dbManager.getTokenStore().put(tokenName, tokenCapsule);
 
-      //mine on owner account
-      var ownerAddress = subContract.getOwnerAddress().toByteArray();
+      //add mined amount to owner account
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      accountCapsule.mineToken(tokenName, subContract.getAmount());
+      accountCapsule.mineToken(tokenName, ctx.getAmount());
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-      logger.info("MineTokenContract  {} ...DONE!", subContract);
+      logger.info("MineTokenContract  {} ...DONE!", ctx);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
@@ -89,14 +89,14 @@ public class TokenMineActuator extends AbstractActuator {
     if (!this.contract.is(MineTokenContract.class))
       throw new ContractValidateException("contract type error, expected type [MineTokenContract],real type[" + contract.getClass() + "]");
 
-    final MineTokenContract subContract;
+    final MineTokenContract ctx;
     try {
-      subContract = this.contract.unpack(MineTokenContract.class);
+      ctx = this.contract.unpack(MineTokenContract.class);
     } catch (InvalidProtocolBufferException e) {
       throw new ContractValidateException(e.getMessage());
     }
 
-    var ownerAddress = subContract.getOwnerAddress().toByteArray();
+    var ownerAddress = ctx.getOwnerAddress().toByteArray();
     var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
     if(Objects.isNull(ownerAccountCap))
       throw new ContractValidateException("Owner address not exist");
@@ -104,10 +104,10 @@ public class TokenMineActuator extends AbstractActuator {
     if (ownerAccountCap.getBalance() < calcFee())
       throw new ContractValidateException("Fee exceed balance");
 
-    var tokenName = subContract.getTokenName().toByteArray();
+    var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
     var tokenPool = dbManager.getTokenStore().get(tokenName);
     if(Objects.isNull(tokenPool))
-      throw new ContractValidateException("Token not exist :"+ subContract.getTokenName());
+      throw new ContractValidateException("Token not exist :"+ ctx.getTokenName());
 
     if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
       throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
@@ -120,7 +120,7 @@ public class TokenMineActuator extends AbstractActuator {
 
     // avail to mine = max - total - burned
     var availableToMine = tokenPool.getMaxSupply() - tokenPool.getTotalSupply() - tokenPool.getBurnedToken();
-    if(subContract.getAmount() > availableToMine)
+    if(ctx.getAmount() > availableToMine)
       throw new ContractValidateException("not enough frozen token to mine, maximum allowed: " + availableToMine);
 
     return true;

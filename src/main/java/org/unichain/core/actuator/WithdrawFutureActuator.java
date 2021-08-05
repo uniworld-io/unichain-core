@@ -15,6 +15,7 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.FutureWithdrawContract;
 import org.unichain.protos.Protocol;
+import org.unichain.protos.Protocol.Account.Future;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.ArrayList;
@@ -33,20 +34,20 @@ public class WithdrawFutureActuator extends AbstractActuator {
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
       long fee = calcFee();
-      final FutureWithdrawContract withdrawFutureContract;
+      final FutureWithdrawContract ctx;
       try {
-        withdrawFutureContract = contract.unpack(FutureWithdrawContract.class);
+        ctx = contract.unpack(FutureWithdrawContract.class);
       } catch (InvalidProtocolBufferException e) {
         logger.debug(e.getMessage(), e);
         ret.setStatus(fee, code.FAILED);
         throw new ContractExeException(e.getMessage());
       }
 
-      byte[] ownerAddress = withdrawFutureContract.getOwnerAddress().toByteArray();
+      byte[] ownerAddress = ctx.getOwnerAddress().toByteArray();
       AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      List<Protocol.Account.Future> remain = new ArrayList<>();
+      List<Future> remain = new ArrayList<>();
       long withdrawAmount = 0L;
-      for(Protocol.Account.Future future : accountCapsule.getFutureSupplyList()){
+      for(Future future : accountCapsule.getFutureSupplyList()){
         if (dbManager.getHeadBlockTimeStamp() >= future.getExpireTime()) {
           logger.info("withdraw future: " + future);
           withdrawAmount += future.getFutureBalance();
@@ -58,7 +59,6 @@ public class WithdrawFutureActuator extends AbstractActuator {
       accountCapsule.setFutureSupply(remain);
       accountCapsule.setBalance(accountCapsule.getBalance() + withdrawAmount);
       dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
-
       ret.setStatus(fee, code.SUCESS);
       return true;
   }
@@ -74,14 +74,14 @@ public class WithdrawFutureActuator extends AbstractActuator {
       if (!this.contract.is(FutureWithdrawContract.class)) {
         throw new ContractValidateException("contract type error,expected type [FutureWithdrawContract], real type[" + contract.getClass() + "]");
       }
-      final FutureWithdrawContract withdrawFutureContract;
+      final FutureWithdrawContract ctx;
       try {
-        withdrawFutureContract = this.contract.unpack(FutureWithdrawContract.class);
+        ctx = this.contract.unpack(FutureWithdrawContract.class);
       } catch (InvalidProtocolBufferException e) {
         logger.debug(e.getMessage(), e);
         throw new ContractValidateException(e.getMessage());
       }
-      byte[] ownerAddress = withdrawFutureContract.getOwnerAddress().toByteArray();
+      byte[] ownerAddress = ctx.getOwnerAddress().toByteArray();
       if (!Wallet.addressValid(ownerAddress)) {
         throw new ContractValidateException("Invalid address");
       }

@@ -21,9 +21,9 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
-public class FutureTransferActuator extends AbstractActuator {
+public class TransferFutureActuator extends AbstractActuator {
 
-  FutureTransferActuator(Any contract, Manager dbManager) {
+  TransferFutureActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -74,7 +74,6 @@ public class FutureTransferActuator extends AbstractActuator {
       throw new ContractValidateException(e.getMessage());
     }
 
-
     byte[] toAddress = transferContract.getToAddress().toByteArray();
     byte[] ownerAddress = transferContract.getOwnerAddress().toByteArray();
     long amount = transferContract.getAmount();
@@ -88,6 +87,9 @@ public class FutureTransferActuator extends AbstractActuator {
     if (Arrays.equals(toAddress, ownerAddress)) {
       throw new ContractValidateException("Cannot transfer unw to yourself.");
     }
+
+    if (transferContract.getExpireTime() <= dbManager.getHeadBlockTimeStamp())
+      throw new ContractValidateException("expire time should be greater than HeadBlockTime");
 
     AccountCapsule ownerAccount = dbManager.getAccountStore().get(ownerAddress);
 
@@ -120,47 +122,6 @@ public class FutureTransferActuator extends AbstractActuator {
       if (toAccount != null) {
         Math.addExact(toAccount.getBalance(), amount);
       }
-    } catch (ArithmeticException e) {
-      logger.debug(e.getMessage(), e);
-      throw new ContractValidateException(e.getMessage());
-    }
-
-    return true;
-  }
-
-  public static boolean validateForSmartContract(Deposit deposit, byte[] ownerAddress, byte[] toAddress, long amount) throws ContractValidateException {
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid ownerAddress");
-    }
-    if (!Wallet.addressValid(toAddress)) {
-      throw new ContractValidateException("Invalid toAddress");
-    }
-
-    if (Arrays.equals(toAddress, ownerAddress)) {
-      throw new ContractValidateException("Cannot transfer unw to yourself.");
-    }
-
-    AccountCapsule ownerAccount = deposit.getAccount(ownerAddress);
-    if (ownerAccount == null) {
-      throw new ContractValidateException("Validate InternalTransfer error, no OwnerAccount.");
-    }
-
-    AccountCapsule toAccount = deposit.getAccount(toAddress);
-    if (toAccount == null) {
-      throw new ContractValidateException("Validate InternalTransfer error, no ToAccount. And not allowed to create account in smart contract.");
-    }
-
-    long balance = ownerAccount.getBalance();
-
-    if (amount < 0) {
-      throw new ContractValidateException("Amount must greater than or equals 0.");
-    }
-
-    try {
-      if (balance < amount) {
-        throw new ContractValidateException("Validate InternalTransfer error, balance is not sufficient.");
-      }
-      Math.addExact(toAccount.getBalance(), amount);
     } catch (ArithmeticException e) {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());

@@ -84,6 +84,13 @@ public interface Utils {
     return format.format(date);
   }
 
+  static String formatDateTimeLong(long time){
+    Date date = new Date(time);
+    String pattern = "yyyy-MM-dd HH:mm:ss";
+    SimpleDateFormat format = new SimpleDateFormat(pattern);
+    return format.format(date);
+  }
+
   static String align(String s, char fillChar, int targetLen, boolean alignRight) {
     if (targetLen <= s.length()) {
       return s;

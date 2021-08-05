@@ -25,9 +25,6 @@ public class GetAccountServlet extends HttpServlet {
   @Autowired
   private Wallet wallet;
 
-  @Autowired
-  private Manager dbManager;
-
   private String convertOutput(Account account) {
     if (account.getAssetIssuedID().isEmpty()) {
       return JsonFormat.printToString(account, false);

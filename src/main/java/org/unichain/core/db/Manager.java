@@ -612,12 +612,11 @@ public class Manager {
     adjustBalance(account, amount);
   }
 
-  public void addFutureBalance(byte[] accountAddress, long amount, long expireTimeAsMinutes) throws BalanceInsufficientException {
+  public void addFutureBalance(byte[] accountAddress, long amount, long expireTime) throws BalanceInsufficientException {
     AccountCapsule account = getAccountStore().getUnchecked(accountAddress);
-    long availableTimestamp = expireTimeAsMinutes * ONE_MINUTE_TIMESTAMP_DIFF + getHeadBlockTimeStamp();
     account.addFuture(Protocol.Account.Future.newBuilder()
             .setFutureBalance(amount)
-            .setExpireTime(availableTimestamp)
+            .setExpireTime(expireTime)
             .build());
     this.getAccountStore().put(account.getAddress().toByteArray(), account);
   }

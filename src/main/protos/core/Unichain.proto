@@ -176,7 +176,7 @@ message Account {
   Permission witness_permission = 32;
   repeated Permission active_permission = 33;
 
-  // frozen asset(for asset issuer)
+  //future transfer balance
   repeated Future future_supply = 34;
 }
 

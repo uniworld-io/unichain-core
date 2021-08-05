@@ -45,7 +45,7 @@ public class ActuatorFactory {
       case TransferContract:
         return new TransferActuator(contract.getParameter(), manager);
       case FutureTransferContract:
-        return new FutureTransferActuator(contract.getParameter(), manager);
+        return new TransferFutureActuator(contract.getParameter(), manager);
       case FutureWithdrawContract:
         return new WithdrawFutureActuator(contract.getParameter(), manager);
       case TransferAssetContract:

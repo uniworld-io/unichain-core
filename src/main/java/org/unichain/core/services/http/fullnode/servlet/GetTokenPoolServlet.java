@@ -29,17 +29,18 @@ public class GetTokenPoolServlet extends HttpServlet {
       var lastOpTime = tokenPool.getLatestOperationTime();
       tokenPoolJson.put("start_time", Utils.formatDateLong(start_time));
       tokenPoolJson.put("end_time", Utils.formatDateLong(end_time));
-      tokenPoolJson.put("latest_operation_time", Utils.formatDateLong(lastOpTime));
+      tokenPoolJson.put("latest_operation_time", Utils.formatDateTimeLong(lastOpTime));
       return tokenPoolJson.toJSONString();
   }
 
+  //@fixme add post method
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       boolean visible = Util.getVisible(request);
-      String tokenName = request.getParameter("name");
+      String tokenName = request.getParameter("token_name");
       CreateTokenContract.Builder build = CreateTokenContract.newBuilder();
       JSONObject jsonObject = new JSONObject();
-      jsonObject.put("name", tokenName);
+      jsonObject.put("token_name", tokenName);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
       CreateTokenContract reply = wallet.getTokenPool(build.build());

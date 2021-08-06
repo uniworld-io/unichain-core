@@ -34,7 +34,9 @@ public class TransferFutureServlet extends HttpServlet {
       boolean visible = Util.getVisiblePost(contract);
       FutureTransferContract.Builder build = FutureTransferContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
-      Transaction tx = wallet.createTransactionCapsule(build.build(), ContractType.FutureTransferContract).getInstance();
+      Transaction tx = wallet
+              .createTransactionCapsule(build.build(), ContractType.FutureTransferContract)
+              .getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

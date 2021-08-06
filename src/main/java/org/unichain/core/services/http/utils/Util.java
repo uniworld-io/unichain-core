@@ -267,11 +267,48 @@ public class Util {
             Contract.ClearABIContract clearABIContract = contractParameter.unpack(Contract.ClearABIContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(clearABIContract, selfType));
             break;
-          case UpdateBrokerageContract: {
+          case UpdateBrokerageContract:
             Contract.UpdateBrokerageContract updateBrokerageContract = contractParameter.unpack(Contract.UpdateBrokerageContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(updateBrokerageContract, selfType));
             break;
-          }
+          //future transfer
+          case FutureTransferContract:
+            FutureTransferContract futureTransferContract = contractParameter.unpack(FutureTransferContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(futureTransferContract, selfType));
+            break;
+          case FutureWithdrawContract:
+            FutureWithdrawContract futureWithdrawContract = contractParameter.unpack(FutureWithdrawContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(futureWithdrawContract, selfType));
+            break;
+          //token economy
+          case CreateTokenContract:
+            CreateTokenContract createTokenContract = contractParameter.unpack(CreateTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(createTokenContract, selfType));
+            break;
+          case ContributeTokenPoolFeeContract:
+            ContributeTokenPoolFeeContract contributeTokenPoolFeeContract = contractParameter.unpack(ContributeTokenPoolFeeContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(contributeTokenPoolFeeContract, selfType));
+            break;
+          case UpdateTokenFeeContract:
+            UpdateTokenFeeContract updateTokenFeeContract = contractParameter.unpack(UpdateTokenFeeContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(updateTokenFeeContract, selfType));
+            break;
+          case UpdateTokenUrlContract:
+            UpdateTokenUrlContract updateTokenUrlContract = contractParameter.unpack(UpdateTokenUrlContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(updateTokenUrlContract, selfType));
+            break;
+          case MineTokenContract:
+            MineTokenContract mineTokenContract = contractParameter.unpack(MineTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(mineTokenContract, selfType));
+            break;
+          case BurnTokenContract:
+            BurnTokenContract burnTokenContract = contractParameter.unpack(BurnTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(burnTokenContract, selfType));
+            break;
+          case TransferTokenContract:
+            TransferTokenContract transferTokenContract = contractParameter.unpack(TransferTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(transferTokenContract, selfType));
+            break;
           // todo add other contract
           default:
         }

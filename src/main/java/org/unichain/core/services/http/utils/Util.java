@@ -540,12 +540,25 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), clearABIContract, selfType);
             any = Any.pack(clearABIContract.build());
             break;
-          case "UpdateBrokerageContract": {
-            Contract.UpdateBrokerageContract.Builder builder = Contract.UpdateBrokerageContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
-            any = Any.pack(builder.build());
+          case "UpdateBrokerageContract":
+            Contract.UpdateBrokerageContract.Builder updateBrokerageContract = Contract.UpdateBrokerageContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateBrokerageContract, selfType);
+            any = Any.pack(updateBrokerageContract.build());
             break;
-          }
+
+          /**
+           * future transfer
+           */
+          case "FutureTransferContract":
+            Contract.FutureTransferContract.Builder futureTransferContract = Contract.FutureTransferContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), futureTransferContract, selfType);
+            any = Any.pack(futureTransferContract.build());
+            break;
+          case "FutureWithdrawContract":
+            Contract.FutureWithdrawContract.Builder futureWithdrawContract = Contract.FutureWithdrawContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), futureWithdrawContract, selfType);
+            any = Any.pack(futureWithdrawContract.build());
+            break;
           // todo add other contract
           default:
         }

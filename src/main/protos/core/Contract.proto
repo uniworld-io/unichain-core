@@ -117,9 +117,10 @@ message CreateTokenContract {
   bytes description = 8;
   bytes url = 9;
   int64 fee = 10;
-  int64 fee_pool = 11;
-  int64 burned = 12;
-  int64 latest_operation_time = 13;
+  int64 extra_fee_rate = 11;
+  int64 fee_pool = 12;
+  int64 burned = 13;
+  int64 latest_operation_time = 14;
 }
 
 message ContributeTokenPoolFeeContract {
@@ -132,6 +133,7 @@ message UpdateTokenFeeContract {
   bytes owner_address = 1;
   bytes token_name = 2;
   int64 amount = 3;
+  int64 extra_fee_rate = 4;
 }
 
 message UpdateTokenUrlContract {
@@ -160,7 +162,6 @@ message TransferTokenContract {
   bytes token_name = 3;
   int64 amount = 4;
   int64 available_time = 5;
-  TokenTransferType type = 6;
 }
 
 message WithdrawFutureTokenContract {

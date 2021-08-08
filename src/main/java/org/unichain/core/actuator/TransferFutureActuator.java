@@ -4,7 +4,6 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import org.unichain.common.storage.Deposit;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -133,6 +132,6 @@ public class TransferFutureActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return ChainConstant.FUTURE_TRANSFER_FEE;
+    return ChainConstant.TRANSFER_FEE;
   }
 }

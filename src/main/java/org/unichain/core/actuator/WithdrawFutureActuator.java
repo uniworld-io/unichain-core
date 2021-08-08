@@ -14,7 +14,6 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.FutureWithdrawContract;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Account.Future;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -117,6 +116,6 @@ public class WithdrawFutureActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return Parameter.ChainConstant.FUTURE_WITHDRAW_FEE;
+    return Parameter.ChainConstant.TRANSFER_FEE;
   }
 }

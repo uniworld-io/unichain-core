@@ -17,5 +17,4 @@ public class NodeInfoOnSolidityService extends NodeInfoService {
   @Override
   protected void setCheatWitnessInfo(NodeInfo nodeInfo) {
   }
-
 }

@@ -287,8 +287,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     return currentWeight;
   }
 
-  public void addSign(byte[] privateKey, AccountStore accountStore)
-      throws PermissionException, SignatureException, SignatureFormatException {
+  public void addSign(byte[] privateKey, AccountStore accountStore) throws PermissionException, SignatureException, SignatureFormatException {
     Transaction.Contract contract = this.transaction.getRawData().getContract(0);
     int permissionId = contract.getPermissionId();
     byte[] owner = getOwner(contract);
@@ -328,7 +327,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   }
 
   /**
-   * @todo add new process for new TX
+   * @addon add new contract declare
    */
   public static byte[] getOwner(Transaction.Contract contract) {
     ByteString owner;
@@ -446,7 +445,27 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case CreateTokenContract:
           owner = contractParameter.unpack(CreateTokenContract.class).getOwnerAddress();
           break;
-
+        case ContributeTokenPoolFeeContract:
+          owner = contractParameter.unpack(ContributeTokenPoolFeeContract.class).getOwnerAddress();
+          break;
+        case UpdateTokenFeeContract:
+          owner = contractParameter.unpack(UpdateTokenFeeContract.class).getOwnerAddress();
+          break;
+        case UpdateTokenUrlContract:
+          owner = contractParameter.unpack(UpdateTokenUrlContract.class).getOwnerAddress();
+          break;
+        case MineTokenContract:
+          owner = contractParameter.unpack(MineTokenContract.class).getOwnerAddress();
+          break;
+        case BurnTokenContract:
+          owner = contractParameter.unpack(BurnTokenContract.class).getOwnerAddress();
+          break;
+        case TransferTokenContract:
+          owner = contractParameter.unpack(TransferTokenContract.class).getOwnerAddress();
+          break;
+        case WithdrawFutureTokenContract:
+          owner = contractParameter.unpack(WithdrawFutureTokenContract.class).getOwnerAddress();
+          break;
         default:
           return null;
       }

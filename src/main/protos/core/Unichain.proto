@@ -16,11 +16,6 @@ enum AccountType {
   Contract = 2;
 }
 
-enum TokenTransferType {
-  Instant = 0;
-  Future =1;
-}
-
 // AccountId, (name, address) use name, (null, address) use address, (name, null) use name,
 message AccountId {
   bytes name = 1;

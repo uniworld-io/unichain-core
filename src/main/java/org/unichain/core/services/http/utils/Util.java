@@ -7,6 +7,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.eclipse.jetty.util.StringUtil;
 import org.pf4j.util.StringUtils;
 import org.spongycastle.util.encoders.Hex;
@@ -140,6 +141,7 @@ public class Util {
     return Hash.sha3omit12(combined);
   }
 
+  //@addon declare new tx
   public static JSONObject printTransactionToJSON(Transaction transaction, boolean selfType) {
     JSONObject jsonTransaction = JSONObject.parseObject(JsonFormat.printToString(transaction, selfType));
     JSONArray contracts = new JSONArray();
@@ -309,7 +311,10 @@ public class Util {
             TransferTokenContract transferTokenContract = contractParameter.unpack(TransferTokenContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(transferTokenContract, selfType));
             break;
-          // todo add other contract
+          case WithdrawFutureTokenContract:
+            WithdrawFutureTokenContract withdrawFutureTokenContract = contractParameter.unpack(WithdrawFutureTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(withdrawFutureTokenContract, selfType));
+            break;
           default:
         }
         JSONObject parameter = new JSONObject();
@@ -337,6 +342,7 @@ public class Util {
     return jsonTransaction;
   }
 
+  //@addon declare new contract
   public static Transaction packTransaction(String strTransaction, boolean selfType) {
     JSONObject jsonTransaction = JSONObject.parseObject(strTransaction);
     JSONObject rawData = jsonTransaction.getJSONObject("raw_data");
@@ -385,51 +391,6 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), assetIssueContractBuilder, selfType);
             any = Any.pack(assetIssueContractBuilder.build());
             break;
-
-          /**
-           *  token economy
-           */
-          case "CreateTokenContract":
-            CreateTokenContract.Builder createTokenContractBuilder = CreateTokenContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), createTokenContractBuilder, selfType);
-            any = Any.pack(createTokenContractBuilder.build());
-            break;
-          case "ContributeTokenPoolFeeContract":
-            ContributeTokenPoolFeeContract.Builder contributeTokenPoolContractBuilder = ContributeTokenPoolFeeContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), contributeTokenPoolContractBuilder, selfType);
-            any = Any.pack(contributeTokenPoolContractBuilder.build());
-            break;
-          case "UpdateTokenFeeContract":
-            UpdateTokenFeeContract.Builder updateTokenFeeContractBuilder = UpdateTokenFeeContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateTokenFeeContractBuilder, selfType);
-            any = Any.pack(updateTokenFeeContractBuilder.build());
-            break;
-          case "UpdateTokenUrlContract":
-            UpdateTokenUrlContract.Builder updateTokenUrlContractBuilder = UpdateTokenUrlContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateTokenUrlContractBuilder, selfType);
-            any = Any.pack(updateTokenUrlContractBuilder.build());
-            break;
-          case "MineTokenContract":
-            MineTokenContract.Builder mineContractBuilder = MineTokenContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), mineContractBuilder, selfType);
-            any = Any.pack(mineContractBuilder.build());
-            break;
-          case "BurnTokenContract":
-            BurnTokenContract.Builder burnTokenContractBuilder = BurnTokenContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), burnTokenContractBuilder, selfType);
-            any = Any.pack(burnTokenContractBuilder.build());
-            break;
-          case "TransferTokenContract":
-            TransferTokenContract.Builder transferTokenContractBuilder = TransferTokenContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferTokenContractBuilder, selfType);
-            any = Any.pack(transferTokenContractBuilder.build());
-            break;
-          case "WithdrawFutureTokenContract":
-            WithdrawFutureTokenContract.Builder withdrawFutureTokenContractBuilder = WithdrawFutureTokenContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), withdrawFutureTokenContractBuilder, selfType);
-            any = Any.pack(withdrawFutureTokenContractBuilder.build());
-            break;
-
           case "WitnessUpdateContract":
             WitnessUpdateContract.Builder witnessUpdateContractBuilder = WitnessUpdateContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), witnessUpdateContractBuilder, selfType);
@@ -559,7 +520,50 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), futureWithdrawContract, selfType);
             any = Any.pack(futureWithdrawContract.build());
             break;
-          // todo add other contract
+
+          /**
+           *  token economy
+           */
+          case "CreateTokenContract":
+            CreateTokenContract.Builder createTokenContractBuilder = CreateTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), createTokenContractBuilder, selfType);
+            any = Any.pack(createTokenContractBuilder.build());
+            break;
+          case "ContributeTokenPoolFeeContract":
+            ContributeTokenPoolFeeContract.Builder contributeTokenPoolContractBuilder = ContributeTokenPoolFeeContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), contributeTokenPoolContractBuilder, selfType);
+            any = Any.pack(contributeTokenPoolContractBuilder.build());
+            break;
+          case "UpdateTokenFeeContract":
+            UpdateTokenFeeContract.Builder updateTokenFeeContractBuilder = UpdateTokenFeeContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateTokenFeeContractBuilder, selfType);
+            any = Any.pack(updateTokenFeeContractBuilder.build());
+            break;
+          case "UpdateTokenUrlContract":
+            UpdateTokenUrlContract.Builder updateTokenUrlContractBuilder = UpdateTokenUrlContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateTokenUrlContractBuilder, selfType);
+            any = Any.pack(updateTokenUrlContractBuilder.build());
+            break;
+          case "MineTokenContract":
+            MineTokenContract.Builder mineContractBuilder = MineTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), mineContractBuilder, selfType);
+            any = Any.pack(mineContractBuilder.build());
+            break;
+          case "BurnTokenContract":
+            BurnTokenContract.Builder burnTokenContractBuilder = BurnTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), burnTokenContractBuilder, selfType);
+            any = Any.pack(burnTokenContractBuilder.build());
+            break;
+          case "TransferTokenContract":
+            TransferTokenContract.Builder transferTokenContractBuilder = TransferTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferTokenContractBuilder, selfType);
+            any = Any.pack(transferTokenContractBuilder.build());
+            break;
+          case "WithdrawFutureTokenContract":
+            WithdrawFutureTokenContract.Builder withdrawFutureTokenContractBuilder = WithdrawFutureTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), withdrawFutureTokenContractBuilder, selfType);
+            any = Any.pack(withdrawFutureTokenContractBuilder.build());
+            break;
           default:
         }
         if (any != null) {
@@ -582,6 +586,17 @@ public class Util {
       logger.debug("ParseException: {}", e.getMessage());
       return null;
     }
+  }
+
+
+  public static byte[] byteString2ByteArrAsUppercase(ByteString bytes){
+    var strUppercase = bytes.toStringUtf8().toUpperCase();
+    return ByteString.copyFrom(strUppercase.getBytes()).toByteArray();
+  }
+
+  public static ByteString byteStringAsUppercase(ByteString bytes){
+    var strUppercase = bytes.toStringUtf8().toUpperCase();
+    return ByteString.copyFrom(strUppercase.getBytes());
   }
 
   public static void checkBodySize(String body) throws Exception {

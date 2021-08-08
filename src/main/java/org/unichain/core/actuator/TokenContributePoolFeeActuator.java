@@ -27,6 +27,7 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.ContributeTokenPoolFeeContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -43,27 +44,19 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      var subContract = contract.unpack(ContributeTokenPoolFeeContract.class);
-      logger.info("ContributeTokenPoolFee  {} ...", subContract);
-      var ownerAddress = subContract.getOwnerAddress().toByteArray();
-      var tokenName = subContract.getTokenName().toStringUtf8().toUpperCase().getBytes();
-      var tokenCapsule = dbManager.getTokenStore().get(tokenName);
-      tokenCapsule.setFeePool(tokenCapsule.getFeePool() + subContract.getAmount());
-      dbManager.getTokenStore().put(tokenName, tokenCapsule);
+        var ctx = contract.unpack(ContributeTokenPoolFeeContract.class);
+        var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+        var contributeAmount =  ctx.getAmount();
+        var tokenCapsule = dbManager.getTokenStore().get(tokenKey);
+        tokenCapsule.setFeePool(tokenCapsule.getFeePool() + contributeAmount);
+        dbManager.getTokenStore().put(tokenCapsule.createDbKey(), tokenCapsule);
 
-      chargeFee(ownerAddress, fee);
-      dbManager.adjustBalance(ownerAddress, subContract.getAmount());
-      ret.setStatus(fee, code.SUCESS);
-      logger.info("ContributeTokenPoolFee  {} ...DONE!", subContract);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (ArithmeticException e) {
+        var ownerAddress = ctx.getOwnerAddress().toByteArray();
+        dbManager.adjustBalance(ownerAddress, -(ctx.getAmount() + fee));
+        dbManager.burnFee(fee);
+        ret.setStatus(fee, code.SUCESS);
+        logger.info("ContributeTokenPoolFee  {} ...DONE!", ctx);
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
@@ -73,6 +66,7 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
+      logger.info("validate ContributeTokenPoolFee ...");
       if (Objects.isNull(contract))
         throw new ContractValidateException("No contract!");
 
@@ -80,34 +74,39 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
         throw new ContractValidateException("No dbManager!");
 
       if (!this.contract.is(ContributeTokenPoolFeeContract.class))
-        throw new ContractValidateException("contract type error, expected type [ContributeTokenPoolFeeContract],real type[" + contract.getClass() + "]");
+        throw new ContractValidateException("contract type error, expected type [ContributeTokenPoolFeeContract], real type[" + contract.getClass() + "]");
 
       final ContributeTokenPoolFeeContract ctx;
       try {
         ctx = this.contract.unpack(ContributeTokenPoolFeeContract.class);
       } catch (InvalidProtocolBufferException e) {
-        logger.debug(e.getMessage(), e);
+        logger.error(e.getMessage(), e);
         throw new ContractValidateException(e.getMessage());
       }
 
-      var accountCap = dbManager.getAccountStore().get(ctx.getOwnerAddress().toByteArray());
-      if (Objects.isNull(accountCap))
+      var ownerAccount = dbManager.getAccountStore().get(ctx.getOwnerAddress().toByteArray());
+      if (Objects.isNull(ownerAccount))
         throw new ContractValidateException("Invalid ownerAddress");
 
-      var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
-      var tokenPool = dbManager.getTokenStore().get(tokenName);
+      var tokenKey =  Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var contributeAmount = ctx.getAmount();
+      var tokenPool = dbManager.getTokenStore().get(tokenKey);
       if (Objects.isNull(tokenPool))
-        throw new ContractValidateException("TokenName not exist: " + ctx.getTokenName().toStringUtf8());
+      {
+          logger.warn("validate ContributeTokenPoolFee 4: token name not exist");
+          throw new ContractValidateException("TokenName not exist: " + ctx.getTokenName().toStringUtf8());
+      }
 
-      if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
+      if(dbManager.getHeadBlockTimeStamp() >= tokenPool.getEndTime())
           throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
 
-      if(tokenPool.getStartTime() < dbManager.getHeadBlockTimeStamp())
+      if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
           throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
-      var contributeAmount = ctx.getAmount();
-      if (accountCap.getBalance() < contributeAmount + calcFee())
-        throw new ContractValidateException("Not enough balance");
+      if (ownerAccount.getBalance() < contributeAmount + calcFee())
+          throw new ContractValidateException("Not enough balance");
+
+      logger.info("validate ContributeTokenPoolFee ...DONE!");
 
       return true;
   }
@@ -119,6 +118,6 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return Parameter.ChainConstant.TOKEN_UPDATE;
+      return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 unw default
   }
 }

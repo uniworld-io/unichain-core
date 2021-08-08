@@ -29,10 +29,14 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.CreateTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Objects;
+
+import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE;
+import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE_RATE;
 
 @Slf4j(topic = "actuator")
 public class TokenCreateActuator extends AbstractActuator {
@@ -48,36 +52,26 @@ public class TokenCreateActuator extends AbstractActuator {
       var ctx = contract.unpack(CreateTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var capsule = new TokenPoolCapsule(ctx);
-
-      //make sure init burned amount
       capsule.setBurnedToken(0L);
-      //set token name as uppercase
-      var tokenName = ByteString.copyFrom(capsule.getTokenName().toStringUtf8().toUpperCase().getBytes());
-      capsule.setTokenName(tokenName);
+      if(capsule.getStartTime() == 0)
+        capsule.setStartTime(dbManager.getHeadBlockTimeStamp());
+      var tokenNameUppercase = Util.byteStringAsUppercase(capsule.getTokenName());
+      capsule.setTokenName(tokenNameUppercase);
       capsule.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenStore().put(capsule.createDbKey(), capsule);
-      chargeFee(ownerAddress, fee);
-      //dont move pool fee to burned unx account
-      dbManager.adjustBalance(ownerAddress, -ctx.getFeePool());
+
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      //add token issued list, dont allow the same name
       accountCapsule.addToken(capsule.createDbKey(), capsule.getTotalSupply());
+      accountCapsule.setBalance(accountCapsule.getBalance() - ctx.getFeePool() - fee);
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
+      dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (ArithmeticException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
@@ -111,11 +105,12 @@ public class TokenCreateActuator extends AbstractActuator {
       throw new ContractValidateException("Invalid token name");
     }
 
-    var tokenName = ctx.getName().toStringUtf8();
-    if (tokenName.equalsIgnoreCase("UNX"))
+    if (ctx.getName().toStringUtf8().equalsIgnoreCase("UNX"))
       throw new ContractValidateException("Token name can't be UNX");
 
-    if (this.dbManager.getTokenStore().get(tokenName.getBytes()) != null) {
+    var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getName());
+
+    if (this.dbManager.getTokenStore().get(tokenKey) != null) {
       throw new ContractValidateException("Token exists");
     }
 
@@ -129,17 +124,11 @@ public class TokenCreateActuator extends AbstractActuator {
     if (!TransactionUtil.validAssetDescription(ctx.getDescription().toByteArray()))
       throw new ContractValidateException("Invalid description");
 
-    if (ctx.getStartTime() == 0)
-      throw new ContractValidateException("Start time should be not empty");
+    if (!(ctx.getStartTime() == 0 || ctx.getStartTime() >= dbManager.getHeadBlockTimeStamp()))
+      throw new ContractValidateException("Invalid start time");
 
-    if (ctx.getEndTime() == 0)
-      throw new ContractValidateException("End time should be not empty");
-
-    if (ctx.getEndTime() <= ctx.getStartTime())
-      throw new ContractValidateException("End time should be greater than start time");
-
-    if (ctx.getStartTime() <= dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("Start time should be greater than HeadBlockTime");
+    if (ctx.getEndTime() <= 0 ||  ctx.getEndTime() <= ctx.getStartTime() || ctx.getEndTime() <= dbManager.getHeadBlockTimeStamp())
+      throw new ContractValidateException("Invalid end time");
 
     if (ctx.getTotalSupply() <= 0)
       throw new ContractValidateException("TotalSupply must greater than 0!");
@@ -150,18 +139,18 @@ public class TokenCreateActuator extends AbstractActuator {
     if (ctx.getMaxSupply() < ctx.getTotalSupply())
       throw new ContractValidateException("MaxSupply must greater or equal than TotalSupply!");
 
-    if (ctx.getFee() < 0)
-      throw new ContractValidateException("Token transfer fee as token must greater or equal than 0!");
+    if (ctx.getFee() < 0 || ctx.getFee() > TOKEN_MAX_TRANSFER_FEE)
+      throw new ContractValidateException("Invalid token transfer fee: must be positive and not exceed max fee : " + TOKEN_MAX_TRANSFER_FEE + " tokens");
 
-    if (ctx.getFeePool() < 0)
-      throw new ContractValidateException("pre-transfer pool fee as UNW must greater or equal than 0!");
+    if (ctx.getExtraFeeRate() < 0 || ctx.getExtraFeeRate() > 100 || ctx.getExtraFeeRate() > TOKEN_MAX_TRANSFER_FEE_RATE)
+      throw new ContractValidateException("Invalid extra fee rate , should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
 
     var accountCap = dbManager.getAccountStore().get(ownerAddress);
     if (Objects.isNull(accountCap))
       throw new ContractValidateException("Account not exists");
 
-    if (accountCap.getBalance() < calcFee() + ctx.getFeePool())
-      throw new ContractValidateException("No enough balance for fee & pre-transfer pool fee");
+    if (ctx.getFeePool() < 0 || (accountCap.getBalance() < calcFee() + ctx.getFeePool()))
+      throw new ContractValidateException("Invalid fee pool or not enough balance for fee & pre-deposit pool fee");
 
     return true;
   }
@@ -173,6 +162,6 @@ public class TokenCreateActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return Parameter.ChainConstant.TOKEN_CREATE_FEE;
+    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 unw default
   }
 }

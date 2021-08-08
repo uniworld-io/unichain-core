@@ -24,22 +24,19 @@ import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.WithdrawFutureTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Objects;
 
-/**
- * @todo:
- * what happen if some one constantly make withdraw tx that not in account ?
- * - pool spam because fee is on pool
- */
 @Slf4j(topic = "actuator")
-public class WithdrawFutureTokenActuator extends AbstractActuator {
+public class TokenWithdrawFutureActuator extends AbstractActuator {
 
-  WithdrawFutureTokenActuator(Any contract, Manager dbManager) {
+  TokenWithdrawFutureActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -47,29 +44,24 @@ public class WithdrawFutureTokenActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      WithdrawFutureTokenContract subContract = contract.unpack(WithdrawFutureTokenContract.class);
-      var ownerAddress = subContract.getOwnerAddress().toByteArray();
+      WithdrawFutureTokenContract ctx = contract.unpack(WithdrawFutureTokenContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
-      var tokenName = subContract.getTokenName().toByteArray();
-      var tokenPool = dbManager.getTokenStore().get(tokenName);
+      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenPool = dbManager.getTokenStore().get(tokenKey);
 
       //withdraw future
-      if(!ownerAccountCap.withdrawTokenFuture(tokenName, dbManager.getHeadBlockTimeStamp()))
+      if(!ownerAccountCap.withdrawTokenFuture(tokenKey, dbManager.getHeadBlockTimeStamp()))
         throw new ContractExeException("failed to withdraw token from account");
       dbManager.getAccountStore().put(ownerAddress, ownerAccountCap);
 
       //if success, charge pool fee
-      tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       tokenPool.setFeePool(tokenPool.getFeePool() - fee);
-      dbManager.getTokenStore().put(tokenName, tokenPool);
-
+      tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      dbManager.getTokenStore().put(tokenKey, tokenPool);
+      dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    }
-    catch (ArithmeticException e) {
+    } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
@@ -79,44 +71,42 @@ public class WithdrawFutureTokenActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
+    if (this.contract == null)
       throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
+
+    if (this.dbManager == null)
       throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(WithdrawFutureTokenContract.class)) {
+
+    if (!this.contract.is(WithdrawFutureTokenContract.class))
       throw new ContractValidateException("contract type error, expected type [WithdrawFutureTokenContract],real type[" + contract.getClass() + "]");
-    }
 
     long fee = calcFee();
 
-    final WithdrawFutureTokenContract subContract;
+    final WithdrawFutureTokenContract ctx;
     try {
-      subContract = this.contract.unpack(WithdrawFutureTokenContract.class);
+      ctx = this.contract.unpack(WithdrawFutureTokenContract.class);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
 
-    var ownerAddress = subContract.getOwnerAddress().toByteArray();
+    var ownerAddress = ctx.getOwnerAddress().toByteArray();
     var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
     if(Objects.isNull(ownerAccountCap))
       throw new ContractValidateException("Owner account not found");
 
-    //detect available token to withdraw
-    var tokenName = subContract.getTokenName().toByteArray();
-    var tokenPool = dbManager.getTokenStore().get(tokenName);
+    var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+    var tokenPool = dbManager.getTokenStore().get(tokenKey);
     if(Objects.isNull(tokenPool))
-      throw new ContractValidateException("Token pool not found: " + subContract.getTokenName());
+      throw new ContractValidateException("Token not found: " + ctx.getTokenName());
 
-    if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("Token expired at: "+ (Utils.formatDateLong(tokenPool.getEndTime())));
+    if(dbManager.getHeadBlockTimeStamp() >= tokenPool.getEndTime())
+      throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
 
-    if(tokenPool.getStartTime() < dbManager.getHeadBlockTimeStamp())
+    if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
       throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
-    long available = ownerAccountCap.getTokenFutureAvailable(tokenName, dbManager.getHeadBlockTimeStamp());
+    long available = ownerAccountCap.getTokenFutureAvailable(tokenKey, dbManager.getHeadBlockTimeStamp());
     if(available <= 0)
       throw new ContractValidateException("Not found future token or unavailable to withdraw");
 
@@ -133,6 +123,6 @@ public class WithdrawFutureTokenActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return Parameter.ChainConstant.TOKEN_FUTURE_WITHDRAW_FEE;
+    return Parameter.ChainConstant.TRANSFER_FEE;
   }
 }

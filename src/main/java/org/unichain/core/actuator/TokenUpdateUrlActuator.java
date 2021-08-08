@@ -28,6 +28,7 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.UpdateTokenUrlContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
@@ -48,29 +49,22 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(Contract.UpdateTokenUrlContract.class);
       logger.info("UpdateTokenUrl  {} ...", ctx);
-      var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
-      var tokenCap = dbManager.getTokenStore().get(tokenName);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenCap = dbManager.getTokenStore().get(tokenKey);
       tokenCap.setUrl(ctx.getUrl());
       tokenCap.setDescription(ctx.getDescription());
-      dbManager.getTokenStore().put(tokenName, tokenCap);
+      dbManager.getTokenStore().put(tokenKey, tokenCap);
 
-      chargeFee(ctx.getOwnerAddress().toByteArray(), fee);
+      chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       logger.info("UpdateTokenUrl  {} ...DONE!", ctx);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (ArithmeticException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
@@ -100,13 +94,16 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
       if(accountCap.getBalance() < calcFee())
           throw new ContractValidateException("Not enough balance");
 
-      var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
-      var tokenPool = dbManager.getTokenStore().get(tokenName);
+      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenPool = dbManager.getTokenStore().get(tokenKey);
       if (Objects.isNull(tokenPool))
         throw new ContractValidateException("TokenName not exist");
 
-      if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
+      if(dbManager.getHeadBlockTimeStamp() >= tokenPool.getEndTime())
           throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
+
+      if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
+          throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
       if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
           throw new ContractValidateException("only owner of token pool allowed to update url description");
@@ -127,6 +124,6 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return Parameter.ChainConstant.TOKEN_UPDATE;
+      return dbManager.getDynamicPropertiesStore().getAssetIssueFee()/2;//250 unw default
   }
 }

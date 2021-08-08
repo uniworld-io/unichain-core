@@ -67,10 +67,6 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return getName().toByteArray();
   }
 
-  public static String createDbKeyString(String name, long order) {
-    return name + "_" + order;
-  }
-
   public long getStartTime() {
     return this.createTokenContract.getStartTime();
   }
@@ -107,6 +103,11 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.getFee();
   }
 
+  public long getExtraFeeRate() {
+    return this.createTokenContract.getExtraFeeRate();
+  }
+
+
   public long getFeePool() {
     return this.createTokenContract.getFeePool();
   }
@@ -115,9 +116,23 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.getAbbr();
   }
 
+  public long getBurnedToken() {
+    return createTokenContract.getBurned();
+  }
+
+  public void setStartTime(long startTime) {
+    this.createTokenContract = this.createTokenContract.toBuilder()
+            .setStartTime(startTime).build();
+  }
+
   public void setFee(long fee) {
     this.createTokenContract = this.createTokenContract.toBuilder()
             .setFee(fee).build();
+  }
+
+  public void setExtraFeeRate(long extraFeeRate) {
+    this.createTokenContract = this.createTokenContract.toBuilder()
+            .setExtraFeeRate(extraFeeRate).build();
   }
 
   public void setTotalSupply(long amount) {
@@ -133,12 +148,11 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
   public void burnToken(long amount) throws ContractExeException {
     if(amount <= 0)
       throw  new ContractExeException("mined token amount must greater than ZERO");
-    this.createTokenContract = this.createTokenContract.toBuilder()
-            .setBurned(createTokenContract.getBurned() + amount).build();
+    setBurnedToken(createTokenContract.getBurned() + amount);
   }
 
-  public void setLatestOperationTime(long latest_time) {
-    this.createTokenContract = this.createTokenContract.toBuilder().setLatestOperationTime(latest_time).build();
+  public void setLatestOperationTime(long latestOpTime) {
+    this.createTokenContract = this.createTokenContract.toBuilder().setLatestOperationTime(latestOpTime).build();
   }
 
   public void setFeePool(long feePool) {
@@ -159,10 +173,6 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
   public void setBurnedToken(long amount){
     this.createTokenContract = this.createTokenContract.toBuilder()
             .setBurned(amount).build();
-  }
-
-  public long getBurnedToken() {
-    return createTokenContract.getBurned();
   }
 
   public void mineToken(long amount) throws ContractExeException{

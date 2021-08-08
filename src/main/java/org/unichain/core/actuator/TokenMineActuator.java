@@ -27,6 +27,7 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.MineTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -47,35 +48,25 @@ public class TokenMineActuator extends AbstractActuator {
       var ctx = contract.unpack(MineTokenContract.class);
       logger.info("MineTokenContract  {} ...", ctx);
 
-      //update total supply
-      var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
-      var tokenCapsule = dbManager.getTokenStore().get(tokenName);
+      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenCapsule = dbManager.getTokenStore().get(tokenKey);
       tokenCapsule.setTotalSupply(tokenCapsule.getTotalSupply() + ctx.getAmount());
-      dbManager.getTokenStore().put(tokenName, tokenCapsule);
+      dbManager.getTokenStore().put(tokenKey, tokenCapsule);
 
-      //add mined amount to owner account
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      accountCapsule.mineToken(tokenName, ctx.getAmount());
+      accountCapsule.mineToken(tokenKey, ctx.getAmount());
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       logger.info("MineTokenContract  {} ...DONE!", ctx);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (ArithmeticException e) {
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
@@ -104,15 +95,15 @@ public class TokenMineActuator extends AbstractActuator {
     if (ownerAccountCap.getBalance() < calcFee())
       throw new ContractValidateException("Fee exceed balance");
 
-    var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
-    var tokenPool = dbManager.getTokenStore().get(tokenName);
+    var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+    var tokenPool = dbManager.getTokenStore().get(tokenKey);
     if(Objects.isNull(tokenPool))
       throw new ContractValidateException("Token not exist :"+ ctx.getTokenName());
 
-    if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
+    if(dbManager.getHeadBlockTimeStamp() >= tokenPool.getEndTime())
       throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
 
-    if(tokenPool.getStartTime() < dbManager.getHeadBlockTimeStamp())
+    if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
       throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
     if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
@@ -133,6 +124,6 @@ public class TokenMineActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return Parameter.ChainConstant.TOKEN_MINE_FEE;
+    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 unw default
   }
 }

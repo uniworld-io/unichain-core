@@ -61,6 +61,7 @@ import org.unichain.core.exception.*;
 import org.unichain.core.net.UnichainNetDelegate;
 import org.unichain.core.net.UnichainNetService;
 import org.unichain.core.net.message.TransactionMessage;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.*;
@@ -276,7 +277,7 @@ public class Wallet {
 
   public CreateTokenContract getTokenPool(CreateTokenContract filter) {
     var tokenStore = dbManager.getTokenStore();
-    TokenPoolCapsule tokenPoolCap = tokenStore.get(filter.getName().toByteArray());
+    TokenPoolCapsule tokenPoolCap = tokenStore.get(Util.byteString2ByteArrAsUppercase(filter.getName()));
     return CreateTokenContract.newBuilder()
             .setName(tokenPoolCap.getName())
             .setAbbr(tokenPoolCap.getAbbr())
@@ -519,7 +520,6 @@ public class Wallet {
         if (permission.getType() != PermissionType.Active) {
           throw new PermissionException("Permission type is error");
         }
-        //check oprations
         if (!checkPermissionOprations(permission, contract)) {
           throw new PermissionException("Permission denied");
         }

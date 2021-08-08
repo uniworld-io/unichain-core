@@ -612,6 +612,10 @@ public class Manager {
     adjustBalance(account, amount);
   }
 
+  public void burnFee(long fee) throws BalanceInsufficientException{
+    adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
+  }
+
   public void addFutureBalance(byte[] accountAddress, long amount, long expireTime) throws BalanceInsufficientException {
     AccountCapsule account = getAccountStore().getUnchecked(accountAddress);
     account.addFuture(Protocol.Account.Future.newBuilder()
@@ -766,7 +770,7 @@ public class Manager {
               chargeFee4TokenPool(wContract.getTokenName().toByteArray(), fee);
             }
             catch (Exception ex) {
-              logger.error("consumeForCreateNewAccount4TokenTransfer got error -->", ex);
+              logger.error("chargeFee4TokenPool got error -->", ex);
               throw new RuntimeException(ex.getMessage());
             }
             break;

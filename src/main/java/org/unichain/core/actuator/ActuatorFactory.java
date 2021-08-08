@@ -75,7 +75,7 @@ public class ActuatorFactory {
       case TransferTokenContract:
         return new TokenTransferActuator(contract.getParameter(), manager);
       case WithdrawFutureTokenContract:
-        return new WithdrawFutureTokenActuator(contract.getParameter(), manager);
+        return new TokenWithdrawFutureActuator(contract.getParameter(), manager);
 
       case UnfreezeAssetContract:
         return new UnfreezeAssetActuator(contract.getParameter(), manager);

@@ -650,7 +650,9 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     Map<String, Long> tokenMap = this.account.getTokenMap();
     String nameKey = ByteArray.toStr(key);
     long current = tokenMap.containsKey(nameKey) ? tokenMap.get(nameKey) : 0L;
-    this.account = this.account.toBuilder().putToken(nameKey, current + amount).build();
+    this.account = this.account.toBuilder()
+            .putToken(nameKey, current + amount)
+            .build();
   }
 
   /**

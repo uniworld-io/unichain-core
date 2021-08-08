@@ -8,17 +8,11 @@ public class Parameter {
     /**
      * token fees
      */
-    public static final long TOKEN_FUTURE_WITHDRAW_FEE = 0; // free
     public static final long TOKEN_TRANSFER_FEE = 0; // free
-    public static final long TOKEN_BURN_FEE = 0; // free
-    public static final long TOKEN_MINE_FEE = 0; // free
-    public static final long TOKEN_MAX_TRANSFER_FEE = 1000; // free
-    public static final long TOKEN_UPDATE = 0; // free
-    public static final long TOKEN_CREATE_FEE = 0; // free
+    public static final long TOKEN_MAX_TRANSFER_FEE = 10000;
+    public static final long TOKEN_MAX_TRANSFER_FEE_RATE = 30; // percent
 
     public static final long TRANSFER_FEE = 0; // free
-    public static final long FUTURE_TRANSFER_FEE = 0; // free
-    public static final long FUTURE_WITHDRAW_FEE = 0; // free
     public static final int WITNESS_STANDBY_LENGTH = 55;
     public static final int SOLIDIFIED_THRESHOLD = 70; // 70%
     public static final int PRIVATE_KEY_LENGTH = 64;

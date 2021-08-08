@@ -29,7 +29,6 @@ public class GetAccountServlet extends HttpServlet {
     if (account.getAssetIssuedID().isEmpty()) {
       return JsonFormat.printToString(account, false);
     } else {
-      //@todo review formatting date time
       JSONObject accountJson = JSONObject.parseObject(JsonFormat.printToString(account, false));
       String assetId = accountJson.get("asset_issued_ID").toString();
       accountJson.put("asset_issued_ID", ByteString.copyFrom(ByteArray.fromHexString(assetId)).toStringUtf8());

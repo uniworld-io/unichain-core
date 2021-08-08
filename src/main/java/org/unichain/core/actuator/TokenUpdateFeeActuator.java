@@ -28,14 +28,15 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.UpdateTokenFeeContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE;
+import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE_RATE;
 
 @Slf4j(topic = "actuator")
 public class TokenUpdateFeeActuator extends AbstractActuator {
@@ -48,33 +49,25 @@ public class TokenUpdateFeeActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var subContract = contract.unpack(Contract.UpdateTokenFeeContract.class);
-      logger.info("UpdateTokenFee  {} ...", subContract);
-      var ownerAddress = subContract.getOwnerAddress().toByteArray();
-      var tokenName = subContract.getTokenName().toByteArray();
+      var ctx = contract.unpack(Contract.UpdateTokenFeeContract.class);
+      logger.info("UpdateTokenFee  {} ...", ctx);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
 
-      //update token fee
-      TokenPoolCapsule tokenCap = dbManager.getTokenStore().get(tokenName);
-      tokenCap.setFee(subContract.getAmount());
-      dbManager.getTokenStore().put(tokenName, tokenCap);
+      TokenPoolCapsule tokenCap = dbManager.getTokenStore().get(tokenKey);
+      tokenCap.setFee(ctx.getAmount());
+      tokenCap.setExtraFeeRate(ctx.getExtraFeeRate());
+      dbManager.getTokenStore().put(tokenKey, tokenCap);
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-      logger.info("UpdateTokenFee  {} ...DONE!", subContract);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (ArithmeticException e) {
+      logger.info("UpdateTokenFee  {} ...DONE!", ctx);
+      return true;
+    } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
       logger.debug(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
@@ -104,20 +97,24 @@ public class TokenUpdateFeeActuator extends AbstractActuator {
       if(accountCap.getBalance() < calcFee())
           throw new ContractValidateException("Not enough balance");
 
-      var tokenName = ctx.getTokenName().toStringUtf8().toUpperCase().getBytes();
-      var tokenPool = dbManager.getTokenStore().get(tokenName);
+      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenPool = dbManager.getTokenStore().get(tokenKey);
       if (Objects.isNull(tokenPool))
         throw new ContractValidateException("TokenName not exist");
 
-      if(tokenPool.getEndTime() <= dbManager.getHeadBlockTimeStamp())
+      if(dbManager.getHeadBlockTimeStamp() >= tokenPool.getEndTime())
           throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
 
-      if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
-          throw new ContractValidateException("only owner of token pool allowed to update fee policy");
+      if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
+          throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
       var amount = ctx.getAmount();
       if (amount < 0 || amount > TOKEN_MAX_TRANSFER_FEE)
         throw new ContractValidateException("invalid fee amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE + "]");
+
+      var extraFeeRate = ctx.getExtraFeeRate();
+      if (extraFeeRate < 0 || extraFeeRate > 100 || amount > TOKEN_MAX_TRANSFER_FEE_RATE)
+          throw new ContractValidateException("invalid extra fee rate amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
 
       return true;
   }
@@ -129,6 +126,6 @@ public class TokenUpdateFeeActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return Parameter.ChainConstant.TOKEN_UPDATE;
+      return dbManager.getDynamicPropertiesStore().getAssetIssueFee()/2;//250 unw default
   }
 }

@@ -108,14 +108,14 @@ message WitnessUpdateContract {
 
 message CreateTokenContract {
   bytes owner_address = 1;
-  bytes name = 2;
-  bytes abbr = 3;
+  string name = 2;
+  string abbr = 3;
   int64 max_supply = 4;
   int64 total_supply = 5;
   int64 start_time = 6;
   int64 end_time = 7;
-  bytes description = 8;
-  bytes url = 9;
+  string description = 8;
+  string url = 9;
   int64 fee = 10;
   int64 extra_fee_rate = 11;
   int64 fee_pool = 12;
@@ -125,48 +125,48 @@ message CreateTokenContract {
 
 message ContributeTokenPoolFeeContract {
   bytes owner_address = 1;
-  bytes token_name = 2;
+  string token_name = 2;
   int64 amount = 3;
 }
 
 message UpdateTokenFeeContract {
   bytes owner_address = 1;
-  bytes token_name = 2;
+  string token_name = 2;
   int64 amount = 3;
   int64 extra_fee_rate = 4;
 }
 
 message UpdateTokenUrlContract {
   bytes owner_address = 1;
-  bytes token_name = 2;
-  bytes url = 3;
-  bytes description = 4;
+  string token_name = 2;
+  string url = 3;
+  string description = 4;
 }
 
 message MineTokenContract {
   bytes owner_address = 1;
-  bytes token_name = 2;
+  string token_name = 2;
   int64 amount = 3;
 }
 
 
 message BurnTokenContract {
   bytes owner_address = 1;
-  bytes token_name = 2;
+  string token_name = 2;
   int64 amount = 3;
 }
 
 message TransferTokenContract {
   bytes owner_address = 1;
   bytes to_address = 2;
-  bytes token_name = 3;
+  string token_name = 3;
   int64 amount = 4;
   int64 available_time = 5;
 }
 
 message WithdrawFutureTokenContract {
   bytes owner_address = 1;
-  bytes token_name = 2;
+  string token_name = 2;
 }
 
 message AssetIssueContract {

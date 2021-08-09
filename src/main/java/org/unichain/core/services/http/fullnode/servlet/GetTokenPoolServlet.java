@@ -23,6 +23,7 @@ public class GetTokenPoolServlet extends HttpServlet {
   @Autowired
   private Wallet wallet;
 
+  //@todo review formatting output
   private String convertOutput(CreateTokenContract tokenPool) {
       JSONObject tokenPoolJson = JSONObject.parseObject(JsonFormat.printToString(tokenPool, false));
       var start_time = tokenPool.getStartTime();

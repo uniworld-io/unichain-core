@@ -55,8 +55,7 @@ public class TokenCreateActuator extends AbstractActuator {
       capsule.setBurnedToken(0L);
       if(capsule.getStartTime() == 0)
         capsule.setStartTime(dbManager.getHeadBlockTimeStamp());
-      var tokenNameUppercase = Util.byteStringAsUppercase(capsule.getTokenName());
-      capsule.setTokenName(tokenNameUppercase);
+      capsule.setTokenName(capsule.getTokenName().toUpperCase());
       capsule.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenStore().put(capsule.createDbKey(), capsule);
 
@@ -98,30 +97,27 @@ public class TokenCreateActuator extends AbstractActuator {
     if (!Wallet.addressValid(ownerAddress))
       throw new ContractValidateException("Invalid ownerAddress");
 
-    if (!TransactionUtil.validTokenName(ctx.getName().toByteArray()))
-      throw new ContractValidateException("Invalid tokenName");
-
-    if (ctx.getName().isEmpty() || !TransactionUtil.validTokenName(ctx.getName().toByteArray())) {
+    if (ctx.getName().isEmpty() || !TransactionUtil.validTokenName(ctx.getName().getBytes())) {
       throw new ContractValidateException("Invalid token name");
     }
 
-    if (ctx.getName().toStringUtf8().equalsIgnoreCase("UNX"))
+    if (ctx.getName().equalsIgnoreCase("UNX"))
       throw new ContractValidateException("Token name can't be UNX");
 
-    var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getName());
+    var tokenKey = Util.stringAsBytesUppercase(ctx.getName());
 
     if (this.dbManager.getTokenStore().get(tokenKey) != null) {
       throw new ContractValidateException("Token exists");
     }
 
-    if ((!ctx.getAbbr().isEmpty()) && !TransactionUtil.validTokenName(ctx.getAbbr().toByteArray())) {
+    if ((!ctx.getAbbr().isEmpty()) && !TransactionUtil.validTokenName(ctx.getAbbr().getBytes())) {
       throw new ContractValidateException("Invalid token abbreviation");
     }
 
-    if (!TransactionUtil.validUrl(ctx.getUrl().toByteArray()))
+    if (!TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()))
       throw new ContractValidateException("Invalid url");
 
-    if (!TransactionUtil.validAssetDescription(ctx.getDescription().toByteArray()))
+    if (!TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()))
       throw new ContractValidateException("Invalid description");
 
     if (!(ctx.getStartTime() == 0 || ctx.getStartTime() >= dbManager.getHeadBlockTimeStamp()))

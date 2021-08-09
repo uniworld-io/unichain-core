@@ -45,11 +45,11 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
     long fee = calcFee();
     try {
         var ctx = contract.unpack(ContributeTokenPoolFeeContract.class);
-        var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+        var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
         var contributeAmount =  ctx.getAmount();
         var tokenCapsule = dbManager.getTokenStore().get(tokenKey);
         tokenCapsule.setFeePool(tokenCapsule.getFeePool() + contributeAmount);
-        dbManager.getTokenStore().put(tokenCapsule.createDbKey(), tokenCapsule);
+        dbManager.getTokenStore().put(tokenKey, tokenCapsule);
 
         var ownerAddress = ctx.getOwnerAddress().toByteArray();
         dbManager.adjustBalance(ownerAddress, -(ctx.getAmount() + fee));
@@ -88,13 +88,13 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
       if (Objects.isNull(ownerAccount))
         throw new ContractValidateException("Invalid ownerAddress");
 
-      var tokenKey =  Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenKey =  Util.stringAsBytesUppercase(ctx.getTokenName());
       var contributeAmount = ctx.getAmount();
       var tokenPool = dbManager.getTokenStore().get(tokenKey);
       if (Objects.isNull(tokenPool))
       {
           logger.warn("validate ContributeTokenPoolFee 4: token name not exist");
-          throw new ContractValidateException("TokenName not exist: " + ctx.getTokenName().toStringUtf8());
+          throw new ContractValidateException("TokenName not exist: " + ctx.getTokenName());
       }
 
       if(dbManager.getHeadBlockTimeStamp() >= tokenPool.getEndTime())

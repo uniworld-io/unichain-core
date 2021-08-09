@@ -42,7 +42,7 @@ public class TokenStore extends UnichainStoreWithRevoking<TokenPoolCapsule> {
     if (tokenList.size() <= offset) {
       return null;
     }
-    tokenList.sort(Comparator.comparing(o -> o.getName().toStringUtf8()));
+    tokenList.sort(Comparator.comparing(o -> o.getName()));
     limit = limit > TOKEN_ISSUE_COUNT_LIMIT_MAX ? TOKEN_ISSUE_COUNT_LIMIT_MAX : limit;
     long end = offset + limit;
     end = end > tokenList.size() ? tokenList.size() : end;

@@ -47,7 +47,7 @@ public class TokenBurnActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(BurnTokenContract.class);
       logger.info("BurnTokenContract  {} ...", ctx);
-      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenCap = dbManager.getTokenStore().get(tokenKey);
       tokenCap.burnToken(ctx.getAmount());
       dbManager.getTokenStore().put(tokenKey, tokenCap);
@@ -95,7 +95,7 @@ public class TokenBurnActuator extends AbstractActuator {
     if (ownerAccountCap.getBalance() < calcFee())
       throw new ContractValidateException("Fee exceeded balance");
 
-    var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+    var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
     var tokenPool = dbManager.getTokenStore().get(tokenKey);
     if(Objects.isNull(tokenPool))
       throw new ContractValidateException("Token not exist :"+ ctx.getTokenName());

@@ -52,7 +52,7 @@ public class TokenUpdateFeeActuator extends AbstractActuator {
       var ctx = contract.unpack(Contract.UpdateTokenFeeContract.class);
       logger.info("UpdateTokenFee  {} ...", ctx);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
 
       TokenPoolCapsule tokenCap = dbManager.getTokenStore().get(tokenKey);
       tokenCap.setFee(ctx.getAmount());
@@ -97,7 +97,7 @@ public class TokenUpdateFeeActuator extends AbstractActuator {
       if(accountCap.getBalance() < calcFee())
           throw new ContractValidateException("Not enough balance");
 
-      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = dbManager.getTokenStore().get(tokenKey);
       if (Objects.isNull(tokenPool))
         throw new ContractValidateException("TokenName not exist");

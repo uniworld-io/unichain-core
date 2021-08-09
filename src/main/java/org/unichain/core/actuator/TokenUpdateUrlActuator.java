@@ -50,7 +50,7 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
       var ctx = contract.unpack(Contract.UpdateTokenUrlContract.class);
       logger.info("UpdateTokenUrl  {} ...", ctx);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenCap = dbManager.getTokenStore().get(tokenKey);
       tokenCap.setUrl(ctx.getUrl());
       tokenCap.setDescription(ctx.getDescription());
@@ -94,7 +94,7 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
       if(accountCap.getBalance() < calcFee())
           throw new ContractValidateException("Not enough balance");
 
-      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = dbManager.getTokenStore().get(tokenKey);
       if (Objects.isNull(tokenPool))
         throw new ContractValidateException("TokenName not exist");
@@ -108,10 +108,10 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
       if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
           throw new ContractValidateException("only owner of token pool allowed to update url description");
 
-      if (!TransactionUtil.validUrl(ctx.getUrl().toByteArray()))
+      if (!TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()))
           throw new ContractValidateException("Invalid url");
 
-      if (!TransactionUtil.validAssetDescription(ctx.getDescription().toByteArray()))
+      if (!TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()))
           throw new ContractValidateException("Invalid description");
 
       return true;

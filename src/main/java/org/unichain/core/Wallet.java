@@ -277,7 +277,7 @@ public class Wallet {
 
   public CreateTokenContract getTokenPool(CreateTokenContract filter) {
     var tokenStore = dbManager.getTokenStore();
-    TokenPoolCapsule tokenPoolCap = tokenStore.get(Util.byteString2ByteArrAsUppercase(filter.getName()));
+    TokenPoolCapsule tokenPoolCap = tokenStore.get(Util.stringAsBytesUppercase(filter.getName()));
     return CreateTokenContract.newBuilder()
             .setName(tokenPoolCap.getName())
             .setAbbr(tokenPoolCap.getAbbr())
@@ -288,6 +288,7 @@ public class Wallet {
             .setMaxSupply(tokenPoolCap.getMaxSupply())
             .setTotalSupply(tokenPoolCap.getTotalSupply())
             .setFee(tokenPoolCap.getFee())
+            .setExtraFeeRate(tokenPoolCap.getExtraFeeRate())
             .setFeePool(tokenPoolCap.getFeePool())
             .setBurned(tokenPoolCap.getBurnedToken())
             .setOwnerAddress(tokenPoolCap.getOwnerAddress())
@@ -463,7 +464,7 @@ public class Wallet {
           .setMessage(ByteString.copyFromUtf8("transaction expired"))
           .build();
     } catch (Exception e) {
-      logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
+      logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage(), e);
       return builder.setResult(false).setCode(response_code.OTHER_ERROR)
           .setMessage(ByteString.copyFromUtf8("other error : " + e.getMessage()))
           .build();

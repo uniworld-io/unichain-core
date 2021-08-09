@@ -153,8 +153,7 @@ public class AdvService {
       blockMsg.getBlockCapsule().getTransactions().forEach(transactionCapsule -> {
         Sha256Hash tid = transactionCapsule.getTransactionId();
         invToSpread.remove(tid);
-        unxCache.put(new Item(tid, InventoryType.UNW),
-            new TransactionMessage(transactionCapsule.getInstance()));
+        unxCache.put(new Item(tid, InventoryType.UNW), new TransactionMessage(transactionCapsule.getInstance()));
       });
       blockCache.put(item, msg);
     } else if (msg instanceof TransactionMessage) {

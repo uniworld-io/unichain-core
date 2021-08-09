@@ -15,7 +15,6 @@
 
 package org.unichain.core.actuator;
 
-import com.google.common.math.IntMath;
 import com.google.common.math.LongMath;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
@@ -52,13 +51,13 @@ public class TokenTransferActuator extends AbstractActuator {
     long fee = calcFee();
     try {
       TransferTokenContract ctx = contract.unpack(TransferTokenContract.class);
+      logger.info("exec TokenTransferActuator from {} to {} token {} amount {}  ...", ctx.getOwnerAddress(), ctx.getToAddress(), ctx.getTokenName(), ctx.getAmount());
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
-      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = dbManager.getTokenStore().get(tokenKey);
       var tokenPoolOwnerAddr = tokenPool.getOwnerAddress().toByteArray();
       var toAddress = ctx.getToAddress().toByteArray();
-
       //if account with to_address does not exist, create it first.
       AccountCapsule toAccountCap = dbManager.getAccountStore().get(toAddress);
       if (toAccountCap == null) {
@@ -66,7 +65,6 @@ public class TokenTransferActuator extends AbstractActuator {
         toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
-
       //transfer token
       if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){
         //owner of token transfer, don't charge fee
@@ -104,9 +102,10 @@ public class TokenTransferActuator extends AbstractActuator {
       dbManager.burnFee(fee);
 
       ret.setStatus(fee, code.SUCESS);
+      logger.info("exec TokenTransferActuator from {} to {} token {} amount {} ... DONE!", ctx.getOwnerAddress(), ctx.getToAddress(), ctx.getTokenName(), ctx.getAmount());
       return true;
     } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error("exec TokenTransferActuator {}" , e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -141,7 +140,7 @@ public class TokenTransferActuator extends AbstractActuator {
     if(Objects.isNull(ownerAccountCap))
       throw new ContractValidateException("Owner account not found");
 
-    var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+    var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
     var tokenPool = dbManager.getTokenStore().get(tokenKey);
     if(Objects.isNull(tokenPool))
       throw new ContractValidateException("Token pool not found: " + ctx.getTokenName());
@@ -153,6 +152,8 @@ public class TokenTransferActuator extends AbstractActuator {
       throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
     var toAddress = ctx.getToAddress().toByteArray();
+    if(Arrays.equals(ownerAddress, toAddress))
+      throw new ContractValidateException("Transfer to itself not allowed");
     if (!Wallet.addressValid(toAddress)) {
       throw new ContractValidateException("Invalid toAddress");
     }

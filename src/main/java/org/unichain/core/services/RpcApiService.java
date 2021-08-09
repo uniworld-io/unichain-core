@@ -264,7 +264,7 @@ public class RpcApiService implements Service {
 
     @Override
     public void getTokenPool(CreateTokenContract request, StreamObserver<CreateTokenContract> responseObserver) {
-      ByteString tokenName = request.getName();
+      String tokenName = request.getName();
       if ( tokenName != null) {
         CreateTokenContract reply = wallet.getTokenPool(request);
         responseObserver.onNext(reply);
@@ -633,7 +633,7 @@ public class RpcApiService implements Service {
 
     @Override
     public void getTokenPool(CreateTokenContract request, StreamObserver<CreateTokenContract> responseObserver) {
-      ByteString tokenName = request.getName();
+      String tokenName = request.getName();
       if ( tokenName != null) {
         CreateTokenContract reply = wallet.getTokenPool(request);
         responseObserver.onNext(reply);

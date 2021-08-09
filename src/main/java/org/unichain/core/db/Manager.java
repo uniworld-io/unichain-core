@@ -49,6 +49,7 @@ import org.unichain.core.net.UnichainNetService;
 import org.unichain.core.net.message.BlockMessage;
 import org.unichain.core.services.DelegationService;
 import org.unichain.core.services.WitnessService;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.witness.ProposalController;
 import org.unichain.core.witness.WitnessController;
 import org.unichain.protos.Contract.TransferTokenContract;
@@ -756,7 +757,7 @@ public class Manager {
             TransferTokenContract tContract;
             try {
               tContract = contract.getParameter().unpack(TransferTokenContract.class);
-              chargeFee4TokenPool(tContract.getTokenName().toByteArray(), fee);
+              chargeFee4TokenPool(Util.stringAsBytesUppercase(tContract.getTokenName()), fee);
             }
             catch (Exception ex) {
               logger.error("chargeFee4TokenPool got error -->", ex);
@@ -767,7 +768,7 @@ public class Manager {
             WithdrawFutureTokenContract wContract;
             try {
               wContract = contract.getParameter().unpack(WithdrawFutureTokenContract.class);
-              chargeFee4TokenPool(wContract.getTokenName().toByteArray(), fee);
+              chargeFee4TokenPool(Util.stringAsBytesUppercase(wContract.getTokenName()), fee);
             }
             catch (Exception ex) {
               logger.error("chargeFee4TokenPool got error -->", ex);
@@ -2033,15 +2034,15 @@ public class Manager {
     adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
   }
 
-  protected void chargeFee4TokenPool(byte[] tokenName, long fee) throws BalanceInsufficientException {
-    TokenPoolCapsule tokenPool = getTokenStore().get(tokenName);
+  protected void chargeFee4TokenPool(byte[] tokenKey, long fee) throws BalanceInsufficientException {
+    TokenPoolCapsule tokenPool = getTokenStore().get(tokenKey);
     if(tokenPool.getFeePool() < fee)
       throw new BalanceInsufficientException("not enough token pool fee");
 
     long latestOperationTime = getHeadBlockTimeStamp();
     tokenPool.setLatestOperationTime(latestOperationTime);
     tokenPool.setFeePool(tokenPool.getFeePool() - fee);
-    getTokenStore().put(tokenName, tokenPool);
+    getTokenStore().put(tokenKey, tokenPool);
 
     adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
   }

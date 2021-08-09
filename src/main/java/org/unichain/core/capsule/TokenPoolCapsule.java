@@ -55,16 +55,16 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.toString();
   }
 
-  public ByteString getName() {
+  public String getName() {
     return this.createTokenContract.getName();
   }
 
-  public ByteString getDescription() {
+  public String getDescription() {
     return this.createTokenContract.getDescription();
   }
 
   public byte[] createDbKey() {
-    return getName().toByteArray();
+    return getName().getBytes();
   }
 
   public long getStartTime() {
@@ -83,7 +83,7 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.getLatestOperationTime();
   }
 
-  public ByteString getUrl() {
+  public String getUrl() {
     return this.createTokenContract.getUrl();
   }
 
@@ -91,7 +91,7 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.getTotalSupply();
   }
 
-  public ByteString getTokenName(){
+  public String getTokenName(){
     return this.createTokenContract.getName();
   }
 
@@ -112,7 +112,7 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.getFeePool();
   }
 
-  public ByteString getAbbr() {
+  public String getAbbr() {
     return this.createTokenContract.getAbbr();
   }
 
@@ -140,7 +140,7 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
             .setTotalSupply(amount).build();
   }
 
-  public void setTokenName(ByteString name) {
+  public void setTokenName(String name) {
     this.createTokenContract = this.createTokenContract.toBuilder()
             .setName(name).build();
   }
@@ -149,6 +149,7 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     if(amount <= 0)
       throw  new ContractExeException("mined token amount must greater than ZERO");
     setBurnedToken(createTokenContract.getBurned() + amount);
+    setTotalSupply(createTokenContract.getTotalSupply() - amount);
   }
 
   public void setLatestOperationTime(long latestOpTime) {
@@ -160,12 +161,12 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
             .setFeePool(feePool).build();
   }
 
-  public void setUrl(ByteString newUrl) {
+  public void setUrl(String newUrl) {
     this.createTokenContract = this.createTokenContract.toBuilder()
         .setUrl(newUrl).build();
   }
 
-  public void setDescription(ByteString description) {
+  public void setDescription(String description) {
     this.createTokenContract = this.createTokenContract.toBuilder()
         .setDescription(description).build();
   }

@@ -27,6 +27,7 @@ import org.unichain.protos.Protocol.Transaction;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
 import java.util.List;
 
@@ -588,15 +589,8 @@ public class Util {
     }
   }
 
-
-  public static byte[] byteString2ByteArrAsUppercase(ByteString bytes){
-    var strUppercase = bytes.toStringUtf8().toUpperCase();
-    return ByteString.copyFrom(strUppercase.getBytes()).toByteArray();
-  }
-
-  public static ByteString byteStringAsUppercase(ByteString bytes){
-    var strUppercase = bytes.toStringUtf8().toUpperCase();
-    return ByteString.copyFrom(strUppercase.getBytes());
+  public static byte[] stringAsBytesUppercase(String str){
+    return str.toUpperCase().getBytes();
   }
 
   public static void checkBodySize(String body) throws Exception {

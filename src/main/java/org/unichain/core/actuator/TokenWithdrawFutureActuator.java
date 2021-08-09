@@ -47,7 +47,7 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
       WithdrawFutureTokenContract ctx = contract.unpack(WithdrawFutureTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
-      var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = dbManager.getTokenStore().get(tokenKey);
 
       //withdraw future
@@ -95,7 +95,7 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
     if(Objects.isNull(ownerAccountCap))
       throw new ContractValidateException("Owner account not found");
 
-    var tokenKey = Util.byteString2ByteArrAsUppercase(ctx.getTokenName());
+    var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
     var tokenPool = dbManager.getTokenStore().get(tokenKey);
     if(Objects.isNull(tokenPool))
       throw new ContractValidateException("Token not found: " + ctx.getTokenName());

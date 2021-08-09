@@ -38,7 +38,6 @@ public class AccountStore extends UnichainStoreWithRevoking<AccountCapsule> {
     return ArrayUtils.isEmpty(value) ? null : new AccountCapsule(value);
   }
 
-
   @Override
   public void put(byte[] key, AccountCapsule item) {
     super.put(key, item);

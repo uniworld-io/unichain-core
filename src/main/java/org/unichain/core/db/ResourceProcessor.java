@@ -13,7 +13,6 @@ import org.unichain.core.exception.TooBigTransactionResultException;
 
 @Slf4j(topic = "DB")
 abstract class ResourceProcessor {
-
   protected Manager dbManager;
   protected long precision;
   protected long windowSize;
@@ -72,9 +71,9 @@ abstract class ResourceProcessor {
     }
   }
 
-  protected boolean consumeFeeTokenPool(byte[] tokenName, long fee) {
+  protected boolean consumeFeeTokenPool(byte[] tokenKey, long fee) {
       long latestOperationTime = dbManager.getHeadBlockTimeStamp();
-      TokenPoolCapsule tokenPool = dbManager.getTokenStore().get(tokenName);
+      TokenPoolCapsule tokenPool = dbManager.getTokenStore().get(tokenKey);
       tokenPool.setLatestOperationTime(latestOperationTime);
 
       if(tokenPool.getFeePool() < fee)
@@ -86,7 +85,7 @@ abstract class ResourceProcessor {
       try {
         dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
         tokenPool.setFeePool(tokenPool.getFeePool() - fee);
-        dbManager.getTokenStore().put(tokenName, tokenPool);
+        dbManager.getTokenStore().put(tokenKey, tokenPool);
       }
       catch (Exception e){
         return false;

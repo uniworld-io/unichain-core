@@ -1,20 +1,23 @@
 package org.unichain.core.db;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.unichain.core.Constant;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.exception.AccountResourceInsufficientException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.exception.TooBigTransactionResultException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.TransferAssetContract;
 import org.unichain.protos.Contract.TransferContract;
 import org.unichain.protos.Contract.TransferTokenContract;
 import org.unichain.protos.Protocol.Transaction.Contract;
-
+import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 import java.util.List;
 import java.util.Map;
-
+import org.unichain.protos.Contract.WithdrawFutureTokenContract;
 /**
  * @note charge bandwidth directly from account balance:
  * - dont use global net
@@ -84,31 +87,46 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         throw new ContractValidateException("account not exists");
       }
 
-      //if create new account, just use create new account fee
+      /**
+       * if create new account: just use create new account fee then quit
+       * @fixme duplication of charging fee: this phase & actuator phase ?
+       */
       if (isContractCreateNewAccount(contract)){
-        if(contract.getType() == Contract.ContractType.TransferTokenContract)
+        if(contract.getType() == ContractType.TransferTokenContract)
           consumeForCreateNewAccount4TokenTransfer(contract, trace);
         else
           consumeForCreateNewAccount(ownerAccountCap, trace);
         continue;
       }
 
-      //or else charge bw fee
-      switch (contract.getType()){
-        case TransferTokenContract:
-        case WithdrawFutureTokenContract:
-          if(useTransactionFee4TokenPool(contract, bytesSize, trace))
-            continue;
-          break;
-        default:
-          if (useTransactionFee(ownerAccountCap, bytesSize, trace)) {
-            continue;
+      /**
+       * or else charge bw fee
+       */
+        try{
+          switch (contract.getType()) {
+            case TransferTokenContract:
+              byte[] tokenKey1 = Util.stringAsBytesUppercase(contract.getParameter().unpack(TransferTokenContract.class).getTokenName());
+              if (useTransactionFee4TokenPool(tokenKey1, bytesSize, trace))
+                continue;
+              break;
+            case WithdrawFutureTokenContract:
+              byte[] tokenKey2 = Util.stringAsBytesUppercase(contract.getParameter().unpack(WithdrawFutureTokenContract.class).getTokenName());
+              if (useTransactionFee4TokenPool(tokenKey2, bytesSize, trace))
+                continue;
+              break;
+            default:
+              if (useTransactionFee(ownerAccountCap, bytesSize, trace)) {
+                continue;
+              }
+              break;
           }
-          break;
-      }
+        }
+        catch (InvalidProtocolBufferException e){
+          throw new RuntimeException(e);
+        }
 
-      long fee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytesSize;
-      throw new AccountResourceInsufficientException("Account Insufficient bandwidth[" + bytesSize + "] and balance[" + fee + "] to create new account");
+        long fee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytesSize;
+        throw new AccountResourceInsufficientException("Account Insufficient bandwidth[" + bytesSize + "] and balance[" + fee + "] to create new account");
     }
   }
 
@@ -123,25 +141,16 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
     }
   }
 
-  private boolean useTransactionFee4TokenPool(Contract _contract, long bytes, TransactionTrace trace) {
-    TransferTokenContract contract;
-    try {
-      contract = _contract.getParameter().unpack(TransferTokenContract.class);
-    }
-    catch (Exception ex) {
-      throw new RuntimeException(ex.getMessage());
-    }
-
-    long bwFee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytes;
-    if (consumeFeeTokenPool(contract.getTokenName().toByteArray(), bwFee)) {
-      trace.setNetBill(0, bwFee);
-      dbManager.getDynamicPropertiesStore().addTotalTransactionCost(bwFee);
-      return true;
-    } else {
-      return false;
-    }
+  private boolean useTransactionFee4TokenPool(byte[] tokenKey, long bytes, TransactionTrace trace) {
+      long bwFee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytes;
+      if (consumeFeeTokenPool(tokenKey, bwFee)) {
+        trace.setNetBill(0, bwFee);
+        dbManager.getDynamicPropertiesStore().addTotalTransactionCost(bwFee);
+        return true;
+      } else {
+        return false;
+      }
   }
-
 
   private void consumeForCreateNewAccount(AccountCapsule accountCapsule, TransactionTrace trace) throws AccountResourceInsufficientException {
     long fee = dbManager.getDynamicPropertiesStore().getCreateAccountFee();
@@ -154,60 +163,44 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
     }
   }
 
-  private void consumeForCreateNewAccount4TokenTransfer(Contract _contract, TransactionTrace trace) throws AccountResourceInsufficientException {
-    TransferTokenContract contract;
+  private void consumeForCreateNewAccount4TokenTransfer(Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
     try {
-      contract = _contract.getParameter().unpack(TransferTokenContract.class);
-    }
-     catch (Exception ex) {
-      logger.error("consumeForCreateNewAccount4TokenTransfer got error -->", ex);
-      throw new RuntimeException(ex.getMessage());
-    }
-
-    long fee = dbManager.getDynamicPropertiesStore().getCreateAccountFee();
-    if (consumeFeeTokenPool(contract.getTokenName().toByteArray(), fee)) {
-      trace.setNetBill(0, fee);
-      dbManager.getDynamicPropertiesStore().addTotalCreateAccountCost(fee);
-      return;
-    } else {
+      var ctx = contract.getParameter().unpack(TransferTokenContract.class);
+      long fee = dbManager.getDynamicPropertiesStore().getCreateAccountFee();
+      if (consumeFeeTokenPool(Util.stringAsBytesUppercase(ctx.getTokenName()), fee)) {
+        trace.setNetBill(0, fee);
+        dbManager.getDynamicPropertiesStore().addTotalCreateAccountCost(fee);
+        return;
+      }
       throw new AccountResourceInsufficientException();
+    }
+    catch (InvalidProtocolBufferException e){
+        logger.error("bad contract format {}", e.getMessage(), e);
+        throw new ContractValidateException("bad contract format:" + e.getMessage());
     }
   }
 
-  public boolean isContractCreateNewAccount(Contract contract) {
-    AccountCapsule toAccount;
-    switch (contract.getType()) {
-      case AccountCreateContract:
-        return true;
-      case TransferContract:
-        TransferContract transferContract;
-        try {
-          transferContract = contract.getParameter().unpack(TransferContract.class);
-        } catch (Exception ex) {
-          throw new RuntimeException(ex.getMessage());
-        }
-        toAccount = dbManager.getAccountStore().get(transferContract.getToAddress().toByteArray());
-        return toAccount == null;
-      case TransferAssetContract:
-        TransferAssetContract transferAssetContract;
-        try {
-          transferAssetContract = contract.getParameter().unpack(TransferAssetContract.class);
-        } catch (Exception ex) {
-          throw new RuntimeException(ex.getMessage());
-        }
-        toAccount = dbManager.getAccountStore().get(transferAssetContract.getToAddress().toByteArray());
-        return toAccount == null;
-      case TransferTokenContract:
-        TransferTokenContract transferTokenContract;
-        try {
-          transferTokenContract = contract.getParameter().unpack(TransferTokenContract.class);
-        } catch (Exception ex) {
-          throw new RuntimeException(ex.getMessage());
-        }
-        toAccount = dbManager.getAccountStore().get(transferTokenContract.getToAddress().toByteArray());
-        return toAccount == null;
-      default:
-        return false;
+  public boolean isContractCreateNewAccount(Contract contract) throws ContractValidateException {
+    try {
+      switch (contract.getType()) {
+        case AccountCreateContract:
+          return true;
+        case TransferContract:
+            var transferContract = contract.getParameter().unpack(TransferContract.class);
+            return !dbManager.getAccountStore().has(transferContract.getToAddress().toByteArray());
+        case TransferAssetContract:
+            var transferAssetContract = contract.getParameter().unpack(TransferAssetContract.class);
+           return !dbManager.getAccountStore().has(transferAssetContract.getToAddress().toByteArray());
+        case TransferTokenContract:
+            var transferTokenContract= contract.getParameter().unpack(TransferTokenContract.class);
+            return !dbManager.getAccountStore().has(transferTokenContract.getToAddress().toByteArray());
+        default:
+          return false;
+      }
+    }
+    catch (InvalidProtocolBufferException e){
+      logger.error("bad contract format {}", e.getMessage(), e);
+      throw new ContractValidateException("bad contract format:" + e.getMessage());
     }
   }
 

@@ -22,6 +22,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.unichain.common.utils.ByteArray;
+import org.unichain.core.actuator.TokenWithdrawFutureActuator;
 import org.unichain.core.db.Manager;
 import org.unichain.protos.Contract.AccountCreateContract;
 import org.unichain.protos.Contract.AccountUpdateContract;
@@ -175,6 +176,10 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   @Override
   public Account getInstance() {
     return this.account;
+  }
+
+  public void clearFutureToken(byte[] tokenKey){
+      this.account = this.account.toBuilder().removeTokenFuture(new String(tokenKey)).build();
   }
 
   public void setInstance(Account account) {
@@ -617,30 +622,30 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   }
 
   /**
-   * add token instant or total supply
+   * add instant token
    */
   public boolean addToken(byte[] key, long value) {
     Map<String, Long> tokenMap = this.account.getTokenMap();
     String nameKey = ByteArray.toStr(key);
-    long totalValue = value;
-    if(tokenMap.containsKey(nameKey))
-      totalValue += tokenMap.get(nameKey);
+    long totalValue = tokenMap.containsKey(nameKey) ? tokenMap.get(nameKey) + value : value;
     this.account = this.account.toBuilder().putToken(nameKey, totalValue).build();
     return true;
+  }
+
+  public void removeFutureTokenSummary(byte[] tokenKey){
+      this.account = this.account.toBuilder()
+              .removeTokenFuture(new String(tokenKey))
+              .build();
   }
 
   /**
    * add token future
    */
-  public boolean addTokenFuture(byte[] key, long value, long availableTime) {
-    var tokenMap = this.account.getTokenFutureMap();
-    var nameKey = ByteArray.toStr(key);
-    var tokens = tokenMap.containsKey(nameKey) ? tokenMap.get(nameKey) : FutureTokens.newBuilder().build();
-    var newItem = FutureToken.newBuilder().setFutureBalance(value).setExpireTime(availableTime).build();
-    tokens = tokens.toBuilder().addFutures(newItem).build();
-
-    this.account = this.account.toBuilder().putTokenFuture(nameKey, tokens).build();
-    return true;
+  public boolean addTokenFutureSummary(FutureTokenSummary summary){
+      this.account = this.account.toBuilder()
+              .putTokenFuture(summary.getTokenName(), summary)
+              .build();
+      return true;
   }
 
   /**
@@ -681,59 +686,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     Map<String, Long> tokenMap = this.account.getTokenMap();
     String nameKey = ByteArray.toStr(key);
     return tokenMap.containsKey(nameKey) ? tokenMap.get(nameKey) : 0L;
-  }
-
-  /**
-   * get future token that available to withdraw, or else return zero
-   */
-  public Long getTokenFutureAvailable(byte[] key, long blockHeadTimestamp) {
-    Map<String, FutureTokens> tokenMap = this.account.getTokenFutureMap();
-    String nameKey = ByteArray.toStr(key);
-    if(!tokenMap.containsKey(nameKey))
-      return 0L;
-
-    FutureTokens futureTokens = tokenMap.get(nameKey);
-
-    long total = futureTokens.getFuturesList().stream()
-              .filter(item -> item.getExpireTime() <= blockHeadTimestamp)
-              .map(item -> item.getFutureBalance())
-              .reduce(0L, (a, b) -> a+ b);
-    return  total;
-  }
-
-  /**
-   * withdraw future token
-   */
-  public boolean withdrawTokenFuture(byte[] key, long blockHeadTimestamp) {
-    Map<String, FutureTokens> futureTokenMap = this.account.getTokenFutureMap();
-    String nameKey = ByteArray.toStr(key);
-    if(!futureTokenMap.containsKey(nameKey))
-      return false;
-
-    FutureTokens futureTokens = futureTokenMap.get(nameKey);
-    List<FutureToken> keepList = new ArrayList<>();
-    List<FutureToken> withdrawList = new ArrayList<>();
-    futureTokens.getFuturesList().forEach(future -> {
-      if(future.getExpireTime() <= blockHeadTimestamp){
-        withdrawList.add(future);
-      }
-      else {
-        keepList.add(future);
-      }
-    });
-
-    //save remaining future list
-    this.account = this.account.toBuilder()
-                                .putTokenFuture(nameKey, FutureTokens.newBuilder().addAllFutures(keepList).build())
-                                .build();
-
-    //withdraw available token list
-    var instantTokenMap = this.account.getTokenMap();
-    var currentAmount = instantTokenMap.containsKey(nameKey) ? instantTokenMap.get(nameKey) : 0L;
-    currentAmount+= withdrawList.stream().map(item -> item.getFutureBalance()).reduce(0L, (a,b) -> a + b);
-    this.account = this.account.toBuilder().putToken(nameKey, currentAmount).build();
-
-    return true;
   }
 
   public boolean addAssetV2(byte[] key, long value) {

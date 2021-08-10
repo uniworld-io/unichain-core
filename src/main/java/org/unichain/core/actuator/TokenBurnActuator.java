@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -48,9 +47,9 @@ public class TokenBurnActuator extends AbstractActuator {
       var ctx = contract.unpack(BurnTokenContract.class);
       logger.info("BurnTokenContract  {} ...", ctx);
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenCap = dbManager.getTokenStore().get(tokenKey);
+      var tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
       tokenCap.burnToken(ctx.getAmount());
-      dbManager.getTokenStore().put(tokenKey, tokenCap);
+      dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
 
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCap = dbManager.getAccountStore().get(ownerAddress);
@@ -96,7 +95,7 @@ public class TokenBurnActuator extends AbstractActuator {
       throw new ContractValidateException("Fee exceeded balance");
 
     var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-    var tokenPool = dbManager.getTokenStore().get(tokenKey);
+    var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
     if(Objects.isNull(tokenPool))
       throw new ContractValidateException("Token not exist :"+ ctx.getTokenName());
 

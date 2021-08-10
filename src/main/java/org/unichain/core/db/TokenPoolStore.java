@@ -16,10 +16,10 @@ import static org.unichain.core.config.Parameter.DatabaseConstants.TOKEN_ISSUE_C
 
 @Slf4j(topic = "DB")
 @Component
-public class TokenStore extends UnichainStoreWithRevoking<TokenPoolCapsule> {
+public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> {
 
   @Autowired
-  protected TokenStore(@Value("token-issue") String dbName) {
+  protected TokenPoolStore(@Value("token-pool") String dbName) {
     super(dbName);
   }
 

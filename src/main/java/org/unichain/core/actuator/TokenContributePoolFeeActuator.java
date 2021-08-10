@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -47,9 +46,9 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
         var ctx = contract.unpack(ContributeTokenPoolFeeContract.class);
         var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
         var contributeAmount =  ctx.getAmount();
-        var tokenCapsule = dbManager.getTokenStore().get(tokenKey);
+        var tokenCapsule = dbManager.getTokenPoolStore().get(tokenKey);
         tokenCapsule.setFeePool(tokenCapsule.getFeePool() + contributeAmount);
-        dbManager.getTokenStore().put(tokenKey, tokenCapsule);
+        dbManager.getTokenPoolStore().put(tokenKey, tokenCapsule);
 
         var ownerAddress = ctx.getOwnerAddress().toByteArray();
         dbManager.adjustBalance(ownerAddress, -(ctx.getAmount() + fee));
@@ -90,7 +89,7 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
 
       var tokenKey =  Util.stringAsBytesUppercase(ctx.getTokenName());
       var contributeAmount = ctx.getAmount();
-      var tokenPool = dbManager.getTokenStore().get(tokenKey);
+      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
       if (Objects.isNull(tokenPool))
       {
           logger.warn("validate ContributeTokenPoolFee 4: token name not exist");

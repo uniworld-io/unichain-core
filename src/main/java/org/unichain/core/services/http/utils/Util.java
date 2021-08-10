@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j(topic = "API")
@@ -589,6 +590,10 @@ public class Util {
     }
   }
 
+  public static byte[] makeFutureTokenIndexKey(byte[] address, byte[] tokenKey){
+    return ((new String(address)) + "_" + (new String(tokenKey))).getBytes();
+  }
+
   public static byte[] stringAsBytesUppercase(String str){
     return str.toUpperCase().getBytes();
   }
@@ -598,6 +603,24 @@ public class Util {
     if (body.getBytes().length > args.getMaxMessageSize()) {
       throw new Exception("body size is too big, limit is " + args.getMaxMessageSize());
     }
+  }
+
+  /*
+   do paging that start from page 0
+   */
+  public static <T> List<T> doPaging(List<T> input, int pageSize, int pageIndex){
+      if(pageSize <= 0 || pageIndex < 0)
+        throw new IllegalArgumentException("invalid paging info");
+      if(input.isEmpty())
+        return new ArrayList<>();
+      int start = pageIndex * pageSize;
+      int end = start + pageSize;
+      if(start >= input.size())
+        return new ArrayList<>();
+
+      if(end >= input.size())
+        end = input.size();
+      return input.subList(start, end);
   }
 
   public static boolean getVisible(final HttpServletRequest request) {

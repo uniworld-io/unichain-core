@@ -42,7 +42,9 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.*;
+import org.unichain.protos.Protocol.FutureTokenQuery;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
+
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -261,6 +263,16 @@ public class RpcApiService implements Service {
    * @addon add solidity api
    */
   public class WalletSolidityApi extends WalletSolidityImplBase {
+    @Override
+    public void getFutureToken(FutureTokenQuery request, StreamObserver<FutureTokenPack> responseObserver) {
+      if (!(request.getTokenName() == null || request.getOwnerAddress() == null)) {
+        FutureTokenPack reply = wallet.getFutureToken(request);
+        responseObserver.onNext(reply);
+      } else {
+        responseObserver.onNext(null);
+      }
+      responseObserver.onCompleted();
+    }
 
     @Override
     public void getTokenPool(CreateTokenContract request, StreamObserver<CreateTokenContract> responseObserver) {
@@ -629,6 +641,17 @@ public class RpcApiService implements Service {
         builder.addBlock(block2Extention(block));
       }
       return builder.build();
+    }
+
+    @Override
+    public void getFutureToken(FutureTokenQuery request, StreamObserver<FutureTokenPack> responseObserver) {
+      if (!(request.getTokenName() == null || request.getOwnerAddress() == null)) {
+        FutureTokenPack reply = wallet.getFutureToken(request);
+        responseObserver.onNext(reply);
+      } else {
+        responseObserver.onNext(null);
+      }
+      responseObserver.onCompleted();
     }
 
     @Override

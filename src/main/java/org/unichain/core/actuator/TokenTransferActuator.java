@@ -24,6 +24,7 @@ import lombok.var;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
+import org.unichain.core.capsule.FutureTokenPackCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -33,6 +34,9 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.TransferTokenContract;
 import org.unichain.protos.Protocol;
+import org.unichain.protos.Protocol.FutureTokenSummary;
+import org.unichain.protos.Protocol.FutureToken;
+import org.unichain.protos.Protocol.FutureTokenPack;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.math.RoundingMode;
@@ -41,6 +45,8 @@ import java.util.Objects;
 
 @Slf4j(topic = "actuator")
 public class TokenTransferActuator extends AbstractActuator {
+
+  private static final int PACK_SIZE = 100;
 
   TokenTransferActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -55,7 +61,7 @@ public class TokenTransferActuator extends AbstractActuator {
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenPool = dbManager.getTokenStore().get(tokenKey);
+      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
       var tokenPoolOwnerAddr = tokenPool.getOwnerAddress().toByteArray();
       var toAddress = ctx.getToAddress().toByteArray();
       //if account with to_address does not exist, create it first.
@@ -74,7 +80,7 @@ public class TokenTransferActuator extends AbstractActuator {
         if(ctx.getAvailableTime() <= 0)
           toAccountCap.addToken(tokenKey, ctx.getAmount());
         else
-          toAccountCap.addTokenFuture(tokenKey, ctx.getAmount(), ctx.getAvailableTime());
+          toAccountCap.addTokenFutureSummary(addFutureToken(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime()));
 
         dbManager.getAccountStore().put(toAddress, toAccountCap);
       }
@@ -90,7 +96,7 @@ public class TokenTransferActuator extends AbstractActuator {
         if(ctx.getAvailableTime() <= 0)
           toAccountCap.addToken(tokenKey, ctx.getAmount());
         else
-          toAccountCap.addTokenFuture(tokenKey, ctx.getAmount(), ctx.getAvailableTime());
+          toAccountCap.addTokenFutureSummary(addFutureToken(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime()));
 
         dbManager.getAccountStore().put(toAddress, toAccountCap);
       }
@@ -98,7 +104,7 @@ public class TokenTransferActuator extends AbstractActuator {
       //charge pool fee
       tokenPool.setFeePool(tokenPool.getFeePool() - fee);
       tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      dbManager.getTokenStore().put(tokenKey, tokenPool);
+      dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
       dbManager.burnFee(fee);
 
       ret.setStatus(fee, code.SUCESS);
@@ -141,7 +147,7 @@ public class TokenTransferActuator extends AbstractActuator {
       throw new ContractValidateException("Owner account not found");
 
     var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-    var tokenPool = dbManager.getTokenStore().get(tokenKey);
+    var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
     if(Objects.isNull(tokenPool))
       throw new ContractValidateException("Token pool not found: " + ctx.getTokenName());
 
@@ -208,5 +214,52 @@ public class TokenTransferActuator extends AbstractActuator {
   @Override
   public long calcFee() {
     return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
+  }
+
+  private FutureTokenSummary addFutureToken(byte[] toAddress, byte[] tokenKey, long amount, long availableTime){
+    var packKey = Util.makeFutureTokenIndexKey(toAddress, tokenKey);
+    var packStore = dbManager.getFutureTokenPackStore();
+    if(packStore.has(packKey)){
+      //exist pack
+      var pack = packStore.get(packKey);
+      FutureToken deal = FutureToken.newBuilder()
+              .setFutureBalance(amount)
+              .setExpireTime(availableTime)
+              .build();
+      pack.addDeal(deal);
+      pack.zip();
+      pack.inspireInfo();
+      packStore.put(packKey, pack);
+      return  FutureTokenSummary.newBuilder()
+              .setDealSize(pack.getDealSize())
+              .setTokenName(pack.getTokenName())
+              .setLowerBoundTime(pack.getLowerBoundTime())
+              .setUpperBoundTime(pack.getUpperBoundTime())
+              .setTotalValue(pack.getTotalValue())
+              .build();
+    }
+    else
+    {
+      //new pack
+      var pack = new FutureTokenPackCapsule(FutureTokenPack.newBuilder()
+              .setDealSize(1)
+              .setTokenName(new String(tokenKey))
+              .setOwnerAddress(ByteString.copyFrom(toAddress))
+              .build());
+      pack.addDeal(FutureToken.newBuilder()
+              .setFutureBalance(amount)
+              .setExpireTime(availableTime)
+              .build());
+      pack.zip();
+      pack.inspireInfo();
+      packStore.put(packKey, pack);
+      return  FutureTokenSummary.newBuilder()
+                .setDealSize(pack.getDealSize())
+                .setTokenName(pack.getTokenName())
+                .setLowerBoundTime(pack.getLowerBoundTime())
+                .setUpperBoundTime(pack.getUpperBoundTime())
+                .setTotalValue(pack.getTotalValue())
+                .build();
+    }
   }
 }

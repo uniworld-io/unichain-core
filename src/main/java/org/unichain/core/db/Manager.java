@@ -67,7 +67,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
-import static org.unichain.core.Constant.ONE_MINUTE_TIMESTAMP_DIFF;
 import static org.unichain.core.config.Parameter.ChainConstant.SOLIDIFIED_THRESHOLD;
 import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PENDING;
 
@@ -91,7 +90,9 @@ public class Manager {
   @Autowired
   private AssetIssueStore assetIssueStore;
   @Autowired
-  private TokenStore tokenStore;
+  private TokenPoolStore tokenPoolStore;
+  @Autowired
+  private FutureTokenPackStore futureTokenPackStore;
   @Autowired
   private AssetIssueV2Store assetIssueV2Store;
   @Autowired
@@ -1768,8 +1769,12 @@ public class Manager {
     return assetIssueStore;
   }
 
-  public TokenStore getTokenStore() {
-    return tokenStore;
+  public TokenPoolStore getTokenPoolStore() {
+    return tokenPoolStore;
+  }
+
+  public FutureTokenPackStore getFutureTokenPackStore() {
+    return futureTokenPackStore;
   }
 
   public AssetIssueV2Store getAssetIssueV2Store() {
@@ -1788,8 +1793,8 @@ public class Manager {
     this.assetIssueStore = assetIssueStore;
   }
 
-  public void setTokenStore(TokenStore tokenStore) {
-    this.tokenStore = tokenStore;
+  public void setTokenPoolStore(TokenPoolStore tokenPoolStore) {
+    this.tokenPoolStore = tokenPoolStore;
   }
 
   public void setBlockIndexStore(BlockIndexStore indexStore) {
@@ -1838,6 +1843,8 @@ public class Manager {
     closeOneStore(assetIssueV2Store);
     closeOneStore(exchangeV2Store);
     closeOneStore(transactionRetStore);
+    closeOneStore(tokenPoolStore);
+    closeOneStore(futureTokenPackStore);
     logger.info("******** end to close db ********");
   }
 
@@ -1853,8 +1860,7 @@ public class Manager {
   }
 
   public boolean isTooManyPending() {
-    return getPendingTransactions().size() + getRepushTransactions().size()
-        > MAX_TRANSACTION_PENDING;
+    return getPendingTransactions().size() + getRepushTransactions().size() > MAX_TRANSACTION_PENDING;
   }
 
   public boolean isGeneratingBlock() {
@@ -1944,8 +1950,7 @@ public class Manager {
   private void startEventSubscribing() {
 
     try {
-      eventPluginLoaded = EventPluginLoader.getInstance()
-          .start(Args.getInstance().getEventPluginConfig());
+      eventPluginLoaded = EventPluginLoader.getInstance().start(Args.getInstance().getEventPluginConfig());
 
       if (!eventPluginLoaded) {
         logger.error("failed to load eventPlugin");
@@ -1976,8 +1981,7 @@ public class Manager {
     }
   }
 
-  private void postTransactionTrigger(final TransactionCapsule unxCap,
-      final BlockCapsule blockCap) {
+  private void postTransactionTrigger(final TransactionCapsule unxCap, final BlockCapsule blockCap) {
     if (eventPluginLoaded && EventPluginLoader.getInstance().isTransactionLogTriggerEnable()) {
       TransactionLogTriggerCapsule unx = new TransactionLogTriggerCapsule(unxCap, blockCap);
       unx.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
@@ -1990,8 +1994,7 @@ public class Manager {
 
   private void reorgContractTrigger() {
     if (eventPluginLoaded &&
-        (EventPluginLoader.getInstance().isContractEventTriggerEnable()
-            || EventPluginLoader.getInstance().isContractLogTriggerEnable())) {
+        (EventPluginLoader.getInstance().isContractEventTriggerEnable() || EventPluginLoader.getInstance().isContractLogTriggerEnable())) {
       logger.info("switchfork occurred, post reorgContractTrigger");
       try {
         BlockCapsule oldHeadBlock = getBlockById(getDynamicPropertiesStore().getLatestBlockHeaderHash());
@@ -2035,14 +2038,14 @@ public class Manager {
   }
 
   protected void chargeFee4TokenPool(byte[] tokenKey, long fee) throws BalanceInsufficientException {
-    TokenPoolCapsule tokenPool = getTokenStore().get(tokenKey);
+    TokenPoolCapsule tokenPool = getTokenPoolStore().get(tokenKey);
     if(tokenPool.getFeePool() < fee)
       throw new BalanceInsufficientException("not enough token pool fee");
 
     long latestOperationTime = getHeadBlockTimeStamp();
     tokenPool.setLatestOperationTime(latestOperationTime);
     tokenPool.setFeePool(tokenPool.getFeePool() - fee);
-    getTokenStore().put(tokenKey, tokenPool);
+    getTokenPoolStore().put(tokenKey, tokenPool);
 
     adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
   }

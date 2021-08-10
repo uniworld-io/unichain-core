@@ -276,7 +276,7 @@ public class Wallet {
   }
 
   public CreateTokenContract getTokenPool(CreateTokenContract filter) {
-    var tokenStore = dbManager.getTokenStore();
+    var tokenStore = dbManager.getTokenPoolStore();
     TokenPoolCapsule tokenPoolCap = tokenStore.get(Util.stringAsBytesUppercase(filter.getName()));
     return CreateTokenContract.newBuilder()
             .setName(tokenPoolCap.getName())
@@ -1448,6 +1448,16 @@ public class Wallet {
     }).filter(Objects::nonNull)
         .forEach(exchangeCapsule -> builder.addExchanges(exchangeCapsule.getInstance()));
     return builder.build();
+  }
+
+  public FutureTokenPack getFutureToken(FutureTokenQuery query) {
+    var packStore = dbManager.getFutureTokenPackStore();
+    var packKey = Util.makeFutureTokenIndexKey(query.getOwnerAddress().toByteArray(), query.getTokenName().toUpperCase().getBytes());
+    var pack = packStore.get(packKey);
+    if(pack == null)
+      throw new RuntimeException("not found future token : " + query.getTokenName().toUpperCase());
+    pack.doPaging(query.getPageSize(), query.getPageIndex());
+    return pack.getInstance();
   }
 }
 

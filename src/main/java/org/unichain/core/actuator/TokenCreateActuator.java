@@ -24,7 +24,6 @@ import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
-import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -57,7 +56,7 @@ public class TokenCreateActuator extends AbstractActuator {
         capsule.setStartTime(dbManager.getHeadBlockTimeStamp());
       capsule.setTokenName(capsule.getTokenName().toUpperCase());
       capsule.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      dbManager.getTokenStore().put(capsule.createDbKey(), capsule);
+      dbManager.getTokenPoolStore().put(capsule.createDbKey(), capsule);
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
       accountCapsule.addToken(capsule.createDbKey(), capsule.getTotalSupply());
@@ -106,7 +105,7 @@ public class TokenCreateActuator extends AbstractActuator {
 
     var tokenKey = Util.stringAsBytesUppercase(ctx.getName());
 
-    if (this.dbManager.getTokenStore().get(tokenKey) != null) {
+    if (this.dbManager.getTokenPoolStore().get(tokenKey) != null) {
       throw new ContractValidateException("Token exists");
     }
 

@@ -10,6 +10,9 @@ import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.CreateTokenContract;
+import org.unichain.protos.Protocol;
+import org.unichain.protos.Protocol.FutureTokenQuery;
+
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -19,18 +22,12 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class GetTokenPoolServlet extends HttpServlet {
+public class GetTokenFutureServlet extends HttpServlet {
   @Autowired
   private Wallet wallet;
 
-  private String convertOutput(CreateTokenContract tokenPool) {
+  private String convertOutput(Protocol.FutureTokenPack tokenPool) {
       JSONObject tokenPoolJson = JSONObject.parseObject(JsonFormat.printToString(tokenPool, false));
-      var start_time = tokenPool.getStartTime();
-      var end_time = tokenPool.getEndTime();
-      var lastOpTime = tokenPool.getLatestOperationTime();
-      tokenPoolJson.put("start_time", Utils.formatDateTimeLong(start_time));
-      tokenPoolJson.put("end_time", Utils.formatDateTimeLong(end_time));
-      tokenPoolJson.put("latest_operation_time", Utils.formatDateTimeLong(lastOpTime));
       return tokenPoolJson.toJSONString();
   }
 
@@ -40,13 +37,13 @@ public class GetTokenPoolServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String tokenFilter = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-      Util.checkBodySize(tokenFilter);
-      boolean visible = Util.getVisiblePost(tokenFilter);
-      CreateTokenContract.Builder build = CreateTokenContract.newBuilder();
-      JsonFormat.merge(tokenFilter, build, visible);
+      String filter = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+      Util.checkBodySize(filter);
+      boolean visible = Util.getVisiblePost(filter);
+      FutureTokenQuery.Builder build = FutureTokenQuery.newBuilder();
+      JsonFormat.merge(filter, build, visible);
 
-      CreateTokenContract reply = wallet.getTokenPool(build.build());
+      Protocol.FutureTokenPack reply = wallet.getFutureToken(build.build());
       if (reply != null) {
         if (visible) {
           response.getWriter().println(JsonFormat.printToString(reply, true));

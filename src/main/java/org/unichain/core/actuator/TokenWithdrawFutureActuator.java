@@ -21,6 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.unichain.common.utils.Utils;
+import org.unichain.core.capsule.FutureTokenPackCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -29,8 +30,10 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.WithdrawFutureTokenContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 @Slf4j(topic = "actuator")
@@ -46,19 +49,16 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
     try {
       WithdrawFutureTokenContract ctx = contract.unpack(WithdrawFutureTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenPool = dbManager.getTokenStore().get(tokenKey);
+      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
 
-      //withdraw future
-      if(!ownerAccountCap.withdrawTokenFuture(tokenKey, dbManager.getHeadBlockTimeStamp()))
-        throw new ContractExeException("failed to withdraw token from account");
-      dbManager.getAccountStore().put(ownerAddress, ownerAccountCap);
+      //withdraw
+      withdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp());
 
       //if success, charge pool fee
       tokenPool.setFeePool(tokenPool.getFeePool() - fee);
       tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      dbManager.getTokenStore().put(tokenKey, tokenPool);
+      dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
     } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException e) {
@@ -96,7 +96,7 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
       throw new ContractValidateException("Owner account not found");
 
     var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-    var tokenPool = dbManager.getTokenStore().get(tokenKey);
+    var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
     if(Objects.isNull(tokenPool))
       throw new ContractValidateException("Token not found: " + ctx.getTokenName());
 
@@ -106,8 +106,7 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
     if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
       throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
-    long available = ownerAccountCap.getTokenFutureAvailable(tokenKey, dbManager.getHeadBlockTimeStamp());
-    if(available <= 0)
+    if(getTokenFutureAvailable(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp()) <= 0)
       throw new ContractValidateException("Not found future token or unavailable to withdraw");
 
     if(tokenPool.getFeePool() < fee)
@@ -124,5 +123,65 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
   @Override
   public long calcFee() {
     return Parameter.ChainConstant.TRANSFER_FEE;
+  }
+
+  private long getTokenFutureAvailable(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) {
+      var packKey = Util.makeFutureTokenIndexKey(ownerAddress, tokenKey);
+      var packStore = dbManager.getFutureTokenPackStore();
+      if(!packStore.has(packKey))
+        return 0;
+
+      long avail = 0;
+      for(var deal : packStore.get(packKey).getDeals()){
+        if(deal.getExpireTime() <= headBlockTime)
+          avail += deal.getFutureBalance();
+      }
+      return avail;
+  }
+
+  private void withdraw(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) throws BalanceInsufficientException{
+    var packKey = Util.makeFutureTokenIndexKey(ownerAddress, tokenKey);
+    var packStore = dbManager.getFutureTokenPackStore();
+    var accountStore = dbManager.getAccountStore();
+
+    if(!packStore.has(packKey))
+      throw new BalanceInsufficientException("not found token to withdraw: "+ (new String(tokenKey)));
+
+    var pack = packStore.get(packKey);
+    long withdrawAmount = 0;
+    var keepList = new ArrayList<Protocol.FutureToken>();
+    for(var deal : pack.getDeals()){
+      if(deal.getExpireTime() <= headBlockTime){
+        withdrawAmount += deal.getFutureBalance();
+      }
+      else
+        keepList.add(deal);
+    }
+
+    if(keepList.size() == 0){
+      packStore.delete(packKey);
+      var ownerAcc = accountStore.get(ownerAddress);
+      ownerAcc.addToken(tokenKey, withdrawAmount);
+      ownerAcc.removeFutureTokenSummary(tokenKey);
+      accountStore.put(ownerAddress, ownerAcc);
+    }
+    else {
+      pack.setDeals(keepList);
+      pack.zip();
+      pack.inspireInfo();
+      packStore.put(packKey, pack);
+
+      var ownerAcc = accountStore.get(ownerAddress);
+      ownerAcc.addToken(tokenKey, withdrawAmount);
+      var summary = Protocol.FutureTokenSummary.newBuilder()
+              .setDealSize(pack.getDealSize())
+              .setTokenName(pack.getTokenName())
+              .setLowerBoundTime(pack.getLowerBoundTime())
+              .setUpperBoundTime(pack.getUpperBoundTime())
+              .setTotalValue(pack.getTotalValue())
+              .build();
+      ownerAcc.addTokenFutureSummary(summary);
+      accountStore.put(ownerAddress, ownerAcc);
+    }
   }
 }

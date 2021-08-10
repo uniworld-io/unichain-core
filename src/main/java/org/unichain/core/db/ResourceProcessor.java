@@ -73,7 +73,7 @@ abstract class ResourceProcessor {
 
   protected boolean consumeFeeTokenPool(byte[] tokenKey, long fee) {
       long latestOperationTime = dbManager.getHeadBlockTimeStamp();
-      TokenPoolCapsule tokenPool = dbManager.getTokenStore().get(tokenKey);
+      TokenPoolCapsule tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
       tokenPool.setLatestOperationTime(latestOperationTime);
 
       if(tokenPool.getFeePool() < fee)
@@ -85,7 +85,7 @@ abstract class ResourceProcessor {
       try {
         dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
         tokenPool.setFeePool(tokenPool.getFeePool() - fee);
-        dbManager.getTokenStore().put(tokenKey, tokenPool);
+        dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
       }
       catch (Exception e){
         return false;

@@ -23,7 +23,6 @@ import lombok.var;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
-import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -51,10 +50,10 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
       logger.info("UpdateTokenUrl  {} ...", ctx);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenCap = dbManager.getTokenStore().get(tokenKey);
+      var tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
       tokenCap.setUrl(ctx.getUrl());
       tokenCap.setDescription(ctx.getDescription());
-      dbManager.getTokenStore().put(tokenKey, tokenCap);
+      dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
@@ -95,7 +94,7 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
           throw new ContractValidateException("Not enough balance");
 
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenPool = dbManager.getTokenStore().get(tokenKey);
+      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
       if (Objects.isNull(tokenPool))
         throw new ContractValidateException("TokenName not exist");
 

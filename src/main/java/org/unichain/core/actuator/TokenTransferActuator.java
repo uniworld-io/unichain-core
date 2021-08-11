@@ -231,7 +231,7 @@ public class TokenTransferActuator extends AbstractActuator {
       pack.inspireInfo();
       packStore.put(packKey, pack);
       return  FutureTokenSummary.newBuilder()
-              .setDealSize(pack.getDealSize())
+              .setTotalDeal(pack.getTotalDeal())
               .setTokenName(pack.getTokenName())
               .setLowerBoundTime(pack.getLowerBoundTime())
               .setUpperBoundTime(pack.getUpperBoundTime())
@@ -242,7 +242,7 @@ public class TokenTransferActuator extends AbstractActuator {
     {
       //new pack
       var pack = new FutureTokenPackCapsule(FutureTokenPack.newBuilder()
-              .setDealSize(1)
+              .setTotalDeal(1)
               .setTokenName(new String(tokenKey))
               .setOwnerAddress(ByteString.copyFrom(toAddress))
               .build());
@@ -254,7 +254,7 @@ public class TokenTransferActuator extends AbstractActuator {
       pack.inspireInfo();
       packStore.put(packKey, pack);
       return  FutureTokenSummary.newBuilder()
-                .setDealSize(pack.getDealSize())
+                .setTotalDeal(pack.getTotalDeal())
                 .setTokenName(pack.getTokenName())
                 .setLowerBoundTime(pack.getLowerBoundTime())
                 .setUpperBoundTime(pack.getUpperBoundTime())

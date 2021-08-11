@@ -63,12 +63,12 @@ public class FutureTokenPackCapsule implements ProtoCapsule<FutureTokenPack> {
     return Util.makeFutureTokenIndexKey(index.getOwnerAddress().toByteArray(), index.getTokenName().getBytes());
   }
 
-  public void setDealSize(long size){
-    this.index = this.index.toBuilder().setDealSize(size).build();
+  public void setTotalDeal(long size){
+    this.index = this.index.toBuilder().setTotalDeal(size).build();
   }
 
-  public long getDealSize(){
-    return this.index.getDealSize();
+  public long getTotalDeal(){
+    return this.index.getTotalDeal();
   }
 
 
@@ -107,16 +107,17 @@ public class FutureTokenPackCapsule implements ProtoCapsule<FutureTokenPack> {
   public void inspireInfo(){
     var lowerBound = -1L;
     var upperBound = -1L;
-    var sum = 0L;
+    var total_value = 0L;
     for(var deal : index.getDealsList()){
       lowerBound = lowerBound == -1L ? deal.getExpireTime() : Math.min(lowerBound, deal.getExpireTime());
       upperBound = upperBound == -1L ? deal.getExpireTime() : Math.max(upperBound, deal.getExpireTime());
-      sum += deal.getFutureBalance();
+      total_value += deal.getFutureBalance();
     }
     this.index = this.index.toBuilder()
             .setLowerBoundTime(lowerBound)
             .setUpperBoundTime(upperBound)
-            .setTotalValue(sum)
+            .setTotalValue(total_value)
+            .setTotalDeal(index.getDealsCount())
             .build();
   }
 

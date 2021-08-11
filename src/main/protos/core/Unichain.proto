@@ -73,7 +73,7 @@ message FutureToken {
 
 message FutureTokenSummary {
   string token_name = 1;
-  int64  deal_size = 3;
+  int64  total_deal = 3;
   int64 lower_bound_time = 4;
   int64 upper_bound_time = 5;
   int64 total_value = 6;
@@ -82,7 +82,7 @@ message FutureTokenSummary {
 message FutureTokenPack {
   string token_name = 1;
   bytes  owner_address = 2;
-  int64  deal_size = 3;
+  int64  total_deal = 3;
   int64 lower_bound_time = 4;
   int64 upper_bound_time = 5;
   int64 total_value = 6;

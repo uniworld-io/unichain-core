@@ -21,7 +21,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.unichain.common.utils.Utils;
-import org.unichain.core.capsule.FutureTokenPackCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -139,6 +138,7 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
       return avail;
   }
 
+  //@todo check summary on account first to detect valid withdraw
   private void withdraw(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) throws BalanceInsufficientException{
     var packKey = Util.makeFutureTokenIndexKey(ownerAddress, tokenKey);
     var packStore = dbManager.getFutureTokenPackStore();
@@ -174,7 +174,7 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
       var ownerAcc = accountStore.get(ownerAddress);
       ownerAcc.addToken(tokenKey, withdrawAmount);
       var summary = Protocol.FutureTokenSummary.newBuilder()
-              .setDealSize(pack.getDealSize())
+              .setTotalDeal(pack.getTotalDeal())
               .setTokenName(pack.getTokenName())
               .setLowerBoundTime(pack.getLowerBoundTime())
               .setUpperBoundTime(pack.getUpperBoundTime())

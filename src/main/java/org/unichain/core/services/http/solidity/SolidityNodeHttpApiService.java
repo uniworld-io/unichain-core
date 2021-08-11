@@ -105,7 +105,7 @@ public class SolidityNodeHttpApiService implements Service {
       // same as FullNode
       context.addServlet(new ServletHolder(getAccountServlet), "/walletsolidity/getaccount");
       context.addServlet(new ServletHolder(getTokenPoolServlet), "/walletsolidity/gettokenpool");
-      context.addServlet(new ServletHolder(getTokenFutureServlet), "/getfuturetoken");
+      context.addServlet(new ServletHolder(getTokenFutureServlet), "/walletsolidity/getfuturetoken");
       context.addServlet(new ServletHolder(listWitnessesServlet), "/walletsolidity/listwitnesses");
       context.addServlet(new ServletHolder(getAssetIssueListServlet), "/walletsolidity/getassetissuelist");
       context.addServlet(new ServletHolder(getPaginatedAssetIssueListServlet), "/walletsolidity/getpaginatedassetissuelist");

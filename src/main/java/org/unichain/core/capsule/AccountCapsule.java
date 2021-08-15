@@ -641,11 +641,15 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   /**
    * add token future
    */
-  public boolean addTokenFutureSummary(FutureTokenSummary summary){
+  public boolean setFutureTokenSummary(FutureTokenSummaryV2 summary){
       this.account = this.account.toBuilder()
               .putTokenFuture(summary.getTokenName(), summary)
               .build();
       return true;
+  }
+
+  public FutureTokenSummaryV2 getFutureTokenSummary(String tokenName){
+    return account.getTokenFutureMap().get(tokenName);
   }
 
   /**

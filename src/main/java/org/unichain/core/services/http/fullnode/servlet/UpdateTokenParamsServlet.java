@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.UpdateTokenFeeContract;
+import org.unichain.protos.Contract.UpdateTokenParamsContract;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class UpdateTokenFeeServlet extends HttpServlet {
+public class UpdateTokenParamsServlet extends HttpServlet {
 
   @Autowired
   private Wallet wallet;
@@ -32,9 +32,9 @@ public class UpdateTokenFeeServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       boolean visible = Util.getVisiblePost(contract);
-      UpdateTokenFeeContract.Builder build = UpdateTokenFeeContract.newBuilder();
+      UpdateTokenParamsContract.Builder build = UpdateTokenParamsContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
-      Transaction tx = wallet.createTransactionCapsule(build.build(), ContractType.UpdateTokenFeeContract).getInstance();
+      Transaction tx = wallet.createTransactionCapsule(build.build(), ContractType.UpdateTokenParamsContract).getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

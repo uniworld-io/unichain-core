@@ -29,18 +29,19 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
-import org.unichain.protos.Contract.UpdateTokenFeeContract;
+import org.unichain.protos.Contract.UpdateTokenParamsContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Objects;
 
 import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE;
 import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE_RATE;
+import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "actuator")
-public class TokenUpdateFeeActuator extends AbstractActuator {
+public class TokenUpdateParamsActuator extends AbstractActuator {
 
-  TokenUpdateFeeActuator(Any contract, Manager dbManager) {
+  TokenUpdateParamsActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -48,19 +49,29 @@ public class TokenUpdateFeeActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(Contract.UpdateTokenFeeContract.class);
-      logger.info("UpdateTokenFee  {} ...", ctx);
+      var ctx = contract.unpack(Contract.UpdateTokenParamsContract.class);
+      logger.info("TokenUpdateParams  {} ...", ctx);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
 
       TokenPoolCapsule tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
-      tokenCap.setFee(ctx.getAmount());
-      tokenCap.setExtraFeeRate(ctx.getExtraFeeRate());
+      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
+          tokenCap.setFee(ctx.getAmount());
+      }
+
+      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
+          tokenCap.setExtraFeeRate(ctx.getExtraFeeRate());
+      }
+
+      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_LOT)) {
+          tokenCap.setLot(ctx.getLot());
+      }
+
       dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-      logger.info("UpdateTokenFee  {} ...DONE!", ctx);
+      logger.info("TokenUpdateParams  {} ...DONE!", ctx);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
       logger.debug(e.getMessage(), e);
@@ -77,16 +88,19 @@ public class TokenUpdateFeeActuator extends AbstractActuator {
       if (Objects.isNull(dbManager))
           throw new ContractValidateException("No dbManager!");
 
-      if (!this.contract.is(UpdateTokenFeeContract.class))
-        throw new ContractValidateException("contract type error, expected type [UpdateTokenFeeContract],real type[" + contract.getClass() + "]");
+      if (!this.contract.is(UpdateTokenParamsContract.class))
+        throw new ContractValidateException("contract type error, expected type [UpdateTokenParamsContract],real type[" + contract.getClass() + "]");
 
-      final UpdateTokenFeeContract ctx;
+      final UpdateTokenParamsContract ctx;
       try {
-        ctx = this.contract.unpack(UpdateTokenFeeContract.class);
+        ctx = this.contract.unpack(UpdateTokenParamsContract.class);
       } catch (InvalidProtocolBufferException e) {
         logger.debug(e.getMessage(), e);
         throw new ContractValidateException(e.getMessage());
       }
+
+      if(!ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_OWNER_ADDR) || !ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_NAME))
+          throw new ContractValidateException("missing owner address or token name");
 
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCap = dbManager.getAccountStore().get(ownerAddress);
@@ -107,20 +121,28 @@ public class TokenUpdateFeeActuator extends AbstractActuator {
       if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
           throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
 
-      var amount = ctx.getAmount();
-      if (amount < 0 || amount > TOKEN_MAX_TRANSFER_FEE)
-        throw new ContractValidateException("invalid fee amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE + "]");
+      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
+          var fee = ctx.getAmount();
+          if (fee < 0 || fee > TOKEN_MAX_TRANSFER_FEE)
+              throw new ContractValidateException("invalid fee amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE + "]");
+      }
+      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_LOT)) {
+          if (ctx.getLot() < 0)
+              throw new ContractValidateException("invalid lot: require positive!");
+      }
 
-      var extraFeeRate = ctx.getExtraFeeRate();
-      if (extraFeeRate < 0 || extraFeeRate > 100 || amount > TOKEN_MAX_TRANSFER_FEE_RATE)
-          throw new ContractValidateException("invalid extra fee rate amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
+      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
+          var extraFeeRate = ctx.getExtraFeeRate();
+          if (extraFeeRate < 0 || extraFeeRate > 100 || extraFeeRate > TOKEN_MAX_TRANSFER_FEE_RATE)
+              throw new ContractValidateException("invalid extra fee rate amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
+      }
 
       return true;
   }
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(UpdateTokenFeeContract.class).getOwnerAddress();
+    return contract.unpack(UpdateTokenParamsContract.class).getOwnerAddress();
   }
 
   @Override

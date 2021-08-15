@@ -92,7 +92,8 @@ public class Manager {
   @Autowired
   private TokenPoolStore tokenPoolStore;
   @Autowired
-  private FutureTokenPackStore futureTokenPackStore;
+  private FutureTokenStore futureTokenStore;
+
   @Autowired
   private AssetIssueV2Store assetIssueV2Store;
   @Autowired
@@ -1773,8 +1774,8 @@ public class Manager {
     return tokenPoolStore;
   }
 
-  public FutureTokenPackStore getFutureTokenPackStore() {
-    return futureTokenPackStore;
+  public FutureTokenStore getFutureTokenStore() {
+    return futureTokenStore;
   }
 
   public AssetIssueV2Store getAssetIssueV2Store() {
@@ -1844,7 +1845,7 @@ public class Manager {
     closeOneStore(exchangeV2Store);
     closeOneStore(transactionRetStore);
     closeOneStore(tokenPoolStore);
-    closeOneStore(futureTokenPackStore);
+    closeOneStore(futureTokenStore);
     logger.info("******** end to close db ********");
   }
 

@@ -32,6 +32,7 @@ public abstract class UnichainStoreWithRevoking<T extends ProtoCapsule> implemen
 
   @Getter // only for unit test
   protected IRevokingDB revokingDB;
+
   private TypeToken<T> token = new TypeToken<T>(getClass()) {
   };
 

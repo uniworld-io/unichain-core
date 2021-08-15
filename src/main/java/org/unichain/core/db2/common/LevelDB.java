@@ -15,8 +15,7 @@ public class LevelDB implements DB<byte[], byte[]>, Flusher {
 
   @Getter
   private LevelDbDataSourceImpl db;
-  private WriteOptionsWrapper writeOptions = WriteOptionsWrapper.getInstance()
-      .sync(Args.getInstance().getStorage().isDbSync());
+  private WriteOptionsWrapper writeOptions = WriteOptionsWrapper.getInstance().sync(Args.getInstance().getStorage().isDbSync());
 
   public LevelDB(String parentName, String name) {
     db = new LevelDbDataSourceImpl(parentName, name);

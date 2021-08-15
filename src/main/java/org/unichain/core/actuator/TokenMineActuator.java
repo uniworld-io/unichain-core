@@ -108,6 +108,9 @@ public class TokenMineActuator extends AbstractActuator {
     if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
       throw new ContractValidateException("Mismatched token owner not allowed to mine");
 
+    if(ctx.getAmount() < tokenPool.getLot())
+      throw new ContractValidateException("Mined amount at least equal lot: " + tokenPool.getLot());
+
     // avail to mine = max - total - burned
     var availableToMine = tokenPool.getMaxSupply() - tokenPool.getTotalSupply() - tokenPool.getBurnedToken();
     if(ctx.getAmount() > availableToMine)

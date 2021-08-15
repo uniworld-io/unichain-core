@@ -1194,10 +1194,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void updateTokenFee(Contract.UpdateTokenFeeContract request,
-                               StreamObserver<Protocol.Transaction> responseObserver) {
+    public void updateTokenParams(Contract.UpdateTokenParamsContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.UpdateTokenFeeContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.UpdateTokenParamsContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());

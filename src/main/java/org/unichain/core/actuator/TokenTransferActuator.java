@@ -24,7 +24,7 @@ import lombok.var;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.FutureTokenPackCapsule;
+import org.unichain.core.capsule.FutureTokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -34,9 +34,6 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.TransferTokenContract;
 import org.unichain.protos.Protocol;
-import org.unichain.protos.Protocol.FutureTokenSummary;
-import org.unichain.protos.Protocol.FutureToken;
-import org.unichain.protos.Protocol.FutureTokenPack;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.math.RoundingMode;
@@ -45,8 +42,6 @@ import java.util.Objects;
 
 @Slf4j(topic = "actuator")
 public class TokenTransferActuator extends AbstractActuator {
-
-  private static final int PACK_SIZE = 100;
 
   TokenTransferActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -78,11 +73,12 @@ public class TokenTransferActuator extends AbstractActuator {
         dbManager.getAccountStore().put(ownerAddr, ownerAccountCap);
 
         if(ctx.getAvailableTime() <= 0)
+        {
           toAccountCap.addToken(tokenKey, ctx.getAmount());
+          dbManager.getAccountStore().put(toAddress, toAccountCap);
+        }
         else
-          toAccountCap.addTokenFutureSummary(addFutureToken(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime()));
-
-        dbManager.getAccountStore().put(toAddress, toAccountCap);
+         addFutureTokenV2(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime());
       }
       else {
         var tokenFee = tokenPool.getFee() + LongMath.divide(ctx.getAmount() * tokenPool.getExtraFeeRate(), 100, RoundingMode.CEILING);
@@ -94,11 +90,13 @@ public class TokenTransferActuator extends AbstractActuator {
         dbManager.getAccountStore().put(ownerAddr, ownerAccountCap);
 
         if(ctx.getAvailableTime() <= 0)
+        {
           toAccountCap.addToken(tokenKey, ctx.getAmount());
+          dbManager.getAccountStore().put(toAddress, toAccountCap);
+        }
         else
-          toAccountCap.addTokenFutureSummary(addFutureToken(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime()));
+          addFutureTokenV2(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime());
 
-        dbManager.getAccountStore().put(toAddress, toAccountCap);
       }
 
       //charge pool fee
@@ -156,6 +154,12 @@ public class TokenTransferActuator extends AbstractActuator {
 
     if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
       throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
+
+    if(ctx.getAvailableTime() > 0)
+    {
+      if(ctx.getAmount() < tokenPool.getLot())
+        throw new ContractValidateException("future transfer require at least amount of token : "+ tokenPool.getLot());
+    }
 
     var toAddress = ctx.getToAddress().toByteArray();
     if(Arrays.equals(ownerAddress, toAddress))
@@ -216,50 +220,172 @@ public class TokenTransferActuator extends AbstractActuator {
     return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
   }
 
-  private FutureTokenSummary addFutureToken(byte[] toAddress, byte[] tokenKey, long amount, long availableTime){
-    var packKey = Util.makeFutureTokenIndexKey(toAddress, tokenKey);
-    var packStore = dbManager.getFutureTokenPackStore();
-    if(packStore.has(packKey)){
-      //exist pack
-      var pack = packStore.get(packKey);
-      FutureToken deal = FutureToken.newBuilder()
-              .setFutureBalance(amount)
-              .setExpireTime(availableTime)
-              .build();
-      pack.addDeal(deal);
-      pack.zip();
-      pack.inspireInfo();
-      packStore.put(packKey, pack);
-      return  FutureTokenSummary.newBuilder()
-              .setTotalDeal(pack.getTotalDeal())
-              .setTokenName(pack.getTokenName())
-              .setLowerBoundTime(pack.getLowerBoundTime())
-              .setUpperBoundTime(pack.getUpperBoundTime())
-              .setTotalValue(pack.getTotalValue())
-              .build();
+  private void addFutureTokenV2(byte[] toAddress, byte[] tokenKey, long amount, long availableTime){
+    var tokenName = new String(tokenKey);
+    var tickDay = Util.makeDayTick(availableTime);
+    var tickKey = Util.makeFutureTokenIndexKey(toAddress, tokenKey, tickDay);
+
+    var tokenStore = dbManager.getFutureTokenStore();
+    var accountStore = dbManager.getAccountStore();
+    var toAcc = accountStore.get(toAddress);
+    var summary = toAcc.getFutureTokenSummary(tokenName);
+    /**
+     * tick exist: the fasted way!
+     */
+    if(tokenStore.has(tickKey)){
+        //update tick
+        var tick = tokenStore.get(tickKey);
+        tick.addBalance(amount);
+        tokenStore.put(tickKey, tick);
+
+        //update account summary
+        summary = summary.toBuilder().setTotalValue(summary.getTotalValue() + amount).build();
+        toAcc.setFutureTokenSummary(summary);
+        accountStore.put(toAddress, toAcc);
+        return;
     }
-    else
-    {
-      //new pack
-      var pack = new FutureTokenPackCapsule(FutureTokenPack.newBuilder()
-              .setTotalDeal(1)
-              .setTokenName(new String(tokenKey))
-              .setOwnerAddress(ByteString.copyFrom(toAddress))
-              .build());
-      pack.addDeal(FutureToken.newBuilder()
+
+    /**
+     * tick not exist: but no other ticks exist
+     */
+    if(summary == null){
+      /*
+        no deal exist: new tick, new summary
+       */
+      //new tick
+      var tick = Protocol.FutureTokenV2.newBuilder()
               .setFutureBalance(amount)
-              .setExpireTime(availableTime)
-              .build());
-      pack.zip();
-      pack.inspireInfo();
-      packStore.put(packKey, pack);
-      return  FutureTokenSummary.newBuilder()
-                .setTotalDeal(pack.getTotalDeal())
-                .setTokenName(pack.getTokenName())
-                .setLowerBoundTime(pack.getLowerBoundTime())
-                .setUpperBoundTime(pack.getUpperBoundTime())
-                .setTotalValue(pack.getTotalValue())
+              .setExpireTime(tickDay)
+              .clearNextTick()
+              .clearPrevTick()
+              .build();
+      tokenStore.put(tickKey, new FutureTokenCapsule(tick));
+
+      //save summary
+      summary = Protocol.FutureTokenSummaryV2.newBuilder()
+              .setTokenName(tokenName)
+              .setTotalValue(amount)
+              .setTotalDeal(1)
+              .setUpperBoundTime(tickDay)
+              .setLowerBoundTime(tickDay)
+              .setLowerTick(ByteString.copyFrom(tickKey))
+              .setUpperTick(ByteString.copyFrom(tickKey))
+              .build();
+      toAcc.setFutureTokenSummary(summary);
+      accountStore.put(toAddress, toAcc);
+      return;
+    }
+
+    /**
+     * other tick exist
+     */
+    var headKey = summary.getLowerTick().toByteArray();
+    var head = tokenStore.get(headKey);
+    var headTime = head.getExpireTime();
+    /**
+     * if new tick is head
+     */
+    if(tickDay < headTime){
+      //new tick is just a new head
+      head.setPrevTick(ByteString.copyFrom(tickKey));
+      tokenStore.put(headKey, head);
+
+      //save new head
+      var newHead = Protocol.FutureTokenV2.newBuilder()
+              .setExpireTime(tickDay)
+              .setFutureBalance(amount)
+              .setNextTick(summary.getLowerTick())
+              .clearPrevTick()
+              .build();
+      tokenStore.put(tickKey, new FutureTokenCapsule(newHead));
+
+      //update summary
+      summary = summary.toBuilder()
+              .setLowerBoundTime(tickDay)
+              .setTotalDeal(summary.getTotalDeal() +1)
+              .setTotalValue(summary.getTotalValue() + amount)
+              .setLowerTick(ByteString.copyFrom(tickKey))
+              .build();
+      toAcc.setFutureTokenSummary(summary);
+      accountStore.put(toAddress, toAcc);
+      return ;
+    }
+
+    /**
+     * if new tick is tail
+     */
+    if(tickDay > headTime){
+      //new tail
+      var oldTailKeyBs = summary.getUpperTick();
+      var newTail = Protocol.FutureTokenV2.newBuilder()
+              .setFutureBalance(amount)
+              .setExpireTime(tickDay)
+              .clearNextTick()
+              .setPrevTick(oldTailKeyBs)
+              .build();
+      tokenStore.put(tickKey, new FutureTokenCapsule(newTail));
+
+      //update old tail
+      var oldTail = tokenStore.get(oldTailKeyBs.toByteArray());
+      oldTail.setNextTick(ByteString.copyFrom(tickKey));
+      tokenStore.put(oldTailKeyBs.toByteArray(), oldTail);
+
+      //update summary
+      summary = summary.toBuilder()
+              .setTotalDeal(summary.getTotalDeal() + 1)
+              .setTotalValue(summary.getTotalValue() + amount)
+              .setUpperTick(ByteString.copyFrom(tickKey))
+              .setUpperBoundTime(tickDay)
+              .build();
+      toAcc.setFutureTokenSummary(summary);
+      accountStore.put(toAddress, toAcc);
+      return;
+    }
+
+    /**
+     * lookup slot between head and tail
+     */
+    var searchKeyBs = summary.getUpperTick();
+    while (true){
+      var searchTick = tokenStore.get(searchKeyBs.toByteArray());
+      if(searchTick.getExpireTime() < tickDay)
+      {
+        /*
+          found: update & quit
+         */
+        //save new tick
+        var oldNextTickKey = searchTick.getNextTick();
+        var newToken = Protocol.FutureTokenV2.newBuilder()
+                .setExpireTime(tickDay)
+                .setFutureBalance(amount)
+                .setPrevTick(searchKeyBs)
+                .setNextTick(oldNextTickKey)
                 .build();
+        tokenStore.put(tickKey, new FutureTokenCapsule(newToken));
+
+        //update prev
+
+        searchTick.setNextTick(ByteString.copyFrom(tickKey));
+        tokenStore.put(searchKeyBs.toByteArray(), searchTick);
+
+        //update next
+        var oldNextTick = tokenStore.get(oldNextTickKey.toByteArray());
+        oldNextTick.setPrevTick(ByteString.copyFrom(tickKey));
+
+        //update summary
+        summary = summary.toBuilder()
+                .setTotalValue(summary.getTotalValue() + amount)
+                .setTotalDeal(summary.getTotalDeal() +1)
+                .build();
+
+        toAcc.setFutureTokenSummary(summary);
+        accountStore.put(toAddress, toAcc);
+        return;
+      }
+      else {
+        searchKeyBs = searchTick.getPrevTick();
+        continue;
+      }
     }
   }
 }

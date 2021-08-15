@@ -448,8 +448,8 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case ContributeTokenPoolFeeContract:
           owner = contractParameter.unpack(ContributeTokenPoolFeeContract.class).getOwnerAddress();
           break;
-        case UpdateTokenFeeContract:
-          owner = contractParameter.unpack(UpdateTokenFeeContract.class).getOwnerAddress();
+        case UpdateTokenParamsContract:
+          owner = contractParameter.unpack(UpdateTokenParamsContract.class).getOwnerAddress();
           break;
         case UpdateTokenUrlContract:
           owner = contractParameter.unpack(UpdateTokenUrlContract.class).getOwnerAddress();

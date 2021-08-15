@@ -66,19 +66,6 @@ message ChainParameters {
   }
 }
 
-message FutureToken {
-  int64 future_balance = 1;
-  int64 expire_time = 2;
-}
-
-message FutureTokenSummary {
-  string token_name = 1;
-  int64  total_deal = 3;
-  int64 lower_bound_time = 4;
-  int64 upper_bound_time = 5;
-  int64 total_value = 6;
-}
-
 message FutureTokenPack {
   string token_name = 1;
   bytes  owner_address = 2;
@@ -86,7 +73,7 @@ message FutureTokenPack {
   int64 lower_bound_time = 4;
   int64 upper_bound_time = 5;
   int64 total_value = 6;
-  repeated FutureToken deals = 7;
+  repeated FutureTokenV2 deals = 7;
 }
 
 message FutureTokenQuery {
@@ -94,6 +81,23 @@ message FutureTokenQuery {
   bytes  owner_address = 2;
   int32  page_size = 3;
   int32 page_index = 4;
+}
+
+message FutureTokenSummaryV2 {
+  string token_name = 1;
+  int64  total_deal = 3;
+  int64 lower_bound_time = 4;
+  int64 upper_bound_time = 5;
+  int64 total_value = 6;
+  bytes lower_tick = 7;
+  bytes upper_tick = 8;
+}
+
+message FutureTokenV2 {
+  int64 future_balance = 1;
+  int64 expire_time = 2;
+  bytes prev_tick = 3;
+  bytes next_tick = 4;
 }
 
 /* Account */
@@ -129,7 +133,7 @@ message Account {
   map<string, int64> token = 60;
 
   //token future
-  map<string, FutureTokenSummary> token_future = 61;
+  map<string, FutureTokenSummaryV2> token_future = 61;
 
   // the frozen balance for bandwidth
   repeated Frozen frozen = 7;
@@ -324,7 +328,7 @@ message Transaction {
       FutureWithdrawContract = 52;
       CreateTokenContract = 53;
       ContributeTokenPoolFeeContract = 54;
-      UpdateTokenFeeContract = 55;
+      UpdateTokenParamsContract = 55;
       UpdateTokenUrlContract = 56;
       MineTokenContract = 57;
       BurnTokenContract = 58;

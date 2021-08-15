@@ -43,7 +43,7 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private ContributeTokenPoolFeeServlet contributeTokenPoolFeeServlet;
   @Autowired
-  private UpdateTokenFeeServlet updateTokenFeeServlet;
+  private UpdateTokenParamsServlet updateTokenParamsServlet; //@fixme change name
   @Autowired
   private UpdateTokenUrlServlet updateTokenUrlServlet;
   @Autowired
@@ -231,7 +231,7 @@ public class FullNodeHttpApiService implements Service {
 
       context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
       context.addServlet(new ServletHolder(contributeTokenPoolFeeServlet), "/contributetokenfee");
-      context.addServlet(new ServletHolder(updateTokenFeeServlet), "/updatetokenfee");
+      context.addServlet(new ServletHolder(updateTokenParamsServlet), "/updatetokenparams");
       context.addServlet(new ServletHolder(updateTokenUrlServlet), "/updatetokenurl");
       context.addServlet(new ServletHolder(mineTokenServlet), "/minetoken");
       context.addServlet(new ServletHolder(burnTokenServlet), "/burntoken");

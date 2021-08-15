@@ -183,4 +183,12 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
       throw  new ContractExeException("mined token amount exceed amount available");
     setTotalSupply(getTotalSupply() + amount);
   }
+
+  public long getLot() {
+    return createTokenContract.getLot();
+  }
+
+  public void setLot(long lot){
+    createTokenContract = createTokenContract.toBuilder().setLot(lot).build();
+  }
 }

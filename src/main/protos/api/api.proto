@@ -176,12 +176,12 @@ service Wallet {
     };
   };
 
-  rpc UpdateTokenFee (UpdateTokenFeeContract) returns (Transaction) {
+  rpc UpdateTokenParams (UpdateTokenParamsContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/updatetokenfee"
+      post: "/wallet/updatetokenparams"
       body: "*"
       additional_bindings {
-        get: "/wallet/updatetokenfee"
+        get: "/wallet/updatetokenparams"
       }
     };
   }

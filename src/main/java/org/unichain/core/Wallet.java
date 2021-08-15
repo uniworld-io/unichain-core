@@ -77,6 +77,7 @@ import java.util.*;
 
 import static org.unichain.core.config.Parameter.DatabaseConstants.EXCHANGE_COUNT_LIMIT_MAX;
 import static org.unichain.core.config.Parameter.DatabaseConstants.PROPOSAL_COUNT_LIMIT_MAX;
+import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j
 @Component
@@ -289,6 +290,7 @@ public class Wallet {
             .setTotalSupply(tokenPoolCap.getTotalSupply())
             .setFee(tokenPoolCap.getFee())
             .setExtraFeeRate(tokenPoolCap.getExtraFeeRate())
+            .setLot(tokenPoolCap.getLot())
             .setFeePool(tokenPoolCap.getFeePool())
             .setBurned(tokenPoolCap.getBurnedToken())
             .setOwnerAddress(tokenPoolCap.getOwnerAddress())
@@ -1451,13 +1453,70 @@ public class Wallet {
   }
 
   public FutureTokenPack getFutureToken(FutureTokenQuery query) {
-    var packStore = dbManager.getFutureTokenPackStore();
-    var packKey = Util.makeFutureTokenIndexKey(query.getOwnerAddress().toByteArray(), query.getTokenName().toUpperCase().getBytes());
-    var pack = packStore.get(packKey);
-    if(pack == null)
-      throw new RuntimeException("not found future token : " + query.getTokenName().toUpperCase());
-    pack.doPaging(query.getPageSize(), query.getPageIndex());
-    return pack.getInstance();
+    if(!query.hasField(TOKEN_QR_FIELD_NAME) || !query.hasField(TOKEN_QR_FIELD_OWNER_ADDR))
+      throw new RuntimeException("missing owner address or token name: ");
+
+    if(!query.hasField(TOKEN_QR_FIELD_PAGE_SIZE) || !query.hasField(TOKEN_QR_FIELD_PAGE_INDEX))
+    {
+      query = query.toBuilder()
+              .setPageSize(DEFAULT_PAGE_SIZE)
+              .setPageIndex(DEFAULT_PAGE_INDEX)
+              .build();
+    }
+    query = query.toBuilder()
+            .setTokenName(query.getTokenName().toUpperCase())
+            .build();
+
+    var acc = dbManager.getAccountStore().get(query.getOwnerAddress().toByteArray());
+    if(acc == null)
+      throw new RuntimeException("not found future account : " + query.getOwnerAddress());
+    var summary = acc.getFutureTokenSummary(query.getTokenName());
+    if(summary == null || summary.getTotalDeal() <= 0)
+      throw new RuntimeException("not found future token deal : " + query.getTokenName());
+
+    //validate query
+    int pageSize = query.getPageSize();
+    int pageIndex = query.getPageIndex();
+    if(pageSize <= 0 || pageIndex < 0)
+      throw new IllegalArgumentException("invalid paging info");
+
+    List<FutureTokenV2> deals = new ArrayList<>();
+
+    long start = pageIndex * pageSize;
+    long end = start + pageSize;
+    if(start >= summary.getTotalDeal()){
+      deals = new ArrayList<>();
+    }
+    else {
+      if(end >= summary.getTotalDeal())
+        end = summary.getTotalDeal();
+
+      //load sublist from [start -> end)
+      var tokenStore = dbManager.getFutureTokenStore();
+      var tmpTickKeyBs = summary.getLowerTick();
+      int index = 0;
+      while (true){
+        var tmpTick = tokenStore.get(tmpTickKeyBs.toByteArray());
+        if(index >= start && index < end)
+        {
+          deals.add(tmpTick.getInstance());
+        }
+        if(index >= end)
+          break;
+        tmpTickKeyBs = tmpTick.getNextTick();
+        index ++;
+      }
+    }
+
+    return FutureTokenPack.newBuilder()
+            .setTokenName(query.getTokenName())
+            .setOwnerAddress(query.getOwnerAddress())
+            .setTotalDeal(summary.getTotalDeal())
+            .setTotalValue(summary.getTotalValue())
+            .setLowerBoundTime(summary.getLowerBoundTime())
+            .setUpperBoundTime(summary.getUpperBoundTime())
+            .addAllDeals(deals)
+            .build();
   }
 }
 

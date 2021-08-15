@@ -35,6 +35,8 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static org.unichain.core.services.http.utils.Util.*;
+
 @Slf4j(topic = "actuator")
 public class TokenUpdateUrlActuator extends AbstractActuator {
 
@@ -51,8 +53,10 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
-      tokenCap.setUrl(ctx.getUrl());
-      tokenCap.setDescription(ctx.getDescription());
+      if(ctx.hasField(TOKEN_UPDATE_FIELD_URL))
+        tokenCap.setUrl(ctx.getUrl());
+      if(ctx.hasField(TOKEN_UPDATE_FIELD_DESC))
+        tokenCap.setDescription(ctx.getDescription());
       dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
 
       chargeFee(ownerAddress, fee);
@@ -85,6 +89,9 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
         throw new ContractValidateException(e.getMessage());
       }
 
+      if(!ctx.hasField(TOKEN_UPDATE_FIELD_OWNER_ADDR) || !ctx.hasField(TOKEN_UPDATE_FIELD_NAME))
+          throw new ContractValidateException("Missing owner address or token name");
+
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCap = dbManager.getAccountStore().get(ownerAddress);
       if (Objects.isNull(accountCap))
@@ -107,10 +114,10 @@ public class TokenUpdateUrlActuator extends AbstractActuator {
       if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
           throw new ContractValidateException("only owner of token pool allowed to update url description");
 
-      if (!TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()))
+      if (ctx.hasField(TOKEN_UPDATE_FIELD_URL) && !TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()))
           throw new ContractValidateException("Invalid url");
 
-      if (!TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()))
+      if (ctx.hasField(TOKEN_UPDATE_FIELD_DESC) && !TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()))
           throw new ContractValidateException("Invalid description");
 
       return true;

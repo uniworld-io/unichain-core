@@ -147,6 +147,9 @@ public class TokenCreateActuator extends AbstractActuator {
     if (ctx.getFeePool() < 0 || (accountCap.getBalance() < calcFee() + ctx.getFeePool()))
       throw new ContractValidateException("Invalid fee pool or not enough balance for fee & pre-deposit pool fee");
 
+    if(ctx.getLot() < 0)
+      throw new ContractValidateException("Invalid lot: must not negative");
+
     return true;
   }
 

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
@@ -22,6 +23,7 @@ import org.unichain.core.config.args.Args;
 import org.unichain.core.services.http.utils.JsonFormat.ParseException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.*;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Block;
 import org.unichain.protos.Protocol.Transaction;
 
@@ -30,6 +32,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j(topic = "API")
@@ -293,9 +296,9 @@ public class Util {
             ContributeTokenPoolFeeContract contributeTokenPoolFeeContract = contractParameter.unpack(ContributeTokenPoolFeeContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(contributeTokenPoolFeeContract, selfType));
             break;
-          case UpdateTokenFeeContract:
-            UpdateTokenFeeContract updateTokenFeeContract = contractParameter.unpack(UpdateTokenFeeContract.class);
-            contractJson = JSONObject.parseObject(JsonFormat.printToString(updateTokenFeeContract, selfType));
+          case UpdateTokenParamsContract:
+            UpdateTokenParamsContract updateTokenParamsContract = contractParameter.unpack(UpdateTokenParamsContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(updateTokenParamsContract, selfType));
             break;
           case UpdateTokenUrlContract:
             UpdateTokenUrlContract updateTokenUrlContract = contractParameter.unpack(UpdateTokenUrlContract.class);
@@ -536,10 +539,10 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), contributeTokenPoolContractBuilder, selfType);
             any = Any.pack(contributeTokenPoolContractBuilder.build());
             break;
-          case "UpdateTokenFeeContract":
-            UpdateTokenFeeContract.Builder updateTokenFeeContractBuilder = UpdateTokenFeeContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateTokenFeeContractBuilder, selfType);
-            any = Any.pack(updateTokenFeeContractBuilder.build());
+          case "UpdateTokenParamsContract":
+            UpdateTokenParamsContract.Builder updateTokenParamsContractBuilder = UpdateTokenParamsContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateTokenParamsContractBuilder, selfType);
+            any = Any.pack(updateTokenParamsContractBuilder.build());
             break;
           case "UpdateTokenUrlContract":
             UpdateTokenUrlContract.Builder updateTokenUrlContractBuilder = UpdateTokenUrlContract.newBuilder();
@@ -590,9 +593,35 @@ public class Util {
     }
   }
 
-  public static byte[] makeFutureTokenIndexKey(byte[] address, byte[] tokenKey){
-    return ((new String(address)) + "_" + (new String(tokenKey))).getBytes();
+  public static final long ONE_DAY = 24 * 60 * 60 * 1000;
+
+  public static long makeDayTick(long timestamp){
+    return timestamp - (timestamp % ONE_DAY);
   }
+
+  public static byte[] makeFutureTokenIndexKey(byte[] ownerAddr, byte[] tokenKey, long dayTick){
+    return ((new String(ownerAddr)) + "_" + (new String(tokenKey)) + "_" + dayTick).getBytes();
+  }
+
+  public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_NAME = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.TOKEN_NAME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_OWNER_ADDR = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.OWNER_ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_PAGE_SIZE = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_PAGE_INDEX = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.PAGE_INDEX_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_FIELD_OWNER_ADDR = UpdateTokenUrlContract.getDescriptor().findFieldByNumber(UpdateTokenUrlContract.OWNER_ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_FIELD_NAME = UpdateTokenUrlContract.getDescriptor().findFieldByNumber(UpdateTokenUrlContract.TOKEN_NAME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_FIELD_URL = UpdateTokenUrlContract.getDescriptor().findFieldByNumber(UpdateTokenUrlContract.URL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_FIELD_DESC = UpdateTokenUrlContract.getDescriptor().findFieldByNumber(UpdateTokenUrlContract.DESCRIPTION_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_OWNER_ADDR = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.OWNER_ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_NAME = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.TOKEN_NAME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_FEE = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.AMOUNT_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_LOT = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.LOT_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.EXTRA_FEE_RATE_FIELD_NUMBER);
+
+
+  public static int DEFAULT_PAGE_SIZE = 20;
+  public static int DEFAULT_PAGE_INDEX = 0;
 
   public static byte[] stringAsBytesUppercase(String str){
     return str.toUpperCase().getBytes();

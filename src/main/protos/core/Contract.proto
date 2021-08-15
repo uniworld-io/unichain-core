@@ -121,6 +121,7 @@ message CreateTokenContract {
   int64 fee_pool = 12;
   int64 burned = 13;
   int64 latest_operation_time = 14;
+  int64 lot =15;
 }
 
 message ContributeTokenPoolFeeContract {
@@ -129,11 +130,12 @@ message ContributeTokenPoolFeeContract {
   int64 amount = 3;
 }
 
-message UpdateTokenFeeContract {
+message UpdateTokenParamsContract {
   bytes owner_address = 1;
   string token_name = 2;
   int64 amount = 3;
   int64 extra_fee_rate = 4;
+  int64 lot = 5;
 }
 
 message UpdateTokenUrlContract {

@@ -264,6 +264,17 @@ public class RpcApiService implements Service {
    */
   public class WalletSolidityApi extends WalletSolidityImplBase {
     @Override
+    public void getFutureTransfer(FutureQuery request, StreamObserver<FuturePack> responseObserver) {
+      if (request.getOwnerAddress() != null) {
+        FuturePack reply = wallet.getFuture(request);
+        responseObserver.onNext(reply);
+      } else {
+        responseObserver.onNext(null);
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
     public void getFutureToken(FutureTokenQuery request, StreamObserver<FutureTokenPack> responseObserver) {
       if (!(request.getTokenName() == null || request.getOwnerAddress() == null)) {
         FutureTokenPack reply = wallet.getFutureToken(request);
@@ -647,6 +658,17 @@ public class RpcApiService implements Service {
     public void getFutureToken(FutureTokenQuery request, StreamObserver<FutureTokenPack> responseObserver) {
       if (!(request.getTokenName() == null || request.getOwnerAddress() == null)) {
         FutureTokenPack reply = wallet.getFutureToken(request);
+        responseObserver.onNext(reply);
+      } else {
+        responseObserver.onNext(null);
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getFutureTransfer(FutureQuery request, StreamObserver<FuturePack> responseObserver) {
+      if (request.getOwnerAddress() != null) {
+        FuturePack reply = wallet.getFuture(request);
         responseObserver.onNext(reply);
       } else {
         responseObserver.onNext(null);

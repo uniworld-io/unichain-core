@@ -95,6 +95,9 @@ public class Manager {
   private FutureTokenStore futureTokenStore;
 
   @Autowired
+  private FutureTransferStore futureTransferStore;
+
+  @Autowired
   private AssetIssueV2Store assetIssueV2Store;
   @Autowired
   private DynamicPropertiesStore dynamicPropertiesStore;
@@ -617,15 +620,6 @@ public class Manager {
 
   public void burnFee(long fee) throws BalanceInsufficientException{
     adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
-  }
-
-  public void addFutureBalance(byte[] accountAddress, long amount, long expireTime) throws BalanceInsufficientException {
-    AccountCapsule account = getAccountStore().getUnchecked(accountAddress);
-    account.addFuture(Protocol.Account.Future.newBuilder()
-            .setFutureBalance(amount)
-            .setExpireTime(expireTime)
-            .build());
-    this.getAccountStore().put(account.getAddress().toByteArray(), account);
   }
 
   /**
@@ -1778,6 +1772,10 @@ public class Manager {
     return futureTokenStore;
   }
 
+  public FutureTransferStore getFutureTransferStore() {
+    return futureTransferStore;
+  }
+
   public AssetIssueV2Store getAssetIssueV2Store() {
     return assetIssueV2Store;
   }
@@ -1846,6 +1844,7 @@ public class Manager {
     closeOneStore(transactionRetStore);
     closeOneStore(tokenPoolStore);
     closeOneStore(futureTokenStore);
+    closeOneStore(futureTransferStore);
     logger.info("******** end to close db ********");
   }
 

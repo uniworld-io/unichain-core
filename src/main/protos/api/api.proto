@@ -11,6 +11,16 @@ option java_outer_classname = "GrpcAPI"; //Specify the class name of the generat
 option go_package = "github.com/unichainprotocol/grpc-gateway/api";
 
 service Wallet {
+  rpc GetFutureTransfer (FutureQuery) returns (FuturePack) {
+    option (google.api.http) = {
+      post: "/wallet/getfuturetransfer"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/getfuturetransfer"
+      }
+    };
+  };
+
   rpc GetFutureToken (FutureTokenQuery) returns (FutureTokenPack) {
     option (google.api.http) = {
       post: "/wallet/getfuturetoken"
@@ -774,12 +784,22 @@ service Wallet {
 };
 
 service WalletSolidity {
-  rpc GetFutureToken (FutureTokenQuery) returns (FutureTokenPack) {
+  rpc GetFutureTransfer (FutureQuery) returns (FuturePack) {
     option (google.api.http) = {
-      post: "/wallet/getfuturetoken"
+      post: "/walletsolidity/getfuturetransfer"
       body: "*"
       additional_bindings {
-        get: "/wallet/getfuturetoken"
+        get: "/walletsolidity/getfuturetransfer"
+      }
+    };
+  };
+
+  rpc GetFutureToken (FutureTokenQuery) returns (FutureTokenPack) {
+    option (google.api.http) = {
+      post: "/walletsolidity/getfuturetoken"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/getfuturetoken"
       }
     };
   };

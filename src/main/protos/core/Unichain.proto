@@ -100,17 +100,42 @@ message FutureTokenV2 {
   bytes next_tick = 4;
 }
 
+message FutureQuery {
+  bytes  owner_address = 1;
+  int32  page_size = 2;
+  int32 page_index = 3;
+}
+
+message Future {
+  int64 future_balance = 1;
+  int64 expire_time = 2;
+  bytes prev_tick = 3;
+  bytes next_tick = 4;
+}
+
+message FutureSummary {
+  int64 total_deal = 1;
+  int64 lower_time = 2;
+  int64 upper_time = 3;
+  int64 total_balance = 4;
+  bytes lower_tick = 5;
+  bytes upper_tick = 6;
+}
+
+message FuturePack {
+  bytes  owner_address = 1;
+  int64  total_deal = 2;
+  int64 lower_time = 3;
+  int64 upper_time = 4;
+  int64 total_balance = 5;
+  repeated Future deals = 6;
+}
+
 /* Account */
 message Account {
   /* frozen balance */
   message Frozen {
     int64 frozen_balance = 1; // the frozen unx balance
-    int64 expire_time = 2; // the expire time
-  }
-
-  /* future transfer balance */
-  message Future {
-    int64 future_balance = 1; // the future unx balance
     int64 expire_time = 2; // the expire time
   }
 
@@ -188,8 +213,8 @@ message Account {
     int64 storage_limit = 6;
     int64 storage_usage = 7;
     int64 latest_exchange_storage_time = 8;
-
   }
+
   AccountResource account_resource = 26;
   bytes codeHash = 30;
   Permission owner_permission = 31;
@@ -197,7 +222,7 @@ message Account {
   repeated Permission active_permission = 33;
 
   //future transfer balance
-  repeated Future future_supply = 34;
+  FutureSummary future_supply = 34;
 }
 
 

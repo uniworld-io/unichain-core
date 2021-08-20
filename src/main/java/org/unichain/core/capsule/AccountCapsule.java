@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.unichain.core.services.http.utils.Util.ACC_FIELD_FUTURE_SUMMARY;
+
 @Slf4j(topic = "capsule")
 public class AccountCapsule implements ProtoCapsule<Account>, Comparable<AccountCapsule> {
 
@@ -182,6 +184,10 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
       this.account = this.account.toBuilder().removeTokenFuture(new String(tokenKey)).build();
   }
 
+  public void clearFuture(){
+    this.account = this.account.toBuilder().clearFutureSupply().build();
+  }
+
   public void setInstance(Account account) {
     this.account = account;
   }
@@ -318,10 +324,9 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     this.account = this.account.toBuilder().setBalance(balance).build();
   }
 
-  public void setFutureSupply(List<Account.Future> futures){
+  public void setFutureSummary(FutureSummary summary){
     this.account = account.toBuilder()
-            .clearFutureSupply()
-            .addAllFutureSupply(futures)
+            .setFutureSupply(summary)
             .build();
   }
 
@@ -632,6 +637,10 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return true;
   }
 
+  public void addBalance(long value){
+    this.account = this.account.toBuilder().setBalance(account.getBalance() + value).build();
+  }
+
   public void removeFutureTokenSummary(byte[] tokenKey){
       this.account = this.account.toBuilder()
               .removeTokenFuture(new String(tokenKey))
@@ -650,6 +659,10 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
 
   public FutureTokenSummaryV2 getFutureTokenSummary(String tokenName){
     return account.getTokenFutureMap().get(tokenName);
+  }
+
+  public FutureSummary getFutureSummary(){
+    return account.hasField(ACC_FIELD_FUTURE_SUMMARY) ? account.getFutureSupply() : null;
   }
 
   /**
@@ -788,30 +801,11 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return getInstance().getFrozenSupplyList();
   }
 
-  public int getFutureSupplyCount() {
-    return getInstance().getFutureSupplyCount();
-  }
-
-  public List<Account.Future> getFutureSupplyList() {
-    return getInstance().getFutureSupplyList();
-  }
-
-  public void addFuture(Account.Future future){
-    this.account = account.toBuilder().addFutureSupply(future).build();
-  }
-
   public long getFrozenSupplyBalance() {
     List<Frozen> frozenSupplyList = getFrozenSupplyList();
     final long[] frozenSupplyBalance = {0};
     frozenSupplyList.forEach(frozen -> frozenSupplyBalance[0] = Long.sum(frozenSupplyBalance[0], frozen.getFrozenBalance()));
     return frozenSupplyBalance[0];
-  }
-
-  public long getFutureSupplyBalance() {
-    List<Account.Future> futureSupplyList = getFutureSupplyList();
-    final long[] futureSupplyBalance = {0};
-    futureSupplyList.forEach(future -> futureSupplyBalance[0] = Long.sum(futureSupplyBalance[0], future.getFutureBalance()));
-    return futureSupplyBalance[0];
   }
 
   public ByteString getAssetIssuedName() {

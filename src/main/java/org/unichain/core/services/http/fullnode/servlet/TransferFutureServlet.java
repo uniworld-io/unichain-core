@@ -2,6 +2,7 @@ package org.unichain.core.services.http.fullnode.servlet;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.Wallet;
@@ -29,15 +30,15 @@ public class TransferFutureServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+      var contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
-      boolean visible = Util.getVisiblePost(contract);
-      FutureTransferContract.Builder build = FutureTransferContract.newBuilder();
+      var visible = Util.getVisiblePost(contract);
+      var build = FutureTransferContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
-      Transaction tx = wallet
+      var tx = wallet
               .createTransactionCapsule(build.build(), ContractType.FutureTransferContract)
               .getInstance();
-      JSONObject jsonObject = JSONObject.parseObject(contract);
+      var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {

@@ -32,6 +32,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.unichain.api.GrpcAPI;
 import org.unichain.api.GrpcAPI.*;
@@ -78,6 +79,7 @@ import java.util.*;
 import static org.unichain.core.config.Parameter.DatabaseConstants.EXCHANGE_COUNT_LIMIT_MAX;
 import static org.unichain.core.config.Parameter.DatabaseConstants.PROPOSAL_COUNT_LIMIT_MAX;
 import static org.unichain.core.services.http.utils.Util.*;
+import static org.unichain.core.services.http.utils.Util.FUTURE_QR_FIELD_PAGE_INDEX;
 
 @Slf4j
 @Component
@@ -1515,6 +1517,71 @@ public class Wallet {
             .setTotalValue(summary.getTotalValue())
             .setLowerBoundTime(summary.getLowerBoundTime())
             .setUpperBoundTime(summary.getUpperBoundTime())
+            .addAllDeals(deals)
+            .build();
+  }
+
+
+  public FuturePack getFuture(FutureQuery query) {
+    Assert.isTrue(query.hasField(FUTURE_QR_FIELD_OWNER_ADDR), "missing owner address");
+
+    if(!query.hasField(FUTURE_QR_FIELD_PAGE_SIZE) || !query.hasField(FUTURE_QR_FIELD_PAGE_INDEX))
+    {
+      query = query.toBuilder()
+              .setPageSize(DEFAULT_PAGE_SIZE)
+              .setPageIndex(DEFAULT_PAGE_INDEX)
+              .build();
+    }
+
+    //validate query
+    int pageSize = query.getPageSize();
+    int pageIndex = query.getPageIndex();
+    Assert.isTrue(pageSize > 0 && pageIndex >=0, "invalid paging info");
+
+    var acc = dbManager.getAccountStore().get(query.getOwnerAddress().toByteArray());
+    Assert.isTrue(acc != null, "not found future account : " + query.getOwnerAddress());
+
+    var summary = acc.getFutureSummary();
+
+    Assert.isTrue(summary != null && summary.getTotalDeal() > 0, "not found any future deals");
+
+    /**
+     * load deals
+     */
+    var deals = new ArrayList<Future>();
+
+    var start = pageIndex * pageSize;
+    var end = start + pageSize;
+    if(start >= summary.getTotalDeal()){
+      deals = new ArrayList<>();
+    }
+    else {
+      if(end >= summary.getTotalDeal())
+        end = (int)summary.getTotalDeal();
+
+      //load sublist from [start -> end)
+      var futureStore = dbManager.getFutureTransferStore();
+      var tmpTickKeyBs = summary.getLowerTick();
+      int index = 0;
+      while (true){
+        var tmpTick = futureStore.get(tmpTickKeyBs.toByteArray());
+        if(index >= start && index < end)
+        {
+          deals.add(tmpTick.getInstance());
+        }
+        if(index >= end)
+          break;
+        tmpTickKeyBs = tmpTick.getNextTick();
+        index ++;
+      }
+    }
+
+    return FuturePack.newBuilder()
+            .setOwnerAddress(query.getOwnerAddress())
+            .setTotalDeal(summary.getTotalDeal())
+            .setTotalBalance(summary.getTotalBalance())
+            .setLowerTime(summary.getLowerTime())
+            .setUpperTime(summary.getUpperTime())
             .addAllDeals(deals)
             .build();
   }

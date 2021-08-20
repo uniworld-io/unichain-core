@@ -30,6 +30,8 @@ public class SolidityNodeHttpApiService implements Service {
   private GetTokenPoolServlet getTokenPoolServlet;
   @Autowired
   private GetTokenFutureServlet getTokenFutureServlet;
+  @Autowired
+  private GetFutureTransferServlet getFutureTransferServlet;
 
   @Autowired
   private GetTransactionByIdSolidityServlet getTransactionByIdServlet;
@@ -106,6 +108,7 @@ public class SolidityNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getAccountServlet), "/walletsolidity/getaccount");
       context.addServlet(new ServletHolder(getTokenPoolServlet), "/walletsolidity/gettokenpool");
       context.addServlet(new ServletHolder(getTokenFutureServlet), "/walletsolidity/getfuturetoken");
+      context.addServlet(new ServletHolder(getFutureTransferServlet), "/walletsolidity/getfuturetransfer");
       context.addServlet(new ServletHolder(listWitnessesServlet), "/walletsolidity/listwitnesses");
       context.addServlet(new ServletHolder(getAssetIssueListServlet), "/walletsolidity/getassetissuelist");
       context.addServlet(new ServletHolder(getPaginatedAssetIssueListServlet), "/walletsolidity/getpaginatedassetissuelist");

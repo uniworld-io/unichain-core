@@ -603,6 +603,15 @@ public class Util {
     return ((new String(ownerAddr)) + "_" + (new String(tokenKey)) + "_" + dayTick).getBytes();
   }
 
+  public static byte[] makeFutureTransferIndexKey(byte[] ownerAddr, long dayTick){
+    return ((new String(ownerAddr)) + "_" + dayTick).getBytes();
+  }
+
+  public static Descriptors.FieldDescriptor ACC_FIELD_FUTURE_SUMMARY = Protocol.Account.getDescriptor().findFieldByNumber(Protocol.Account.FUTURE_SUPPLY_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor FUTURE_QR_FIELD_OWNER_ADDR = Protocol.FutureQuery.getDescriptor().findFieldByNumber(Protocol.FutureQuery.OWNER_ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor FUTURE_QR_FIELD_PAGE_SIZE = Protocol.FutureQuery.getDescriptor().findFieldByNumber(Protocol.FutureQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor FUTURE_QR_FIELD_PAGE_INDEX = Protocol.FutureQuery.getDescriptor().findFieldByNumber(Protocol.FutureQuery.PAGE_INDEX_FIELD_NUMBER);
+
   public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_NAME = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.TOKEN_NAME_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_OWNER_ADDR = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.OWNER_ADDRESS_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_PAGE_SIZE = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.PAGE_SIZE_FIELD_NUMBER);

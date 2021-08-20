@@ -19,7 +19,10 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -29,6 +32,7 @@ import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
+import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.CreateTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -65,8 +69,8 @@ public class TokenCreateActuator extends AbstractActuator {
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error("exec TokenCreateActuator got error ->" , e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -74,83 +78,49 @@ public class TokenCreateActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (Objects.isNull(contract))
-      throw new ContractValidateException("No contract!");
-
-    if (Objects.isNull(dbManager))
-      throw new ContractValidateException("No dbManager!");
-
-    if (!this.contract.is(CreateTokenContract.class)) {
-      throw new ContractValidateException("contract type error, expected type [CreateTokenContract],real type[" + contract.getClass() + "]");
-    }
-
-    final CreateTokenContract ctx;
     try {
-      ctx = this.contract.unpack(CreateTokenContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(contract.is(CreateTokenContract.class), "contract type error,expected type [CreateTokenContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(CreateTokenContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
+      Assert.isTrue(!ctx.getName().isEmpty() && TransactionUtil.validTokenName(ctx.getName().getBytes()), "Invalid token name");
+      Assert.isTrue(!ctx.getName().equalsIgnoreCase("UNX"), "Token name can't be UNX");
+
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getName());
+      Assert.isNull(this.dbManager.getTokenPoolStore().get(tokenKey), "Token exists");
+
+      Assert.isTrue(!StringUtils.isEmpty(ctx.getAbbr().isEmpty()) && TransactionUtil.validTokenName(ctx.getAbbr().getBytes()), "Invalid token abbreviation");
+
+      Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
+      Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
+
+      Assert.isTrue(ctx.getStartTime() == 0 || ctx.getStartTime() >= dbManager.getHeadBlockTimeStamp(), "Invalid start time");
+
+      if (ctx.getEndTime() <= 0 || ctx.getEndTime() <= ctx.getStartTime() || ctx.getEndTime() <= dbManager.getHeadBlockTimeStamp())
+        throw new ContractValidateException("Invalid end time");
+
+      Assert.isTrue(ctx.getTotalSupply() > 0 , "TotalSupply must greater than 0");
+      Assert.isTrue(ctx.getMaxSupply() > 0 , "MaxSupply must greater than 0!");
+      Assert.isTrue(ctx.getMaxSupply() >= ctx.getTotalSupply() , "MaxSupply must greater or equal than TotalSupply");
+      Assert.isTrue(ctx.getFee() >= 0 && ctx.getFee() <= TOKEN_MAX_TRANSFER_FEE, "Invalid token transfer fee: must be positive and not exceed max fee : " + TOKEN_MAX_TRANSFER_FEE + " tokens");
+
+      Assert.isTrue(ctx.getExtraFeeRate() >= 0 && ctx.getExtraFeeRate() <= 100 && ctx.getExtraFeeRate() <= TOKEN_MAX_TRANSFER_FEE_RATE, "Invalid extra fee rate , should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
+
+      var accountCap = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(accountCap, "Account not exists");
+
+      Assert.isTrue(ctx.getFeePool() >= 0 && (accountCap.getBalance() >= calcFee() + ctx.getFeePool()), "Invalid fee pool or not enough balance for fee & pre-deposit pool fee");
+      Assert.isTrue(ctx.getLot() >= 0, "Invalid lot: must not negative");
+
+      return true;
+    }
+    catch (Exception e){
+      logger.error("validate TokenCreateActuator got error ->", e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    var ownerAddress = ctx.getOwnerAddress().toByteArray();
-    if (!Wallet.addressValid(ownerAddress))
-      throw new ContractValidateException("Invalid ownerAddress");
-
-    if (ctx.getName().isEmpty() || !TransactionUtil.validTokenName(ctx.getName().getBytes())) {
-      throw new ContractValidateException("Invalid token name");
-    }
-
-    if (ctx.getName().equalsIgnoreCase("UNX"))
-      throw new ContractValidateException("Token name can't be UNX");
-
-    var tokenKey = Util.stringAsBytesUppercase(ctx.getName());
-
-    if (this.dbManager.getTokenPoolStore().get(tokenKey) != null) {
-      throw new ContractValidateException("Token exists");
-    }
-
-    if ((!ctx.getAbbr().isEmpty()) && !TransactionUtil.validTokenName(ctx.getAbbr().getBytes())) {
-      throw new ContractValidateException("Invalid token abbreviation");
-    }
-
-    if (!TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()))
-      throw new ContractValidateException("Invalid url");
-
-    if (!TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()))
-      throw new ContractValidateException("Invalid description");
-
-    if (!(ctx.getStartTime() == 0 || ctx.getStartTime() >= dbManager.getHeadBlockTimeStamp()))
-      throw new ContractValidateException("Invalid start time");
-
-    if (ctx.getEndTime() <= 0 ||  ctx.getEndTime() <= ctx.getStartTime() || ctx.getEndTime() <= dbManager.getHeadBlockTimeStamp())
-      throw new ContractValidateException("Invalid end time");
-
-    if (ctx.getTotalSupply() <= 0)
-      throw new ContractValidateException("TotalSupply must greater than 0!");
-
-    if (ctx.getMaxSupply() <= 0)
-      throw new ContractValidateException("MaxSupply must greater than 0!");
-
-    if (ctx.getMaxSupply() < ctx.getTotalSupply())
-      throw new ContractValidateException("MaxSupply must greater or equal than TotalSupply!");
-
-    if (ctx.getFee() < 0 || ctx.getFee() > TOKEN_MAX_TRANSFER_FEE)
-      throw new ContractValidateException("Invalid token transfer fee: must be positive and not exceed max fee : " + TOKEN_MAX_TRANSFER_FEE + " tokens");
-
-    if (ctx.getExtraFeeRate() < 0 || ctx.getExtraFeeRate() > 100 || ctx.getExtraFeeRate() > TOKEN_MAX_TRANSFER_FEE_RATE)
-      throw new ContractValidateException("Invalid extra fee rate , should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
-
-    var accountCap = dbManager.getAccountStore().get(ownerAddress);
-    if (Objects.isNull(accountCap))
-      throw new ContractValidateException("Account not exists");
-
-    if (ctx.getFeePool() < 0 || (accountCap.getBalance() < calcFee() + ctx.getFeePool()))
-      throw new ContractValidateException("Invalid fee pool or not enough balance for fee & pre-deposit pool fee");
-
-    if(ctx.getLot() < 0)
-      throw new ContractValidateException("Invalid lot: must not negative");
-
-    return true;
   }
 
   @Override

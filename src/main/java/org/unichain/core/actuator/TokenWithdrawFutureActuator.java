@@ -19,7 +19,9 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
@@ -28,6 +30,7 @@ import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
+import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.WithdrawFutureTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -68,48 +71,32 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null)
-      throw new ContractValidateException("No contract!");
-
-    if (this.dbManager == null)
-      throw new ContractValidateException("No dbManager!");
-
-    if (!this.contract.is(WithdrawFutureTokenContract.class))
-      throw new ContractValidateException("contract type error, expected type [WithdrawFutureTokenContract],real type[" + contract.getClass() + "]");
-
-    long fee = calcFee();
-
-    final WithdrawFutureTokenContract ctx;
     try {
-      ctx = this.contract.unpack(WithdrawFutureTokenContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      long fee = calcFee();
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(contract.is(WithdrawFutureTokenContract.class), "contract type error,expected type [Contract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(WithdrawFutureTokenContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull (ownerAccountCap, "Owner account not found");
+
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
+      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
+      Assert.notNull (tokenPool, "Token not found: " + ctx.getTokenName());
+
+      Assert.isTrue (dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
+      Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+      Assert.isTrue (isTokenFutureWithdrawable(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp()), "Token unavailable to withdraw");
+      Assert.isTrue (tokenPool.getFeePool() >= fee, "not enough token pool fee balance");
+
+      return true;
+    }
+    catch (Exception e){
+      logger.error("validate token future withdraw got error -->", e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    var ownerAddress = ctx.getOwnerAddress().toByteArray();
-    var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
-    if(Objects.isNull(ownerAccountCap))
-      throw new ContractValidateException("Owner account not found");
-
-    var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-    var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
-    if(Objects.isNull(tokenPool))
-      throw new ContractValidateException("Token not found: " + ctx.getTokenName());
-
-    if(dbManager.getHeadBlockTimeStamp() >= tokenPool.getEndTime())
-      throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
-
-    if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
-      throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
-
-    if(!isTokenFutureWithdrawable(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp()))
-      throw new ContractValidateException("Token unavailable to withdraw");
-
-    if(tokenPool.getFeePool() < fee)
-      throw new ContractValidateException("not enough token pool fee balance");
-
-    return true;
   }
 
   @Override

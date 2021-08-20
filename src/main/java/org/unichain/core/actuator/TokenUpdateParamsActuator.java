@@ -19,7 +19,9 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -50,7 +52,7 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(Contract.UpdateTokenParamsContract.class);
-      logger.info("TokenUpdateParams  {} ...", ctx);
+      logger.debug("TokenUpdateParams  {} ...", ctx);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
 
@@ -71,10 +73,10 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-      logger.info("TokenUpdateParams  {} ...DONE!", ctx);
+      logger.debug("TokenUpdateParams  {} ...DONE!", ctx);
       return true;
-    } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error("exec TokenUpdateParams got error --> ", e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -82,62 +84,51 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-      if (Objects.isNull(contract))
-          throw new ContractValidateException("No contract!");
-
-      if (Objects.isNull(dbManager))
-          throw new ContractValidateException("No dbManager!");
-
-      if (!this.contract.is(UpdateTokenParamsContract.class))
-        throw new ContractValidateException("contract type error, expected type [UpdateTokenParamsContract],real type[" + contract.getClass() + "]");
-
-      final UpdateTokenParamsContract ctx;
       try {
-        ctx = this.contract.unpack(UpdateTokenParamsContract.class);
-      } catch (InvalidProtocolBufferException e) {
-        logger.debug(e.getMessage(), e);
-        throw new ContractValidateException(e.getMessage());
+          Assert.notNull(contract, "No contract!");
+          Assert.notNull(dbManager, "No dbManager!");
+          Assert.isTrue(contract.is(UpdateTokenParamsContract.class), "contract type error,expected type [UpdateTokenParamsContract],real type[" + contract.getClass() + "]");
+
+          val ctx = this.contract.unpack(UpdateTokenParamsContract.class);
+
+          Assert.isTrue(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_OWNER_ADDR), "missing owner address");
+          Assert.isTrue(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_NAME), "missing token name");
+
+          var ownerAddress = ctx.getOwnerAddress().toByteArray();
+          var accountCap = dbManager.getAccountStore().get(ownerAddress);
+
+          Assert.notNull(accountCap, "Invalid ownerAddress");
+
+          Assert.isTrue (accountCap.getBalance() >= calcFee(), "Not enough balance");
+
+          var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
+          var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
+          Assert.notNull(tokenPool, "TokenName not exist");
+
+          Assert.isTrue (dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
+
+          Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+
+          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
+              var fee = ctx.getAmount();
+              Assert.isTrue (fee >= 0 && fee <= TOKEN_MAX_TRANSFER_FEE, "invalid fee amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE + "]");
+          }
+
+          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_LOT)) {
+              Assert.isTrue (ctx.getLot() >= 0, "invalid lot: require positive!");
+          }
+
+          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
+              var extraFeeRate = ctx.getExtraFeeRate();
+              Assert.isTrue (extraFeeRate >= 0 && extraFeeRate <= 100 && extraFeeRate <= TOKEN_MAX_TRANSFER_FEE_RATE, "invalid extra fee rate amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
+          }
+
+          return true;
       }
-
-      if(!ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_OWNER_ADDR) || !ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_NAME))
-          throw new ContractValidateException("missing owner address or token name");
-
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var accountCap = dbManager.getAccountStore().get(ownerAddress);
-      if (Objects.isNull(accountCap))
-        throw new ContractValidateException("Invalid ownerAddress");
-
-      if(accountCap.getBalance() < calcFee())
-          throw new ContractValidateException("Not enough balance");
-
-      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
-      if (Objects.isNull(tokenPool))
-        throw new ContractValidateException("TokenName not exist");
-
-      if(dbManager.getHeadBlockTimeStamp() >= tokenPool.getEndTime())
-          throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
-
-      if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
-          throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
-
-      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
-          var fee = ctx.getAmount();
-          if (fee < 0 || fee > TOKEN_MAX_TRANSFER_FEE)
-              throw new ContractValidateException("invalid fee amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE + "]");
+      catch (Exception e){
+          logger.error("validate TokenUpdateParams got error -->", e);
+          throw new ContractValidateException(e.getMessage());
       }
-      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_LOT)) {
-          if (ctx.getLot() < 0)
-              throw new ContractValidateException("invalid lot: require positive!");
-      }
-
-      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
-          var extraFeeRate = ctx.getExtraFeeRate();
-          if (extraFeeRate < 0 || extraFeeRate > 100 || extraFeeRate > TOKEN_MAX_TRANSFER_FEE_RATE)
-              throw new ContractValidateException("invalid extra fee rate amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
-      }
-
-      return true;
   }
 
   @Override

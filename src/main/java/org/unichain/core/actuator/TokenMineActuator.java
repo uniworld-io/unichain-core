@@ -19,7 +19,9 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -27,6 +29,7 @@ import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
+import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.MineTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -45,7 +48,7 @@ public class TokenMineActuator extends AbstractActuator {
     long fee = calcFee();
     try {
       var ctx = contract.unpack(MineTokenContract.class);
-      logger.info("MineTokenContract  {} ...", ctx);
+      logger.debug("MineTokenContract  {} ...", ctx);
 
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenCapsule = dbManager.getTokenPoolStore().get(tokenKey);
@@ -59,10 +62,10 @@ public class TokenMineActuator extends AbstractActuator {
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-      logger.info("MineTokenContract  {} ...DONE!", ctx);
+      logger.debug("MineTokenContract  {} ...DONE!", ctx);
       return true;
-    } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error("exec MineTokenContract got error --> ", e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -70,53 +73,39 @@ public class TokenMineActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (Objects.isNull(contract))
-      throw new ContractValidateException("No contract!");
-
-    if (Objects.isNull(dbManager))
-      throw new ContractValidateException("No dbManager!");
-
-    if (!this.contract.is(MineTokenContract.class))
-      throw new ContractValidateException("contract type error, expected type [MineTokenContract],real type[" + contract.getClass() + "]");
-
-    final MineTokenContract ctx;
     try {
-      ctx = this.contract.unpack(MineTokenContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(contract.is(MineTokenContract.class), "contract type error,expected type [MineTokenContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(MineTokenContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(ownerAccountCap, "Owner address not exist");
+
+      Assert.isTrue(ownerAccountCap.getBalance() >= calcFee(), "Fee exceed balance");
+
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
+      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
+      Assert.notNull(tokenPool, "Token not exist :" + ctx.getTokenName());
+
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+
+      Assert.isTrue(Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()), "Mismatched token owner not allowed to mine");
+
+      Assert.isTrue(ctx.getAmount() >= tokenPool.getLot(), "Mined amount at least equal lot: " + tokenPool.getLot());
+
+      // avail to mine = max - total - burned
+      var availableToMine = tokenPool.getMaxSupply() - tokenPool.getTotalSupply() - tokenPool.getBurnedToken();
+      Assert.isTrue(ctx.getAmount() <= availableToMine, "not enough frozen token to mine, maximum allowed: " + availableToMine);
+
+      return true;
+    }
+    catch (Exception e){
+      logger.error("validate TokenMine got error -->", e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    var ownerAddress = ctx.getOwnerAddress().toByteArray();
-    var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
-    if(Objects.isNull(ownerAccountCap))
-      throw new ContractValidateException("Owner address not exist");
-
-    if (ownerAccountCap.getBalance() < calcFee())
-      throw new ContractValidateException("Fee exceed balance");
-
-    var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-    var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
-    if(Objects.isNull(tokenPool))
-      throw new ContractValidateException("Token not exist :"+ ctx.getTokenName());
-
-    if(dbManager.getHeadBlockTimeStamp() >= tokenPool.getEndTime())
-      throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
-
-    if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
-      throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
-
-    if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
-      throw new ContractValidateException("Mismatched token owner not allowed to mine");
-
-    if(ctx.getAmount() < tokenPool.getLot())
-      throw new ContractValidateException("Mined amount at least equal lot: " + tokenPool.getLot());
-
-    // avail to mine = max - total - burned
-    var availableToMine = tokenPool.getMaxSupply() - tokenPool.getTotalSupply() - tokenPool.getBurnedToken();
-    if(ctx.getAmount() > availableToMine)
-      throw new ContractValidateException("not enough frozen token to mine, maximum allowed: " + availableToMine);
-
-    return true;
   }
 
   @Override

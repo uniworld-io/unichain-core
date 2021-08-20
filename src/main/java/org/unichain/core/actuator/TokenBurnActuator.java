@@ -19,7 +19,9 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -27,6 +29,7 @@ import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
+import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.BurnTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -45,7 +48,7 @@ public class TokenBurnActuator extends AbstractActuator {
     long fee = calcFee();
     try {
       var ctx = contract.unpack(BurnTokenContract.class);
-      logger.info("BurnTokenContract  {} ...", ctx);
+      logger.debug("BurnTokenContract  {} ...", ctx);
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
       tokenCap.burnToken(ctx.getAmount());
@@ -58,60 +61,44 @@ public class TokenBurnActuator extends AbstractActuator {
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-      logger.info("BurnTokenContract  {} ...DONE!", ctx);
-    } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
-      logger.debug(e.getMessage(), e);
+      logger.debug("BurnTokenContract  {} ...DONE!", ctx);
+      return true;
+    } catch (Exception e) {
+      logger.error("exec burn token got error", e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (Objects.isNull(contract))
-      throw new ContractValidateException("No contract!");
-
-    if (Objects.isNull(dbManager))
-      throw new ContractValidateException("No dbManager!");
-
-    if (!this.contract.is(BurnTokenContract.class))
-      throw new ContractValidateException("contract type error, expected type [BurnTokenContract],real type[" + contract.getClass() + "]");
-
-    final BurnTokenContract ctx;
     try {
-      ctx = this.contract.unpack(BurnTokenContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.error(e.getMessage(), e);
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(contract.is(BurnTokenContract.class), "contract type error,expected type [BurnTokenContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(BurnTokenContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
+
+      Assert.notNull(ownerAccountCap, "Owner address not exist");
+      Assert.isTrue(ownerAccountCap.getBalance() >= calcFee());
+
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
+      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
+      Assert.notNull(tokenPool, "Token not exist :" + ctx.getTokenName());
+
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+      Assert.isTrue(Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()), "Mismatched token owner not allowed to mine");
+      Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount(), "Not enough token balance of" + ctx.getTokenName() + "at least " + ctx.getAmount());
+
+      return true;
+    }
+    catch (Exception e){
+      logger.error("validate TokenBurn got error -->", e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    var ownerAddress = ctx.getOwnerAddress().toByteArray();
-    var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
-    if(Objects.isNull(ownerAccountCap))
-      throw new ContractValidateException("Owner address not exist");
-
-    if (ownerAccountCap.getBalance() < calcFee())
-      throw new ContractValidateException("Fee exceeded balance");
-
-    var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-    var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
-    if(Objects.isNull(tokenPool))
-      throw new ContractValidateException("Token not exist :"+ ctx.getTokenName());
-
-    if(dbManager.getHeadBlockTimeStamp() >= tokenPool.getEndTime())
-      throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
-
-    if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
-      throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
-
-    if(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
-      throw new ContractValidateException("Mismatched token owner not allowed to mine");
-
-    if(ownerAccountCap.getTokenAvailable(tokenKey) < ctx.getAmount())
-      throw new ContractValidateException("Not enough token balance of" + ctx.getTokenName() + "at least " + ctx.getAmount());
-
-    return true;
   }
 
   @Override

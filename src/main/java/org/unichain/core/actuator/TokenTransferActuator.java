@@ -20,7 +20,9 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
@@ -28,7 +30,6 @@ import org.unichain.core.capsule.FutureTokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
-import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
@@ -38,7 +39,6 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.math.RoundingMode;
 import java.util.Arrays;
-import java.util.Objects;
 
 @Slf4j(topic = "actuator")
 public class TokenTransferActuator extends AbstractActuator {
@@ -52,7 +52,7 @@ public class TokenTransferActuator extends AbstractActuator {
     long fee = calcFee();
     try {
       var ctx = contract.unpack(TransferTokenContract.class);
-      logger.info("exec TokenTransferActuator from {} to {} token {} amount {}  ...", ctx.getOwnerAddress(), ctx.getToAddress(), ctx.getTokenName(), ctx.getAmount());
+      logger.debug("exec TokenTransferActuator from {} to {} token {} amount {}  ...", ctx.getOwnerAddress(), ctx.getToAddress(), ctx.getTokenName(), ctx.getAmount());
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
@@ -66,6 +66,7 @@ public class TokenTransferActuator extends AbstractActuator {
         toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
+
       //transfer token
       if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){
         //owner of token transfer, don't charge fee
@@ -78,7 +79,7 @@ public class TokenTransferActuator extends AbstractActuator {
           dbManager.getAccountStore().put(toAddress, toAccountCap);
         }
         else
-         addFutureTokenV2(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime());
+          addFutureToken(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime());
       }
       else {
         var tokenFee = tokenPool.getFee() + LongMath.divide(ctx.getAmount() * tokenPool.getExtraFeeRate(), 100, RoundingMode.CEILING);
@@ -95,8 +96,7 @@ public class TokenTransferActuator extends AbstractActuator {
           dbManager.getAccountStore().put(toAddress, toAccountCap);
         }
         else
-          addFutureTokenV2(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime());
-
+          addFutureToken(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime());
       }
 
       //charge pool fee
@@ -106,9 +106,9 @@ public class TokenTransferActuator extends AbstractActuator {
       dbManager.burnFee(fee);
 
       ret.setStatus(fee, code.SUCESS);
-      logger.info("exec TokenTransferActuator from {} to {} token {} amount {} ... DONE!", ctx.getOwnerAddress(), ctx.getToAddress(), ctx.getTokenName(), ctx.getAmount());
+      logger.debug("exec TokenTransferActuator from {} to {} token {} amount {} ... DONE!", ctx.getOwnerAddress(), ctx.getToAddress(), ctx.getTokenName(), ctx.getAmount());
       return true;
-    } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException e) {
+    } catch (Exception e) {
       logger.error("exec TokenTransferActuator {}" , e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
@@ -117,97 +117,72 @@ public class TokenTransferActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-
-    if (!this.contract.is(TransferTokenContract.class)) {
-      throw new ContractValidateException("contract type error, expected type [TransferTokenContract],real type[" + contract.getClass() + "]");
-    }
-
-    long fee = calcFee();
-
-    final TransferTokenContract ctx;
     try {
-      ctx = this.contract.unpack(TransferTokenContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(contract.is(TransferTokenContract.class), "contract type error,expected type [TransferTokenContract],real type[" + contract.getClass() + "]");
+
+      long fee = calcFee();
+
+      val ctx = this.contract.unpack(TransferTokenContract.class);
+
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(ownerAccountCap, "Owner account not found");
+
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
+      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
+      Assert.notNull(tokenPool, "Token pool not found: " + ctx.getTokenName());
+
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
+
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+
+      if (ctx.getAvailableTime() > 0) {
+        Assert.isTrue(ctx.getAmount() >= tokenPool.getLot(),"future transfer require at least amount of token : " + tokenPool.getLot());
+      }
+
+      var toAddress = ctx.getToAddress().toByteArray();
+      Assert.isTrue(!Arrays.equals(ownerAddress, toAddress), "Transfer to itself not allowed");
+      Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
+
+      var toAccountCap = dbManager.getAccountStore().get(toAddress);
+      if (toAccountCap == null) {
+        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+      }
+
+      Assert.isTrue(tokenPool.getFeePool() >= fee, "not enough token pool fee balance");
+
+      Assert.isTrue (ctx.getAmount() > 0, "invalid transfer amount, expect positive number");
+
+      //estimate new fee
+      long tokenFee;
+      if (Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray())) {
+        tokenFee = 0;
+      } else {
+        tokenFee = tokenPool.getFee() + LongMath.divide(ctx.getAmount() * tokenPool.getExtraFeeRate(), 100, RoundingMode.CEILING);
+      }
+
+      Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount() + tokenFee, "not enough token balance");
+
+      if (ctx.getAvailableTime() > 0) {
+        Assert.isTrue(ctx.getAvailableTime() < tokenPool.getEndTime(), "available time exceeded token expired time");
+        Assert.isTrue (ctx.getAvailableTime() > dbManager.getHeadBlockTimeStamp(), "block time passed available time");
+      }
+
+      //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
+      if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1
+              && toAccountCap != null
+              && toAccountCap.getType() == Protocol.AccountType.Contract) {
+        throw new ContractValidateException("Cannot transfer token to smartContract.");
+      }
+
+      return true;
+    }
+    catch (Exception e){
+      logger.error("validate TokenTransfer got error -->", e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    var ownerAddress = ctx.getOwnerAddress().toByteArray();
-    var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
-    if(Objects.isNull(ownerAccountCap))
-      throw new ContractValidateException("Owner account not found");
-
-    var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-    var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
-    if(Objects.isNull(tokenPool))
-      throw new ContractValidateException("Token pool not found: " + ctx.getTokenName());
-
-    if(dbManager.getHeadBlockTimeStamp() >= tokenPool.getEndTime())
-      throw new ContractValidateException("Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
-
-    if(dbManager.getHeadBlockTimeStamp() < tokenPool.getStartTime())
-      throw new ContractValidateException("Token pending to start at: "+ Utils.formatDateLong(tokenPool.getStartTime()));
-
-    if(ctx.getAvailableTime() > 0)
-    {
-      if(ctx.getAmount() < tokenPool.getLot())
-        throw new ContractValidateException("future transfer require at least amount of token : "+ tokenPool.getLot());
-    }
-
-    var toAddress = ctx.getToAddress().toByteArray();
-    if(Arrays.equals(ownerAddress, toAddress))
-      throw new ContractValidateException("Transfer to itself not allowed");
-    if (!Wallet.addressValid(toAddress)) {
-      throw new ContractValidateException("Invalid toAddress");
-    }
-
-    var toAccountCap = dbManager.getAccountStore().get(toAddress);
-    if (toAccountCap == null) {
-      fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
-    }
-
-    if(tokenPool.getFeePool() < fee)
-      throw new ContractValidateException("not enough token pool fee balance");
-
-    if(ctx.getAmount() <= 0)
-      throw new ContractValidateException("invalid transfer amount, expect positive number");
-
-    //estimate new fee
-    long tokenFee;
-    if(Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()))
-    {
-      tokenFee = 0;
-    }
-    else {
-      tokenFee = tokenPool.getFee() + LongMath.divide(ctx.getAmount() * tokenPool.getExtraFeeRate(), 100, RoundingMode.CEILING);
-    }
-
-    if(ownerAccountCap.getTokenAvailable(tokenKey) < ctx.getAmount() + tokenFee)
-      throw new ContractValidateException("not enough token balance");
-
-    if(ctx.getAvailableTime() > 0){
-      if(ctx.getAvailableTime() >= tokenPool.getEndTime())
-        throw new ContractValidateException("available time exceeded token expired time");
-
-      if(ctx.getAvailableTime() <= dbManager.getHeadBlockTimeStamp())
-        throw new ContractValidateException("block time passed available time");
-    }
-
-    //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
-    if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1
-            && toAccountCap != null
-            && toAccountCap.getType() == Protocol.AccountType.Contract) {
-      throw new ContractValidateException("Cannot transfer token to smartContract.");
-    }
-
-    return true;
   }
 
   @Override
@@ -220,7 +195,7 @@ public class TokenTransferActuator extends AbstractActuator {
     return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
   }
 
-  private void addFutureTokenV2(byte[] toAddress, byte[] tokenKey, long amount, long availableTime){
+  private void addFutureToken(byte[] toAddress, byte[] tokenKey, long amount, long availableTime){
     var tokenName = new String(tokenKey);
     var tickDay = Util.makeDayTick(availableTime);
     var tickKey = Util.makeFutureTokenIndexKey(toAddress, tokenKey, tickDay);

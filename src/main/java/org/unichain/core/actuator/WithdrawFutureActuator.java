@@ -37,7 +37,6 @@ public class WithdrawFutureActuator extends AbstractActuator {
       try {
           val ctx = contract.unpack(FutureWithdrawContract.class);
           var ownerAddress = ctx.getOwnerAddress().toByteArray();
-//          var ownerAccount = dbManager.getAccountStore().get(ownerAddress);
           withdraw(ownerAddress, dbManager.getHeadBlockTimeStamp());
           ret.setStatus(fee, code.SUCESS);
           return true;

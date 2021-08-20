@@ -51,7 +51,7 @@ public class TokenTransferActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     long fee = calcFee();
     try {
-      TransferTokenContract ctx = contract.unpack(TransferTokenContract.class);
+      var ctx = contract.unpack(TransferTokenContract.class);
       logger.info("exec TokenTransferActuator from {} to {} token {} amount {}  ...", ctx.getOwnerAddress(), ctx.getToAddress(), ctx.getTokenName(), ctx.getAmount());
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
@@ -60,9 +60,9 @@ public class TokenTransferActuator extends AbstractActuator {
       var tokenPoolOwnerAddr = tokenPool.getOwnerAddress().toByteArray();
       var toAddress = ctx.getToAddress().toByteArray();
       //if account with to_address does not exist, create it first.
-      AccountCapsule toAccountCap = dbManager.getAccountStore().get(toAddress);
+      var toAccountCap = dbManager.getAccountStore().get(toAddress);
       if (toAccountCap == null) {
-        boolean withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
+        var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }

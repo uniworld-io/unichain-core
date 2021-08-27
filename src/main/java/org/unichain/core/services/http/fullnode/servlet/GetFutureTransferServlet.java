@@ -39,8 +39,11 @@ public class GetFutureTransferServlet extends HttpServlet {
       var visible = Util.getVisiblePost(filter);
       var build = FutureQuery.newBuilder();
       JsonFormat.merge(filter, build, visible);
+      FutureQuery query = build.build();
+      logger.info("getFutureTransfer --> {}" , Wallet.encode58Check(query.getOwnerAddress().toByteArray())); //@todo remove later
 
-      FuturePack reply = wallet.getFuture(build.build());
+      FuturePack reply = wallet.getFuture(query);
+
       if (reply != null) {
         if (visible) {
           response.getWriter().println(JsonFormat.printToString(reply, true));

@@ -2,6 +2,7 @@ package org.unichain.core.services.http.fullnode.servlet;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.Wallet;
@@ -34,7 +35,10 @@ public class UpdateTokenParamsServlet extends HttpServlet {
       boolean visible = Util.getVisiblePost(contract);
       UpdateTokenParamsContract.Builder build = UpdateTokenParamsContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
-      Transaction tx = wallet.createTransactionCapsule(build.build(), ContractType.UpdateTokenParamsContract).getInstance();
+      var updateCtx = build.build();
+      logger.info("updateTokenParams --> {} --> {} {}" , Wallet.encode58Check(updateCtx.getOwnerAddress().toByteArray()), updateCtx.getTokenName(), updateCtx.getExtraFeeRate()); //@todo remove later
+
+      Transaction tx = wallet.createTransactionCapsule(updateCtx, ContractType.UpdateTokenParamsContract).getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

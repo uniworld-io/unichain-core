@@ -3,12 +3,19 @@ package org.unichain.core.services.interfaceOnSolidity;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.ConnectionLimit;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.unichain.common.application.Service;
 import org.unichain.core.config.args.Args;
+import org.unichain.core.services.http.fullnode.servlet.GetFutureTransferServlet;
+import org.unichain.core.services.http.fullnode.servlet.GetTokenFutureServlet;
 import org.unichain.core.services.interfaceOnSolidity.http.*;
+
+import javax.servlet.DispatcherType;
+import java.util.EnumSet;
 
 @Slf4j(topic = "API")
 public class HttpApiOnSolidityService implements Service {
@@ -19,9 +26,12 @@ public class HttpApiOnSolidityService implements Service {
 
   @Autowired
   private GetAccountOnSolidityServlet accountOnSolidityServlet;
-
   @Autowired
   private GetTokenPoolOnSolidityServlet tokenPoolOnSolidityServlet;
+  @Autowired
+  private GetTokenFutureServlet getTokenFutureServlet;
+  @Autowired
+  private GetFutureTransferServlet getFutureTransferServlet;
 
   @Autowired
   private GetTransactionByIdOnSolidityServlet getTransactionByIdOnSolidityServlet;
@@ -87,12 +97,25 @@ public class HttpApiOnSolidityService implements Service {
     try {
       server = new Server(port);
       ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+      /**
+       * @todo review
+       * enable cors
+       */
+      FilterHolder holder = new FilterHolder(CrossOriginFilter.class);
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
+      holder.setInitParameter(CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, "*");
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,Content-Type,Accept,Origin");
+      context.addFilter(holder, "/*", EnumSet.of(DispatcherType.REQUEST));
+
       context.setContextPath("/");
       server.setHandler(context);
 
       // same as FullNode
       context.addServlet(new ServletHolder(accountOnSolidityServlet), "/walletsolidity/getaccount");
       context.addServlet(new ServletHolder(tokenPoolOnSolidityServlet), "/walletsolidity/gettokenpool");
+      context.addServlet(new ServletHolder(getTokenFutureServlet), "/walletsolidity/getfuturetoken");
+      context.addServlet(new ServletHolder(getFutureTransferServlet), "/walletsolidity/getfuturetransfer");
       context.addServlet(new ServletHolder(listWitnessesOnSolidityServlet), "/walletsolidity/listwitnesses");
       context.addServlet(new ServletHolder(getAssetIssueListOnSolidityServlet), "/walletsolidity/getassetissuelist");
       context.addServlet(new ServletHolder(getPaginatedAssetIssueListOnSolidityServlet), "/walletsolidity/getpaginatedassetissuelist");

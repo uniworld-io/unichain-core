@@ -72,8 +72,9 @@ public class GetAccountServlet extends HttpServlet {
       boolean visible = Util.getVisiblePost(account);
       Account.Builder build = Account.newBuilder();
       JsonFormat.merge(account, build, visible);
-
-      Account reply = wallet.getAccount(build.build());
+      Account query = build.build();
+      logger.info("getAccount --> {}" , Wallet.encode58Check(query.getAddress().toByteArray())); //@todo remove later
+      Account reply = wallet.getAccount(query);
       if (reply != null) {
         if (visible) {
           response.getWriter().println(JsonFormat.printToString(reply, true));

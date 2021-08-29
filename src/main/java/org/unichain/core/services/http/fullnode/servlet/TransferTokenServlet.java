@@ -2,6 +2,7 @@ package org.unichain.core.services.http.fullnode.servlet;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.Wallet;
@@ -35,7 +36,10 @@ public class TransferTokenServlet extends HttpServlet {
       TransferTokenContract.Builder build = TransferTokenContract.newBuilder();
 
       JsonFormat.merge(contract, build, visible);
-      Transaction tx = wallet.createTransactionCapsule(build.build(), ContractType.TransferTokenContract).getInstance();
+      var transferCtx = build.build();
+      logger.info("transferToken --> {} --> {} : {} {}" , Wallet.encode58Check(transferCtx.getOwnerAddress().toByteArray()), transferCtx.getToAddress().toByteArray(), transferCtx.getTokenName(), transferCtx.getAmount()); //@todo remove later
+
+      Transaction tx = wallet.createTransactionCapsule(transferCtx, ContractType.TransferTokenContract).getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

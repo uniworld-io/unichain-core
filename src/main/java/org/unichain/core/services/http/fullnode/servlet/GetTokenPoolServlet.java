@@ -45,8 +45,9 @@ public class GetTokenPoolServlet extends HttpServlet {
       boolean visible = Util.getVisiblePost(tokenFilter);
       CreateTokenContract.Builder build = CreateTokenContract.newBuilder();
       JsonFormat.merge(tokenFilter, build, visible);
-
-      CreateTokenContract reply = wallet.getTokenPool(build.build());
+      var query = build.build();
+      logger.info("getTokenPool --> {}" , query); //@todo remove later
+        CreateTokenContract reply = wallet.getTokenPool(query);
       if (reply != null) {
         if (visible) {
           response.getWriter().println(JsonFormat.printToString(reply, true));

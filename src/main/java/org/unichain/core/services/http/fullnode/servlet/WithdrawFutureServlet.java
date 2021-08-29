@@ -37,9 +37,10 @@ public class WithdrawFutureServlet extends HttpServlet {
       var visible = Util.getVisiblePost(contract);
       var build = FutureWithdrawContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
-      var tx = wallet
-          .createTransactionCapsule(build.build(), ContractType.FutureWithdrawContract)
-          .getInstance();
+      var query = build.build();
+      logger.info("withdrawFuture --> {}" , Wallet.encode58Check(query.getOwnerAddress().toByteArray())); //@todo remove later
+
+      var tx = wallet.createTransactionCapsule(query, ContractType.FutureWithdrawContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

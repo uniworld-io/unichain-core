@@ -42,8 +42,9 @@ public class GetTokenFutureServlet extends HttpServlet {
       boolean visible = Util.getVisiblePost(filter);
       FutureTokenQuery.Builder build = FutureTokenQuery.newBuilder();
       JsonFormat.merge(filter, build, visible);
-
-      Protocol.FutureTokenPack reply = wallet.getFutureToken(build.build());
+      var query = build.build();
+      logger.info("getTokenFuture --> {} {}" , Wallet.encode58Check(query.getOwnerAddress().toByteArray()), query.getTokenName()); //@todo remove later
+      Protocol.FutureTokenPack reply = wallet.getFutureToken(query);
       if (reply != null) {
         if (visible) {
           response.getWriter().println(JsonFormat.printToString(reply, true));

@@ -3,8 +3,10 @@ package org.unichain.core.services.http.solidity;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.ConnectionLimit;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.common.application.Service;
@@ -14,6 +16,9 @@ import org.unichain.core.services.http.solidity.servlet.GetTransactionByIdSolidi
 import org.unichain.core.services.http.solidity.servlet.GetTransactionInfoByIdSolidityServlet;
 import org.unichain.core.services.http.solidity.servlet.GetTransactionsFromThisServlet;
 import org.unichain.core.services.http.solidity.servlet.GetTransactionsToThisServlet;
+
+import javax.servlet.DispatcherType;
+import java.util.EnumSet;
 
 
 @Component
@@ -101,6 +106,16 @@ public class SolidityNodeHttpApiService implements Service {
     try {
       server = new Server(port);
       ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+      /**
+       * enable cors
+       */
+      FilterHolder holder = new FilterHolder(CrossOriginFilter.class);
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
+      holder.setInitParameter(CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, "*");
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET, POST, PUT, DELETE, OPTIONS, HEAD");
+      holder.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,Content-Type,Accept,Origin");
+      context.addFilter(holder, "/*", EnumSet.of(DispatcherType.REQUEST));
+
       context.setContextPath("/");
       server.setHandler(context);
 
@@ -145,7 +160,6 @@ public class SolidityNodeHttpApiService implements Service {
       if (maxHttpConnectNumber > 0) {
         server.addBean(new ConnectionLimit(maxHttpConnectNumber, server));
       }
-
       server.start();
     } catch (Exception e) {
       logger.debug("IOException: {}", e.getMessage());

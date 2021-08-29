@@ -136,6 +136,8 @@ message UpdateTokenParamsContract {
   int64 amount = 3;
   int64 extra_fee_rate = 4;
   int64 lot = 5;
+  string url = 6;
+  string description = 7;
 }
 
 message UpdateTokenUrlContract {

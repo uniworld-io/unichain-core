@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
+@Deprecated
 public class UpdateTokenUrlServlet extends HttpServlet {
 
   @Autowired

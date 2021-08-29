@@ -39,6 +39,7 @@ import java.util.Objects;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
+@Deprecated
 @Slf4j(topic = "actuator")
 public class TokenUpdateUrlActuator extends AbstractActuator {
 

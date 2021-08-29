@@ -25,6 +25,7 @@ import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -51,30 +52,38 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(Contract.UpdateTokenParamsContract.class);
-      logger.debug("TokenUpdateParams  {} ...", ctx);
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
+        var ctx = contract.unpack(Contract.UpdateTokenParamsContract.class);
+        logger.debug("TokenUpdateParams  {} ...", ctx);
+        var ownerAddress = ctx.getOwnerAddress().toByteArray();
+        var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
 
-      TokenPoolCapsule tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
-      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
+        TokenPoolCapsule tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
+        if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
           tokenCap.setFee(ctx.getAmount());
-      }
+        }
 
-      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
+        if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
           tokenCap.setExtraFeeRate(ctx.getExtraFeeRate());
-      }
+        }
 
-      if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_LOT)) {
+        if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_LOT)) {
           tokenCap.setLot(ctx.getLot());
-      }
+        }
 
-      dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
+        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_URL)) {
+            tokenCap.setUrl(ctx.getUrl());
+        }
 
-      chargeFee(ownerAddress, fee);
-      ret.setStatus(fee, code.SUCESS);
-      logger.debug("TokenUpdateParams  {} ...DONE!", ctx);
-      return true;
+        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_DESCRIPTION)) {
+            tokenCap.setDescription(ctx.getDescription());
+        }
+
+        dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
+
+        chargeFee(ownerAddress, fee);
+        ret.setStatus(fee, code.SUCESS);
+        logger.debug("TokenUpdateParams  {} ...DONE!", ctx);
+        return true;
     } catch (Exception e) {
       logger.error("exec TokenUpdateParams got error --> ", e);
       ret.setStatus(fee, code.FAILED);
@@ -96,9 +105,7 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
 
           var ownerAddress = ctx.getOwnerAddress().toByteArray();
           var accountCap = dbManager.getAccountStore().get(ownerAddress);
-
           Assert.notNull(accountCap, "Invalid ownerAddress");
-
           Assert.isTrue (accountCap.getBalance() >= calcFee(), "Not enough balance");
 
           var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
@@ -106,7 +113,6 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
           Assert.notNull(tokenPool, "TokenName not exist");
 
           Assert.isTrue (dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
-
           Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
 
           if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
@@ -121,6 +127,14 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
           if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
               var extraFeeRate = ctx.getExtraFeeRate();
               Assert.isTrue (extraFeeRate >= 0 && extraFeeRate <= 100 && extraFeeRate <= TOKEN_MAX_TRANSFER_FEE_RATE, "invalid extra fee rate amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
+          }
+
+          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_URL)) {
+              Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
+          }
+
+          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_DESCRIPTION)) {
+              Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
           }
 
           return true;

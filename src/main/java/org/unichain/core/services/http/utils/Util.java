@@ -617,6 +617,7 @@ public class Util {
   public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_PAGE_SIZE = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.PAGE_SIZE_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_PAGE_INDEX = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.PAGE_INDEX_FIELD_NUMBER);
 
+  //@todo remove
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_FIELD_OWNER_ADDR = UpdateTokenUrlContract.getDescriptor().findFieldByNumber(UpdateTokenUrlContract.OWNER_ADDRESS_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_FIELD_NAME = UpdateTokenUrlContract.getDescriptor().findFieldByNumber(UpdateTokenUrlContract.TOKEN_NAME_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_FIELD_URL = UpdateTokenUrlContract.getDescriptor().findFieldByNumber(UpdateTokenUrlContract.URL_FIELD_NUMBER);
@@ -627,6 +628,8 @@ public class Util {
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_FEE = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.AMOUNT_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_LOT = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.LOT_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.EXTRA_FEE_RATE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_URL = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.URL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_DESCRIPTION = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.DESCRIPTION_FIELD_NUMBER);
 
 
   public static int DEFAULT_PAGE_SIZE = 20;

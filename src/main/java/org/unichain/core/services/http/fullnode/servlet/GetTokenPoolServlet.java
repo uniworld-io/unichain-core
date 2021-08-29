@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
@@ -47,7 +48,8 @@ public class GetTokenPoolServlet extends HttpServlet {
       JsonFormat.merge(tokenFilter, build, visible);
       var query = build.build();
       logger.info("getTokenPool --> {}" , query);
-        CreateTokenContract reply = wallet.getTokenPool(query);
+      Assert.notNull(query.getName(), "token name required");
+      CreateTokenContract reply = wallet.getTokenPool(query);
       if (reply != null) {
         if (visible) {
           response.getWriter().println(JsonFormat.printToString(reply, true));

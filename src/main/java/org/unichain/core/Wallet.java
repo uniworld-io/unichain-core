@@ -1455,8 +1455,8 @@ public class Wallet {
   }
 
   public FutureTokenPack getFutureToken(FutureTokenQuery query) {
-    if(!query.hasField(TOKEN_QR_FIELD_NAME) || !query.hasField(TOKEN_QR_FIELD_OWNER_ADDR))
-      throw new RuntimeException("missing owner address or token name: ");
+    Assert.isTrue(query.hasField(TOKEN_QR_FIELD_NAME), "missing token name");
+    Assert.isTrue(query.hasField(TOKEN_QR_FIELD_OWNER_ADDR), "missing owner address");
 
     if(!query.hasField(TOKEN_QR_FIELD_PAGE_SIZE) || !query.hasField(TOKEN_QR_FIELD_PAGE_INDEX))
     {
@@ -1470,11 +1470,10 @@ public class Wallet {
             .build();
 
     var acc = dbManager.getAccountStore().get(query.getOwnerAddress().toByteArray());
-    if(acc == null)
-      throw new RuntimeException("not found future account : " + query.getOwnerAddress());
+    Assert.notNull(acc, "owner address not found: " + Wallet.encode58Check(query.getOwnerAddress().toByteArray()));
     var summary = acc.getFutureTokenSummary(query.getTokenName());
-    if(summary == null || summary.getTotalDeal() <= 0)
-      throw new RuntimeException("not found future token deal : " + query.getTokenName());
+    Assert.notNull(summary, "not found token" + query.getTokenName());
+    Assert.isTrue(summary.getTotalDeal() > 0, "not found future token deal of" + query.getTokenName());
 
     //validate query
     int pageSize = query.getPageSize();

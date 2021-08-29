@@ -140,13 +140,6 @@ message UpdateTokenParamsContract {
   string description = 7;
 }
 
-message UpdateTokenUrlContract {
-  bytes owner_address = 1;
-  string token_name = 2;
-  string url = 3;
-  string description = 4;
-}
-
 message MineTokenContract {
   bytes owner_address = 1;
   string token_name = 2;

@@ -38,7 +38,7 @@ public class WithdrawFutureTokenServlet extends HttpServlet {
 
       JsonFormat.merge(contract, build, visible);
       var withdrawCtx = build.build();
-      logger.info("withdrawFutureToken --> {} {}" , Wallet.encode58Check(withdrawCtx.getOwnerAddress().toByteArray()), withdrawCtx.getTokenName()); //@todo remove later
+      logger.info("withdrawFutureToken --> {} {}" , Wallet.encode58Check(withdrawCtx.getOwnerAddress().toByteArray()), withdrawCtx.getTokenName());
 
       Transaction tx = wallet.createTransactionCapsule(withdrawCtx, ContractType.WithdrawFutureTokenContract).getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);

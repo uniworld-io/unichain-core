@@ -300,10 +300,6 @@ public class Util {
             UpdateTokenParamsContract updateTokenParamsContract = contractParameter.unpack(UpdateTokenParamsContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(updateTokenParamsContract, selfType));
             break;
-          case UpdateTokenUrlContract:
-            UpdateTokenUrlContract updateTokenUrlContract = contractParameter.unpack(UpdateTokenUrlContract.class);
-            contractJson = JSONObject.parseObject(JsonFormat.printToString(updateTokenUrlContract, selfType));
-            break;
           case MineTokenContract:
             MineTokenContract mineTokenContract = contractParameter.unpack(MineTokenContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(mineTokenContract, selfType));
@@ -544,11 +540,6 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateTokenParamsContractBuilder, selfType);
             any = Any.pack(updateTokenParamsContractBuilder.build());
             break;
-          case "UpdateTokenUrlContract":
-            UpdateTokenUrlContract.Builder updateTokenUrlContractBuilder = UpdateTokenUrlContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateTokenUrlContractBuilder, selfType);
-            any = Any.pack(updateTokenUrlContractBuilder.build());
-            break;
           case "MineTokenContract":
             MineTokenContract.Builder mineContractBuilder = MineTokenContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), mineContractBuilder, selfType);
@@ -616,12 +607,6 @@ public class Util {
   public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_OWNER_ADDR = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.OWNER_ADDRESS_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_PAGE_SIZE = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.PAGE_SIZE_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_QR_FIELD_PAGE_INDEX = Protocol.FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.FutureTokenQuery.PAGE_INDEX_FIELD_NUMBER);
-
-  //@todo remove
-  public static Descriptors.FieldDescriptor TOKEN_UPDATE_FIELD_OWNER_ADDR = UpdateTokenUrlContract.getDescriptor().findFieldByNumber(UpdateTokenUrlContract.OWNER_ADDRESS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor TOKEN_UPDATE_FIELD_NAME = UpdateTokenUrlContract.getDescriptor().findFieldByNumber(UpdateTokenUrlContract.TOKEN_NAME_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor TOKEN_UPDATE_FIELD_URL = UpdateTokenUrlContract.getDescriptor().findFieldByNumber(UpdateTokenUrlContract.URL_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor TOKEN_UPDATE_FIELD_DESC = UpdateTokenUrlContract.getDescriptor().findFieldByNumber(UpdateTokenUrlContract.DESCRIPTION_FIELD_NUMBER);
 
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_OWNER_ADDR = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.OWNER_ADDRESS_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_NAME = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.TOKEN_NAME_FIELD_NUMBER);

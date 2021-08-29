@@ -354,7 +354,6 @@ message Transaction {
       CreateTokenContract = 53;
       ContributeTokenPoolFeeContract = 54;
       UpdateTokenParamsContract = 55;
-      UpdateTokenUrlContract = 56;
       MineTokenContract = 57;
       BurnTokenContract = 58;
       TransferTokenContract = 59;

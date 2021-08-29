@@ -46,7 +46,7 @@ public class GetTokenPoolServlet extends HttpServlet {
       CreateTokenContract.Builder build = CreateTokenContract.newBuilder();
       JsonFormat.merge(tokenFilter, build, visible);
       var query = build.build();
-      logger.info("getTokenPool --> {}" , query); //@todo remove later
+      logger.info("getTokenPool --> {}" , query);
         CreateTokenContract reply = wallet.getTokenPool(query);
       if (reply != null) {
         if (visible) {

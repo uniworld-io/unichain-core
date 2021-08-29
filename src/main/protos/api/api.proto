@@ -196,16 +196,6 @@ service Wallet {
     };
   }
 
-  rpc UpdateTokenUrl (UpdateTokenUrlContract) returns (Transaction) {
-    option (google.api.http) = {
-      post: "/wallet/updatetokenurl"
-      body: "*"
-      additional_bindings {
-        get: "/wallet/updatetokenurl"
-      }
-    };
-  }
-
   rpc MineToken (MineTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/minetoken"

@@ -36,7 +36,8 @@ public class ContributeTokenPoolFeeServlet extends HttpServlet {
       ContributeTokenPoolFeeContract.Builder build = ContributeTokenPoolFeeContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var contributeCtx = build.build();
-      logger.info("contributeTokenFee --> {} {}  {}" , Wallet.encode58Check(contributeCtx.getOwnerAddress().toByteArray()), contributeCtx.getTokenName(), contributeCtx.getAmount()); //@todo remove later
+      logger.info("contributeTokenFee --> {} {} {}" ,
+              Wallet.encode58Check(contributeCtx.getOwnerAddress().toByteArray()), contributeCtx.getTokenName(), contributeCtx.getAmount());
       Transaction tx = wallet.createTransactionCapsule(contributeCtx, ContractType.ContributeTokenPoolFeeContract).getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);

@@ -98,7 +98,6 @@ public class HttpApiOnSolidityService implements Service {
       server = new Server(port);
       ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
       /**
-       * @todo review
        * enable cors
        */
       FilterHolder holder = new FilterHolder(CrossOriginFilter.class);

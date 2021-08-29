@@ -38,7 +38,7 @@ public class WithdrawFutureServlet extends HttpServlet {
       var build = FutureWithdrawContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var query = build.build();
-      logger.info("withdrawFuture --> {}" , Wallet.encode58Check(query.getOwnerAddress().toByteArray())); //@todo remove later
+      logger.info("withdrawFuture --> {}" , Wallet.encode58Check(query.getOwnerAddress().toByteArray()));
 
       var tx = wallet.createTransactionCapsule(query, ContractType.FutureWithdrawContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);

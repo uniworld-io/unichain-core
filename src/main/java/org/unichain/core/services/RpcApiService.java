@@ -1229,20 +1229,6 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void updateTokenUrl(Contract.UpdateTokenUrlContract request,
-                               StreamObserver<Protocol.Transaction> responseObserver) {
-      try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.UpdateTokenUrlContract).getInstance());
-      } catch (ContractValidateException e) {
-        responseObserver.onNext(null);
-        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
-      }
-      responseObserver.onCompleted();
-    }
-
-    /**
-     */
-    @Override
     public void mineToken(Contract.MineTokenContract request,
                           StreamObserver<Protocol.Transaction> responseObserver) {
       try {

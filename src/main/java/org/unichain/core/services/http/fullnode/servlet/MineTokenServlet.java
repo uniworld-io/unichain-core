@@ -36,7 +36,7 @@ public class MineTokenServlet extends HttpServlet {
       MineTokenContract.Builder build = MineTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var mineCtx = build.build();
-      logger.info("burnToken --> {} {}  {}" , Wallet.encode58Check(mineCtx.getOwnerAddress().toByteArray()), mineCtx.getTokenName(), mineCtx.getAmount()); //@todo remove later
+      logger.info("burnToken --> {} {}  {}" , Wallet.encode58Check(mineCtx.getOwnerAddress().toByteArray()), mineCtx.getTokenName(), mineCtx.getAmount());
       Transaction tx = wallet.createTransactionCapsule(mineCtx, ContractType.MineTokenContract).getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);

@@ -66,8 +66,6 @@ public class ActuatorFactory {
         return new TokenContributePoolFeeActuator(contract.getParameter(), manager);
       case UpdateTokenParamsContract:
         return new TokenUpdateParamsActuator(contract.getParameter(), manager);
-      case UpdateTokenUrlContract:
-        return new TokenUpdateUrlActuator(contract.getParameter(), manager);
       case MineTokenContract:
         return new TokenMineActuator(contract.getParameter(), manager);
       case BurnTokenContract:

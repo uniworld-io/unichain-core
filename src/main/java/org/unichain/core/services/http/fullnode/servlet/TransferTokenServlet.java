@@ -37,7 +37,7 @@ public class TransferTokenServlet extends HttpServlet {
 
       JsonFormat.merge(contract, build, visible);
       var transferCtx = build.build();
-      logger.info("transferToken --> {} --> {} : {} {}" , Wallet.encode58Check(transferCtx.getOwnerAddress().toByteArray()), transferCtx.getToAddress().toByteArray(), transferCtx.getTokenName(), transferCtx.getAmount()); //@todo remove later
+      logger.info("transferToken --> {} --> {} : {} {}" , Wallet.encode58Check(transferCtx.getOwnerAddress().toByteArray()), transferCtx.getToAddress().toByteArray(), transferCtx.getTokenName(), transferCtx.getAmount());
 
       Transaction tx = wallet.createTransactionCapsule(transferCtx, ContractType.TransferTokenContract).getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);

@@ -50,8 +50,6 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private UpdateTokenParamsServlet updateTokenParamsServlet;
   @Autowired
-  private UpdateTokenUrlServlet updateTokenUrlServlet;
-  @Autowired
   private MineTokenServlet mineTokenServlet;
   @Autowired
   private BurnTokenServlet burnTokenServlet;
@@ -224,7 +222,6 @@ public class FullNodeHttpApiService implements Service {
       ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
       context.setContextPath("/wallet/");
       /**
-       * @todo review
        * enable cors
        */
       FilterHolder holder = new FilterHolder(CrossOriginFilter.class);
@@ -253,7 +250,6 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
       context.addServlet(new ServletHolder(contributeTokenPoolFeeServlet), "/contributetokenfee");
       context.addServlet(new ServletHolder(updateTokenParamsServlet), "/updatetokenparams");
-      context.addServlet(new ServletHolder(updateTokenUrlServlet), "/updatetokenurl");
       context.addServlet(new ServletHolder(mineTokenServlet), "/minetoken");
       context.addServlet(new ServletHolder(burnTokenServlet), "/burntoken");
       context.addServlet(new ServletHolder(transferTokenServlet), "/transfertoken");

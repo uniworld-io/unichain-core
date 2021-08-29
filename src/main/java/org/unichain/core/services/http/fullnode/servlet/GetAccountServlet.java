@@ -73,7 +73,7 @@ public class GetAccountServlet extends HttpServlet {
       Account.Builder build = Account.newBuilder();
       JsonFormat.merge(account, build, visible);
       Account query = build.build();
-      logger.info("getAccount --> {}" , Wallet.encode58Check(query.getAddress().toByteArray())); //@todo remove later
+      logger.info("getAccount --> {}" , Wallet.encode58Check(query.getAddress().toByteArray()));
       Account reply = wallet.getAccount(query);
       if (reply != null) {
         if (visible) {

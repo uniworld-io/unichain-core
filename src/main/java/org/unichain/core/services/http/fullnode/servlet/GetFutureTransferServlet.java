@@ -40,7 +40,7 @@ public class GetFutureTransferServlet extends HttpServlet {
       var build = FutureQuery.newBuilder();
       JsonFormat.merge(filter, build, visible);
       FutureQuery query = build.build();
-      logger.info("getFutureTransfer --> {}" , Wallet.encode58Check(query.getOwnerAddress().toByteArray())); //@todo remove later
+      logger.info("getFutureTransfer --> {}" , Wallet.encode58Check(query.getOwnerAddress().toByteArray()));
 
       FuturePack reply = wallet.getFuture(query);
 

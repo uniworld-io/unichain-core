@@ -37,7 +37,7 @@ public class CreateTokenServlet extends HttpServlet {
       CreateTokenContract.Builder build = CreateTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
-      logger.info("createToken --> {} --> {} " , Wallet.encode58Check(tokenCtx.getOwnerAddress().toByteArray()), tokenCtx.getName()); //@todo remove later
+      logger.info("createToken --> {} --> {} " , Wallet.encode58Check(tokenCtx.getOwnerAddress().toByteArray()), tokenCtx.getName());
 
       Transaction tx = wallet.createTransactionCapsule(tokenCtx, ContractType.CreateTokenContract).getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);

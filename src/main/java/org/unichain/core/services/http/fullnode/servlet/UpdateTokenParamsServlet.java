@@ -36,7 +36,10 @@ public class UpdateTokenParamsServlet extends HttpServlet {
       UpdateTokenParamsContract.Builder build = UpdateTokenParamsContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var updateCtx = build.build();
-      logger.info("updateTokenParams --> {} --> {} {}" , Wallet.encode58Check(updateCtx.getOwnerAddress().toByteArray()), updateCtx.getTokenName(), updateCtx.getExtraFeeRate()); //@todo remove later
+      logger.info("updateTokenParams --> {} --> {} fee {} feeRate {} lot {} url {} description {}" ,
+              Wallet.encode58Check(updateCtx.getOwnerAddress().toByteArray()),
+              updateCtx.getTokenName(), updateCtx.getAmount(), updateCtx.getExtraFeeRate(),
+              updateCtx.getLot(),  updateCtx.getUrl(), updateCtx.getDescription());
 
       Transaction tx = wallet.createTransactionCapsule(updateCtx, ContractType.UpdateTokenParamsContract).getInstance();
       JSONObject jsonObject = JSONObject.parseObject(contract);

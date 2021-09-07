@@ -147,7 +147,7 @@ public class RpcApiServiceOnSolidity implements Service {
   private class WalletSolidityApi extends WalletSolidityImplBase {
 
     @Override
-    public void getTokenPool(CreateTokenContract request, StreamObserver<CreateTokenContract> responseObserver) {
+    public void getTokenPool(TokenPoolQuery request, io.grpc.stub.StreamObserver<Contract.TokenPage> responseObserver){
       walletOnSolidity.futureGet(() -> rpcApiService.getWalletSolidityApi().getTokenPool(request, responseObserver)
       );
     }

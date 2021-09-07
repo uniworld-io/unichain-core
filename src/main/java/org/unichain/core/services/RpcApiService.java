@@ -54,8 +54,6 @@ import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
-
 @Component
 @Slf4j(topic = "API")
 public class RpcApiService implements Service {
@@ -286,14 +284,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void getTokenPool(CreateTokenContract request, StreamObserver<CreateTokenContract> responseObserver) {
-      String tokenName = request.getName();
-      if ( tokenName != null) {
-        CreateTokenContract reply = wallet.getTokenPool(request);
-        responseObserver.onNext(reply);
-      } else {
-        responseObserver.onNext(null);
-      }
+    public void getTokenPool(TokenPoolQuery request, io.grpc.stub.StreamObserver<TokenPage> responseObserver) {
+      TokenPage reply = wallet.getTokenPool(request);
+      responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
@@ -677,14 +670,10 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void getTokenPool(CreateTokenContract request, StreamObserver<CreateTokenContract> responseObserver) {
-      String tokenName = request.getName();
-      if ( tokenName != null) {
-        CreateTokenContract reply = wallet.getTokenPool(request);
-        responseObserver.onNext(reply);
-      } else {
-        responseObserver.onNext(null);
-      }
+    public void getTokenPool(TokenPoolQuery request, io.grpc.stub.StreamObserver<TokenPage> responseObserver) {
+      String tokenName = request.getTokenName();
+      TokenPage reply = wallet.getTokenPool(request);
+      responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 

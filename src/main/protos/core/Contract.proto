@@ -23,6 +23,13 @@ option go_package = "github.com/unichainprotocol/grpc-gateway/core";
 
 import "core/Unichain.proto";
 
+message TokenPage {
+  int64  page_size = 1;
+  int64 page_index = 2;
+  int64 total = 3;
+  repeated CreateTokenContract tokens = 4;
+}
+
 message AccountCreateContract {
   bytes owner_address = 1;
   bytes account_address = 2;

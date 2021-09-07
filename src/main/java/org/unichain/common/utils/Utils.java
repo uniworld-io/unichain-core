@@ -18,13 +18,17 @@
 
 package org.unichain.common.utils;
 
+import org.springframework.util.Assert;
+
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public interface Utils {
 
@@ -112,5 +116,16 @@ public interface Utils {
       }
       return ret.toString();
     }
+  }
+
+  static <V> List<V> paging(List<V> all, int pageIndex, int pageSize){
+    Assert.isTrue(pageIndex >=0 && pageSize > 0, "invalid paging info");
+    int start = pageIndex * pageSize;
+    int end = start + pageSize;
+    if(start >= all.size())
+       return new ArrayList<>();
+    if(end >= all.size())
+      end = all.size();
+    return all.subList(start, end);
   }
 }

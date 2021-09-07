@@ -31,7 +31,7 @@ service Wallet {
     };
   };
 
-  rpc GetTokenPool (CreateTokenContract) returns (CreateTokenContract) {
+  rpc GetTokenPool (TokenPoolQuery) returns (TokenPage) {
     option (google.api.http) = {
       post: "/wallet/gettokenpool"
       body: "*"
@@ -794,7 +794,7 @@ service WalletSolidity {
     };
   };
 
-  rpc GetTokenPool (CreateTokenContract) returns (CreateTokenContract) {
+  rpc GetTokenPool (TokenPoolQuery) returns (TokenPage) {
     option (google.api.http) = {
       post: "/walletsolidity/gettokenpool"
       body: "*"

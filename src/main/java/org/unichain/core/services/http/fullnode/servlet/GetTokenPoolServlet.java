@@ -1,16 +1,17 @@
 package org.unichain.core.services.http.fullnode.servlet;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.CreateTokenContract;
+import org.unichain.protos.Contract;
+import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -24,15 +25,25 @@ public class GetTokenPoolServlet extends HttpServlet {
   @Autowired
   private Wallet wallet;
 
-  private String convertOutput(CreateTokenContract tokenPool) {
-      JSONObject tokenPoolJson = JSONObject.parseObject(JsonFormat.printToString(tokenPool, false));
-      var start_time = tokenPool.getStartTime();
-      var end_time = tokenPool.getEndTime();
-      var lastOpTime = tokenPool.getLatestOperationTime();
-      tokenPoolJson.put("start_time", Utils.formatDateTimeLong(start_time));
-      tokenPoolJson.put("end_time", Utils.formatDateTimeLong(end_time));
-      tokenPoolJson.put("latest_operation_time", Utils.formatDateTimeLong(lastOpTime));
-      return tokenPoolJson.toJSONString();
+  private String convertOutput(Contract.TokenPage page) {
+    JSONObject pageJson = new JSONObject();
+    pageJson.put("page_size", page.getPageSize());
+    pageJson.put("page_index", page.getPageIndex());
+    pageJson.put("total", page.getTotal());
+    JSONArray tokens = new JSONArray();
+    for(var item : page.getTokensList()){
+      JSONObject itemJson = JSONObject.parseObject(JsonFormat.printToString(item, false));
+      var start_time = item.getStartTime();
+      var end_time = item.getEndTime();
+      var lastOpTime = item.getLatestOperationTime();
+      itemJson.put("start_time", Utils.formatDateTimeLong(start_time));
+      itemJson.put("end_time", Utils.formatDateTimeLong(end_time));
+      itemJson.put("latest_operation_time", Utils.formatDateTimeLong(lastOpTime));
+      tokens.add(itemJson);
+    }
+    pageJson.put("tokens", tokens);
+
+    return pageJson.toJSONString();
   }
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
@@ -44,12 +55,11 @@ public class GetTokenPoolServlet extends HttpServlet {
       String tokenFilter = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(tokenFilter);
       boolean visible = Util.getVisiblePost(tokenFilter);
-      CreateTokenContract.Builder build = CreateTokenContract.newBuilder();
+      Protocol.TokenPoolQuery.Builder build = Protocol.TokenPoolQuery.newBuilder();
       JsonFormat.merge(tokenFilter, build, visible);
       var query = build.build();
       logger.info("getTokenPool --> {}" , query);
-      Assert.notNull(query.getName(), "token name required");
-      CreateTokenContract reply = wallet.getTokenPool(query);
+      Contract.TokenPage reply = wallet.getTokenPool(query);
       if (reply != null) {
         if (visible) {
           response.getWriter().println(JsonFormat.printToString(reply, true));

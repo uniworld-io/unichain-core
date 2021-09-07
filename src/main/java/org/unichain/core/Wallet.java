@@ -278,26 +278,8 @@ public class Wallet {
     return accountCapsule.getInstance();
   }
 
-  public CreateTokenContract getTokenPool(CreateTokenContract filter) {
-    var tokenStore = dbManager.getTokenPoolStore();
-    TokenPoolCapsule tokenPoolCap = tokenStore.get(Util.stringAsBytesUppercase(filter.getName()));
-    return CreateTokenContract.newBuilder()
-            .setName(tokenPoolCap.getName())
-            .setAbbr(tokenPoolCap.getAbbr())
-            .setDescription(tokenPoolCap.getDescription())
-            .setUrl(tokenPoolCap.getUrl())
-            .setStartTime(tokenPoolCap.getStartTime())
-            .setEndTime(tokenPoolCap.getEndTime())
-            .setMaxSupply(tokenPoolCap.getMaxSupply())
-            .setTotalSupply(tokenPoolCap.getTotalSupply())
-            .setFee(tokenPoolCap.getFee())
-            .setExtraFeeRate(tokenPoolCap.getExtraFeeRate())
-            .setLot(tokenPoolCap.getLot())
-            .setFeePool(tokenPoolCap.getFeePool())
-            .setBurned(tokenPoolCap.getBurnedToken())
-            .setOwnerAddress(tokenPoolCap.getOwnerAddress())
-            .setLatestOperationTime(tokenPoolCap.getLatestOperationTime())
-            .build();
+  public TokenPage getTokenPool(TokenPoolQuery query) {
+    return dbManager.getTokenPoolStore().query(query);
   }
 
   public Account getAccountById(Account account) {

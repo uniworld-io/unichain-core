@@ -6,10 +6,14 @@ import com.google.common.collect.Streams;
 import com.google.common.reflect.TypeToken;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.ProtoCapsule;
+import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.api.IndexHelper;
+import org.unichain.core.db.common.DataPage;
 import org.unichain.core.db2.common.DB;
 import org.unichain.core.db2.common.IRevokingDB;
 import org.unichain.core.db2.common.LevelDB;
@@ -19,13 +23,16 @@ import org.unichain.core.db2.core.RevokingDBWithCachingNewValue;
 import org.unichain.core.db2.core.RevokingDBWithCachingOldValue;
 import org.unichain.core.exception.BadItemException;
 import org.unichain.core.exception.ItemNotFoundException;
+import org.unichain.core.services.http.utils.Util;
 
 import javax.annotation.PostConstruct;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j(topic = "DB")
 public abstract class UnichainStoreWithRevoking<T extends ProtoCapsule> implements IUnichainChainBase<T> {
@@ -159,5 +166,16 @@ public abstract class UnichainStoreWithRevoking<T extends ProtoCapsule> implemen
 
   public void setMode(boolean mode) {
     revokingDB.setMode(mode);
+  }
+
+  public List<T> getAll() {
+    return Streams.stream(iterator())
+            .map(Map.Entry::getValue)
+            .collect(Collectors.toList());
+  }
+
+  public DataPage<T> getDataPage(int pageSize, int pageIndex){
+    var all = getAll();
+    return new DataPage<>(pageIndex, pageSize, all.size(), Utils.paging(all, pageIndex, pageSize));
   }
 }

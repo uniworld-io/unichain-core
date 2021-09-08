@@ -3,11 +3,11 @@ package org.unichain.core.db;
 import com.google.protobuf.Descriptors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.services.http.utils.Util;
@@ -37,36 +37,28 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
   }
 
   public Contract.TokenPage query(Protocol.TokenPoolQuery query){
-    int pageSize, pageIndex;
-    if(!query.hasField(TOKEN_QUERY_FIELD_PAGE_INDEX))
-      pageIndex = 0;
-    else
-      pageIndex = query.getPageIndex();
-
-    if(!query.hasField(TOKEN_QUERY_FIELD_PAGE_SIZE))
-      pageSize = 10;
-    else
-      pageSize = query.getPageSize();
-
+    int pageSize = query.hasField(TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : 10;
+    int pageIndex = query.hasField(TOKEN_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : 0;
     Assert.isTrue(pageSize > 0, "invalid page size");
     Assert.isTrue(pageIndex >= 0, "invalid page index");
-
-    List<TokenPoolCapsule> found;
-
+    List<Contract.CreateTokenContract> sorted;
     if(query.hasField(TOKEN_QUERY_FIELD_TOKEN_NAME))
     {
-      found = new ArrayList<>();
-      found.add(get(Util.stringAsBytesUppercase(query.getTokenName())));
+      sorted  = getAll().stream()
+              .filter(Objects::nonNull)
+              .map(item -> item.getInstance())
+              .filter(item -> StringUtils.containsIgnoreCase(item.getName(), query.getTokenName()))
+              .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))
+              .collect(Collectors.toList());
     }
-    else
-      found = getAll();
+    else{
+      sorted = getAll().stream()
+              .filter(Objects::nonNull)
+              .map(item -> item.getInstance())
+              .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))
+              .collect(Collectors.toList());
+    }
 
-    //then sorting & filter
-    var sorted = found.stream()
-            .filter(Objects::nonNull)
-            .map(item -> item.getInstance())
-            .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))
-            .collect(Collectors.toList());
     return Contract.TokenPage.newBuilder()
             .setPageSize(pageSize)
             .setPageIndex(pageIndex)

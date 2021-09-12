@@ -79,6 +79,10 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.getOwnerAddress();
   }
 
+  public long getOriginFeePool() {
+    return this.createTokenContract.getFeePoolOrigin();
+  }
+
   public Long getLatestOperationTime() {
     return this.createTokenContract.getLatestOperationTime();
   }
@@ -125,6 +129,11 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
             .setStartTime(startTime).build();
   }
 
+  public void setEndTime(long endTime) {
+    this.createTokenContract = this.createTokenContract.toBuilder()
+            .setEndTime(endTime).build();
+  }
+
   public void setFee(long fee) {
     this.createTokenContract = this.createTokenContract.toBuilder()
             .setFee(fee).build();
@@ -150,6 +159,10 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
       throw  new ContractExeException("mined token amount must greater than ZERO");
     setBurnedToken(createTokenContract.getBurned() + amount);
     setTotalSupply(createTokenContract.getTotalSupply() - amount);
+  }
+
+  public void setOriginFeePool(long originFeePool) {
+    this.createTokenContract = this.createTokenContract.toBuilder().setFeePoolOrigin(originFeePool).build();
   }
 
   public void setLatestOperationTime(long latestOpTime) {

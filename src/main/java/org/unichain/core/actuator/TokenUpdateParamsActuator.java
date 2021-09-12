@@ -27,7 +27,6 @@ import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
-import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
@@ -35,7 +34,7 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.UpdateTokenParamsContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.util.Objects;
+import java.util.Arrays;
 
 import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE;
 import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE_RATE;
@@ -55,9 +54,11 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
         var ctx = contract.unpack(Contract.UpdateTokenParamsContract.class);
         logger.debug("TokenUpdateParams  {} ...", ctx);
         var ownerAddress = ctx.getOwnerAddress().toByteArray();
+
         var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
 
         TokenPoolCapsule tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
+
         if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
           tokenCap.setFee(ctx.getAmount());
         }
@@ -76,6 +77,24 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
 
         if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_DESCRIPTION)) {
             tokenCap.setDescription(ctx.getDescription());
+        }
+
+        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
+            var newTotalSupply = ctx.getTotalSupply();
+            var totalSupplyDiff = newTotalSupply - tokenCap.getTotalSupply();
+            tokenCap.setTotalSupply(newTotalSupply);
+            var ownerAccount = dbManager.getAccountStore().get(ownerAddress);
+            ownerAccount.mineToken(tokenKey, totalSupplyDiff);
+            dbManager.getAccountStore().put(ownerAddress, ownerAccount);
+        }
+
+        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_POOL)) {
+            var newFeePool = ctx.getFeePool();
+            var oldFeePool = tokenCap.getOriginFeePool();
+            var diffFeePool = newFeePool - oldFeePool;
+            tokenCap.setOriginFeePool(newFeePool);
+            dbManager.adjustBalance(ownerAddress, -diffFeePool);
+            tokenCap.setFeePool(tokenCap.getFeePool() + diffFeePool);
         }
 
         dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
@@ -112,6 +131,8 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
           var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
           Assert.notNull(tokenPool, "TokenName not exist");
 
+          Assert.isTrue(Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()), "Mismatched token owner not allowed to mine");
+
           Assert.isTrue (dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
           Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
 
@@ -135,6 +156,37 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
 
           if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_DESCRIPTION)) {
               Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
+          }
+
+          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
+              var maxSupply = tokenPool.getMaxSupply();
+              var newTotalSupply = ctx.getTotalSupply();
+              var oldTotalSupply = tokenPool.getTotalSupply();
+              var diff = newTotalSupply - oldTotalSupply;
+
+              Assert.isTrue(diff != 0, "total supply not changed!");
+
+              if(diff > 0){
+                  Assert.isTrue(maxSupply >= newTotalSupply, "new total supply break max supply: " + maxSupply);
+              }
+              else if(diff < 0){
+                  var availableSupply = accountCap.getTokenAvailable(tokenKey);
+                  Assert.isTrue(availableSupply + diff >= 0, "max available token supply not enough to lower down total supply, minimum total supply is: " + (oldTotalSupply - availableSupply));
+              }
+          }
+
+          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_POOL)) {
+              var newFeePool = ctx.getFeePool();
+              var oldFeePool = tokenPool.getOriginFeePool();
+              var availableFeePool = tokenPool.getFeePool();
+              var diffFeePool = newFeePool - oldFeePool;
+              Assert.isTrue(diffFeePool != 0, "fee pool not changed");
+              if(diffFeePool > 0){
+                    Assert.isTrue(accountCap.getBalance() >= diffFeePool + calcFee(), "not enough balance to update new fee pool, at least: " + diffFeePool + calcFee());
+              }
+              else if(diffFeePool < 0){
+                  Assert.isTrue(availableFeePool + diffFeePool >= 0 && (accountCap.getBalance() - diffFeePool - calcFee() ) >= 0, "available fee pool not enough to lower down fee pool or balance not enough fee, require at least: " + diffFeePool + " fee :"+ calcFee());
+              }
           }
 
           return true;

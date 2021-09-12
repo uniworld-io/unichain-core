@@ -129,6 +129,7 @@ message CreateTokenContract {
   int64 burned = 13;
   int64 latest_operation_time = 14;
   int64 lot =15;
+  int64 fee_pool_origin = 16;
 }
 
 message ContributeTokenPoolFeeContract {
@@ -145,6 +146,8 @@ message UpdateTokenParamsContract {
   int64 lot = 5;
   string url = 6;
   string description = 7;
+  int64 total_supply = 8;
+  int64 fee_pool = 9;
 }
 
 message MineTokenContract {

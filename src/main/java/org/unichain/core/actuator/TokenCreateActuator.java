@@ -28,21 +28,20 @@ import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
-import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.CreateTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.util.Objects;
-
 import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE;
 import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE_RATE;
+import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "actuator")
 public class TokenCreateActuator extends AbstractActuator {
+
+  public static final long FIFTY_YEARS = 5 * 315360000000L;
 
   TokenCreateActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -55,11 +54,22 @@ public class TokenCreateActuator extends AbstractActuator {
       var ctx = contract.unpack(CreateTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var capsule = new TokenPoolCapsule(ctx);
-      capsule.setBurnedToken(0L);
-      if(capsule.getStartTime() == 0)
+      if(!ctx.hasField(TOKEN_CREATE_FIELD_START_TIME))
+      {
         capsule.setStartTime(dbManager.getHeadBlockTimeStamp());
+        logger.info("default startTime to headBlockTimestamp: " + capsule.getStartTime());
+      }
+      var startTime = capsule.getStartTime();
+      if(!ctx.hasField(TOKEN_CREATE_FIELD_END_TIME))
+      {
+        capsule.setEndTime(startTime + FIFTY_YEARS);
+        logger.info("default endTime to startTime + 10Years: " + capsule.getEndTime());
+      }
+
+      capsule.setBurnedToken(0L);
       capsule.setTokenName(capsule.getTokenName().toUpperCase());
       capsule.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      capsule.setOriginFeePool(ctx.getFeePool());
       dbManager.getTokenPoolStore().put(capsule.createDbKey(), capsule);
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
@@ -86,31 +96,30 @@ public class TokenCreateActuator extends AbstractActuator {
       val ctx = this.contract.unpack(CreateTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
+      var accountCap = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(accountCap, "Account not exists");
+
       Assert.isTrue(!ctx.getName().isEmpty() && TransactionUtil.validTokenName(ctx.getName().getBytes()), "Invalid token name");
       Assert.isTrue(!ctx.getName().equalsIgnoreCase("UNX"), "Token name can't be UNX");
 
       var tokenKey = Util.stringAsBytesUppercase(ctx.getName());
-      Assert.isNull(this.dbManager.getTokenPoolStore().get(tokenKey), "Token exists");
+      Assert.isTrue(!this.dbManager.getTokenPoolStore().has(tokenKey), "Token exists");
 
       Assert.isTrue(!StringUtils.isEmpty(ctx.getAbbr().isEmpty()) && TransactionUtil.validTokenName(ctx.getAbbr().getBytes()), "Invalid token abbreviation");
-
       Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
       Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
 
-      Assert.isTrue(ctx.getStartTime() == 0 || ctx.getStartTime() >= dbManager.getHeadBlockTimeStamp(), "Invalid start time");
+      long startTime = ctx.hasField(TOKEN_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
+      Assert.isTrue(startTime >= dbManager.getHeadBlockTimeStamp(), "Invalid start time");
 
-      if (ctx.getEndTime() <= 0 || ctx.getEndTime() <= ctx.getStartTime() || ctx.getEndTime() <= dbManager.getHeadBlockTimeStamp())
-        throw new ContractValidateException("Invalid end time");
+      long endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : startTime + FIFTY_YEARS;
+      Assert.isTrue(endTime > 0 && endTime > startTime && endTime > dbManager.getHeadBlockTimeStamp(), "Invalid end time");
 
       Assert.isTrue(ctx.getTotalSupply() > 0 , "TotalSupply must greater than 0");
       Assert.isTrue(ctx.getMaxSupply() > 0 , "MaxSupply must greater than 0!");
       Assert.isTrue(ctx.getMaxSupply() >= ctx.getTotalSupply() , "MaxSupply must greater or equal than TotalSupply");
       Assert.isTrue(ctx.getFee() >= 0 && ctx.getFee() <= TOKEN_MAX_TRANSFER_FEE, "Invalid token transfer fee: must be positive and not exceed max fee : " + TOKEN_MAX_TRANSFER_FEE + " tokens");
-
       Assert.isTrue(ctx.getExtraFeeRate() >= 0 && ctx.getExtraFeeRate() <= 100 && ctx.getExtraFeeRate() <= TOKEN_MAX_TRANSFER_FEE_RATE, "Invalid extra fee rate , should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
-
-      var accountCap = dbManager.getAccountStore().get(ownerAddress);
-      Assert.notNull(accountCap, "Account not exists");
 
       Assert.isTrue(ctx.getFeePool() >= 0 && (accountCap.getBalance() >= calcFee() + ctx.getFeePool()), "Invalid fee pool or not enough balance for fee & pre-deposit pool fee");
       Assert.isTrue(ctx.getLot() >= 0, "Invalid lot: must not negative");

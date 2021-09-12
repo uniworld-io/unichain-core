@@ -33,15 +33,13 @@ public class WithdrawFutureTokenServlet extends HttpServlet {
     try {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
-      boolean visible = Util.getVisiblePost(contract);
-      WithdrawFutureTokenContract.Builder build = Contract.WithdrawFutureTokenContract.newBuilder();
-
+      var visible = Util.getVisiblePost(contract);
+      var build = Contract.WithdrawFutureTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var withdrawCtx = build.build();
-      logger.info("withdrawFutureToken --> {} {}" , Wallet.encode58Check(withdrawCtx.getOwnerAddress().toByteArray()), withdrawCtx.getTokenName());
-
-      Transaction tx = wallet.createTransactionCapsule(withdrawCtx, ContractType.WithdrawFutureTokenContract).getInstance();
-      JSONObject jsonObject = JSONObject.parseObject(contract);
+      logger.info("withdrawFutureToken --> {} {}" , Wallet.encode58Check(withdrawCtx.getOwnerAddress().toByteArray()), withdrawCtx);
+      var tx = wallet.createTransactionCapsule(withdrawCtx, ContractType.WithdrawFutureTokenContract).getInstance();
+      var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {

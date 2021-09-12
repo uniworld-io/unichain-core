@@ -32,17 +32,13 @@ public class UpdateTokenParamsServlet extends HttpServlet {
     try {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
-      boolean visible = Util.getVisiblePost(contract);
-      UpdateTokenParamsContract.Builder build = UpdateTokenParamsContract.newBuilder();
+      var visible = Util.getVisiblePost(contract);
+      var build = UpdateTokenParamsContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var updateCtx = build.build();
-      logger.info("updateTokenParams --> {} --> {} fee {} feeRate {} lot {} url {} description {}" ,
-              Wallet.encode58Check(updateCtx.getOwnerAddress().toByteArray()),
-              updateCtx.getTokenName(), updateCtx.getAmount(), updateCtx.getExtraFeeRate(),
-              updateCtx.getLot(),  updateCtx.getUrl(), updateCtx.getDescription());
-
-      Transaction tx = wallet.createTransactionCapsule(updateCtx, ContractType.UpdateTokenParamsContract).getInstance();
-      JSONObject jsonObject = JSONObject.parseObject(contract);
+      logger.info("updateTokenParams --> {} --> {}" , Wallet.encode58Check(updateCtx.getOwnerAddress().toByteArray()), updateCtx);
+      var tx = wallet.createTransactionCapsule(updateCtx, ContractType.UpdateTokenParamsContract).getInstance();
+      var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {

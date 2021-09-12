@@ -32,14 +32,13 @@ public class ContributeTokenPoolFeeServlet extends HttpServlet {
     try {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
-      boolean visible = Util.getVisiblePost(contract);
-      ContributeTokenPoolFeeContract.Builder build = ContributeTokenPoolFeeContract.newBuilder();
+      var visible = Util.getVisiblePost(contract);
+      var build = ContributeTokenPoolFeeContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var contributeCtx = build.build();
-      logger.info("contributeTokenFee --> {} {} {}" ,
-              Wallet.encode58Check(contributeCtx.getOwnerAddress().toByteArray()), contributeCtx.getTokenName(), contributeCtx.getAmount());
-      Transaction tx = wallet.createTransactionCapsule(contributeCtx, ContractType.ContributeTokenPoolFeeContract).getInstance();
-      JSONObject jsonObject = JSONObject.parseObject(contract);
+      logger.info("contributeTokenFee --> {} --> {}" , Wallet.encode58Check(contributeCtx.getOwnerAddress().toByteArray()), contributeCtx);
+      var tx = wallet.createTransactionCapsule(contributeCtx, ContractType.ContributeTokenPoolFeeContract).getInstance();
+      var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {

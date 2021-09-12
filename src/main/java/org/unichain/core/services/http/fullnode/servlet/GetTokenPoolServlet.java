@@ -42,7 +42,6 @@ public class GetTokenPoolServlet extends HttpServlet {
       tokens.add(itemJson);
     }
     pageJson.put("tokens", tokens);
-
     return pageJson.toJSONString();
   }
 

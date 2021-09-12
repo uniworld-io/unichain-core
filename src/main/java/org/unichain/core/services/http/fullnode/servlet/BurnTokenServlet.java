@@ -32,13 +32,13 @@ public class BurnTokenServlet extends HttpServlet {
     try {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
-      boolean visible = Util.getVisiblePost(contract);
-      BurnTokenContract.Builder build = BurnTokenContract.newBuilder();
+      var visible = Util.getVisiblePost(contract);
+      var build = BurnTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var burnCtx = build.build();
       logger.info("burnToken --> {} {}  {}" , Wallet.encode58Check(burnCtx.getOwnerAddress().toByteArray()), burnCtx.getTokenName(), burnCtx.getAmount());
-      Transaction tx = wallet.createTransactionCapsule(burnCtx, ContractType.BurnTokenContract).getInstance();
-      JSONObject jsonObject = JSONObject.parseObject(contract);
+      var tx = wallet.createTransactionCapsule(burnCtx, ContractType.BurnTokenContract).getInstance();
+      var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {

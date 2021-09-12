@@ -32,13 +32,13 @@ public class MineTokenServlet extends HttpServlet {
     try {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
-      boolean visible = Util.getVisiblePost(contract);
-      MineTokenContract.Builder build = MineTokenContract.newBuilder();
+      var visible = Util.getVisiblePost(contract);
+      var build = MineTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var mineCtx = build.build();
       logger.info("burnToken --> {} {}  {}" , Wallet.encode58Check(mineCtx.getOwnerAddress().toByteArray()), mineCtx.getTokenName(), mineCtx.getAmount());
-      Transaction tx = wallet.createTransactionCapsule(mineCtx, ContractType.MineTokenContract).getInstance();
-      JSONObject jsonObject = JSONObject.parseObject(contract);
+      var tx = wallet.createTransactionCapsule(mineCtx, ContractType.MineTokenContract).getInstance();
+      var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {

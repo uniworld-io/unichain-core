@@ -33,14 +33,13 @@ public class CreateTokenServlet extends HttpServlet {
     try {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
-      boolean visible = Util.getVisiblePost(contract);
-      CreateTokenContract.Builder build = CreateTokenContract.newBuilder();
+      var visible = Util.getVisiblePost(contract);
+      var build = CreateTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
-      logger.info("createToken --> {} --> {} " , Wallet.encode58Check(tokenCtx.getOwnerAddress().toByteArray()), tokenCtx.getName());
-
-      Transaction tx = wallet.createTransactionCapsule(tokenCtx, ContractType.CreateTokenContract).getInstance();
-      JSONObject jsonObject = JSONObject.parseObject(contract);
+      logger.info("createToken --> {} --> {} " , Wallet.encode58Check(tokenCtx.getOwnerAddress().toByteArray()), tokenCtx);
+      var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.CreateTokenContract).getInstance();
+      var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {

@@ -32,15 +32,13 @@ public class TransferTokenServlet extends HttpServlet {
     try {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
-      boolean visible = Util.getVisiblePost(contract);
-      TransferTokenContract.Builder build = TransferTokenContract.newBuilder();
-
+      var visible = Util.getVisiblePost(contract);
+      var build = TransferTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var transferCtx = build.build();
-      logger.info("transferToken --> {} --> {} : {} {}" , Wallet.encode58Check(transferCtx.getOwnerAddress().toByteArray()), transferCtx.getToAddress().toByteArray(), transferCtx.getTokenName(), transferCtx.getAmount());
-
-      Transaction tx = wallet.createTransactionCapsule(transferCtx, ContractType.TransferTokenContract).getInstance();
-      JSONObject jsonObject = JSONObject.parseObject(contract);
+      logger.info("transferToken --> {} --> {} : {}" , Wallet.encode58Check(transferCtx.getOwnerAddress().toByteArray()), Wallet.encode58Check(transferCtx.getToAddress().toByteArray()), transferCtx);
+      var tx = wallet.createTransactionCapsule(transferCtx, ContractType.TransferTokenContract).getInstance();
+      var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {

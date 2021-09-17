@@ -42,6 +42,7 @@ import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
 public class TokenTransferActuator extends AbstractActuator {
+  private static final long FIVE_YEARS = 5*365*24*3600000;
 
   TokenTransferActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -125,7 +126,6 @@ public class TokenTransferActuator extends AbstractActuator {
       long fee = calcFee();
 
       val ctx = this.contract.unpack(TransferTokenContract.class);
-
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
       Assert.notNull(ownerAccountCap, "Owner account not found");
@@ -133,13 +133,14 @@ public class TokenTransferActuator extends AbstractActuator {
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
       Assert.notNull(tokenPool, "Token pool not found: " + ctx.getTokenName());
-
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
-
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
 
       if (ctx.getAvailableTime() > 0) {
-        Assert.isTrue(ctx.getAmount() >= tokenPool.getLot(),"future transfer require at least amount of token : " + tokenPool.getLot());
+        Assert.isTrue (ctx.getAvailableTime() > dbManager.getHeadBlockTimeStamp(), "block time passed available time");
+        Assert.isTrue (ctx.getAvailableTime() <= dbManager.getHeadBlockTimeStamp() + FIVE_YEARS, "available time limited within 5 years from now");
+        Assert.isTrue(ctx.getAvailableTime() < tokenPool.getEndTime(), "available time exceeded token expired time");
+        Assert.isTrue(ctx.getAmount() >= tokenPool.getLot(),"future transfer require minimum amount of : " + tokenPool.getLot());
       }
 
       var toAddress = ctx.getToAddress().toByteArray();
@@ -165,10 +166,6 @@ public class TokenTransferActuator extends AbstractActuator {
 
       Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount() + tokenFee, "not enough token balance");
 
-      if (ctx.getAvailableTime() > 0) {
-        Assert.isTrue(ctx.getAvailableTime() < tokenPool.getEndTime(), "available time exceeded token expired time");
-        Assert.isTrue (ctx.getAvailableTime() > dbManager.getHeadBlockTimeStamp(), "block time passed available time");
-      }
 
       //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1

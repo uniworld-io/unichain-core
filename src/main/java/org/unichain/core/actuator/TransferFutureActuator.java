@@ -26,6 +26,7 @@ import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
 public class TransferFutureActuator extends AbstractActuator {
+  private static final long FIVE_YEARS = 5 * 365 * 24 * 3600000;
 
   TransferFutureActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -73,7 +74,7 @@ public class TransferFutureActuator extends AbstractActuator {
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var amount = ctx.getAmount();
       Assert.isTrue(amount > 0, "Amount must greater than 0.");
-      Assert.isTrue(ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp(), "xpire time should be greater than HeadBlockTime");
+      Assert.isTrue(ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp() && (ctx.getExpireTime() <= dbManager.getHeadBlockTimeStamp() + FIVE_YEARS), "expire time must greater current time, within five years from now");
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
       Assert.isTrue(!Arrays.equals(toAddress, ownerAddress), "Cannot transfer unw to yourself");

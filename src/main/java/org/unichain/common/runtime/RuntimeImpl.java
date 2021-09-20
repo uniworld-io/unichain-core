@@ -57,6 +57,8 @@ import static java.lang.Math.min;
 import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 import static org.unichain.common.runtime.utils.MUtil.*;
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION;
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION_2;
 
 @Slf4j(topic = "VM")
 public class RuntimeImpl implements Runtime {
@@ -175,13 +177,13 @@ public class RuntimeImpl implements Runtime {
     }
   }
 
-  /**
-   @note get account energy limit:
-   - from balance
-   - exclude in-transaction transfer
-   - exclude frozen balance
+   /**
+   * @note: version 2 of get account energy which:
+   * - from balance
+   * - exclude in-transaction transfer
+   * - exclude frozen balance
    */
-  public long getAccountEnergyLimit(AccountCapsule account, long feeLimit, long callValue) {
+  public long getAccountEnergyLimitV2(AccountCapsule account, long feeLimit, long callValue) {
     long ginzaPerEnergy = deposit.getDbManager().loadEnergyGinzaFactor();
     callValue = max(callValue, 0);
     long energyFromBalance =  Math.floorDiv(max(account.getBalance() - callValue, 0), ginzaPerEnergy);
@@ -210,12 +212,14 @@ public class RuntimeImpl implements Runtime {
 
   }
 
-  private long getAccountEnergyLimitWithFloatRatio(AccountCapsule account, long feeLimit, long callValue) {
+  /**
+   * @note: version 1: get account energy with float ratio
+   */
+  private long getAccountEnergyLimitV1(AccountCapsule account, long feeLimit, long callValue) {
     long ginzaPerEnergy = Constant.GINZA_PER_ENERGY;
     if (deposit.getDbManager().getDynamicPropertiesStore().getEnergyFee() > 0) {
       ginzaPerEnergy = deposit.getDbManager().getDynamicPropertiesStore().getEnergyFee();
     }
-    // can change the calc way
     long leftEnergyFromFreeze = energyProcessor.getAccountLeftEnergyFromFreeze(account);
     callValue = max(callValue, 0);
     long energyFromBalance = Math.floorDiv(max(account.getBalance() - callValue, 0), ginzaPerEnergy);
@@ -236,12 +240,11 @@ public class RuntimeImpl implements Runtime {
         energyFromFeeLimit = Math.addExact(leftEnergyFromFreeze, (feeLimit - leftBalanceForEnergyFreeze) / ginzaPerEnergy);
       }
     }
-
     return min(Math.addExact(leftEnergyFromFreeze, energyFromBalance), energyFromFeeLimit);
   }
 
   private long getTotalEnergyLimitWithFloatRatioV2(AccountCapsule creator, AccountCapsule caller, TriggerSmartContract contract, long feeLimit, long callValue) {
-    long callerEnergyLimit = getAccountEnergyLimit(caller, feeLimit, callValue);
+    long callerEnergyLimit = getAccountEnergyLimitV2(caller, feeLimit, callValue);
     if (Arrays.equals(creator.getAddress().toByteArray(), caller.getAddress().toByteArray())) {
       return callerEnergyLimit;
     }
@@ -256,8 +259,8 @@ public class RuntimeImpl implements Runtime {
     }
   }
 
-  private long getTotalEnergyLimitWithFloatRatio(AccountCapsule creator, AccountCapsule caller, TriggerSmartContract contract, long feeLimit, long callValue) {
-    long callerEnergyLimit = getAccountEnergyLimitWithFloatRatio(caller, feeLimit, callValue);
+  private long getTotalEnergyLimitWithFloatRatioV1(AccountCapsule creator, AccountCapsule caller, TriggerSmartContract contract, long feeLimit, long callValue) {
+    long callerEnergyLimit = getAccountEnergyLimitV1(caller, feeLimit, callValue);
     if (Arrays.equals(creator.getAddress().toByteArray(), caller.getAddress().toByteArray())) {
       return callerEnergyLimit;
     }
@@ -276,9 +279,20 @@ public class RuntimeImpl implements Runtime {
 
   public long getTotalEnergyLimit(AccountCapsule creator, AccountCapsule caller, TriggerSmartContract contract, long feeLimit, long callValue) throws ContractValidateException {
     if (Objects.isNull(creator) && VMConfig.allowTvmConstantinople()) {
-      return useHardForkVersion() ? getAccountEnergyLimit(caller, feeLimit, callValue) : getAccountEnergyLimitWithFixRatio(caller, feeLimit, callValue);
+      switch (findBlockVersion()){
+        case BLOCK_VERSION:
+          return getAccountEnergyLimitWithFixRatio(caller, feeLimit, callValue);
+        default:
+          return getAccountEnergyLimitV2(caller, feeLimit, callValue);
+      }
     }
-    return useHardForkVersion() ? getTotalEnergyLimitWithFloatRatioV2(creator, caller, contract, feeLimit, callValue) : getTotalEnergyLimitWithFloatRatio(creator, caller, contract, feeLimit, callValue);
+
+    switch (findBlockVersion()){
+      case BLOCK_VERSION:
+        return getTotalEnergyLimitWithFloatRatioV1(creator, caller, contract, feeLimit, callValue);
+      default:
+        return getTotalEnergyLimitWithFloatRatioV2(creator, caller, contract, feeLimit, callValue);
+    }
   }
 
   private boolean isCheckTransaction() {
@@ -371,9 +385,17 @@ public class RuntimeImpl implements Runtime {
       }
 
       AccountCapsule creator = this.deposit.getAccount(newSmartContract.getOriginAddress().toByteArray());
+
       //@note estimate energy limit affordable to execute TX
-      //use old fee policy or new fee policy
-      long energyLimit = useHardForkVersion() ? getAccountEnergyLimit(creator, feeLimit, callValue): getAccountEnergyLimitWithFloatRatio(creator, feeLimit, callValue);
+      long energyLimit;
+      switch (findBlockVersion()){
+        case BLOCK_VERSION:
+          energyLimit = getAccountEnergyLimitV1(creator, feeLimit, callValue);
+          break;
+        default:
+          energyLimit = getAccountEnergyLimitV2(creator, feeLimit, callValue);
+          break;
+      }
 
       checkTokenValueAndId(tokenValue, tokenId);
 
@@ -692,18 +714,7 @@ public class RuntimeImpl implements Runtime {
     return runtimeError;
   }
 
-  //detect that it's time to play hardfork version
-  private boolean useHardForkVersion(){
-    long hardForkBlockNumber = Args.getInstance().getHardforkBlockNumber();
-    long headBlockNumber;
-    if(executorType == ExecutorType.ET_PRE_TYPE)
-    {
-      headBlockNumber = deposit.getDbManager().getDynamicPropertiesStore().getLatestBlockHeaderNumber();
-      return headBlockNumber + 1 >= hardForkBlockNumber;
-    }
-    else{
-      headBlockNumber = blockCap.getNum();
-      return headBlockNumber >= hardForkBlockNumber;
-    }
+  private int findBlockVersion(){
+    return  (blockCap == null) ? deposit.getDbManager().getDynamicPropertiesStore().getHardForkVersion() : blockCap.getInstance().getBlockHeader().getRawData().getVersion();
   }
 }

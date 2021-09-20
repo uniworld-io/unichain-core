@@ -183,8 +183,6 @@ public class SolidityNode {
       return;
     }
 
-    logger.info("use hardfork block number " + Args.getInstance().getHardforkBlockNumber());
-
     Application appT = ApplicationFactory.create(context);
     FullNode.shutdown(appT);
 

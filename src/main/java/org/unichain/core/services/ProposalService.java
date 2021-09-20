@@ -1,11 +1,15 @@
 package org.unichain.core.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 import org.unichain.core.capsule.ProposalCapsule;
+import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractValidateException;
 
 import java.util.Map;
+
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION;
 
 /**
  * Notice:
@@ -56,7 +60,8 @@ public class ProposalService {
     WITNESS_55_PAY_PER_BLOCK(31), //drop, 31
     ALLOW_TVM_SOLIDITY_059(32), // 1, 32
     //@todo review and remove
-    ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO(33); // 10, 33
+    ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO(33), // 10, 33
+    HARD_FORK(34); // block version 34
 
     ProposalType(long code) {
       this.code = code;
@@ -259,6 +264,12 @@ public class ProposalService {
         }
         break;
       }
+      case HARD_FORK: {
+        Assert.isTrue(value >= 2 && value <= Integer.MAX_VALUE, "hardfork version should greater than version 1 and not greater than MAX_INTEGER :" + Integer.MAX_VALUE);
+        Assert.isTrue(Parameter.BLOCK_VERSION_SUPPORTED.contains(value), "hardfork version not supported by software :" + value);
+        Assert.isTrue(value > manager.getDynamicPropertiesStore().getHardForkVersion(), "hardfork version must be greater than current version");
+        break;
+      }
       default:
         break;
     }
@@ -421,6 +432,10 @@ public class ProposalService {
         }
         case WITNESS_55_PAY_PER_BLOCK: {
           manager.getDynamicPropertiesStore().saveWitness55PayPerBlock(entry.getValue());
+          break;
+        }
+        case HARD_FORK: {
+          manager.getDynamicPropertiesStore().saveHardForkVersion(entry.getValue());
           break;
         }
         default:

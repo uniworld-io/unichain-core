@@ -58,8 +58,6 @@ public class FullNode {
       logger.info("not in debug mode, it will check energy time");
     }
 
-    logger.info("use hardfork block number " + Args.getInstance().getHardforkBlockNumber());
-
     DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
     beanFactory.setAllowCircularReferences(false);
     UnichainApplicationContext context = new UnichainApplicationContext(beanFactory);

@@ -59,6 +59,8 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
 
   private static final byte[] WITNESS_STANDBY_ALLOWANCE = "WITNESS_STANDBY_ALLOWANCE".getBytes();
 
+  private static final byte[] HARD_FORK_VERSION = "HARD_FORK_VERSION".getBytes();
+
   private static class DynamicResourceProperties {
     private static final byte[] ONE_DAY_NET_LIMIT = "ONE_DAY_NET_LIMIT".getBytes();
     //public free bandwidth
@@ -824,6 +826,30 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
         .orElseThrow(
             () -> new IllegalArgumentException("not found WITNESS_STANDBY_ALLOWANCE"));
   }
+
+  /**
+   * @note
+   * - save hardfork version
+   * - @fixme validate block version
+   */
+  public void saveHardForkVersion(long blockVersion) {
+    logger.debug("HARD_FORK_VERSION:" + blockVersion);
+    this.put(HARD_FORK_VERSION, new BytesCapsule(ByteArray.fromLong(blockVersion)));
+  }
+
+  /**
+   * @note
+   * - get block version
+   * - if not set that means version version 1
+   */
+  public int getHardForkVersion() {
+    return Optional.ofNullable(getUnchecked(HARD_FORK_VERSION))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .map(version -> version.intValue())
+            .orElse(ChainConstant.BLOCK_VERSION);
+  }
+
 
   public void saveOneDayNetLimit(long oneDayNetLimit) {
     this.put(DynamicResourceProperties.ONE_DAY_NET_LIMIT,

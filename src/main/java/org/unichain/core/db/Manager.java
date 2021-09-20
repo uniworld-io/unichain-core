@@ -14,6 +14,8 @@ import javafx.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
 import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.DateTime;
 import org.spongycastle.util.encoders.Hex;
@@ -28,9 +30,11 @@ import org.unichain.common.logsfilter.capsule.TriggerCapsule;
 import org.unichain.common.logsfilter.trigger.ContractTrigger;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.common.overlay.message.Message;
+import org.unichain.common.runtime.Runtime;
 import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.utils.*;
 import org.unichain.core.Constant;
+import org.unichain.core.Wallet;
 import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
 import org.unichain.core.capsule.utils.BlockUtil;
@@ -64,10 +68,11 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
-import static org.unichain.core.config.Parameter.ChainConstant.SOLIDIFIED_THRESHOLD;
+import static org.unichain.core.config.Parameter.ChainConstant.*;
 import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PENDING;
 
 
@@ -653,6 +658,15 @@ public class Manager {
     this.getAccountStore().put(account.createDbKey(), account);
   }
 
+  void validateTxAgainBlockVersion(TransactionCapsule unx, BlockCapsule blockCapsule) throws ContractValidateException{
+    val blockVersion = findBlockVersion(blockCapsule);
+    var txs = unx.getInstance().getRawData().getContractList();
+    for(var tx : txs){
+        if(blockVersion < TransactionCapsule.getMinSupportedBlockVersion(tx.getType()))
+          throw new ContractValidateException(String.format("transaction type %s not supported by this block version %s", tx.getType(), blockVersion));
+    };
+  }
+
   void validateTapos(TransactionCapsule transactionCapsule) throws TaposException {
     byte[] refBlockHash = transactionCapsule.getInstance().getRawData().getRefBlockHash().toByteArray();
     byte[] refBlockNumBytes = transactionCapsule.getInstance().getRawData().getRefBlockBytes().toByteArray();
@@ -742,7 +756,19 @@ public class Manager {
     return true;
   }
 
-  public void consumeMultiSignFee(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException {
+  public void consumeMultiSignFee(TransactionCapsule unx, TransactionTrace trace, BlockCapsule blockCapsule) throws AccountResourceInsufficientException, ContractExeException {
+    val blockVersion = findBlockVersion(blockCapsule);
+    switch (blockVersion){
+      case BLOCK_VERSION:
+        consumeMultiSignFeeV1(unx, trace);
+        break;
+      default:
+        consumeMultiSignFeeV2(unx, trace);
+        break;
+    }
+  }
+
+  public void consumeMultiSignFeeV2(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException {
     if (unx.getInstance().getSignatureCount() > 1) {
       long fee = getDynamicPropertiesStore().getMultiSignFee();
 
@@ -786,34 +812,32 @@ public class Manager {
     }
   }
 
-  public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule blockCapsule) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    if(useHardForkVersion(blockCapsule)){
-      logger.info("consume bw use hardfork version!");
-      (new BandwidthProcessorV2(this)).consume(unx, trace);
-    }
-    else
-      (new BandwidthProcessor(this)).consume(unx, trace);
-  }
-
-  //detect that it's time to play hardfork version
-  private boolean useHardForkVersion(BlockCapsule blockCapsule){
-    long hardForkBlockNumber = Args.getInstance().getHardforkBlockNumber();
-    long headBlockNumber;
-    if(blockCapsule == null)
-    {
-      headBlockNumber = getDynamicPropertiesStore().getLatestBlockHeaderNumber();
-      return headBlockNumber + 1 >= hardForkBlockNumber;
-    }
-    else{
-      headBlockNumber = blockCapsule.getNum();
-      return headBlockNumber >= hardForkBlockNumber;
+  public void consumeMultiSignFeeV1(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException{
+    if (unx.getInstance().getSignatureCount() > 1) {
+      var fee = getDynamicPropertiesStore().getMultiSignFee();
+      for (Contract contract : unx.getInstance().getRawData().getContractList()) {
+            var accountCapsule = getAccountStore().get(TransactionCapsule.getOwner(contract));
+            try {
+              chargeFee(accountCapsule, fee);
+            } catch (BalanceInsufficientException e) {
+              throw new AccountResourceInsufficientException("Account Insufficient  balance[" + fee + "] to MultiSign");
+            }
+      }
+      trace.getReceipt().setMultiSignFee(fee);
     }
   }
 
-  private boolean useHardForkVersionWhenGenerateBlock(long blockNumber){
-    return blockNumber >= Args.getInstance().getHardforkBlockNumber();
+  public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule blockCapsule) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException, ContractExeException {
+    int blockVersion = findBlockVersion(blockCapsule);
+    switch (blockVersion){
+      case BLOCK_VERSION:
+        (new BandwidthProcessor(this)).consume(unx, trace);
+        break;
+      default:
+        (new BandwidthProcessorV2(this)).consume(unx, trace);
+        break;
+    }
   }
-
 
   /**
    * when switch fork need erase blocks on fork branch.
@@ -848,8 +872,8 @@ public class Manager {
         block.getTransactions().size());
   }
 
-  /*
-    @note
+  /**
+    @note Apply block
     - apply block on main chain
     - if any error when process blocks (tx ..), then throw exception
     - index main chain block: block store & index
@@ -866,7 +890,6 @@ public class Manager {
       this.transactionRetStore.put(ByteArray.fromLong(block.getNum()), block.getResult());
     }
 
-    //@note update fork with block version: just notify new hardfork with different block version
     updateFork(block);
     if (System.currentTimeMillis() - block.getTimeStamp() >= 60_000) {
       revokingStore.setMaxFlushCount(SnapshotManager.DEFAULT_MAX_FLUSH_COUNT);
@@ -918,7 +941,7 @@ public class Manager {
       Collections.reverse(forkBranch);
       for (KhaosBlock kForkBlock : forkBranch) {
         Exception exception = null;
-        // todo process the exception carefully later
+        //@todo process the exception carefully later
         try (ISession tmpSession = revokingStore.buildSession()) {
           applyBlock(kForkBlock.getBlk());
           tmpSession.commit();
@@ -954,7 +977,7 @@ public class Manager {
             List<KhaosBlock> second = new ArrayList<>(branchPair.getValue());
             Collections.reverse(second);
             for (KhaosBlock khaosBlock : second) {
-              //@todo  process the exception carefully later
+              //@todo process the exception carefully later
               try (ISession tmpSession = revokingStore.buildSession()) {
                 applyBlock(khaosBlock.getBlk());
                 tmpSession.commit();
@@ -976,9 +999,6 @@ public class Manager {
     }
   }
 
-  /**
-   * save a block.
-   */
   public synchronized void pushBlock(final BlockCapsule block) throws ValidateSignatureException, ContractValidateException, ContractExeException,
       UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException,
       TaposException, TooBigTransactionException, TooBigTransactionResultException, DupTransactionException, TransactionExpirationException,
@@ -1002,7 +1022,7 @@ public class Manager {
         witnessService.checkDupWitness(block);
       }
 
-      /*
+      /**
       @note
         - put to khaos db, return higher block as head:
         - if a block of forked chain come with invalid order, it will be rejected due to unlinked block
@@ -1016,8 +1036,8 @@ public class Manager {
           return;
         }
       } else {
-        /*
-          @note this means that:
+        /**
+          @note this means:
           - if we got a forked, lower block: just put in khaos db, don't apply it > nice!
           - if it's a forward block, just apply it
           - if it's a longer, valid fork branch: switch to forked branch
@@ -1026,7 +1046,7 @@ public class Manager {
           return;
         }
 
-        /*
+        /**
           @note switch fork:
           - newBlock always the higher block. if incoming block is valid, lower, current head returned so no fork found
           - else switch fork, also means:
@@ -1075,7 +1095,7 @@ public class Manager {
           return;
         }
 
-        /*
+        /**
           @note
           + advance new session to apply this block
           + apply block to main chain
@@ -1220,7 +1240,7 @@ public class Manager {
   /**
    * Process transaction.
    */
-  public TransactionInfo processTransaction(final TransactionCapsule txCap, BlockCapsule blockCap)
+    public TransactionInfo processTransaction(final TransactionCapsule txCap, BlockCapsule blockCap)
           throws ValidateSignatureException, ContractValidateException, ContractExeException,
                   AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException,
                   TooBigTransactionResultException, DupTransactionException, TaposException, ReceiptCheckErrException,
@@ -1229,6 +1249,7 @@ public class Manager {
       return null;
     }
 
+    validateTxAgainBlockVersion(txCap, blockCap);
     validateTapos(txCap);
     validateCommon(txCap);
 
@@ -1246,7 +1267,7 @@ public class Manager {
     txCap.setUnxTrace(trace);
 
     consumeBandwidth(txCap, trace, blockCap);
-    consumeMultiSignFee(txCap, trace);
+    consumeMultiSignFee(txCap, trace, blockCap);
 
     VMConfig.initVmHardFork();
     VMConfig.initAllowMultiSign(dynamicPropertiesStore.getAllowMultiSign());
@@ -1256,6 +1277,7 @@ public class Manager {
 
     trace.init(blockCap, eventPluginLoaded);
     trace.checkIsConstant();
+
     /**
      * + setup simple tx that call actuator to do bizz & charge fee
      * + play op code & charge energy
@@ -1279,11 +1301,10 @@ public class Manager {
     }
 
     /** @note
-     * + charge energy fee with smart contract call or deply
+     * + charge energy fee with smart contract call or deploy
      * + with token transfer, dont use energy so don't charge fee
      */
-
-    trace.finalization();
+    trace.finalization(findBlockVersion(blockCap));
 
     if (Objects.nonNull(blockCap) && getDynamicPropertiesStore().supportVM()) {
       txCap.setResult(trace.getRuntime());
@@ -1336,9 +1357,9 @@ public class Manager {
     }
     // }
 
-    final long timestamp = this.dynamicPropertiesStore.getLatestBlockHeaderTimestamp();
-    final long number = this.dynamicPropertiesStore.getLatestBlockHeaderNumber();
-    final Sha256Hash preHash = this.dynamicPropertiesStore.getLatestBlockHeaderHash();
+    val timestamp = this.dynamicPropertiesStore.getLatestBlockHeaderTimestamp();
+    val number = this.dynamicPropertiesStore.getLatestBlockHeaderNumber();
+    val preHash = this.dynamicPropertiesStore.getLatestBlockHeaderHash();
 
     // judge create block time
     if (when < timestamp) {
@@ -1346,8 +1367,9 @@ public class Manager {
     }
 
     long postponedUnxCount = 0;
-    int blockVersion = useHardForkVersionWhenGenerateBlock(number + 1) ? ChainConstant.BLOCK_VERSION_2 : ChainConstant.BLOCK_VERSION;
-    final BlockCapsule blockCapsule = new BlockCapsule(blockVersion, number + 1, preHash, when, witnessCapsule.getAddress());
+    //@todo review
+    val blockVersion = this.dynamicPropertiesStore.getHardForkVersion();
+    val blockCapsule = new BlockCapsule(blockVersion, number + 1, preHash, when, witnessCapsule.getAddress());
     blockCapsule.generatedByMyself = true;
     /*
       @note
@@ -1363,7 +1385,7 @@ public class Manager {
       logger.warn("Witness permission is wrong");
       return null;
     }
-    TransactionRetCapsule transationRetCapsule = new TransactionRetCapsule(blockCapsule);
+    TransactionRetCapsule txRetCapsule = new TransactionRetCapsule(blockCapsule);
 
     Set<String> accountSet = new HashSet<>();
     Iterator<TransactionCapsule> iterator = pendingTransactions.iterator();
@@ -1407,16 +1429,16 @@ public class Manager {
         - process tx
         - merge back to common session and create one consistent block's view
        */
-      try (ISession tmpSeesion = revokingStore.buildSession()) {
+      try (ISession tmpSession = revokingStore.buildSession()) {
         accountStateCallBack.preExeTrans();
-        TransactionInfo result = processTransaction(tx, blockCapsule);
+        var result = processTransaction(tx, blockCapsule);
         accountStateCallBack.exeTransFinish();
-        tmpSeesion.merge();
+        tmpSession.merge();
         // push into block
         blockCapsule.addTransaction(tx);
 
         if (Objects.nonNull(result)) {
-          transationRetCapsule.addTransactionInfo(result);
+          txRetCapsule.addTransactionInfo(result);
         }
         if (fromPending) {
           iterator.remove();
@@ -1473,7 +1495,7 @@ public class Manager {
     logger.info("postponedUnxCount[" + postponedUnxCount + "],UnxLeft[" + pendingTransactions.size() + "],repushUnxCount[" + repushTransactions.size() + "]");
     blockCapsule.setMerkleRoot();
     blockCapsule.sign(privateKey);
-    blockCapsule.setResult(transationRetCapsule);
+    blockCapsule.setResult(txRetCapsule);
 
     if (unichainNetService != null) {
       unichainNetService.fastForward(new BlockMessage(blockCapsule));
@@ -1552,13 +1574,14 @@ public class Manager {
       AccountResourceInsufficientException, TaposException, TooBigTransactionException,
       DupTransactionException, TransactionExpirationException, ValidateScheduleException,
       ReceiptCheckErrException, VMIllegalException, TooBigTransactionResultException, BadBlockException {
+
     //@todo set revoking db max size.
     if (!witnessController.validateWitnessSchedule(block)) {
       throw new ValidateScheduleException("validateWitnessSchedule error");
     }
-    //reset BlockEnergyUsage
+
     this.dynamicPropertiesStore.saveBlockEnergyUsage(0);
-    //parallel check sign
+
     if (!block.generatedByMyself) {
       try {
         preValidateTransactionSign(block);
@@ -1568,7 +1591,7 @@ public class Manager {
       }
     }
 
-    TransactionRetCapsule transationRetCapsule = new TransactionRetCapsule(block);
+    TransactionRetCapsule transactionRetCapsule = new TransactionRetCapsule(block);
 
     try {
       accountStateCallBack.preExecute(block);
@@ -1581,7 +1604,7 @@ public class Manager {
         TransactionInfo result = processTransaction(transactionCapsule, block);
         accountStateCallBack.exeTransFinish();
         if (Objects.nonNull(result)) {
-          transationRetCapsule.addTransactionInfo(result);
+          transactionRetCapsule.addTransactionInfo(result);
         }
       }
       accountStateCallBack.executePushFinish();
@@ -1589,10 +1612,10 @@ public class Manager {
       accountStateCallBack.exceptionFinish();
     }
 
-    block.setResult(transationRetCapsule);
+    block.setResult(transactionRetCapsule);
     payReward(block);
-    boolean needMaint = needMaintenance(block.getTimeStamp());
-    if (needMaint) {
+    boolean needMaintain = needMaintenance(block.getTimeStamp());
+    if (needMaintain) {
       if (block.getNum() == 1) {
         this.dynamicPropertiesStore.updateNextMaintenanceTime(block.getTimeStamp());
       } else {
@@ -1609,7 +1632,7 @@ public class Manager {
     updateTransHashCache(block);
     updateRecentBlock(block);
     updateDynamicProperties(block);
-    updateMaintenanceState(needMaint);
+    updateMaintenanceState(needMaintain);
   }
 
 
@@ -2053,5 +2076,9 @@ public class Manager {
   public long loadEnergyGinzaFactor(){
     long dynamicEnergyFee = getDynamicPropertiesStore().getEnergyFee();
     return dynamicEnergyFee > 0 ? dynamicEnergyFee : Constant.GINZA_PER_ENERGY;
+  }
+
+  private int findBlockVersion(BlockCapsule blockCapsule){
+    return  (blockCapsule == null) ? this.dynamicPropertiesStore.getHardForkVersion() : blockCapsule.getInstance().getBlockHeader().getRawData().getVersion();
   }
 }

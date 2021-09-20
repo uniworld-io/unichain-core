@@ -56,6 +56,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION;
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION_2;
 import static org.unichain.core.exception.P2pException.TypeEnum.PROTOBUF_ERROR;
 import static org.unichain.protos.Contract.*;
 
@@ -923,5 +925,22 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       return null;
     }
     return this.transaction.getRet(0).getContractRet();
+  }
+
+  public static int getMinSupportedBlockVersion(ContractType txType){
+    switch (txType){
+      case CreateTokenContract:
+      case ContributeTokenPoolFeeContract:
+      case UpdateTokenParamsContract:
+      case MineTokenContract:
+      case BurnTokenContract:
+      case TransferTokenContract:
+      case WithdrawFutureTokenContract:
+      case FutureTransferContract:
+      case FutureWithdrawContract:
+        return BLOCK_VERSION_2;
+      default:
+        return BLOCK_VERSION;
+    }
   }
 }

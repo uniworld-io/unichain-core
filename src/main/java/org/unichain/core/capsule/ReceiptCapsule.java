@@ -96,7 +96,7 @@ public class ReceiptCapsule {
   }
 
   /**
-   * pay energy bill new version: directly charge from account's balance
+   * @note: pay energy bill block version 2: directly charge from account's balance
    */
   public void payEnergyBillV2(Manager manager, AccountCapsule origin, AccountCapsule caller, long sharedPercent) throws BalanceInsufficientException {
     if (receipt.getEnergyUsageTotal() <= 0) {
@@ -111,11 +111,9 @@ public class ReceiptCapsule {
     if (caller.getAddress().equals(origin.getAddress())) {
       payEnergyBillV2(manager, caller, receipt.getEnergyUsageTotal());
     } else {
-      //charge origin account
       long originUsage = Math.multiplyExact(receipt.getEnergyUsageTotal(), sharedPercent) / 100;
       originUsage = chargeOriginUsage(manager, origin, originUsage);
       this.setOriginEnergyUsage(originUsage);
-      //charge caller account
       long callerUsage = receipt.getEnergyUsageTotal() - originUsage;
       payEnergyBillV2(manager, caller, callerUsage);
     }
@@ -126,7 +124,6 @@ public class ReceiptCapsule {
     manager.getDynamicPropertiesStore().saveBlockEnergyUsage(blockEnergyUsage);
 
     long ginzaPerEnergy = manager.loadEnergyGinzaFactor();
-
     long energyFee = usage * ginzaPerEnergy;
     this.setEnergyUsage(0);
     this.setEnergyFee(energyFee);
@@ -141,7 +138,7 @@ public class ReceiptCapsule {
   }
 
   /**
-   * pay energy bill, old version
+   * pay energy bill block version 1
    */
   public void payEnergyBill(Manager manager, AccountCapsule origin, AccountCapsule caller, long percent, long originEnergyLimit, EnergyProcessor energyProcessor, long now) throws BalanceInsufficientException {
     if (receipt.getEnergyUsageTotal() <= 0) {
@@ -212,8 +209,8 @@ public class ReceiptCapsule {
 
   /**
    @note
-   - charge origin fee at most
-   - return actually usage
+    - charge origin fee at most
+    - return actually usage
    */
   private long chargeOriginUsage(Manager manager, AccountCapsule origin, long usage) {
     long ginzaEnergyFactor = manager.loadEnergyGinzaFactor();

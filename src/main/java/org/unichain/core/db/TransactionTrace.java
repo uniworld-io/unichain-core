@@ -29,6 +29,7 @@ import org.unichain.protos.Protocol.Transaction.Result.contractResult;
 import java.util.Objects;
 
 import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.*;
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION;
 
 @Slf4j(topic = "TransactionTrace")
 public class TransactionTrace {
@@ -86,7 +87,6 @@ public class TransactionTrace {
     return this.unxType == UNW_CONTRACT_CALL_TYPE || this.unxType == UNW_CONTRACT_CREATION_TYPE;
   }
 
-  //pre transaction check
   public void init(BlockCapsule blockCap, boolean eventPluginLoaded) {
     blockCapsule = blockCap;
     txStartTimeInMs = System.currentTimeMillis();
@@ -145,15 +145,16 @@ public class TransactionTrace {
     }
   }
 
-  public void finalization() throws ContractExeException {
+  public void finalization(int blockVersion) throws ContractExeException {
     try {
-      if(useHardForkVersion())
-      {
-        logger.info("pay with hardfork version!");
-        payV2();
+      switch (blockVersion){
+        case BLOCK_VERSION:
+          payEnergyV1();
+          break;
+        default:
+          payEnergyV2();
+          break;
       }
-      else
-        pay();
     } catch (BalanceInsufficientException e) {
       throw new ContractExeException(e.getMessage());
     }
@@ -161,11 +162,9 @@ public class TransactionTrace {
   }
 
   /**
-   * @note
-   * - pay energy bill
-   * - directly charge fee from balance
+   * @note pay energy bill using v2 which directly charge fee from balance
    */
-  public void payV2() throws BalanceInsufficientException {
+  public void payEnergyV2() throws BalanceInsufficientException {
     byte[] originAccount;
     byte[] callerAccount;
     long percent = 0;
@@ -194,7 +193,7 @@ public class TransactionTrace {
   /**
    * pay actually bill(include ENERGY and storage).
    */
-  public void pay() throws BalanceInsufficientException {
+  public void payEnergyV1() throws BalanceInsufficientException {
     byte[] originAccount;
     byte[] callerAccount;
     long percent = 0;
@@ -323,20 +322,5 @@ public class TransactionTrace {
 
   public Runtime getRuntime() {
     return runtime;
-  }
-
-  //detect that it's time to play hardfork version
-  private boolean useHardForkVersion(){
-    long hardForkBlockNumber = Args.getInstance().getHardforkBlockNumber();
-    long headBlockNumber;
-    if(blockCapsule == null)
-    {
-      headBlockNumber = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderNumber();
-      return headBlockNumber + 1 >= hardForkBlockNumber;
-    }
-    else{
-      headBlockNumber = blockCapsule.getNum();
-      return headBlockNumber >= hardForkBlockNumber;
-    }
   }
 }

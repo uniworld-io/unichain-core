@@ -2,7 +2,15 @@ package org.unichain.core.config;
 
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 public class Parameter {
+  /**
+   * @critical: all supported version add here
+   */
+  public static final Set<Integer> BLOCK_VERSION_SUPPORTED = new HashSet<>(Arrays.asList(ChainConstant.BLOCK_VERSION, ChainConstant.BLOCK_VERSION_2));
 
   public class ChainConstant {
     /**
@@ -29,6 +37,10 @@ public class Parameter {
     public static final int BLOCK_FILLED_SLOTS_NUMBER = 56; 
     public static final int MAX_VOTE_NUMBER = 30;
     public static final int MAX_FROZEN_NUMBER = 1;
+
+    /**
+     * @note critical: all available block version must declare here
+     */
     public static final int BLOCK_VERSION = 1;
     public static final int BLOCK_VERSION_2 = 2;
   }
@@ -76,12 +88,6 @@ public class Parameter {
     public static final int LIMIT_MULTIPLIER = 1000; //s
   }
 
-  @Deprecated
-  public class ForkBlockVersionConsts {
-    public static final int START_NEW_TRANSACTION = 4;
-    public static final int ENERGY_LIMIT = 5;
-  }
-
   public enum ForkBlockVersionEnum {
     VERSION_1_0(1),
     VERSION_2_0(2);
@@ -93,5 +99,4 @@ public class Parameter {
       this.value = value;
     }
   }
-
 }

@@ -88,8 +88,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
       }
 
       /**
-       * if create new account: just use create new account fee then quit
-       * @fixme duplication of charging fee: this phase & actuator phase ?
+       * @todo review duplication of charging fee: this phase & actuator phase
        */
       if (isContractCreateNewAccount(contract)){
         if(contract.getType() == ContractType.TransferTokenContract)

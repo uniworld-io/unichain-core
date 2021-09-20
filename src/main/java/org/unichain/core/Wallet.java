@@ -353,7 +353,10 @@ public class Wallet {
   }
 
   /**
-   * Broadcast a transaction.
+   * Broadcast a transaction:
+   * - check peer status
+   * - save to tx pool, play snapshot
+   * - broadcast to peers
    */
   public GrpcAPI.Return broadcastTransaction(Transaction signedTransaction) {
     GrpcAPI.Return.Builder builder = GrpcAPI.Return.newBuilder();
@@ -402,10 +405,8 @@ public class Wallet {
         tx.resetResult();
       }
 
-      //push tx
       dbManager.pushTransaction(tx);
 
-      //broadcast to other nodes with origin tx
       unichainNetService.broadcast(message);
       logger.info("Broadcast transaction {} successfully.", tx.getTransactionId());
       return builder.setResult(true).setCode(response_code.SUCCESS).build();

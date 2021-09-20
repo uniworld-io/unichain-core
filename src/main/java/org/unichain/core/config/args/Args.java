@@ -97,11 +97,6 @@ public class Args {
 
   @Getter
   @Setter
-  @Parameter(names = {"--hardfork"})
-  private long hardforkBlockNumber = 1000000;
-
-  @Getter
-  @Setter
   @Parameter(names = {"--max-connect-number"})
   private int maxHttpConnectNumber = 50;
 

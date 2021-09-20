@@ -265,6 +265,7 @@ public class ProposalService {
         break;
       }
       case HARD_FORK: {
+        logger.info("validating hardfork proposal --> {}", value);
         Assert.isTrue(value >= 2 && value <= Integer.MAX_VALUE, "hardfork version should greater than version 1 and not greater than MAX_INTEGER :" + Integer.MAX_VALUE);
         Assert.isTrue(Parameter.BLOCK_VERSION_SUPPORTED.contains(value), "hardfork version not supported by software :" + value);
         Assert.isTrue(value > manager.getDynamicPropertiesStore().getHardForkVersion(), "hardfork version must be greater than current version");
@@ -435,6 +436,7 @@ public class ProposalService {
           break;
         }
         case HARD_FORK: {
+          logger.info("saving hardfork proposal version --> {}", entry.getValue());
           manager.getDynamicPropertiesStore().saveHardForkVersion(entry.getValue());
           break;
         }

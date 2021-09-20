@@ -1,6 +1,8 @@
 package org.unichain.core.net.messagehandler;
 
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -93,6 +95,16 @@ public class BlockMsgHandler implements UnichainMsgHandler {
   }
 
   private void processBlock(PeerConnection peer, BlockCapsule block) throws P2pException {
+    /**
+     * @todo review: check hard-forked chain
+     */
+    val currentVersion = unichainNetDelegate.getRunningBlockVersion();
+    var blockVersion = block.getInstance().getBlockHeader().getRawData().getVersion();
+    if(blockVersion < currentVersion)
+    {
+      throw new P2pException(TypeEnum.HARD_FORKED, String.format("receive lower block version: %s, current version %s --> assume hardforked!", blockVersion, currentVersion));
+    }
+
     BlockId blockId = block.getBlockId();
     if (!unichainNetDelegate.containBlock(block.getParentBlockId())) {
       logger.warn("Get unlink block {} from {}, head is {}.", blockId.getString(), peer.getInetAddress(), unichainNetDelegate.getHeadBlockId().getString());

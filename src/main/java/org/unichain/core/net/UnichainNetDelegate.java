@@ -218,4 +218,9 @@ public class UnichainNetDelegate {
       throw new P2pException(TypeEnum.BAD_BLOCK, e);
     }
   }
+
+  //@todo review: is it solid or snapshot version ?
+  public int getRunningBlockVersion(){
+    return dbManager.getDynamicPropertiesStore().getHardForkVersion();
+  }
 }

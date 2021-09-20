@@ -763,6 +763,7 @@ public class Manager {
         consumeMultiSignFeeV1(unx, trace);
         break;
       default:
+        logger.info("using consumeMultiSignFeeV2");
         consumeMultiSignFeeV2(unx, trace);
         break;
     }
@@ -834,6 +835,7 @@ public class Manager {
         (new BandwidthProcessor(this)).consume(unx, trace);
         break;
       default:
+        logger.info("using BandwidthProcessorV2");
         (new BandwidthProcessorV2(this)).consume(unx, trace);
         break;
     }
@@ -1367,7 +1369,6 @@ public class Manager {
     }
 
     long postponedUnxCount = 0;
-    //@todo review
     val blockVersion = this.dynamicPropertiesStore.getHardForkVersion();
     val blockCapsule = new BlockCapsule(blockVersion, number + 1, preHash, when, witnessCapsule.getAddress());
     blockCapsule.generatedByMyself = true;

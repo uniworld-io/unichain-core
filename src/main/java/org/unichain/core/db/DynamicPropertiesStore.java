@@ -827,11 +827,6 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
             () -> new IllegalArgumentException("not found WITNESS_STANDBY_ALLOWANCE"));
   }
 
-  /**
-   * @note
-   * - save hardfork version
-   * - @fixme validate block version
-   */
   public void saveHardForkVersion(long blockVersion) {
     logger.debug("HARD_FORK_VERSION:" + blockVersion);
     this.put(HARD_FORK_VERSION, new BytesCapsule(ByteArray.fromLong(blockVersion)));

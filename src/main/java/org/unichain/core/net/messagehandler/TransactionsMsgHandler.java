@@ -119,8 +119,7 @@ public class TransactionsMsgHandler implements UnichainMsgHandler {
 
   private void handleTransaction(PeerConnection peer, TransactionMessage unx) {
     if (peer.isDisconnect()) {
-      logger.warn("Drop unx {} from {}, peer is disconnect.", unx.getMessageId(),
-          peer.getInetAddress());
+      logger.warn("Drop unx {} from {}, peer is disconnect.", unx.getMessageId(), peer.getInetAddress());
       return;
     }
 

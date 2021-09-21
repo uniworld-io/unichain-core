@@ -149,7 +149,7 @@ public class AdvService {
     if (msg instanceof BlockMessage) {
       BlockMessage blockMsg = (BlockMessage) msg;
       item = new Item(blockMsg.getMessageId(), InventoryType.BLOCK);
-      logger.info("Ready to broadcast block {}", blockMsg.getBlockId().getString());
+      logger.info("Ready to broadcast block {}", blockMsg.getBlockCapsule());
       blockMsg.getBlockCapsule().getTransactions().forEach(transactionCapsule -> {
         Sha256Hash tid = transactionCapsule.getTransactionId();
         invToSpread.remove(tid);

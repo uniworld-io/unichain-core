@@ -867,9 +867,10 @@ public class Manager {
     block.generatedByMyself = true;
     long start = System.currentTimeMillis();
     pushBlock(block);
-    logger.info("push block cost:{}ms, blockNum:{}, blockHash:{}, unx count:{}",
+    logger.info("push block cost:{}ms, blockNum:{}, blockVersion {}, blockHash:{}, unx count:{}",
         System.currentTimeMillis() - start,
         block.getNum(),
+        findBlockVersion(block),
         block.getBlockId(),
         block.getTransactions().size());
   }

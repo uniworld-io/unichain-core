@@ -119,9 +119,8 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
                 continue;
               break;
             default:
-              if (useTransactionFee(ownerAccountCap, bytesSize, trace)) {
+              if (useTransactionFee(ownerAccountCap, bytesSize, trace))
                 continue;
-              }
               break;
           }
         }
@@ -130,7 +129,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         }
 
         long fee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytesSize;
-        throw new AccountResourceInsufficientException("Account Insufficient balance[" + fee + "]");
+        throw new AccountResourceInsufficientException("Account or token pool insufficient balance[" + fee + "]");
     }
   }
 

@@ -43,6 +43,14 @@ public class Parameter {
      */
     public static final int BLOCK_VERSION = 1;
     public static final int BLOCK_VERSION_2 = 2;
+
+    /**
+     * max time duration
+     */
+    public static final long MAX_FUTURE_TRANSFER_FIVE_YEARS = 5*31536000000L;
+    public static final long MAX_TOKEN_AGE_FIFTY_YEARS = 50*31536000000L;
+    public static final long DEFAULT_TOKEN_AGE_TWENTY_YEARS = 20*31536000000L;
+    public static final long MAX_TOKEN_ACTIVE_FIFTY_YEARS = 50*31536000000L;
   }
 
   public class NodeConstant {

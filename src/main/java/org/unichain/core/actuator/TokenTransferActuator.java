@@ -138,7 +138,7 @@ public class TokenTransferActuator extends AbstractActuator {
 
       if (ctx.getAvailableTime() > 0) {
         Assert.isTrue (ctx.getAvailableTime() > dbManager.getHeadBlockTimeStamp(), "block time passed available time");
-        Assert.isTrue (ctx.getAvailableTime() <= dbManager.getHeadBlockTimeStamp() + FIVE_YEARS, "available time limited within 5 years from now");
+        Assert.isTrue (ctx.getAvailableTime() <= dbManager.getHeadBlockTimeStamp() + Parameter.ChainConstant.MAX_FUTURE_TRANSFER_FIVE_YEARS, "available time limited within 5 years from now");
         Assert.isTrue(ctx.getAvailableTime() < tokenPool.getEndTime(), "available time exceeded token expired time");
         Assert.isTrue(ctx.getAmount() >= tokenPool.getLot(),"future transfer require minimum amount of : " + tokenPool.getLot());
       }

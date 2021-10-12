@@ -195,8 +195,7 @@ public class SolidityNode {
 
     appT.initServices(cfgArgs);
     appT.startServices();
-//    appT.startup();
-
+    //appT.startup();
     //Disable peer discovery for solidity node
     DiscoverServer discoverServer = context.getBean(DiscoverServer.class);
     discoverServer.close();

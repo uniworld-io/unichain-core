@@ -9,7 +9,7 @@ import org.unichain.core.exception.ContractValidateException;
 
 import java.util.Map;
 
-import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION;
+import static org.unichain.core.config.Parameter.ChainConstant.*;
 
 /**
  * Notice:
@@ -61,7 +61,9 @@ public class ProposalService {
     ALLOW_TVM_SOLIDITY_059(32), // 1, 32
     //@todo review and remove
     ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO(33), // 10, 33
-    HARD_FORK(34); // block version 34
+    HARD_FORK(34), // block version 34
+    MAX_FUTURE_TRANSFER_TIME_RANGE_UNW(35), // max future transfer unw 35
+    MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN(36); // max future transfer token 36
 
     ProposalType(long code) {
       this.code = code;
@@ -258,12 +260,14 @@ public class ProposalService {
         }
         break;
       }
+
       case WITNESS_55_PAY_PER_BLOCK: {
         if (value < 0 || value > LONG_VALUE) {
           throw new ContractValidateException(LONG_VALUE_ERROR);
         }
         break;
       }
+
       case HARD_FORK: {
         logger.info("validating hardfork proposal --> {}", value);
         Assert.isTrue(value >= 2 && value <= Integer.MAX_VALUE, "hardfork version should greater than version 1 and not greater than MAX_INTEGER :" + Integer.MAX_VALUE);
@@ -271,6 +275,19 @@ public class ProposalService {
         Assert.isTrue(value > manager.getDynamicPropertiesStore().getHardForkVersion(), "hardfork version must be greater than current version");
         break;
       }
+      case MAX_FUTURE_TRANSFER_TIME_RANGE_UNW: {
+        logger.info("validating MAX_FUTURE_TRANSFER_TIME_RANGE_UNW proposal --> {}", value);
+        Assert.isTrue(value > 0 && value <= MAX_FUTURE_TRANSFER_UNW_TIME_RANGE_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: "+ MAX_FUTURE_TRANSFER_UNW_TIME_RANGE_UPPER_BOUND);
+        Assert.isTrue(manager.getDynamicPropertiesStore().getHardForkVersion() >= BLOCK_VERSION_2, "require at least block version: " + BLOCK_VERSION_2);
+        break;
+      }
+      case MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN: {
+        logger.info("validating MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN proposal --> {}", value);
+        Assert.isTrue(value > 0 && value <= MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: "+ MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_UPPER_BOUND);
+        Assert.isTrue(manager.getDynamicPropertiesStore().getHardForkVersion() >= BLOCK_VERSION_2, "require at least block version: " + BLOCK_VERSION_2);
+        break;
+      }
+
       default:
         break;
     }
@@ -436,8 +453,18 @@ public class ProposalService {
           break;
         }
         case HARD_FORK: {
-          logger.info("saving hardfork proposal version --> {}", entry.getValue());
+          logger.info("saving hardfork proposal --> {}", entry.getValue());
           manager.getDynamicPropertiesStore().saveHardForkVersion(entry.getValue());
+          break;
+        }
+        case MAX_FUTURE_TRANSFER_TIME_RANGE_UNW: {
+          logger.info("saving max future transfer time range unw --> {}", entry.getValue());
+          manager.getDynamicPropertiesStore().saveMaxFutureTransferUnw(entry.getValue());
+          break;
+        }
+        case MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN: {
+          logger.info("saving max future transfer time range token --> {}", entry.getValue());
+          manager.getDynamicPropertiesStore().saveMaxFutureTransferToken(entry.getValue());
           break;
         }
         default:

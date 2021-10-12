@@ -13,7 +13,6 @@ import org.unichain.core.capsule.FutureTransferCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.db.Manager;
-import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
@@ -26,8 +25,6 @@ import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
 public class TransferFutureActuator extends AbstractActuator {
-  private static final long FIVE_YEARS = 5 * 365 * 24 * 3600000;
-
   TransferFutureActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
@@ -74,7 +71,10 @@ public class TransferFutureActuator extends AbstractActuator {
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var amount = ctx.getAmount();
       Assert.isTrue(amount > 0, "Amount must greater than 0.");
-      Assert.isTrue(ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp() && (ctx.getExpireTime() <= dbManager.getHeadBlockTimeStamp() + FIVE_YEARS), "expire time must greater current time, within five years from now");
+
+      long maxExpireTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationUnw();
+      Assert.isTrue((ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp()) && (ctx.getExpireTime() <= maxExpireTime),
+                      "expire time must greater current block time, lower than maximum timestamp:" + maxExpireTime);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
       Assert.isTrue(!Arrays.equals(toAddress, ownerAddress), "Cannot transfer unw to yourself");

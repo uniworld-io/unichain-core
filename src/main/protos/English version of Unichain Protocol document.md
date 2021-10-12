@@ -1,4 +1,3 @@
-   
 # Protobuf protocol
 
 ## The protocol of UNICHAIN is defined by Google Protobuf and contains a range of layers, from account, block to transfer.
@@ -19,7 +18,7 @@
      `type`: what type of this account is – e.g. _0_ stands for type `Normal`.  
      `balance`: balance of this account – e.g. _4213312_.  
      `votes`: received votes on this account – e.g. _{(“0x1b7w…9xj3”,323), (“0x8djq…j12m”,88),…,(“0x82nd…mx6i”,10001)}_.  
-     `asset`: other assets expect TRX in this account – e.g. _{<“WishToken”,66666>,<”Dogie”,233>}_.
+     `asset`: other assets expect UNW in this account – e.g. _{<“WishToken”,66666>,<”Dogie”,233>}_.
      `latest_operation_time`: the latest operation time of this account.
      
       // Account 
@@ -137,7 +136,7 @@
           }
      
      A `TransferContract` contains 3 parameters:  
-     `amount`: the amount of TRX – e.g. _12534_.  
+     `amount`: the amount of UNW – e.g. _12534_.  
      `to_address`: the receiver address – e.g. “_0xu82h…7237_”.  
      `owner_address`: the address of contract owner – e.g. “_0xu82h…7237_”.
 
@@ -210,7 +209,7 @@
      `owner_address`: the address for contract owner – e.g. “_0xu82h…7237_”.  
      `name`: the name for this contract – e.g. “Billscontract”.  
      `total_supply`: the maximum supply of this asset – e.g. _1000000000_.  
-     `trx_num`: the number of UNICHAINIX – e.g._232241_.  
+     `unx_num`: the number of UNICHAINIX – e.g._232241_.  
      `num`: number of corresponding asset.  
      `start_time`: the starting date of this contract – e.g._20170312_.  
      `end_time`: the expiring date of this contract – e.g. _20170512_.  
@@ -222,7 +221,7 @@
            bytes owner_address = 1;   
            bytes name = 2;   
            int64 total_supply = 4;   
-           int32 trx_num = 6;   
+           int32 unx_num = 6;   
            int32 num = 8;   
            int64 start_time = 9;   
            int64 end_time = 10;  
@@ -243,7 +242,138 @@
            bytes asset_name = 3; 
            int64 amount = 4; 
           }
-          
+
+An `FutureTransferContract` contains 4 parameters:
+`owner_address`: the address of contract owner – e.g. “_0xu92h…7236_”.
+`to_address`: the target address to send fund – e.g. “_0xu82h…7237_”.
+`amount`: the amount of unw to send – e.g. “_10000_”.
+`expire_time`: expire timestamp – e.g. “_1633458714000_”.
+
+        message FutureTransferContract {   
+          bytes owner_address = 1;   
+          bytes to_address = 2;   
+          int64 amount = 3;   
+          int64 expire_time = 4;   
+        }
+
+    An `FutureWithdrawContract` contains 1 parameters:
+    `owner_address`: the address of contract owner to withdraw expired funds – e.g. “_0xu92h…7236_”.
+
+        message FutureWithdrawContract {   
+          bytes owner_address = 1;   
+        }
+
+    An `CreateTokenContract` contains 13 parameters:
+        `owner_address`: the address that create token – e.g. “_0xu92h…7236_”.
+        `name`: token name– e.g. “_PWR_”.
+        `abbr`: token abbreviation – e.g. “_pwr_”.
+        `max_supply`: max token circulation number – e.g. “_1000000000”.
+        `total_supply`: initial token circulation number – e.g. “_500000000_”.
+        `start_time`: active time – e.g. “_1633458714000_”.
+        `end_time`: expired time – e.g. “_1999458714000_”.
+        `description`: token description – e.g. “_Solr Power Token_”.
+        `url`: project home page – e.g. “_https://solarpower.com_”.
+        `fee`: fee in token charged for each token transfer, by token – e.g. “_100_”.
+        `extra_fee_rate`: extra fee rate in percent charged for each token transfer, by token – e.g. “_1_”.
+        `fee_pool`: initial pool fee deposit, by unw that come from owner account – e.g. “_1000000_”.
+        `lot`: the minimum  amount of token allowed to transfer – e.g. “_0xu92h…7236_”.
+
+       message CreateTokenContract {
+            bytes owner_address = 1;  
+            string name = 2;  
+            string abbr = 3;  
+            int64 max_supply = 4;  
+            int64 total_supply = 5;  
+            int64 start_time = 6;  
+            int64 end_time = 7;  
+            string description = 8;  
+            string url = 9;  
+            int64 fee = 10;  
+            int64 extra_fee_rate = 11;  
+            int64 fee_pool = 12;  
+            int64 lot =15;  
+            }
+  
+    An `ContributeTokenPoolFeeContract` contains 3 parameters:
+      `owner_address`: the address to contribute pool fee – e.g. “_0xu92h…7236_”.
+      `token_name`: token name to contribute fee to – e.g. “_PWR_”.
+      `amount`: amount of fund to contribute, by unw – e.g. “_1000000_”.
+    
+           message ContributeTokenPoolFeeContract {
+                bytes owner_address = 1;  
+                string token_name = 2;  
+                int64 amount = 3;  
+            }
+
+    An `ContributeTokenPoolFeeContract` contains 9 parameters:
+        `owner_address`: the address to contribute pool fee – e.g. “_0xu92h…7236_”.
+        `token_name`: token name to contribute fee to – e.g. “_PWR_”.
+        `amount`: token transfer fee – e.g. “_200_”.
+        `extra_fee_rate`: extra fee rate – e.g. “_2_”.
+        `lot`: minimum token transfer value – e.g. “_PWR_”.
+        `url`: project home page – e.g. “_https://solarpower.com_”.
+        `description`: token description – e.g. “_Solr Power_”.
+        `total_supply`: initial token circulation – e.g. “_500000000_”.
+        `fee_pool`: pool fee extracted from owner – e.g. “_1000000_”.
+
+           message UpdateTokenParamsContract {
+                bytes owner_address = 1;  
+                string token_name = 2;  
+                int64 amount = 3;  
+                int64 extra_fee_rate = 4;  
+                int64 lot = 5;  
+                string url = 6;  
+                string description = 7;  
+                int64 total_supply = 8;  
+                int64 fee_pool = 9;  
+            }
+
+    An `MineTokenContract` contains 3 parameters:
+    `owner_address`: token owner address – e.g. “_0xu92h…7236_”.
+    `token_name`: token name – e.g. “_PWR_”.
+    `amount`: amount of token to mine – e.g. “_100000000_”.
+    
+           message MineTokenContract {
+             bytes owner_address = 1;  
+             string token_name = 2;  
+             int64 amount = 3;  
+            }
+
+    An `BurnTokenContract` contains 3 parameters:
+    `owner_address`: token owner address – e.g. “_0xu92h…7236_”.
+    `token_name`: token name – e.g. “_PWR_”.
+    `amount`: amount of token to burn – e.g. “_100000000_”.
+
+         message BurnTokenContract {
+            bytes owner_address = 1;  
+            string token_name = 2;  
+            int64 amount = 3;  
+        }
+
+    An `BurnTokenContract` contains 3 parameters:
+    `owner_address`: token owner address – e.g. “_0xu92h…7236_”.
+    `to_address`: target address – e.g. “_0xu84h…72345_”.
+    `token_name`: token name – e.g. “_PWR_”.
+    `amount`: amount of token to burn – e.g. “_100000000_”.
+    `available_time`: active time, missing if transfer now, or future timestampe for future transfer – e.g. “_1633458714000_”.
+
+       message TransferTokenContract {
+         bytes owner_address = 1;  
+         bytes to_address = 2;  
+         string token_name = 3;  
+         int64 amount = 4;  
+         int64 available_time = 5;  
+        }
+
+    An `WithdrawFutureTokenContract` contains 2 parameters:
+    `owner_address`: token owner address – e.g. “_0xu92h…7236_”.
+    `token_name`: token name – e.g. “_PWR_”.
+
+       message WithdrawFutureTokenContract {
+        bytes owner_address = 1;  
+        string token_name = 2;  
+       }
+
      A `DeployContract` contains 2 parameters:  
      `script`: the script of this contract.  
      `owner_address`: the address for contract owner – e.g. “_0xu82h…7237_”. 
@@ -365,17 +495,17 @@ Input, transaction and head block all require signature.
 +	Inventory is mainly used to inform peer nodes the list of items.  
 
     `Inventory` contains `type` and `ids`.  
-    `type`: what type this `Inventory` is. – e.g. _0_ stands for `TRX`.  
+    `type`: what type this `Inventory` is. – e.g. _0_ stands for `UNW`.  
     `ids`: ID of things in this `Inventory`.
 
-    Two `Inventory` types: `TRX` and `BLOCK`.  
-    `TRX`: transaction.  
+    Two `Inventory` types: `UNW` and `BLOCK`.  
+    `UNW`: transaction.  
     `BLOCK`: block.
 
         // Inventory 
         message Inventory {   
           enum InventoryType {     
-            TRX = 0;     
+            UNW = 0;     
             BLOCK = 1;   
            }   
            InventoryType type = 1;   
@@ -383,21 +513,21 @@ Input, transaction and head block all require signature.
          }
 
     message `Items` contains 4 parameters:  
-    `type`: type of items – e.g. _1_ stands for `TRX`.  
+    `type`: type of items – e.g. _1_ stands for `UNW`.  
     `blocks`: blocks in `Items` if there is any.  
     `block_headers`: block headers if there is any.  
     `transactions`: transactions if there is any.
 
-    `Items` have four types: `ERR`, `TRX`, `BLOCK` and `BLOCKHEADER`.  
+    `Items` have four types: `ERR`, `UNW`, `BLOCK` and `BLOCKHEADER`.  
     `ERR`: error.  
-    `TRX`: transaction.  
+    `UNW`: transaction.  
     `BLOCK`: block.  
     `BLOCKHEADER`: block header.
 
         message Items {   
           enum ItemType {     
             ERR = 0;     
-            TRX = 1;    
+            UNW = 1;    
             BLOCK = 2;     
             BLOCKHEADER = 3;  
            }   
@@ -537,7 +667,31 @@ Input, transaction and head block all require signature.
     Get block by block number.  
     __`TotalTransaction`__:  
     Check out the total transaction.
-   
+   __`Createfuturetransaction`__:  
+   Create future transfer.
+   __`WithdrawFutureTransaction`__:  
+   Withdraw future deals.
+   __`GetFutureTransfer`__:  
+   Get future transfer deals.
+   __`GetFutureToken`__:  
+   Get future token transfer deals.
+   __`GetTokenPool`__:  
+   Get all token in chain.
+   __`CreateToken`__:  
+   Create token v2.
+   __`ContributeTokenFee`__:  
+   Contribute fee to token pool.
+   __`UpdateTokenParams`__:  
+   Update token params.
+   __`MineToken`__:  
+   Mine token.
+   __`BurnToken`__:  
+   Burn token.
+   __`TransferToken`__:  
+   Transfer token.
+   __`WithdrawTokenFuture`__:  
+   Withdraw expired token deals.
+
       service Wallet {
       
         rpc GetAccount (Account) returns (Account) {
@@ -612,6 +766,34 @@ Input, transaction and head block all require signature.
         }
         rpc TotalTransaction (EmptyMessage) returns (NumberMessage) {
       
+        }
+
+        rpc CreateToken (CreateTokenContract) returns (Transaction){
+        
+        }
+        rpc ContributeTokenFee (ContributeTokenPoolFeeContract) returns (Transaction){
+
+        }
+        rpc UpdateTokenParams (UpdateTokenParamsContract) returns (Transaction) {
+
+        }
+        rpc MineToken (MineTokenContract) returns (Transaction) {
+
+        }
+        rpc BurnToken (BurnTokenContract) returns (Transaction){
+
+        }
+        rpc TransferToken (TransferTokenContract) returns (Transaction){
+
+        }
+        rpc WithdrawTokenFuture (WithdrawFutureTokenContract) returns (Transaction) {
+
+        }
+        rpc CreateFutureTransferTransaction (FutureTransferContract) returns (Transaction)
+
+        }
+        rpc WithdrawTokenFuture (WithdrawFutureTokenContract) returns (Transaction){
+
         }
       };
    

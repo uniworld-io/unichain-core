@@ -43,6 +43,19 @@ public class Parameter {
      */
     public static final int BLOCK_VERSION = 1;
     public static final int BLOCK_VERSION_2 = 2;
+
+    /**
+     * max unw/token transfer time range
+     */
+    public static final long MAX_FUTURE_TRANSFER_TIME_RANGE_UNW = 10*31536000000L;//10 years
+    public static final long MAX_FUTURE_TRANSFER_UNW_TIME_RANGE_UPPER_BOUND = 30*31536000000L;//30 years
+
+    public static final long MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN = 10*31536000000L;//10 years
+    public static final long MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_UPPER_BOUND = 30*31536000000L;//10 years
+
+    public static final long MAX_TOKEN_AGE = 50*31536000000L;//50 years
+    public static final long DEFAULT_TOKEN_AGE = 20*31536000000L;//20 years
+    public static final long MAX_TOKEN_ACTIVE = 50*31536000000L;//50 years
   }
 
   public class NodeConstant {

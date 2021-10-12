@@ -27,6 +27,7 @@ import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
+import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -34,8 +35,7 @@ import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.CreateTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE;
-import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE_RATE;
+import static org.unichain.core.config.Parameter.ChainConstant.*;
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "actuator")
@@ -62,8 +62,7 @@ public class TokenCreateActuator extends AbstractActuator {
       var startTime = capsule.getStartTime();
       if(!ctx.hasField(TOKEN_CREATE_FIELD_END_TIME))
       {
-        capsule.setEndTime(startTime + FIFTY_YEARS);
-        logger.info("default endTime to startTime + 10Years: " + capsule.getEndTime());
+        capsule.setEndTime(startTime + Parameter.ChainConstant.DEFAULT_TOKEN_AGE);
       }
 
       capsule.setBurnedToken(0L);
@@ -110,10 +109,15 @@ public class TokenCreateActuator extends AbstractActuator {
       Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
 
       long startTime = ctx.hasField(TOKEN_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
-      Assert.isTrue(startTime >= dbManager.getHeadBlockTimeStamp(), "Invalid start time");
+      long maxTokenActive = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_ACTIVE;
+      Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= maxTokenActive), "Invalid start time: must be greater than current block time and lower than limit timestamp:" +maxTokenActive);
 
-      long endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : startTime + FIFTY_YEARS;
-      Assert.isTrue(endTime > 0 && endTime > startTime && endTime > dbManager.getHeadBlockTimeStamp(), "Invalid end time");
+      long endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : (startTime + Parameter.ChainConstant.DEFAULT_TOKEN_AGE);
+      long maxTokenAge = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_AGE;
+      Assert.isTrue((endTime > 0)
+              && (endTime > startTime )
+              && (endTime > dbManager.getHeadBlockTimeStamp())
+              && (endTime <= maxTokenAge) , "Invalid end time: must greater start time and lower than token age's limit timestamp:" + maxTokenAge);
 
       Assert.isTrue(ctx.getTotalSupply() > 0 , "TotalSupply must greater than 0");
       Assert.isTrue(ctx.getMaxSupply() > 0 , "MaxSupply must greater than 0!");

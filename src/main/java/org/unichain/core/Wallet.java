@@ -427,8 +427,8 @@ public class Wallet {
           .build();
     } catch (AccountResourceInsufficientException e) {
       logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
-      return builder.setResult(false).setCode(response_code.BANDWITH_ERROR)
-          .setMessage(ByteString.copyFromUtf8("AccountResourceInsufficient error"))
+      return builder.setResult(false).setCode(response_code.NOT_ENOUGH_RESOURCE)
+          .setMessage(ByteString.copyFromUtf8("AccountResourceInsufficient error :" + e.getMessage()))
           .build();
     } catch (DupTransactionException e) {
       logger.error("Broadcast transaction {} failed, {}.", tx.getTransactionId(), e.getMessage());
@@ -1441,16 +1441,25 @@ public class Wallet {
     Assert.isTrue(query.hasField(TOKEN_QR_FIELD_NAME), "missing token name");
     Assert.isTrue(query.hasField(TOKEN_QR_FIELD_OWNER_ADDR), "missing owner address");
 
-    if(!query.hasField(TOKEN_QR_FIELD_PAGE_SIZE) || !query.hasField(TOKEN_QR_FIELD_PAGE_INDEX))
+    if(!query.hasField(TOKEN_QR_FIELD_PAGE_SIZE))
     {
       query = query.toBuilder()
               .setPageSize(DEFAULT_PAGE_SIZE)
+              .build();
+    }
+
+    if(!query.hasField(TOKEN_QR_FIELD_PAGE_INDEX))
+    {
+      query = query.toBuilder()
               .setPageIndex(DEFAULT_PAGE_INDEX)
               .build();
     }
+
     query = query.toBuilder()
             .setTokenName(query.getTokenName().toUpperCase())
             .build();
+
+    Assert.isTrue(query.getPageSize() > 0 &&  query.getPageIndex() >=0 && query.getPageSize() <= MAX_PAGE_SIZE, "invalid paging info");
 
     var acc = dbManager.getAccountStore().get(query.getOwnerAddress().toByteArray());
     Assert.notNull(acc, "owner address not found: " + Wallet.encode58Check(query.getOwnerAddress().toByteArray()));
@@ -1459,13 +1468,10 @@ public class Wallet {
     Assert.isTrue(summary.getTotalDeal() > 0, "not found future token deal of" + query.getTokenName());
 
     //validate query
-    int pageSize = query.getPageSize();
-    int pageIndex = query.getPageIndex();
-    if(pageSize <= 0 || pageIndex < 0)
-      throw new IllegalArgumentException("invalid paging info");
-
     List<FutureTokenV2> deals = new ArrayList<>();
 
+    int pageSize = query.getPageSize();
+    int pageIndex = query.getPageIndex();
     long start = pageIndex * pageSize;
     long end = start + pageSize;
     if(start >= summary.getTotalDeal()){
@@ -1507,10 +1513,16 @@ public class Wallet {
   public FuturePack getFuture(FutureQuery query) {
     Assert.isTrue(query.hasField(FUTURE_QR_FIELD_OWNER_ADDR), "missing owner address");
 
-    if(!query.hasField(FUTURE_QR_FIELD_PAGE_SIZE) || !query.hasField(FUTURE_QR_FIELD_PAGE_INDEX))
+    if(!query.hasField(FUTURE_QR_FIELD_PAGE_SIZE))
     {
       query = query.toBuilder()
               .setPageSize(DEFAULT_PAGE_SIZE)
+              .build();
+    }
+
+    if(!query.hasField(FUTURE_QR_FIELD_PAGE_INDEX))
+    {
+      query = query.toBuilder()
               .setPageIndex(DEFAULT_PAGE_INDEX)
               .build();
     }
@@ -1518,7 +1530,7 @@ public class Wallet {
     //validate query
     int pageSize = query.getPageSize();
     int pageIndex = query.getPageIndex();
-    Assert.isTrue(pageSize > 0 && pageIndex >=0, "invalid paging info");
+    Assert.isTrue(pageSize > 0 && pageIndex >=0 && pageSize <= MAX_PAGE_SIZE, "invalid paging info");
 
     var acc = dbManager.getAccountStore().get(query.getOwnerAddress().toByteArray());
     Assert.isTrue(acc != null, "not found future account : " + query.getOwnerAddress());

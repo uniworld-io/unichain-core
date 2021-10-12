@@ -171,6 +171,10 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
   private static final byte[] CURRENT_CYCLE_NUMBER = "CURRENT_CYCLE_NUMBER".getBytes();
   private static final byte[] CHANGE_DELEGATION = "CHANGE_DELEGATION".getBytes();
 
+  //Future transfer unw/token
+  private static final byte[] MAX_FUTURE_TRANSFER_TIME_RANGE_UNW = "MAX_FUTURE_TRANSFER_TIME_RANGE_UNW".getBytes();
+  private static final byte[] MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN = "MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN".getBytes();
+
   @Autowired
   private DynamicPropertiesStore(@Value("properties") String dbName) {
     super(dbName);
@@ -828,8 +832,15 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
   }
 
   public void saveHardForkVersion(long blockVersion) {
-    logger.debug("HARD_FORK_VERSION:" + blockVersion);
     this.put(HARD_FORK_VERSION, new BytesCapsule(ByteArray.fromLong(blockVersion)));
+  }
+
+  public void saveMaxFutureTransferUnw(long duration) {
+    this.put(MAX_FUTURE_TRANSFER_TIME_RANGE_UNW, new BytesCapsule(ByteArray.fromLong(duration)));
+  }
+
+  public void saveMaxFutureTransferToken(long duration) {
+    this.put(MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN, new BytesCapsule(ByteArray.fromLong(duration)));
   }
 
   /**
@@ -1588,6 +1599,23 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found latest block header timestamp"));
+  }
+
+  /**
+   * get timestamp of creating global latest block.
+   */
+  public long getMaxFutureTransferTimeRangeUnw() {
+    return Optional.ofNullable(getUnchecked(MAX_FUTURE_TRANSFER_TIME_RANGE_UNW))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElse(Parameter.ChainConstant.MAX_FUTURE_TRANSFER_TIME_RANGE_UNW);
+  }
+
+  public long getMaxFutureTransferTimeRangeToken() {
+    return Optional.ofNullable(getUnchecked(MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElse(Parameter.ChainConstant.MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN);
   }
 
   /**

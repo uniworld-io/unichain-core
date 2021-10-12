@@ -628,6 +628,7 @@ public class Util {
 
   public static int DEFAULT_PAGE_SIZE = 20;
   public static int DEFAULT_PAGE_INDEX = 0;
+  public static int MAX_PAGE_SIZE = 50;
 
   public static byte[] stringAsBytesUppercase(String str){
     return str.toUpperCase().getBytes();

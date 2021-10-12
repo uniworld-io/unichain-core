@@ -88,14 +88,19 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
       }
 
       /**
-       * @todo review duplication of charging fee: this phase & actuator phase
+       * @todo double fee: this phase & actuator phase ?
        */
-      if (isContractCreateNewAccount(contract)){
-        if(contract.getType() == ContractType.TransferTokenContract)
-          consumeForCreateNewAccount4TokenTransfer(contract, trace);
-        else
-          consumeForCreateNewAccount(ownerAccountCap, trace);
-        continue;
+      try {
+        if (isContractCreateNewAccount(contract)) {
+          if (contract.getType() == ContractType.TransferTokenContract)
+            consumeForCreateNewAccount4TokenTransfer(contract, trace);
+          else
+            consumeForCreateNewAccount(ownerAccountCap, trace);
+          continue;
+        }
+      }
+      catch (AccountResourceInsufficientException ex){
+        throw new AccountResourceInsufficientException("Account Insufficient balance to create new account");
       }
 
       /**
@@ -114,9 +119,8 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
                 continue;
               break;
             default:
-              if (useTransactionFee(ownerAccountCap, bytesSize, trace)) {
+              if (useTransactionFee(ownerAccountCap, bytesSize, trace))
                 continue;
-              }
               break;
           }
         }
@@ -125,7 +129,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         }
 
         long fee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytesSize;
-        throw new AccountResourceInsufficientException("Account Insufficient bandwidth[" + bytesSize + "] and balance[" + fee + "] to create new account");
+        throw new AccountResourceInsufficientException("Account or token pool insufficient balance[" + fee + "]");
     }
   }
 

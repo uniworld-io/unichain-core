@@ -37,10 +37,10 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
   }
 
   public Contract.TokenPage query(Protocol.TokenPoolQuery query){
-    int pageSize = query.hasField(TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : 10;
-    int pageIndex = query.hasField(TOKEN_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : 0;
-    Assert.isTrue(pageSize > 0, "invalid page size");
-    Assert.isTrue(pageIndex >= 0, "invalid page index");
+    int pageSize = query.hasField(TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
+    int pageIndex = query.hasField(TOKEN_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
+    Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "invalid paging info");
+
     List<Contract.CreateTokenContract> sorted;
     if(query.hasField(TOKEN_QUERY_FIELD_TOKEN_NAME))
     {

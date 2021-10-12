@@ -10,6 +10,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import javafx.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,11 +31,9 @@ import org.unichain.common.logsfilter.capsule.TriggerCapsule;
 import org.unichain.common.logsfilter.trigger.ContractTrigger;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.common.overlay.message.Message;
-import org.unichain.common.runtime.Runtime;
 import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.utils.*;
 import org.unichain.core.Constant;
-import org.unichain.core.Wallet;
 import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
 import org.unichain.core.capsule.utils.BlockUtil;
@@ -58,7 +57,6 @@ import org.unichain.core.witness.ProposalController;
 import org.unichain.core.witness.WitnessController;
 import org.unichain.protos.Contract.TransferTokenContract;
 import org.unichain.protos.Contract.WithdrawFutureTokenContract;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract;
@@ -68,7 +66,6 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -347,6 +344,13 @@ public class Manager {
     return getDynamicPropertiesStore().getLatestBlockHeaderTimestamp();
   }
 
+  public long getMaxFutureTransferTimeDurationUnw() {
+    return getDynamicPropertiesStore().getMaxFutureTransferTimeRangeUnw();
+  }
+
+  public long getMaxFutureTransferTimeDurationToken() {
+    return getDynamicPropertiesStore().getMaxFutureTransferTimeRangeToken();
+  }
 
   public void clearAndWriteNeighbours(Set<Node> nodes) {
     this.peersStore.put("neighbours".getBytes(), nodes);
@@ -763,13 +767,12 @@ public class Manager {
         consumeMultiSignFeeV1(unx, trace);
         break;
       default:
-        logger.info("using consumeMultiSignFeeV2");
         consumeMultiSignFeeV2(unx, trace);
         break;
     }
   }
 
-  public void consumeMultiSignFeeV2(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException {
+  public void consumeMultiSignFeeV2(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException, ContractExeException {
     if (unx.getInstance().getSignatureCount() > 1) {
       long fee = getDynamicPropertiesStore().getMultiSignFee();
 
@@ -782,9 +785,11 @@ public class Manager {
               tContract = contract.getParameter().unpack(TransferTokenContract.class);
               chargeFee4TokenPool(Util.stringAsBytesUppercase(tContract.getTokenName()), fee);
             }
-            catch (Exception ex) {
-              logger.error("chargeFee4TokenPool got error -->", ex);
-              throw new RuntimeException(ex.getMessage());
+            catch (BalanceInsufficientException e1) {
+              throw new AccountResourceInsufficientException("Not enough account's balance or pool fee to transfer token");
+            }
+            catch (InvalidProtocolBufferException e2){
+              throw new ContractExeException("bad TransferTokenContract format");
             }
             break;
           case WithdrawFutureTokenContract:
@@ -793,9 +798,11 @@ public class Manager {
               wContract = contract.getParameter().unpack(WithdrawFutureTokenContract.class);
               chargeFee4TokenPool(Util.stringAsBytesUppercase(wContract.getTokenName()), fee);
             }
-            catch (Exception ex) {
-              logger.error("chargeFee4TokenPool got error -->", ex);
-              throw new RuntimeException(ex.getMessage());
+            catch (BalanceInsufficientException e1) {
+              throw new AccountResourceInsufficientException("Not enough account's balance or pool fee to withdraw future token");
+            }
+            catch (InvalidProtocolBufferException e2){
+              throw new ContractExeException("bad WithdrawFutureTokenContract format");
             }
             break;
           default:
@@ -803,7 +810,7 @@ public class Manager {
             try {
               chargeFee(accountCapsule, fee);
             } catch (BalanceInsufficientException e) {
-              throw new AccountResourceInsufficientException("Account Insufficient  balance[" + fee + "] to MultiSign");
+                throw new AccountResourceInsufficientException("Account Insufficient  balance[" + fee + "] to MultiSign");
             }
             break;
         }
@@ -821,21 +828,20 @@ public class Manager {
             try {
               chargeFee(accountCapsule, fee);
             } catch (BalanceInsufficientException e) {
-              throw new AccountResourceInsufficientException("Account Insufficient  balance[" + fee + "] to MultiSign");
+                throw new AccountResourceInsufficientException("Insufficient  account's balance[" + fee + "] to MultiSign");
             }
       }
       trace.getReceipt().setMultiSignFee(fee);
     }
   }
 
-  public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule blockCapsule) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException, ContractExeException {
+  public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule blockCapsule) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
     int blockVersion = findBlockVersion(blockCapsule);
     switch (blockVersion){
       case BLOCK_VERSION:
         (new BandwidthProcessor(this)).consume(unx, trace);
         break;
       default:
-        logger.info("using BandwidthProcessorV2");
         (new BandwidthProcessorV2(this)).consume(unx, trace);
         break;
     }

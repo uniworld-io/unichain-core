@@ -31,11 +31,9 @@ import org.unichain.common.logsfilter.capsule.TriggerCapsule;
 import org.unichain.common.logsfilter.trigger.ContractTrigger;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.common.overlay.message.Message;
-import org.unichain.common.runtime.Runtime;
 import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.utils.*;
 import org.unichain.core.Constant;
-import org.unichain.core.Wallet;
 import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
 import org.unichain.core.capsule.utils.BlockUtil;
@@ -59,7 +57,6 @@ import org.unichain.core.witness.ProposalController;
 import org.unichain.core.witness.WitnessController;
 import org.unichain.protos.Contract.TransferTokenContract;
 import org.unichain.protos.Contract.WithdrawFutureTokenContract;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract;
@@ -69,7 +66,6 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -348,6 +344,13 @@ public class Manager {
     return getDynamicPropertiesStore().getLatestBlockHeaderTimestamp();
   }
 
+  public long getMaxFutureTransferTimeDurationUnw() {
+    return getDynamicPropertiesStore().getMaxFutureTransferTimeRangeUnw();
+  }
+
+  public long getMaxFutureTransferTimeDurationToken() {
+    return getDynamicPropertiesStore().getMaxFutureTransferTimeRangeToken();
+  }
 
   public void clearAndWriteNeighbours(Set<Node> nodes) {
     this.peersStore.put("neighbours".getBytes(), nodes);

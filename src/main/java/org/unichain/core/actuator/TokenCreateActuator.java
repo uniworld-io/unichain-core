@@ -62,8 +62,7 @@ public class TokenCreateActuator extends AbstractActuator {
       var startTime = capsule.getStartTime();
       if(!ctx.hasField(TOKEN_CREATE_FIELD_END_TIME))
       {
-        capsule.setEndTime(startTime + Parameter.ChainConstant.DEFAULT_TOKEN_AGE_TWENTY_YEARS);
-        logger.info("default endTime to startTime + 20Years: " + capsule.getEndTime());
+        capsule.setEndTime(startTime + Parameter.ChainConstant.DEFAULT_TOKEN_AGE);
       }
 
       capsule.setBurnedToken(0L);
@@ -110,13 +109,15 @@ public class TokenCreateActuator extends AbstractActuator {
       Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
 
       long startTime = ctx.hasField(TOKEN_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
-      Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= (dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_ACTIVE_FIFTY_YEARS)), "Invalid start time: must be greater than now and maximum fifty years from now");
+      long maxTokenActive = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_ACTIVE;
+      Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= maxTokenActive), "Invalid start time: must be greater than current block time and lower than limit timestamp:" +maxTokenActive);
 
-      long endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : startTime + Parameter.ChainConstant.DEFAULT_TOKEN_AGE_TWENTY_YEARS;
+      long endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : (startTime + Parameter.ChainConstant.DEFAULT_TOKEN_AGE);
+      long maxTokenAge = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_AGE;
       Assert.isTrue((endTime > 0)
               && (endTime > startTime )
               && (endTime > dbManager.getHeadBlockTimeStamp())
-              && (endTime <= dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_AGE_FIFTY_YEARS) , "Invalid end time: must greater start time and maximum 50 years from now");
+              && (endTime <= maxTokenAge) , "Invalid end time: must greater start time and lower than token age's limit timestamp:" + maxTokenAge);
 
       Assert.isTrue(ctx.getTotalSupply() > 0 , "TotalSupply must greater than 0");
       Assert.isTrue(ctx.getMaxSupply() > 0 , "MaxSupply must greater than 0!");

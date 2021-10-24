@@ -270,9 +270,10 @@ public class ProposalService {
 
       case HARD_FORK: {
         logger.info("validating hardfork proposal --> {}", value);
-        Assert.isTrue(value >= 2 && value <= Integer.MAX_VALUE, "hardfork version should greater than version 1 and not greater than MAX_INTEGER :" + Integer.MAX_VALUE);
-        Assert.isTrue(Parameter.BLOCK_VERSION_SUPPORTED.contains(value), "hardfork version not supported by software :" + value);
-        Assert.isTrue(value > manager.getDynamicPropertiesStore().getHardForkVersion(), "hardfork version must be greater than current version");
+        int valueInt = Long.valueOf(value).intValue();
+        Assert.isTrue(valueInt >= 2 && valueInt <= Integer.MAX_VALUE, "hardfork version should greater than version 1 and not greater than MAX_INTEGER :" + Integer.MAX_VALUE);
+        Assert.isTrue(Parameter.BLOCK_VERSION_SUPPORTED.contains(valueInt), "hardfork version not supported by software :" + valueInt);
+        Assert.isTrue(valueInt > manager.getDynamicPropertiesStore().getHardForkVersion(), "hardfork version must be greater than current version: " + manager.getDynamicPropertiesStore().getHardForkVersion());
         break;
       }
       case MAX_FUTURE_TRANSFER_TIME_RANGE_UNW: {
@@ -452,6 +453,11 @@ public class ProposalService {
           manager.getDynamicPropertiesStore().saveWitness55PayPerBlock(entry.getValue());
           break;
         }
+        /**
+         * @note:
+         * - if some hard fork proposals created/approved in the same maintain time, they will be processed sequentially
+         * - the last proposal will win.
+         */
         case HARD_FORK: {
           logger.info("saving hardfork proposal --> {}", entry.getValue());
           manager.getDynamicPropertiesStore().saveHardForkVersion(entry.getValue());

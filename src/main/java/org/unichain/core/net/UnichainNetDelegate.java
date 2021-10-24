@@ -219,7 +219,6 @@ public class UnichainNetDelegate {
     }
   }
 
-  //@todo review: is it solid or snapshot version ?
   public int getRunningBlockVersion(){
     return dbManager.getDynamicPropertiesStore().getHardForkVersion();
   }

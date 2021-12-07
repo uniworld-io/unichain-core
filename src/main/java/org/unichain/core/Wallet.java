@@ -303,14 +303,6 @@ public class Wallet {
   }
 
   /**
-   * Create a transaction.
-   */
-  /*public Transaction createTransaction(byte[] address, String to, long amount) {
-    long balance = getBalance(address);
-    return new TransactionCapsule(address, to, amount, balance, utxoStore).getInstance();
-  } */
-
-  /**
    * Create a transaction by contract.
    */
   @Deprecated
@@ -355,7 +347,8 @@ public class Wallet {
   /**
    * Broadcast a transaction:
    * - check peer status
-   * - save to tx pool, play snapshot
+   * - save to mem pool
+   * - play snapshot state
    * - broadcast to peers
    */
   public GrpcAPI.Return broadcastTransaction(Transaction signedTransaction) {
@@ -375,7 +368,7 @@ public class Wallet {
             .filter(p -> !p.isNeedSyncFromUs() && !p.isNeedSyncFromPeer())
             .count();
 
-        //@note if active peer < min: don't broadcast
+        //@note if active peer < min: don't
         if (count < minEffectiveConnection) {
           String info = "effective connection:" + count + " lt minEffectiveConnection:" + minEffectiveConnection;
           logger.warn("Broadcast transaction {} failed, {}.", tx.getTransactionId(), info);
@@ -1438,8 +1431,8 @@ public class Wallet {
   }
 
   public FutureTokenPack getFutureToken(FutureTokenQuery query) {
-    Assert.isTrue(query.hasField(TOKEN_QR_FIELD_NAME), "missing token name");
-    Assert.isTrue(query.hasField(TOKEN_QR_FIELD_OWNER_ADDR), "missing owner address");
+    Assert.isTrue(query.hasField(TOKEN_QR_FIELD_NAME), "Missing token name");
+    Assert.isTrue(query.hasField(TOKEN_QR_FIELD_OWNER_ADDR), "Missing owner address");
 
     if(!query.hasField(TOKEN_QR_FIELD_PAGE_SIZE))
     {
@@ -1462,10 +1455,21 @@ public class Wallet {
     Assert.isTrue(query.getPageSize() > 0 &&  query.getPageIndex() >=0 && query.getPageSize() <= MAX_PAGE_SIZE, "invalid paging info");
 
     var acc = dbManager.getAccountStore().get(query.getOwnerAddress().toByteArray());
-    Assert.notNull(acc, "owner address not found: " + Wallet.encode58Check(query.getOwnerAddress().toByteArray()));
+    Assert.notNull(acc, "Owner address not found: " + Wallet.encode58Check(query.getOwnerAddress().toByteArray()));
     var summary = acc.getFutureTokenSummary(query.getTokenName());
-    Assert.notNull(summary, "not found token" + query.getTokenName());
-    Assert.isTrue(summary.getTotalDeal() > 0, "not found future token deal of" + query.getTokenName());
+
+    //no deals
+    if(Objects.isNull(summary) || (summary.getTotalDeal() <= 0)){
+      return FutureTokenPack.newBuilder()
+              .setTokenName(query.getTokenName())
+              .setOwnerAddress(query.getOwnerAddress())
+              .setTotalDeal(0)
+              .setTotalValue(0)
+              .clearLowerBoundTime()
+              .clearUpperBoundTime()
+              .clearDeals()
+              .build();
+    }
 
     //validate query
     List<FutureTokenV2> deals = new ArrayList<>();
@@ -1475,7 +1479,7 @@ public class Wallet {
     long start = pageIndex * pageSize;
     long end = start + pageSize;
     if(start >= summary.getTotalDeal()){
-      deals = new ArrayList<>();
+      //empty deals
     }
     else {
       if(end >= summary.getTotalDeal())
@@ -1511,49 +1515,54 @@ public class Wallet {
 
 
   public FuturePack getFuture(FutureQuery query) {
-    Assert.isTrue(query.hasField(FUTURE_QR_FIELD_OWNER_ADDR), "missing owner address");
-
+    //validate
+    Assert.isTrue(query.hasField(FUTURE_QR_FIELD_OWNER_ADDR), "Missing owner address");
     if(!query.hasField(FUTURE_QR_FIELD_PAGE_SIZE))
     {
       query = query.toBuilder()
               .setPageSize(DEFAULT_PAGE_SIZE)
               .build();
     }
-
     if(!query.hasField(FUTURE_QR_FIELD_PAGE_INDEX))
     {
       query = query.toBuilder()
               .setPageIndex(DEFAULT_PAGE_INDEX)
               .build();
     }
-
-    //validate query
     int pageSize = query.getPageSize();
     int pageIndex = query.getPageIndex();
-    Assert.isTrue(pageSize > 0 && pageIndex >=0 && pageSize <= MAX_PAGE_SIZE, "invalid paging info");
-
+    Assert.isTrue(pageSize > 0 && pageIndex >=0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
     var acc = dbManager.getAccountStore().get(query.getOwnerAddress().toByteArray());
-    Assert.isTrue(acc != null, "not found future account : " + query.getOwnerAddress());
-
+    Assert.isTrue(acc != null, "Not found future account : " + query.getOwnerAddress());
     var summary = acc.getFutureSummary();
 
-    Assert.isTrue(summary != null && summary.getTotalDeal() > 0, "not found any future deals");
+    //no deals
+    if(Objects.isNull(summary) || (summary.getTotalDeal() <= 0))
+    {
+      return FuturePack.newBuilder()
+              .setOwnerAddress(query.getOwnerAddress())
+              .setTotalDeal(0)
+              .setTotalBalance(0)
+              .clearLowerTime()
+              .clearUpperTime()
+              .clearDeals()
+              .build();
+    }
 
     /**
-     * load deals
+     * paging deals
      */
     var deals = new ArrayList<Future>();
-
     var start = pageIndex * pageSize;
     var end = start + pageSize;
+
     if(start >= summary.getTotalDeal()){
-      deals = new ArrayList<>();
+      //empty page
     }
     else {
       if(end >= summary.getTotalDeal())
         end = (int)summary.getTotalDeal();
 
-      //load sublist from [start -> end)
       var futureStore = dbManager.getFutureTransferStore();
       var tmpTickKeyBs = summary.getLowerTick();
       int index = 0;

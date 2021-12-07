@@ -221,8 +221,9 @@ public class FullNodeHttpApiService implements Service {
       server = new Server(port);
       ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
       context.setContextPath("/wallet/");
+
       /**
-       * enable cors
+       * Enable CORS
        */
       FilterHolder holder = new FilterHolder(CrossOriginFilter.class);
       holder.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");

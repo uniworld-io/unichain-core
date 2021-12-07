@@ -300,8 +300,7 @@ public class Manager {
   private List<TransactionCapsule> pendingTransactions;
 
   // transactions popped
-  private List<TransactionCapsule> popedTransactions =
-      Collections.synchronizedList(Lists.newArrayList());
+  private List<TransactionCapsule> popedTransactions = Collections.synchronizedList(Lists.newArrayList());
 
   // the capacity is equal to Integer.MAX_VALUE default
   private BlockingQueue<TransactionCapsule> repushTransactions;
@@ -332,8 +331,8 @@ public class Manager {
 
   public synchronized BlockId getHeadBlockId() {
     return new BlockId(
-        getDynamicPropertiesStore().getLatestBlockHeaderHash(),
-        getDynamicPropertiesStore().getLatestBlockHeaderNumber());
+            getDynamicPropertiesStore().getLatestBlockHeaderHash(),
+            getDynamicPropertiesStore().getLatestBlockHeaderNumber());
   }
 
   public long getHeadBlockNum() {
@@ -394,9 +393,9 @@ public class Manager {
       () -> {
         while (isRunTriggerCapsuleProcessThread) {
           try {
-            TriggerCapsule tiggerCapsule = triggerCapsuleQueue.poll(1, TimeUnit.SECONDS);
-            if (tiggerCapsule != null) {
-              tiggerCapsule.processTrigger();
+            TriggerCapsule triggerCapsule = triggerCapsuleQueue.poll(1, TimeUnit.SECONDS);
+            if (triggerCapsule != null) {
+              triggerCapsule.processTrigger();
             }
           } catch (InterruptedException ex) {
             logger.info(ex.getMessage());
@@ -409,11 +408,11 @@ public class Manager {
         }
       };
 
-  public void stopRepushThread() {
+  public void stopRePushThread() {
     isRunRepushThread = false;
   }
 
-  public void stopRepushTriggerThread() {
+  public void stopRePushTriggerThread() {
     isRunTriggerCapsuleProcessThread = false;
   }
 
@@ -848,7 +847,7 @@ public class Manager {
   }
 
   /**
-   * when switch fork need erase blocks on fork branch.
+   * @note when switch fork need erase blocks on fork branch.
    */
   public synchronized void eraseBlock() {
     session.reset();
@@ -882,7 +881,7 @@ public class Manager {
   }
 
   /**
-    @note Apply block
+    @note apply block
     - apply block on main chain
     - if any error when process blocks (tx ..), then throw exception
     - index main chain block: block store & index
@@ -1033,7 +1032,7 @@ public class Manager {
 
       /**
       @note
-        - put to khaos db, return higher block as head:
+        - put to KhaosDB, return higher block as head:
         - if a block of forked chain come with invalid order, it will be rejected due to unlinked block
         - khaos db make sure that it maintain valid block that build a tree having root is genesis block
        */
@@ -1249,7 +1248,7 @@ public class Manager {
   /**
    * Process transaction.
    */
-    public TransactionInfo processTransaction(final TransactionCapsule txCap, BlockCapsule blockCap)
+    public TransactionInfo processTransaction(final TransactionCapsule txCap, final BlockCapsule blockCap)
           throws ValidateSignatureException, ContractValidateException, ContractExeException,
                   AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException,
                   TooBigTransactionResultException, DupTransactionException, TaposException, ReceiptCheckErrException,
@@ -1323,10 +1322,8 @@ public class Manager {
     Optional.ofNullable(transactionCache)
           .ifPresent(t -> t.put(txCap.getTransactionId().getBytes(), new BytesCapsule(ByteArray.fromLong(txCap.getBlockNum()))));
 
-    //build tx exec info
     TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, blockCap, trace);
 
-    //post contract triggers to queue if event subs enabled
     postContractTrigger(trace, false);
     Contract contract = txCap.getInstance().getRawData().getContract(0);
     if (isMultSignTransaction(txCap.getInstance())) {
@@ -1379,7 +1376,7 @@ public class Manager {
     val blockVersion = this.dynamicPropertiesStore.getHardForkVersion();
     val blockCapsule = new BlockCapsule(blockVersion, number + 1, preHash, when, witnessCapsule.getAddress());
     blockCapsule.generatedByMyself = true;
-    /*
+    /**
       @note
       - revoke/drop current tmp snapshot, get back to stable point
       - create new snapshot to apply all block's tx
@@ -1412,7 +1409,6 @@ public class Manager {
         break;
       }
 
-      // check the block size
       if ((blockCapsule.getInstance().getSerializedSize() + tx.getSerializedSize() + 3) > ChainConstant.BLOCK_SIZE) {
         postponedUnxCount++;
         continue;
@@ -1431,7 +1427,7 @@ public class Manager {
       if (ownerAddressSet.contains(ownerAddress)) {
         tx.setVerified(false);
       }
-      /*
+      /**
         @note
         - create new session for only one tx
         - process tx
@@ -1484,11 +1480,11 @@ public class Manager {
       } catch (VMIllegalException e) {
         logger.warn(e.getMessage(), e);
       }
-    } // end of while
+    }
 
     accountStateCallBack.executeGenerateFinish();
 
-    /*
+    /**
       @note
       - after all tx & result of tx put on block, reset back to stable point again
       - why ? because this block will be:
@@ -1509,7 +1505,7 @@ public class Manager {
       unichainNetService.fastForward(new BlockMessage(blockCapsule));
     }
     try {
-      /*
+      /**
         @note
         - put block to ledger
         - process again & make one stable system status (commit session)
@@ -1848,7 +1844,7 @@ public class Manager {
   }
 
   public void closeAllStore() {
-    logger.info("******** begin to close db ********");
+    logger.warn("******** begin to close db ********");
     closeOneStore(accountStore);
     closeOneStore(blockStore);
     closeOneStore(blockIndexStore);

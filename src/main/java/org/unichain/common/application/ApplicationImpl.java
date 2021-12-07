@@ -61,8 +61,8 @@ public class ApplicationImpl implements Application {
       closeRevokingStore();
       closeAllStore();
     }
-    dbManager.stopRepushThread();
-    dbManager.stopRepushTriggerThread();
+    dbManager.stopRePushThread();
+    dbManager.stopRePushTriggerThread();
     EventPluginLoader.getInstance().stopPlugin();
     logger.info("******** end to shutdown ********");
   }

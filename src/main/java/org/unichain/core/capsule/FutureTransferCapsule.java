@@ -65,11 +65,19 @@ public class FutureTransferCapsule implements ProtoCapsule<Future> {
       this.index = index.toBuilder().setPrevTick(tick).build();
   }
 
+  public void clearPrevTick(){
+      this.index = index.toBuilder().clearPrevTick().build();
+  }
+
   public void setNextTick(ByteString tick){
     if(tick == null)
       this.index = index.toBuilder().clearNextTick().build();
     else
       this.index = index.toBuilder().setNextTick(tick).build();
+  }
+
+  public void clearNextTick(){
+      this.index = index.toBuilder().clearNextTick().build();
   }
 
   public void setBalance(long balance){

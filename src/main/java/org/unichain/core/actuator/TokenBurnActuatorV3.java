@@ -93,6 +93,7 @@ public class TokenBurnActuatorV3 extends AbstractActuator {
       return true;
     }
     catch (Exception e){
+      logger.error("validate TokenBurn got error -->", e);
       throw new ContractValidateException(e.getMessage());
     }
   }

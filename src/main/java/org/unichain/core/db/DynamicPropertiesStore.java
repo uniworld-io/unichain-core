@@ -98,6 +98,8 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
 
   private static final byte[] ASSET_ISSUE_FEE = "ASSET_ISSUE_FEE".getBytes();
 
+  private static final byte[] ASSET_UPDATE_FEE = "ASSET_UPDATE_FEE".getBytes();
+
   private static final byte[] UPDATE_ACCOUNT_PERMISSION_FEE = "UPDATE_ACCOUNT_PERMISSION_FEE".getBytes();
 
   private static final byte[] MULTI_SIGN_FEE = "MULTI_SIGN_FEE".getBytes();
@@ -421,6 +423,12 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
       this.getAssetIssueFee();
     } catch (IllegalArgumentException e) {
       this.saveAssetIssueFee(500000000L); //500 UNW
+    }
+
+    try {
+      this.getAssetUpdateFee();
+    } catch (IllegalArgumentException e) {
+      this.saveAssetUpdateFee(2000000L); //2UNW
     }
 
     try {
@@ -1170,6 +1178,11 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
         new BytesCapsule(ByteArray.fromLong(fee)));
   }
 
+  public void saveAssetUpdateFee(long fee) {
+    this.put(ASSET_UPDATE_FEE,
+            new BytesCapsule(ByteArray.fromLong(fee)));
+  }
+
   public void saveUpdateAccountPermissionFee(long fee) {
     this.put(UPDATE_ACCOUNT_PERMISSION_FEE,
         new BytesCapsule(ByteArray.fromLong(fee)));
@@ -1187,6 +1200,14 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ASSET_ISSUE_FEE"));
+  }
+
+  public long getAssetUpdateFee() {
+    return Optional.ofNullable(getUnchecked(ASSET_UPDATE_FEE))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElseThrow(
+                    () -> new IllegalArgumentException("not found ASSET_UPDATE_FEE"));
   }
 
   public long getUpdateAccountPermissionFee() {

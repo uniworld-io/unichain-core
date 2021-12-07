@@ -153,9 +153,9 @@ public class TokenTransferActuator extends AbstractActuator {
         fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
 
-      Assert.isTrue(tokenPool.getFeePool() >= fee, "not enough token pool fee balance");
+      Assert.isTrue(tokenPool.getFeePool() >= fee, "Not enough token pool fee balance");
 
-      Assert.isTrue (ctx.getAmount() > 0, "invalid transfer amount, expect positive number");
+      Assert.isTrue (ctx.getAmount() > 0, "Invalid transfer amount, expect positive number");
 
       //estimate new fee
       long tokenFee;
@@ -165,7 +165,7 @@ public class TokenTransferActuator extends AbstractActuator {
         tokenFee = tokenPool.getFee() + LongMath.divide(ctx.getAmount() * tokenPool.getExtraFeeRate(), 100, RoundingMode.CEILING);
       }
 
-      Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount() + tokenFee, "not enough token balance");
+      Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount() + tokenFee, "Not enough token balance");
 
       //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1
@@ -177,7 +177,7 @@ public class TokenTransferActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error("validate TokenTransfer got error -->", e);
+      logger.error("TokenTransfer got error -->", e);
       throw new ContractValidateException(e.getMessage());
     }
   }

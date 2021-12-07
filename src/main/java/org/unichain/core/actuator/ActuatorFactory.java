@@ -26,24 +26,20 @@ public class ActuatorFactory {
     return INSTANCE;
   }
 
-  /**
-   * create actuator.
-   */
-  public static List<Actuator> createActuator(BlockCapsule blockCapsule, TransactionCapsule transactionCapsule, Manager manager) {
-    List<Actuator> actuatorList = Lists.newArrayList();
-    if (null == transactionCapsule || null == transactionCapsule.getInstance()) {
-      logger.info("transactionCapsule or Transaction is null");
-      return actuatorList;
+  public static List<Actuator> createActuator(BlockCapsule blockCap, TransactionCapsule txCap, Manager manager) {
+    List<Actuator> actuators = Lists.newArrayList();
+    if (null == txCap || null == txCap.getInstance()) {
+      return actuators;
     }
 
-    Preconditions.checkNotNull(manager, "manager is null");
-    Protocol.Transaction.raw rawData = transactionCapsule.getInstance().getRawData();
-    rawData.getContractList().forEach(contract -> actuatorList.add(getActuatorByContract(blockCapsule, contract, manager)));
-    return actuatorList;
+    Preconditions.checkNotNull(manager, "DB manager is null");
+    Protocol.Transaction.raw rawData = txCap.getInstance().getRawData();
+    rawData.getContractList().forEach(contract -> actuators.add(getActuatorByContract(blockCap, contract, manager)));
+    return actuators;
   }
 
-  private static Actuator getActuatorByContract(BlockCapsule blockCapsule, Contract contract, Manager manager) {
-    final int blockVersion = manager.findBlockVersion(blockCapsule);
+  private static Actuator getActuatorByContract(final BlockCapsule block, final Contract contract, final Manager manager) {
+    final int blockVersion = manager.findBlockVersion(block);
     switch (contract.getType()) {
       case AccountUpdateContract:
         return new UpdateAccountActuator(contract.getParameter(), manager);
@@ -74,7 +70,7 @@ public class ActuatorFactory {
         return new AssetIssueActuator(contract.getParameter(), manager);
       case CreateTokenContract:
         return new TokenCreateActuator(contract.getParameter(), manager);
-      case ContributeTokenPoolFeeContract:
+      case ContributeTokenPoolFeeContract:{
         switch (blockVersion){
           case BLOCK_VERSION:
           case BLOCK_VERSION_2:
@@ -82,12 +78,37 @@ public class ActuatorFactory {
           default:
             return new TokenContributePoolFeeActuatorV3(contract.getParameter(), manager);
         }
+      }
       case UpdateTokenParamsContract:
-        return new TokenUpdateParamsActuator(contract.getParameter(), manager);
+      {
+        switch (blockVersion){
+          case BLOCK_VERSION:
+          case BLOCK_VERSION_2:
+            return new TokenUpdateParamsActuator(contract.getParameter(), manager);
+          default:
+            return new TokenUpdateParamsActuatorV3(contract.getParameter(), manager);
+        }
+      }
       case MineTokenContract:
-        return new TokenMineActuator(contract.getParameter(), manager);
+      {
+        switch (blockVersion){
+          case BLOCK_VERSION:
+          case BLOCK_VERSION_2:
+            return new TokenMineActuator(contract.getParameter(), manager);
+          default:
+            return new TokenMineActuatorV3(contract.getParameter(), manager);
+        }
+      }
       case BurnTokenContract:
-        return new TokenBurnActuator(contract.getParameter(), manager);
+      {
+        switch (blockVersion){
+          case BLOCK_VERSION:
+          case BLOCK_VERSION_2:
+            return new TokenBurnActuator(contract.getParameter(), manager);
+          default:
+            return new TokenBurnActuatorV3(contract.getParameter(), manager);
+        }
+      }
       case TransferTokenContract:
         return new TokenTransferActuator(contract.getParameter(), manager);
       case WithdrawFutureTokenContract:{
@@ -147,7 +168,6 @@ public class ActuatorFactory {
         return new UpdateBrokerageActuator(contract.getParameter(), manager);
       default:
         break;
-
     }
     return null;
   }

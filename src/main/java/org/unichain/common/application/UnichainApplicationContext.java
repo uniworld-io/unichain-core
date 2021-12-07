@@ -39,8 +39,8 @@ public class UnichainApplicationContext extends AnnotationConfigApplicationConte
     nodeManager.close();
 
     Manager dbManager = getBean(Manager.class);
-    dbManager.stopRepushThread();
-    dbManager.stopRepushTriggerThread();
+    dbManager.stopRePushThread();
+    dbManager.stopRePushTriggerThread();
     super.destroy();
   }
 }

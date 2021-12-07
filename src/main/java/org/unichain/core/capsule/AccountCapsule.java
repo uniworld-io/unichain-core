@@ -20,21 +20,18 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.unichain.common.utils.ByteArray;
-import org.unichain.core.actuator.TokenWithdrawFutureActuator;
 import org.unichain.core.db.Manager;
 import org.unichain.protos.Contract.AccountCreateContract;
 import org.unichain.protos.Contract.AccountUpdateContract;
 import org.unichain.protos.Protocol.*;
-import org.unichain.protos.Protocol.Account.*;
+import org.unichain.protos.Protocol.Account.AccountResource;
+import org.unichain.protos.Protocol.Account.Builder;
+import org.unichain.protos.Protocol.Account.Frozen;
 import org.unichain.protos.Protocol.Permission.PermissionType;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static org.unichain.core.services.http.utils.Util.ACC_FIELD_FUTURE_SUMMARY;
 
 @Slf4j(topic = "capsule")
 public class AccountCapsule implements ProtoCapsule<Account>, Comparable<AccountCapsule> {
@@ -61,8 +58,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   /**
    * initial account capsule.
    */
-  public AccountCapsule(ByteString accountName, ByteString address, AccountType accountType,
-      long balance) {
+  public AccountCapsule(ByteString accountName, ByteString address, AccountType accountType, long balance) {
     this.account = Account.newBuilder()
         .setAccountName(accountName)
         .setType(accountType)

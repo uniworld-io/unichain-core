@@ -21,5 +21,5 @@ public interface Runtime {
 
   String getRuntimeError();
 
-  void setEnableEventLinstener(boolean enableEventLinstener);
+  void setEnableEventListener(boolean enableEventListener);
 }

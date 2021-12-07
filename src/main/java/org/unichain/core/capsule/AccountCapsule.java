@@ -662,7 +662,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   }
 
   public FutureSummary getFutureSummary(){
-    return account.hasField(ACC_FIELD_FUTURE_SUMMARY) ? account.getFutureSupply() : null;
+    return account.hasFutureSupply() ? account.getFutureSupply() : null;
   }
 
   /**

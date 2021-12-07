@@ -2086,7 +2086,7 @@ public class Manager {
     return dynamicEnergyFee > 0 ? dynamicEnergyFee : Constant.GINZA_PER_ENERGY;
   }
 
-  private int findBlockVersion(BlockCapsule blockCapsule){
+  public int findBlockVersion(BlockCapsule blockCapsule){
     return  (blockCapsule == null) ? this.dynamicPropertiesStore.getHardForkVersion() : blockCapsule.getInstance().getBlockHeader().getRawData().getVersion();
   }
 }

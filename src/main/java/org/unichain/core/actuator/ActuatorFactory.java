@@ -3,12 +3,16 @@ package org.unichain.core.actuator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Contract;
 
 import java.util.List;
+
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION;
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION_2;
 
 @Slf4j(topic = "actuator")
 public class ActuatorFactory {
@@ -25,7 +29,7 @@ public class ActuatorFactory {
   /**
    * create actuator.
    */
-  public static List<Actuator> createActuator(TransactionCapsule transactionCapsule, Manager manager) {
+  public static List<Actuator> createActuator(BlockCapsule blockCapsule, TransactionCapsule transactionCapsule, Manager manager) {
     List<Actuator> actuatorList = Lists.newArrayList();
     if (null == transactionCapsule || null == transactionCapsule.getInstance()) {
       logger.info("transactionCapsule or Transaction is null");
@@ -34,11 +38,12 @@ public class ActuatorFactory {
 
     Preconditions.checkNotNull(manager, "manager is null");
     Protocol.Transaction.raw rawData = transactionCapsule.getInstance().getRawData();
-    rawData.getContractList().forEach(contract -> actuatorList.add(getActuatorByContract(contract, manager)));
+    rawData.getContractList().forEach(contract -> actuatorList.add(getActuatorByContract(blockCapsule, contract, manager)));
     return actuatorList;
   }
 
-  private static Actuator getActuatorByContract(Contract contract, Manager manager) {
+  private static Actuator getActuatorByContract(BlockCapsule blockCapsule, Contract contract, Manager manager) {
+    final int blockVersion = manager.findBlockVersion(blockCapsule);
     switch (contract.getType()) {
       case AccountUpdateContract:
         return new UpdateAccountActuator(contract.getParameter(), manager);
@@ -46,8 +51,15 @@ public class ActuatorFactory {
         return new TransferActuator(contract.getParameter(), manager);
       case FutureTransferContract:
         return new TransferFutureActuator(contract.getParameter(), manager);
-      case FutureWithdrawContract:
-        return new WithdrawFutureActuator(contract.getParameter(), manager);
+      case FutureWithdrawContract:{
+        switch (blockVersion){
+          case BLOCK_VERSION:
+          case BLOCK_VERSION_2:
+            return new WithdrawFutureActuator(contract.getParameter(), manager);
+          default:
+            return new WithdrawFutureActuatorV3(contract.getParameter(), manager);
+        }
+      }
       case TransferAssetContract:
         return new TransferAssetActuator(contract.getParameter(), manager);
       case VoteAssetContract:
@@ -63,7 +75,13 @@ public class ActuatorFactory {
       case CreateTokenContract:
         return new TokenCreateActuator(contract.getParameter(), manager);
       case ContributeTokenPoolFeeContract:
-        return new TokenContributePoolFeeActuator(contract.getParameter(), manager);
+        switch (blockVersion){
+          case BLOCK_VERSION:
+          case BLOCK_VERSION_2:
+            return new TokenContributePoolFeeActuator(contract.getParameter(), manager);
+          default:
+            return new TokenContributePoolFeeActuatorV3(contract.getParameter(), manager);
+        }
       case UpdateTokenParamsContract:
         return new TokenUpdateParamsActuator(contract.getParameter(), manager);
       case MineTokenContract:
@@ -72,9 +90,15 @@ public class ActuatorFactory {
         return new TokenBurnActuator(contract.getParameter(), manager);
       case TransferTokenContract:
         return new TokenTransferActuator(contract.getParameter(), manager);
-      case WithdrawFutureTokenContract:
-        return new TokenWithdrawFutureActuator(contract.getParameter(), manager);
-
+      case WithdrawFutureTokenContract:{
+        switch (blockVersion){
+          case BLOCK_VERSION:
+          case BLOCK_VERSION_2:
+            return new TokenWithdrawFutureActuator(contract.getParameter(), manager);
+          default:
+            return new TokenWithdrawFutureActuatorV3(contract.getParameter(), manager);
+        }
+      }
       case UnfreezeAssetContract:
         return new UnfreezeAssetActuator(contract.getParameter(), manager);
       case WitnessUpdateContract:

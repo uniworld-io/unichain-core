@@ -154,7 +154,7 @@ public class RuntimeImpl implements Runtime {
 
   private void setupPrecompiled() throws ContractValidateException, ContractExeException {
     TransactionCapsule txCap = new TransactionCapsule(unx);
-    for (Actuator act : ActuatorFactory.createActuator(txCap, deposit.getDbManager())) {
+    for (Actuator act : ActuatorFactory.createActuator(blockCap, txCap, deposit.getDbManager())) {
       act.validate();
       act.execute(result.getRet());
     }

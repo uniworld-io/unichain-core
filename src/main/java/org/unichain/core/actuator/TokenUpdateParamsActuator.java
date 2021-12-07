@@ -52,7 +52,6 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
     var fee = calcFee();
     try {
         var ctx = contract.unpack(Contract.UpdateTokenParamsContract.class);
-        logger.debug("TokenUpdateParams  {} ...", ctx);
         var ownerAddress = ctx.getOwnerAddress().toByteArray();
 
         var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
@@ -101,10 +100,9 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
 
         chargeFee(ownerAddress, fee);
         ret.setStatus(fee, code.SUCESS);
-        logger.debug("TokenUpdateParams  {} ...DONE!", ctx);
         return true;
     } catch (Exception e) {
-      logger.error("exec TokenUpdateParams got error --> ", e);
+      logger.error("TokenUpdateParams got error --> ", e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }

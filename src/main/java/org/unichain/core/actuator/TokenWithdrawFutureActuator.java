@@ -49,8 +49,10 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
 
+      //withdraw
       withdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp());
 
+      //if success, charge pool fee
       tokenPool.setFeePool(tokenPool.getFeePool() - fee);
       tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
@@ -83,12 +85,13 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
 
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
-      Assert.isTrue (availableToWithdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp()), "Token unavailable to withdraw");
+      Assert.isTrue (isTokenFutureWithdrawable(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp()), "Token unavailable to withdraw");
       Assert.isTrue (tokenPool.getFeePool() >= fee, "not enough token pool fee balance");
+
       return true;
     }
     catch (Exception e){
-      logger.error("withdraw token failed -->", e);
+      logger.error("validate token future withdraw got error -->", e);
       throw new ContractValidateException(e.getMessage());
     }
   }
@@ -103,67 +106,54 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
     return Parameter.ChainConstant.TRANSFER_FEE;
   }
 
-  private boolean availableToWithdraw(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) {
-      var headBlockTickDay = Util.makeDayTick(headBlockTime);
-      var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
-      var summary = ownerAcc.getFutureTokenSummary(new String(tokenKey));
-      if(summary == null || headBlockTickDay < summary.getLowerBoundTime() || summary.getTotalDeal() <= 0 || summary.getTotalValue() <= 0)
-        return false;
-      else
-        return true;
+  private boolean isTokenFutureWithdrawable(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) {
+    var headBlockTickDay = Util.makeDayTick(headBlockTime);
+    var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
+    var summary = ownerAcc.getFutureTokenSummary(new String(tokenKey));
+    if(summary == null || headBlockTickDay < summary.getLowerBoundTime() || summary.getTotalDeal() <= 0 || summary.getTotalValue() <= 0)
+      return false;
+    else
+      return true;
   }
 
-  private void withdraw(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) throws ContractValidateException{
+  private void withdraw(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) throws BalanceInsufficientException, ContractValidateException{
     var headBlockTickDay = Util.makeDayTick(headBlockTime);
     var tokenName = new String(tokenKey);
     var tokenStore = dbManager.getFutureTokenStore();
-    var accountStore = dbManager.getAccountStore();
-    var ownerAcc = accountStore.get(ownerAddress);
-    var summary = ownerAcc.getFutureTokenSummary(tokenName);
+    var summary = dbManager.getAccountStore().get(ownerAddress).getFutureTokenSummary(tokenName);
+    var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
 
-    /**
-     * loop to withdraw, the most fastest way!!!
-     */
+    if(summary == null || summary.getLowerBoundTime() > headBlockTickDay)
+      throw new ContractValidateException("No token to withdraw");
+
+    //then loop to withdraw, the most fastest way!!!
     var tmpTickKeyBs = summary.getLowerTick();
     var withdrawAmount = 0;
     var withdrawDeal = 0;
-    var withdrawAll = false;
     while (true){
       if(tmpTickKeyBs == null)
-      {
-        withdrawAll = true;
         break;
-      }
-      var tmpTickKey = tmpTickKeyBs.toByteArray();
-      if(!tokenStore.has(tmpTickKey))
-      {
-        withdrawAll = true;
-        break;
-      }
-
-      var tmpTick = tokenStore.get(tmpTickKey);
+      var tmpTick = tokenStore.get(tmpTickKeyBs.toByteArray());
       if(tmpTick.getExpireTime() <= headBlockTickDay)
       {
         //withdraw
         withdrawAmount += tmpTick.getBalance();
         withdrawDeal ++;
+        //delete
         tokenStore.delete(tmpTickKeyBs.toByteArray());
         tmpTickKeyBs = tmpTick.getNextTick();
-        continue;
       }
       else
-      {
         break;
-      }
     }
 
     /**
-     * all deals withdrawn: remove summary
+     * all deals withdrawed: remove summary
      */
-    if(withdrawAll){
+    if(tmpTickKeyBs == null){
       ownerAcc.clearFutureToken(tokenKey);
       ownerAcc.addToken(tokenKey, withdrawAmount);
-      accountStore.put(ownerAddress, ownerAcc);
+      dbManager.getAccountStore().put(ownerAddress, ownerAcc);
       return;
     }
 
@@ -171,8 +161,10 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
      * some deals remain: update head & summary
      */
     var newHead = tokenStore.get(tmpTickKeyBs.toByteArray());
-    newHead.clearPrevTick();
+    newHead.setPrevTick(null);
     tokenStore.put(tmpTickKeyBs.toByteArray(), newHead);
+
+    //save summary
     summary = summary.toBuilder()
             .setTotalDeal(summary.getTotalDeal() - withdrawDeal)
             .setTotalValue(summary.getTotalValue() - withdrawAmount)

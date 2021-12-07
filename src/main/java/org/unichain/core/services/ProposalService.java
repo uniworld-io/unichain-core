@@ -59,11 +59,11 @@ public class ProposalService {
     ALLOW_CHANGE_DELEGATION(30), //1, 30
     WITNESS_55_PAY_PER_BLOCK(31), //drop, 31
     ALLOW_TVM_SOLIDITY_059(32), // 1, 32
-    //@todo review and remove
     ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO(33), // 10, 33
     HARD_FORK(34), // block version 34
     MAX_FUTURE_TRANSFER_TIME_RANGE_UNW(35), // max future transfer unw 35
-    MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN(36); // max future transfer token 36
+    MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN(36), // max future transfer token 36
+    TOKEN_UPDATE_FEE(37); // token update(burn, mine, update params..) fee 37
 
     ProposalType(long code) {
       this.code = code;
@@ -289,6 +289,16 @@ public class ProposalService {
         break;
       }
 
+      case TOKEN_UPDATE_FEE: {
+        logger.info("validating TOKEN_BURN_FEE proposal --> {}", value);
+        if (value < 0 || value > LONG_VALUE) {
+          throw new ContractValidateException(LONG_VALUE_ERROR);
+        }
+        Assert.isTrue(value > 0 && value <= LONG_VALUE, "max future transfer time range must be positive and lower than upper bound value: "+ LONG_VALUE);
+        Assert.isTrue(manager.getDynamicPropertiesStore().getHardForkVersion() >= BLOCK_VERSION_3, "require at least block version: " + BLOCK_VERSION_3);
+        break;
+      }
+
       default:
         break;
     }
@@ -471,6 +481,11 @@ public class ProposalService {
         case MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN: {
           logger.info("saving max future transfer time range token --> {}", entry.getValue());
           manager.getDynamicPropertiesStore().saveMaxFutureTransferToken(entry.getValue());
+          break;
+        }
+        case TOKEN_UPDATE_FEE: {
+          logger.info("saving token update fee --> {}", entry.getValue());
+          manager.getDynamicPropertiesStore().saveAssetUpdateFee(entry.getValue());
           break;
         }
         default:

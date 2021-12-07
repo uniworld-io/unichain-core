@@ -13,8 +13,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class RevokingDBWithCachingNewValue implements IRevokingDB {
-
-  //true:fullnode, false:soliditynode
   private ThreadLocal<Boolean> mode = new ThreadLocal<>();
   private Snapshot head;
   @Getter
@@ -28,6 +26,10 @@ public class RevokingDBWithCachingNewValue implements IRevokingDB {
     mode.set(true);
   }
 
+  /**
+   *
+   * @param mode true: fullNode, false: solidityNode
+   */
   @Override
   public void setMode(boolean mode) {
     this.mode.set(mode);

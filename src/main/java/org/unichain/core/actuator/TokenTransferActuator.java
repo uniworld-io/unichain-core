@@ -39,11 +39,10 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.math.RoundingMode;
 import java.util.Arrays;
+import java.util.Objects;
 
 @Slf4j(topic = "actuator")
 public class TokenTransferActuator extends AbstractActuator {
-  private static final long FIVE_YEARS = 5*365*24*3600000;
-
   TokenTransferActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
@@ -60,12 +59,13 @@ public class TokenTransferActuator extends AbstractActuator {
       var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
       var tokenPoolOwnerAddr = tokenPool.getOwnerAddress().toByteArray();
       var toAddress = ctx.getToAddress().toByteArray();
-      //if account with to_address does not exist, create it first.
+
+      //create account of to_address if not exist.
       var toAccountCap = dbManager.getAccountStore().get(toAddress);
       if (toAccountCap == null) {
         var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-        fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
 
       //transfer token
@@ -167,7 +167,6 @@ public class TokenTransferActuator extends AbstractActuator {
 
       Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount() + tokenFee, "not enough token balance");
 
-
       //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1
               && toAccountCap != null
@@ -202,6 +201,7 @@ public class TokenTransferActuator extends AbstractActuator {
     var accountStore = dbManager.getAccountStore();
     var toAcc = accountStore.get(toAddress);
     var summary = toAcc.getFutureTokenSummary(tokenName);
+
     /**
      * tick exist: the fasted way!
      */
@@ -219,13 +219,10 @@ public class TokenTransferActuator extends AbstractActuator {
     }
 
     /**
-     * tick not exist: but no other ticks exist
+     * the first tick ever.
      */
-    if(summary == null){
-      /*
-        no deal exist: new tick, new summary
-       */
-      //new tick
+    if(Objects.isNull(summary)){
+      //save tick
       var tick = Protocol.FutureTokenV2.newBuilder()
               .setFutureBalance(amount)
               .setExpireTime(tickDay)
@@ -259,7 +256,7 @@ public class TokenTransferActuator extends AbstractActuator {
      * if new tick is head
      */
     if(tickDay < headTime){
-      //new tick is just a new head
+      //save old head pointer
       head.setPrevTick(ByteString.copyFrom(tickKey));
       tokenStore.put(headKey, head);
 
@@ -272,7 +269,7 @@ public class TokenTransferActuator extends AbstractActuator {
               .build();
       tokenStore.put(tickKey, new FutureTokenCapsule(newHead));
 
-      //update summary
+      //save summary
       summary = summary.toBuilder()
               .setLowerBoundTime(tickDay)
               .setTotalDeal(summary.getTotalDeal() +1)
@@ -288,8 +285,9 @@ public class TokenTransferActuator extends AbstractActuator {
      * if new tick is tail
      */
     if(tickDay > headTime){
-      //new tail
       var oldTailKeyBs = summary.getUpperTick();
+
+      //save new tail
       var newTail = Protocol.FutureTokenV2.newBuilder()
               .setFutureBalance(amount)
               .setExpireTime(tickDay)
@@ -298,12 +296,12 @@ public class TokenTransferActuator extends AbstractActuator {
               .build();
       tokenStore.put(tickKey, new FutureTokenCapsule(newTail));
 
-      //update old tail
+      //save old tail
       var oldTail = tokenStore.get(oldTailKeyBs.toByteArray());
       oldTail.setNextTick(ByteString.copyFrom(tickKey));
       tokenStore.put(oldTailKeyBs.toByteArray(), oldTail);
 
-      //update summary
+      //save summary
       summary = summary.toBuilder()
               .setTotalDeal(summary.getTotalDeal() + 1)
               .setTotalValue(summary.getTotalValue() + amount)
@@ -316,36 +314,34 @@ public class TokenTransferActuator extends AbstractActuator {
     }
 
     /**
-     * lookup slot between head and tail
+     * lookup slot and insert tick
      */
     var searchKeyBs = summary.getUpperTick();
     while (true){
       var searchTick = tokenStore.get(searchKeyBs.toByteArray());
       if(searchTick.getExpireTime() < tickDay)
       {
-        /*
-          found: update & quit
-         */
-        //save new tick
         var oldNextTickKey = searchTick.getNextTick();
-        var newToken = Protocol.FutureTokenV2.newBuilder()
+
+        //save new tick
+        var newTick = Protocol.FutureTokenV2.newBuilder()
                 .setExpireTime(tickDay)
                 .setFutureBalance(amount)
                 .setPrevTick(searchKeyBs)
                 .setNextTick(oldNextTickKey)
                 .build();
-        tokenStore.put(tickKey, new FutureTokenCapsule(newToken));
+        tokenStore.put(tickKey, new FutureTokenCapsule(newTick));
 
-        //update prev
-
+        //save prev tick
         searchTick.setNextTick(ByteString.copyFrom(tickKey));
         tokenStore.put(searchKeyBs.toByteArray(), searchTick);
 
-        //update next
+        //save next tick
         var oldNextTick = tokenStore.get(oldNextTickKey.toByteArray());
         oldNextTick.setPrevTick(ByteString.copyFrom(tickKey));
+        tokenStore.put(oldNextTickKey.toByteArray(), oldNextTick);
 
-        //update summary
+        //save tick summary
         summary = summary.toBuilder()
                 .setTotalValue(summary.getTotalValue() + amount)
                 .setTotalDeal(summary.getTotalDeal() +1)

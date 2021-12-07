@@ -58,7 +58,6 @@ import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 import static org.unichain.common.runtime.utils.MUtil.*;
 import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION;
-import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION_2;
 
 @Slf4j(topic = "VM")
 public class RuntimeImpl implements Runtime {
@@ -81,7 +80,6 @@ public class RuntimeImpl implements Runtime {
   private InternalTransaction.UnxType unxType;
   private ExecutorType executorType;
 
-  //tx trace
   private TransactionTrace trace;
 
   @Getter
@@ -89,7 +87,7 @@ public class RuntimeImpl implements Runtime {
   private boolean isConstantCall = false;
 
   @Setter
-  private boolean enableEventLinstener;
+  private boolean enableEventListener;
 
   private LogInfoTriggerParser logInfoTriggerParser;
 
@@ -416,7 +414,7 @@ public class RuntimeImpl implements Runtime {
       this.program = new Program(ops, programHandler, rootInternalTransaction, config, this.blockCap);
       byte[] txId = new TransactionCapsule(unx).getTransactionId().getBytes();
       this.program.setRootTransactionId(txId);
-      if (enableEventLinstener
+      if (enableEventListener
               && (EventPluginLoader.getInstance().isContractEventTriggerEnable() || EventPluginLoader.getInstance().isContractLogTriggerEnable())
               && isCheckTransaction()) {
         logInfoTriggerParser = new LogInfoTriggerParser(blockCap.getNum(), blockCap.getTimeStamp(), txId, callerAddress);
@@ -449,7 +447,6 @@ public class RuntimeImpl implements Runtime {
 
 
   private void setupCallContract()throws ContractValidateException {
-    //base validation
     if (!deposit.getDbManager().getDynamicPropertiesStore().supportVM()) {
       logger.info("vm work is off, need to be opened by the committee");
       throw new ContractValidateException("VM work is off, need to be opened by the committee");
@@ -467,7 +464,7 @@ public class RuntimeImpl implements Runtime {
     byte[] contractAddress = contract.getContractAddress().toByteArray();
 
     ContractCapsule deployedContract = this.deposit.getContract(contractAddress);
-    if (null == deployedContract) {
+    if (deployedContract == null) {
       logger.info("No contract or not a smart contract");
       throw new ContractValidateException("No contract or not a smart contract");
     }
@@ -518,7 +515,7 @@ public class RuntimeImpl implements Runtime {
       byte[] txId = new TransactionCapsule(unx).getTransactionId().getBytes();
       this.program.setRootTransactionId(txId);
 
-      if (enableEventLinstener && (EventPluginLoader.getInstance().isContractEventTriggerEnable() || EventPluginLoader.getInstance().isContractLogTriggerEnable()) && isCheckTransaction()) {
+      if (enableEventListener && (EventPluginLoader.getInstance().isContractEventTriggerEnable() || EventPluginLoader.getInstance().isContractLogTriggerEnable()) && isCheckTransaction()) {
         logInfoTriggerParser = new LogInfoTriggerParser(blockCap.getNum(), blockCap.getTimeStamp(), txId, callerAddress);
       }
     }
@@ -535,7 +532,7 @@ public class RuntimeImpl implements Runtime {
   }
 
 
-  /*
+  /**
     @note execute/play or save contract
     - play smart contract
     - save contract if needed

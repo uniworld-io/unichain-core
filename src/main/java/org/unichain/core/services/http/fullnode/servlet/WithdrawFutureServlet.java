@@ -39,17 +39,16 @@ public class WithdrawFutureServlet extends HttpServlet {
       JsonFormat.merge(contract, build, visible);
       var query = build.build();
       logger.info("withdrawFuture --> {}" , Wallet.encode58Check(query.getOwnerAddress().toByteArray()));
-
       var tx = wallet.createTransactionCapsule(query, ContractType.FutureWithdrawContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
       try {
+        logger.error("withdrawFuture got error --> ", e);
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
-        logger.debug("IOException: {}", ioe.getMessage());
+        logger.error("IOException: {}", ioe.getMessage());
       }
     }
   }

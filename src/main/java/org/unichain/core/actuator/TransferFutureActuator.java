@@ -39,7 +39,7 @@ public class TransferFutureActuator extends AbstractActuator {
       var toAddress = ctx.getToAddress().toByteArray();
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var toAccount = dbManager.getAccountStore().get(toAddress);
-      if (toAccount == null) {
+      if (Objects.isNull(toAccount)) {
         boolean withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
         toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         dbManager.getAccountStore().put(toAddress, toAccount);
@@ -138,7 +138,9 @@ public class TransferFutureActuator extends AbstractActuator {
       futureStore.put(tickKey, tick);
 
       //save summary
-      summary = summary.toBuilder().setTotalBalance(summary.getTotalBalance() + amount).build();
+      summary = summary.toBuilder()
+              .setTotalBalance(summary.getTotalBalance() + amount)
+              .build();
       toAcc.setFutureSummary(summary);
       accountStore.put(toAddress, toAcc);
       return;

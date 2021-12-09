@@ -70,6 +70,8 @@ public class ActuatorFactory {
         return new AssetIssueActuator(contract.getParameter(), manager);
       case CreateTokenContract:
         return new TokenCreateActuator(contract.getParameter(), manager);
+      case TransferTokenOwnerContract:
+        return new TokenTransferOwnerActuator(contract.getParameter(), manager);
       case ContributeTokenPoolFeeContract:{
         switch (blockVersion){
           case BLOCK_VERSION:

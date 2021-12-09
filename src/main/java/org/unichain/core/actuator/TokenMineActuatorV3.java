@@ -54,7 +54,7 @@ public class TokenMineActuatorV3 extends AbstractActuator {
 
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      accountCapsule.mineToken(tokenKey, ctx.getAmount());
+      accountCapsule.addToken(tokenKey, ctx.getAmount());
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
 
       chargeFee(ownerAddress, fee);

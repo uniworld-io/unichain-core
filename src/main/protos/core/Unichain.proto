@@ -364,6 +364,7 @@ message Transaction {
       BurnTokenContract = 58;
       TransferTokenContract = 59;
       WithdrawFutureTokenContract = 60;
+      TransferTokenOwnerContract = 61;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;

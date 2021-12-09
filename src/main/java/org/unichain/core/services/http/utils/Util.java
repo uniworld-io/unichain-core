@@ -292,6 +292,10 @@ public class Util {
             CreateTokenContract createTokenContract = contractParameter.unpack(CreateTokenContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(createTokenContract, selfType));
             break;
+          case TransferTokenOwnerContract:
+            TransferTokenOwnerContract transferTokenOwnerContract = contractParameter.unpack(TransferTokenOwnerContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(transferTokenOwnerContract, selfType));
+            break;
           case ContributeTokenPoolFeeContract:
             ContributeTokenPoolFeeContract contributeTokenPoolFeeContract = contractParameter.unpack(ContributeTokenPoolFeeContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(contributeTokenPoolFeeContract, selfType));
@@ -529,6 +533,11 @@ public class Util {
             CreateTokenContract.Builder createTokenContractBuilder = CreateTokenContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), createTokenContractBuilder, selfType);
             any = Any.pack(createTokenContractBuilder.build());
+            break;
+          case "TransferTokenOwnerContract":
+            TransferTokenOwnerContract.Builder transferTokenOwnerContractBuilder = TransferTokenOwnerContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferTokenOwnerContractBuilder, selfType);
+            any = Any.pack(transferTokenOwnerContractBuilder.build());
             break;
           case "ContributeTokenPoolFeeContract":
             ContributeTokenPoolFeeContract.Builder contributeTokenPoolContractBuilder = ContributeTokenPoolFeeContract.newBuilder();

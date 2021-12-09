@@ -99,7 +99,7 @@ public class TokenWithdrawFutureActuatorV3 extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return Parameter.ChainConstant.TRANSFER_FEE;
+    return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
   }
 
   private boolean availableToWithdraw(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) {

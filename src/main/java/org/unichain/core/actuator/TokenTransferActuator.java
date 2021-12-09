@@ -85,7 +85,7 @@ public class TokenTransferActuator extends AbstractActuator {
       else {
         var tokenFee = tokenPool.getFee() + LongMath.divide(ctx.getAmount() * tokenPool.getExtraFeeRate(), 100, RoundingMode.CEILING);
         var tokenPoolOwnerCap = dbManager.getAccountStore().get(tokenPoolOwnerAddr);
-        tokenPoolOwnerCap.mineToken(tokenKey, tokenFee);
+        tokenPoolOwnerCap.addToken(tokenKey, tokenFee);
         dbManager.getAccountStore().put(tokenPoolOwnerAddr, tokenPoolOwnerCap);
 
         ownerAccountCap.burnToken(tokenKey, (tokenFee + ctx.getAmount()));

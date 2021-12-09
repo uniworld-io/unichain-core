@@ -311,6 +311,17 @@ public class Wallet {
     return new TransactionCapsule(contract, accountStore).getInstance();
   }
 
+  /**
+   * Load all future deals
+   */
+
+  public List<FutureTransferCapsule> listAllFutureDeals(){
+      return dbManager.getFutureTransferStore().getAll();
+  }
+
+  public List<FutureTokenCapsule> listAllFutureTokenStore() {
+    return dbManager.getFutureTokenStore().getAll();
+  }
 
   public TransactionCapsule createTransactionCapsule(com.google.protobuf.Message message, ContractType contractType) throws ContractValidateException {
     TransactionCapsule unx = new TransactionCapsule(message, contractType);

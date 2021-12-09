@@ -713,13 +713,11 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void createTransaction2(TransferContract request,
-        StreamObserver<TransactionExtention> responseObserver) {
+    public void createTransaction2(TransferContract request, StreamObserver<TransactionExtention> responseObserver) {
       createTransactionExtention(request, ContractType.TransferContract, responseObserver);
     }
 
-    private void createTransactionExtention(Message request, ContractType contractType,
-        StreamObserver<TransactionExtention> responseObserver) {
+    private void createTransactionExtention(Message request, ContractType contractType, StreamObserver<TransactionExtention> responseObserver) {
       TransactionExtention.Builder unxExtBuilder = TransactionExtention.newBuilder();
       Return.Builder retBuilder = Return.newBuilder();
       try {
@@ -904,8 +902,8 @@ public class RpcApiService implements Service {
 
     @Override
     public void broadcastTransaction(Transaction req, StreamObserver<GrpcAPI.Return> responseObserver) {
-      GrpcAPI.Return retur = wallet.broadcastTransaction(req);
-      responseObserver.onNext(retur);
+      GrpcAPI.Return ret = wallet.broadcastTransaction(req);
+      responseObserver.onNext(ret);
       responseObserver.onCompleted();
     }
 
@@ -1182,6 +1180,19 @@ public class RpcApiService implements Service {
     public void createToken(Contract.CreateTokenContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.CreateTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void transferTokenOwner(Contract.TransferTokenOwnerContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.TransferTokenOwnerContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());

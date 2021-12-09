@@ -662,18 +662,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   }
 
   /**
-   * mine more token issued by this account.
-   */
-  public void mineToken(byte[] key, long amount) {
-    Map<String, Long> tokenMap = this.account.getTokenMap();
-    String nameKey = ByteArray.toStr(key);
-    long current = tokenMap.containsKey(nameKey) ? tokenMap.get(nameKey) : 0L;
-    this.account = this.account.toBuilder()
-            .putToken(nameKey, current + amount)
-            .build();
-  }
-
-  /**
    * burn more token issued by this account
    */
   public boolean burnToken(byte[] key, long amount) {
@@ -690,6 +678,20 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     else
       this.account = this.account.toBuilder().removeToken(nameKey).build();
     return true;
+  }
+
+  public long burnAllAvailableToken(byte[] key) {
+    Map<String, Long> tokenMap = this.account.getTokenMap();
+    String nameKey = ByteArray.toStr(key);
+    if (!tokenMap.containsKey(nameKey)) {
+      logger.warn("missing token {}", nameKey);
+      return 0L;
+    }
+    else {
+      long available = tokenMap.get(nameKey);
+      this.account = this.account.toBuilder().removeToken(nameKey).build();
+      return available;
+    }
   }
 
   /**

@@ -290,7 +290,7 @@ public class ProposalService {
       }
 
       case TOKEN_UPDATE_FEE: {
-        logger.info("validating TOKEN_BURN_FEE proposal --> {}", value);
+        logger.info("validating TOKEN_UPDATE_FEE proposal --> {}", value);
         if (value < 0 || value > LONG_VALUE) {
           throw new ContractValidateException(LONG_VALUE_ERROR);
         }

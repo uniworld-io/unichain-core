@@ -111,7 +111,6 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.getExtraFeeRate();
   }
 
-
   public long getFeePool() {
     return this.createTokenContract.getFeePool();
   }
@@ -122,6 +121,11 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
 
   public long getBurnedToken() {
     return createTokenContract.getBurned();
+  }
+
+  public void setOwnerAddress(ByteString ownerAddress) {
+    this.createTokenContract= this.createTokenContract.toBuilder()
+            .setOwnerAddress(ownerAddress).build();
   }
 
   public void setStartTime(long startTime) {
@@ -202,6 +206,7 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
   }
 
   public void setLot(long lot){
-    createTokenContract = createTokenContract.toBuilder().setLot(lot).build();
+    createTokenContract = createTokenContract.toBuilder()
+            .setLot(lot).build();
   }
 }

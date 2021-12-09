@@ -176,6 +176,16 @@ service Wallet {
     };
   };
 
+  rpc TransferTokenOwner (TransferTokenOwnerContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/transfertokenowner"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/transfertokenowner"
+      }
+    };
+  };
+
   rpc ContributeTokenFee (ContributeTokenPoolFeeContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/contributetokenfee"

@@ -82,7 +82,7 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
             var totalSupplyDiff = newTotalSupply - tokenCap.getTotalSupply();
             tokenCap.setTotalSupply(newTotalSupply);
             var ownerAccount = dbManager.getAccountStore().get(ownerAddress);
-            ownerAccount.mineToken(tokenKey, totalSupplyDiff);
+            ownerAccount.addToken(tokenKey, totalSupplyDiff);
             dbManager.getAccountStore().put(ownerAddress, ownerAccount);
         }
 

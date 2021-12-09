@@ -25,6 +25,9 @@ public class FullNodeHttpApiService implements Service {
   private Server server;
 
   @Autowired
+  private ShowFutureDealServlet showFutureDealServlet;
+
+  @Autowired
   private GetAccountServlet getAccountServlet;
   @Autowired
   private TransferServlet transferServlet;
@@ -45,6 +48,8 @@ public class FullNodeHttpApiService implements Service {
 
   @Autowired
   private CreateTokenServlet createTokenServlet;
+  @Autowired
+  private TransferTokenOwnerServlet transferTokenOwnerServlet;
   @Autowired
   private ContributeTokenPoolFeeServlet contributeTokenPoolFeeServlet;
   @Autowired
@@ -234,6 +239,8 @@ public class FullNodeHttpApiService implements Service {
 
       server.setHandler(context);
 
+      //@todo show all future deals
+//      context.addServlet(new ServletHolder(showFutureDealServlet), "/showfuturedeal");
       context.addServlet(new ServletHolder(getAccountServlet), "/getaccount");
       context.addServlet(new ServletHolder(getTokenPoolServlet), "/gettokenpool");
       context.addServlet(new ServletHolder(getTokenFutureServlet), "/getfuturetoken");
@@ -249,6 +256,7 @@ public class FullNodeHttpApiService implements Service {
 
 
       context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
+      context.addServlet(new ServletHolder(transferTokenOwnerServlet), "/transfertokenowner");
       context.addServlet(new ServletHolder(contributeTokenPoolFeeServlet), "/contributetokenfee");
       context.addServlet(new ServletHolder(updateTokenParamsServlet), "/updatetokenparams");
       context.addServlet(new ServletHolder(mineTokenServlet), "/minetoken");

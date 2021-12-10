@@ -51,6 +51,8 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private TransferTokenOwnerServlet transferTokenOwnerServlet;
   @Autowired
+  private ExchangeTokenServlet exchangeTokenServlet;
+  @Autowired
   private ContributeTokenPoolFeeServlet contributeTokenPoolFeeServlet;
   @Autowired
   private UpdateTokenParamsServlet updateTokenParamsServlet;
@@ -257,6 +259,7 @@ public class FullNodeHttpApiService implements Service {
 
       context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
       context.addServlet(new ServletHolder(transferTokenOwnerServlet), "/transfertokenowner");
+      context.addServlet(new ServletHolder(exchangeTokenServlet), "/exchangetoken");
       context.addServlet(new ServletHolder(contributeTokenPoolFeeServlet), "/contributetokenfee");
       context.addServlet(new ServletHolder(updateTokenParamsServlet), "/updatetokenparams");
       context.addServlet(new ServletHolder(mineTokenServlet), "/minetoken");

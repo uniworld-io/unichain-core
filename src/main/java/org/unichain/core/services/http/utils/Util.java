@@ -8,7 +8,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.eclipse.jetty.util.StringUtil;
 import org.pf4j.util.StringUtils;
 import org.spongycastle.util.encoders.Hex;
@@ -29,10 +28,8 @@ import org.unichain.protos.Protocol.Transaction;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Slf4j(topic = "API")
@@ -296,6 +293,10 @@ public class Util {
             TransferTokenOwnerContract transferTokenOwnerContract = contractParameter.unpack(TransferTokenOwnerContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(transferTokenOwnerContract, selfType));
             break;
+          case ExchangeTokenContract:
+            TokenExchangeContract tokenExchangeContract = contractParameter.unpack(TokenExchangeContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(tokenExchangeContract, selfType));
+            break;
           case ContributeTokenPoolFeeContract:
             ContributeTokenPoolFeeContract contributeTokenPoolFeeContract = contractParameter.unpack(ContributeTokenPoolFeeContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(contributeTokenPoolFeeContract, selfType));
@@ -539,6 +540,11 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferTokenOwnerContractBuilder, selfType);
             any = Any.pack(transferTokenOwnerContractBuilder.build());
             break;
+          case "TokenExchangeContract":
+            TokenExchangeContract.Builder tokenExchangeContractBuilder = TokenExchangeContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), tokenExchangeContractBuilder, selfType);
+            any = Any.pack(tokenExchangeContractBuilder.build());
+            break;
           case "ContributeTokenPoolFeeContract":
             ContributeTokenPoolFeeContract.Builder contributeTokenPoolContractBuilder = ContributeTokenPoolFeeContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), contributeTokenPoolContractBuilder, selfType);
@@ -626,6 +632,9 @@ public class Util {
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_DESCRIPTION = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.DESCRIPTION_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.TOTAL_SUPPLY_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_FEE_POOL = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.FEE_POOL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.EXCH_UNX_NUM_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.EXCH_NUM_FIELD_NUMBER);
+
 
   public static Descriptors.FieldDescriptor TOKEN_QUERY_FIELD_PAGE_INDEX= Protocol.TokenPoolQuery.getDescriptor().findFieldByNumber(Protocol.TokenPoolQuery.PAGE_INDEX_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_QUERY_FIELD_PAGE_SIZE= Protocol.TokenPoolQuery.getDescriptor().findFieldByNumber(Protocol.TokenPoolQuery.PAGE_SIZE_FIELD_NUMBER);

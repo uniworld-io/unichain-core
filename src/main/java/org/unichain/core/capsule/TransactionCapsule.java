@@ -443,6 +443,9 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case FutureWithdrawContract:
           owner = contractParameter.unpack(FutureWithdrawContract.class).getOwnerAddress();
           break;
+        case ExchangeTokenContract:
+          owner = contractParameter.unpack(TokenExchangeContract.class).getOwnerAddress();
+          break;
         case TransferTokenOwnerContract:
           owner = contractParameter.unpack(TransferTokenOwnerContract.class).getOwnerAddress();
           break;
@@ -932,6 +935,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   public static int getMinSupportedBlockVersion(ContractType txType){
     switch (txType){
       case TransferTokenOwnerContract:
+      case ExchangeTokenContract:
         return BLOCK_VERSION_3;
       case CreateTokenContract:
       case ContributeTokenPoolFeeContract:

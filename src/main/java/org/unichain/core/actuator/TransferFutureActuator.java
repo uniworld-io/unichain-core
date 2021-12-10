@@ -127,7 +127,6 @@ public class TransferFutureActuator extends AbstractActuator {
     var accountStore = dbManager.getAccountStore();
     var toAcc = accountStore.get(toAddress);
     var summary = toAcc.getFutureSummary();
-
     /**
      * tick exist: the fasted way!
      */

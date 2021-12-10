@@ -42,11 +42,9 @@ public class TokenMineActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
       var ctx = contract.unpack(MineTokenContract.class);
-      logger.debug("MineTokenContract  {} ...", ctx);
-
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenCapsule = dbManager.getTokenPoolStore().get(tokenKey);
       tokenCapsule.setTotalSupply(tokenCapsule.getTotalSupply() + ctx.getAmount());
@@ -59,10 +57,9 @@ public class TokenMineActuator extends AbstractActuator {
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-      logger.debug("MineTokenContract  {} ...DONE!", ctx);
       return true;
     } catch (Exception e) {
-      logger.error("exec MineTokenContract got error --> ", e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -73,7 +70,7 @@ public class TokenMineActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(MineTokenContract.class), "contract type error,expected type [MineTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(MineTokenContract.class), "Contract type error,expected type [MineTokenContract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(MineTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
@@ -95,12 +92,12 @@ public class TokenMineActuator extends AbstractActuator {
 
       // avail to mine = max - total - burned
       var availableToMine = tokenPool.getMaxSupply() - tokenPool.getTotalSupply() - tokenPool.getBurnedToken();
-      Assert.isTrue(ctx.getAmount() <= availableToMine, "not enough frozen token to mine, maximum allowed: " + availableToMine);
+      Assert.isTrue(ctx.getAmount() <= availableToMine, "Not enough frozen token to mine, maximum allowed: " + availableToMine);
 
       return true;
     }
     catch (Exception e){
-      logger.error("validate TokenMine got error -->", e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

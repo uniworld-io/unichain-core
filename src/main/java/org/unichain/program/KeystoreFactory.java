@@ -41,13 +41,13 @@ public class KeystoreFactory {
     File file = new File(FilePath);
     if (!file.exists()) {
       if (!file.mkdir()) {
-        throw new IOException("Make directory faild!");
+        throw new IOException("Make directory failed!");
       }
     } else {
       if (!file.isDirectory()) {
         if (file.delete()) {
           if (!file.mkdir()) {
-            throw new IOException("Make directory faild!");
+            throw new IOException("Make directory failed!");
           }
         } else {
           throw new IOException("File is exists and can not delete!");
@@ -60,7 +60,7 @@ public class KeystoreFactory {
     System.out.println("Your address is " + credentials.getAddress());
   }
 
-  private void importPrivatekey() throws CipherException, IOException {
+  private void importPrivateKey() throws CipherException, IOException {
     Scanner in = new Scanner(System.in);
     String privateKey;
     System.out.println("Please input private key.");
@@ -130,7 +130,7 @@ public class KeystoreFactory {
             break;
           }
           case "importprivatekey": {
-            importPrivatekey();
+            importPrivateKey();
             break;
           }
           case "exit":

@@ -4,11 +4,13 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.db.AccountStore;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -34,109 +36,77 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
   @Override
   public boolean execute(TransactionResultCapsule result) throws ContractExeException {
     long fee = calcFee();
-    final AccountPermissionUpdateContract accountPermissionUpdateContract;
     try {
-      accountPermissionUpdateContract = contract.unpack(AccountPermissionUpdateContract.class);
-
-      byte[] ownerAddress = accountPermissionUpdateContract.getOwnerAddress().toByteArray();
-      AccountStore accountStore = dbManager.getAccountStore();
-      AccountCapsule account = accountStore.get(ownerAddress);
-      account.updatePermissions(accountPermissionUpdateContract.getOwner(),
-          accountPermissionUpdateContract.getWitness(),
-          accountPermissionUpdateContract.getActivesList());
+      val ctx = contract.unpack(AccountPermissionUpdateContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var accountStore = dbManager.getAccountStore();
+      var account = accountStore.get(ownerAddress);
+      account.updatePermissions(ctx.getOwner(), ctx.getWitness(), ctx.getActivesList());
       accountStore.put(ownerAddress, account);
-
       dbManager.adjustBalance(ownerAddress, -fee);
       dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().createDbKey(), fee);
-
       result.setStatus(fee, code.SUCESS);
-    } catch (BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
-      result.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      return true;
+    } catch (BalanceInsufficientException | InvalidProtocolBufferException e) {
+      logger.error(e.getMessage(), e);
       result.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-
-    return true;
   }
 
   private boolean checkPermission(Permission permission) throws ContractValidateException {
-    if (permission.getKeysCount() > dbManager.getDynamicPropertiesStore().getTotalSignNum()) {
-      throw new ContractValidateException("number of keys in permission should not be greater "
-          + "than " + dbManager.getDynamicPropertiesStore().getTotalSignNum());
-    }
-    if (permission.getKeysCount() == 0) {
-      throw new ContractValidateException("key's count should be greater than 0");
-    }
-    if (permission.getType() == PermissionType.Witness && permission.getKeysCount() != 1) {
-      throw new ContractValidateException("Witness permission's key count should be 1");
-    }
-    if (permission.getThreshold() <= 0) {
-      throw new ContractValidateException("permission's threshold should be greater than 0");
-    }
-    String name = permission.getPermissionName();
-    if (!StringUtils.isEmpty(name) && name.length() > 32) {
-      throw new ContractValidateException("permission's name is too long");
-    }
-    //check owner name ?
-    if (permission.getParentId() != 0) {
-      throw new ContractValidateException("permission's parent should be owner");
-    }
+    try {
+      Assert.isTrue(permission.getKeysCount() <= dbManager.getDynamicPropertiesStore().getTotalSignNum(), "number of keys in permission should not be greater than " + dbManager.getDynamicPropertiesStore().getTotalSignNum());
+      Assert.isTrue(permission.getKeysCount() != 0, "key's count should be greater than 0");
+      Assert.isTrue(!(permission.getType() == PermissionType.Witness && permission.getKeysCount() != 1), "Witness permission's key count should be 1");
+      Assert.isTrue(permission.getThreshold() > 0, "permission's threshold should be greater than 0");
 
-    long weightSum = 0;
-    List<ByteString> addressList = permission.getKeysList()
-        .stream()
-        .map(x -> x.getAddress())
-        .distinct()
-        .collect(toList());
-    if (addressList.size() != permission.getKeysList().size()) {
-      throw new ContractValidateException(
-          "address should be distinct in permission " + permission.getType());
-    }
-    for (Key key : permission.getKeysList()) {
-      if (!Wallet.addressValid(key.getAddress().toByteArray())) {
-        throw new ContractValidateException("key is not a validate address");
-      }
-      if (key.getWeight() <= 0) {
-        throw new ContractValidateException("key's weight should be greater than 0");
-      }
-      try {
+      String name = permission.getPermissionName();
+      Assert.isTrue(!(!StringUtils.isEmpty(name) && name.length() > 32), "permission's name is too long");
+
+      //check owner name
+      Assert.isTrue(permission.getParentId() == 0, "permission's parent should be owner");
+
+      long weightSum = 0;
+      List<ByteString> addressList = permission.getKeysList()
+              .stream()
+              .map(x -> x.getAddress())
+              .distinct()
+              .collect(toList());
+
+      Assert.isTrue(addressList.size() == permission.getKeysList().size(), "address should be distinct in permission " + permission.getType());
+
+      for (Key key : permission.getKeysList()) {
+        Assert.isTrue(Wallet.addressValid(key.getAddress().toByteArray()), "key is not a validate address");
+        Assert.isTrue(key.getWeight() > 0, "key's weight should be greater than 0");
         weightSum = Math.addExact(weightSum, key.getWeight());
-      } catch (ArithmeticException e) {
-        throw new ContractValidateException(e.getMessage());
       }
-    }
-    if (weightSum < permission.getThreshold()) {
-      throw new ContractValidateException(
-          "sum of all key's weight should not be less than threshold in permission " + permission
-              .getType());
-    }
 
-    ByteString operations = permission.getOperations();
-    if (permission.getType() != PermissionType.Active) {
-      if (!operations.isEmpty()) {
-        throw new ContractValidateException(
-            permission.getType() + " permission needn't operations");
+      Assert.isTrue(weightSum >= permission.getThreshold(), "sum of all key's weight should not be less than threshold in permission " + permission.getType());
+
+      ByteString operations = permission.getOperations();
+      if (permission.getType() != PermissionType.Active) {
+        Assert.isTrue(operations.isEmpty(), permission.getType() + " permission needn't operations");
+        return true;
+      }
+
+      //check operations
+      Assert.isTrue((operations.size() == 32), "operations size must 32");
+
+      byte[] types1 = dbManager.getDynamicPropertiesStore().getAvailableContractType();
+      for (int i = 0; i < 256; i++) {
+        boolean b = (operations.byteAt(i / 8) & (1 << (i % 8))) != 0;
+        boolean t = ((types1[(i / 8)] & 0xff) & (1 << (i % 8))) != 0;
+        if (b && !t) {
+          throw new ContractValidateException(i + " isn't a validate ContractType");
+        }
       }
       return true;
     }
-    //check operations
-    if (operations.isEmpty() || operations.size() != 32) {
-      throw new ContractValidateException("operations size must 32");
+    catch (Exception e){
+      logger.error(e.getMessage(), e);
+      throw new ContractValidateException(e.getMessage());
     }
-
-    byte[] types1 = dbManager.getDynamicPropertiesStore().getAvailableContractType();
-    for (int i = 0; i < 256; i++) {
-      boolean b = (operations.byteAt(i / 8) & (1 << (i % 8))) != 0;
-      boolean t = ((types1[(i / 8)] & 0xff) & (1 << (i % 8))) != 0;
-      if (b && !t) {
-        throw new ContractValidateException(i + " isn't a validate ContractType");
-      }
-    }
-    return true;
   }
 
   @Override
@@ -148,14 +118,10 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
       throw new ContractValidateException("No dbManager!");
     }
     if (this.dbManager.getDynamicPropertiesStore().getAllowMultiSign() != 1) {
-      throw new ContractValidateException("multi sign is not allowed, "
-          + "need to be opened by the committee");
+      throw new ContractValidateException("multi sign is not allowed, need to be opened by the committee");
     }
     if (!this.contract.is(AccountPermissionUpdateContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [AccountPermissionUpdateContract],real type["
-              + contract
-              .getClass() + "]");
+      throw new ContractValidateException("contract type error,expected type [AccountPermissionUpdateContract],real type[" + contract.getClass() + "]");
     }
     final AccountPermissionUpdateContract accountPermissionUpdateContract;
     try {

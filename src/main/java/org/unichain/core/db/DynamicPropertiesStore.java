@@ -522,9 +522,9 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
     }
 
     try {
-      this.getAllowTvmSolidity059();
+      this.getAllowUvmSolidity059();
     } catch (IllegalArgumentException e) {
-      this.saveAllowTvmSolidity059(Args.getInstance().getAllowTvmSolidity059());
+      this.saveAllowUvmSolidity059(Args.getInstance().getAllowTvmSolidity059());
     }
 
     try {
@@ -1410,12 +1410,12 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
   }
 
 
-  public void saveAllowTvmSolidity059(long value) {
+  public void saveAllowUvmSolidity059(long value) {
     this.put(ALLOW_TVM_SOLIDITY_059,
             new BytesCapsule(ByteArray.fromLong(value)));
   }
 
-  public long getAllowTvmSolidity059() {
+  public long getAllowUvmSolidity059() {
     return Optional.ofNullable(getUnchecked(ALLOW_TVM_SOLIDITY_059))
             .map(BytesCapsule::getData)
             .map(ByteArray::toLong)

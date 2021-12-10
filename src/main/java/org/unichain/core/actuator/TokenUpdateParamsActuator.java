@@ -102,7 +102,7 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
         ret.setStatus(fee, code.SUCESS);
         return true;
     } catch (Exception e) {
-      logger.error("TokenUpdateParams got error --> ", e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -113,12 +113,12 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
       try {
           Assert.notNull(contract, "No contract!");
           Assert.notNull(dbManager, "No dbManager!");
-          Assert.isTrue(contract.is(UpdateTokenParamsContract.class), "contract type error,expected type [UpdateTokenParamsContract],real type[" + contract.getClass() + "]");
+          Assert.isTrue(contract.is(UpdateTokenParamsContract.class), "Contract type error,expected type [UpdateTokenParamsContract],real type[" + contract.getClass() + "]");
 
           val ctx = this.contract.unpack(UpdateTokenParamsContract.class);
 
-          Assert.isTrue(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_OWNER_ADDR), "missing owner address");
-          Assert.isTrue(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_NAME), "missing token name");
+          Assert.isTrue(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_OWNER_ADDR), "Missing owner address");
+          Assert.isTrue(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_NAME), "Missing token name");
 
           var ownerAddress = ctx.getOwnerAddress().toByteArray();
           var accountCap = dbManager.getAccountStore().get(ownerAddress);
@@ -136,16 +136,16 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
 
           if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
               var fee = ctx.getAmount();
-              Assert.isTrue (fee >= 0 && fee <= TOKEN_MAX_TRANSFER_FEE, "invalid fee amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE + "]");
+              Assert.isTrue (fee >= 0 && fee <= TOKEN_MAX_TRANSFER_FEE, "Invalid fee amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE + "]");
           }
 
           if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_LOT)) {
-              Assert.isTrue (ctx.getLot() >= 0, "invalid lot: require positive!");
+              Assert.isTrue (ctx.getLot() >= 0, "Invalid lot: require positive!");
           }
 
           if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
               var extraFeeRate = ctx.getExtraFeeRate();
-              Assert.isTrue (extraFeeRate >= 0 && extraFeeRate <= 100 && extraFeeRate <= TOKEN_MAX_TRANSFER_FEE_RATE, "invalid extra fee rate amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
+              Assert.isTrue (extraFeeRate >= 0 && extraFeeRate <= 100 && extraFeeRate <= TOKEN_MAX_TRANSFER_FEE_RATE, "Invalid extra fee rate amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
           }
 
           if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_URL)) {
@@ -162,14 +162,14 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
               var oldTotalSupply = tokenPool.getTotalSupply();
               var diff = newTotalSupply - oldTotalSupply;
 
-              Assert.isTrue(diff != 0, "total supply not changed!");
+              Assert.isTrue(diff != 0, "Total supply not changed!");
 
               if(diff > 0){
-                  Assert.isTrue(maxSupply >= newTotalSupply, "new total supply break max supply: " + maxSupply);
+                  Assert.isTrue(maxSupply >= newTotalSupply, "New total supply break max supply: " + maxSupply);
               }
               else if(diff < 0){
                   var availableSupply = accountCap.getTokenAvailable(tokenKey);
-                  Assert.isTrue(availableSupply + diff >= 0, "max available token supply not enough to lower down total supply, minimum total supply is: " + (oldTotalSupply - availableSupply));
+                  Assert.isTrue(availableSupply + diff >= 0, "Max available token supply not enough to lower down total supply, minimum total supply is: " + (oldTotalSupply - availableSupply));
               }
           }
 
@@ -178,19 +178,19 @@ public class TokenUpdateParamsActuator extends AbstractActuator {
               var oldFeePool = tokenPool.getOriginFeePool();
               var availableFeePool = tokenPool.getFeePool();
               var diffFeePool = newFeePool - oldFeePool;
-              Assert.isTrue(diffFeePool != 0, "fee pool not changed");
+              Assert.isTrue(diffFeePool != 0, "Fee pool not changed");
               if(diffFeePool > 0){
-                    Assert.isTrue(accountCap.getBalance() >= diffFeePool + calcFee(), "not enough balance to update new fee pool, at least: " + diffFeePool + calcFee());
+                    Assert.isTrue(accountCap.getBalance() >= diffFeePool + calcFee(), "Not enough balance to update new fee pool, at least: " + diffFeePool + calcFee());
               }
               else if(diffFeePool < 0){
-                  Assert.isTrue(availableFeePool + diffFeePool >= 0 && (accountCap.getBalance() - diffFeePool - calcFee() ) >= 0, "available fee pool not enough to lower down fee pool or balance not enough fee, require at least: " + diffFeePool + " fee :"+ calcFee());
+                  Assert.isTrue(availableFeePool + diffFeePool >= 0 && (accountCap.getBalance() - diffFeePool - calcFee() ) >= 0, "Available fee pool not enough to lower down fee pool or balance not enough fee, require at least: " + diffFeePool + " fee :"+ calcFee());
               }
           }
 
           return true;
       }
       catch (Exception e){
-          logger.error("validate TokenUpdateParams got error -->", e);
+          logger.error(e.getMessage(), e);
           throw new ContractValidateException(e.getMessage());
       }
   }

@@ -440,7 +440,7 @@ public class ProposalService {
           break;
         }
         case ALLOW_TVM_SOLIDITY_059: {
-          manager.getDynamicPropertiesStore().saveAllowTvmSolidity059(entry.getValue());
+          manager.getDynamicPropertiesStore().saveAllowUvmSolidity059(entry.getValue());
           break;
         }
         case ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO: {

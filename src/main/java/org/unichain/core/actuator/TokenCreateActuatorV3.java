@@ -56,9 +56,9 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
       if(!ctx.hasField(TOKEN_CREATE_FIELD_START_TIME))
       {
         capsule.setStartTime(dbManager.getHeadBlockTimeStamp());
-        logger.info("default startTime to headBlockTimestamp: " + capsule.getStartTime());
       }
       var startTime = capsule.getStartTime();
+
       if(!ctx.hasField(TOKEN_CREATE_FIELD_END_TIME))
       {
         capsule.setEndTime(startTime + Parameter.ChainConstant.DEFAULT_TOKEN_AGE);
@@ -78,7 +78,7 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (Exception e) {
-      logger.error("exec TokenCreateActuator got error ->" , e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -107,12 +107,12 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
       Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
       Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
 
-      long startTime = ctx.hasField(TOKEN_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
-      long maxTokenActive = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_ACTIVE;
+      var startTime = ctx.hasField(TOKEN_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
+      var maxTokenActive = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_ACTIVE;
       Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= maxTokenActive), "Invalid start time: must be greater than current block time and lower than limit timestamp:" +maxTokenActive);
 
-      long endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : (startTime + Parameter.ChainConstant.DEFAULT_TOKEN_AGE);
-      long maxTokenAge = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_AGE;
+      var endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : (startTime + Parameter.ChainConstant.DEFAULT_TOKEN_AGE);
+      var maxTokenAge = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_AGE;
       Assert.isTrue((endTime > 0)
               && (endTime > startTime )
               && (endTime > dbManager.getHeadBlockTimeStamp())
@@ -131,7 +131,7 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error("validate TokenCreateActuator got error ->", e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

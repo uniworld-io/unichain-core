@@ -1281,7 +1281,7 @@ public class Manager {
     VMConfig.initAllowMultiSign(dynamicPropertiesStore.getAllowMultiSign());
     VMConfig.initAllowTvmTransferUnc(dynamicPropertiesStore.getAllowTvmTransferUnc());
     VMConfig.initAllowTvmConstantinople(dynamicPropertiesStore.getAllowTvmConstantinople());
-    VMConfig.initAllowTvmSolidity059(dynamicPropertiesStore.getAllowTvmSolidity059());
+    VMConfig.initAllowTvmSolidity059(dynamicPropertiesStore.getAllowUvmSolidity059());
 
     trace.init(blockCap, eventPluginLoaded);
     trace.checkIsConstant();

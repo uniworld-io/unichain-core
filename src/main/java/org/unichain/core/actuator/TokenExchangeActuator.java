@@ -50,7 +50,7 @@ public class TokenExchangeActuator extends AbstractActuator {
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var ownerAccount = accountStore.get(ownerAddress);
 
-      byte[] tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = tokenPoolStore.get(tokenKey);
       var tokenOwnerAddress = tokenPool.getOwnerAddress().toByteArray();
       var tokenOwnerAcc = accountStore.get(tokenOwnerAddress);
@@ -72,7 +72,7 @@ public class TokenExchangeActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (Exception e) {
-      logger.error("exec TokenExchange got error ->" , e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -111,7 +111,7 @@ public class TokenExchangeActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error("validate TokenExchangeActuator got error ->", e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

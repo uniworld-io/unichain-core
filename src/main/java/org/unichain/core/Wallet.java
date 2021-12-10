@@ -62,7 +62,6 @@ import org.unichain.core.exception.*;
 import org.unichain.core.net.UnichainNetDelegate;
 import org.unichain.core.net.UnichainNetService;
 import org.unichain.core.net.message.TransactionMessage;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.*;
@@ -846,7 +845,7 @@ public class Wallet {
 
     builder.addChainParameter(Protocol.ChainParameters.ChainParameter.newBuilder()
         .setKey("getAllowTvmSolidity059")
-        .setValue(dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059())
+        .setValue(dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059())
         .build());
 
     builder.addChainParameter(Protocol.ChainParameters.ChainParameter.newBuilder()
@@ -1280,7 +1279,7 @@ public class Wallet {
     VMConfig.initAllowTvmTransferUnc(dbManager.getDynamicPropertiesStore().getAllowTvmTransferUnc());
     VMConfig.initAllowMultiSign(dbManager.getDynamicPropertiesStore().getAllowMultiSign());
     VMConfig.initAllowTvmConstantinople(dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople());
-    VMConfig.initAllowTvmSolidity059(dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059());
+    VMConfig.initAllowTvmSolidity059(dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059());
     runtime.setup();
     runtime.go();
     runtime.finalization();

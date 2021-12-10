@@ -68,8 +68,18 @@ public class ActuatorFactory {
         return new CreateAccountActuator(contract.getParameter(), manager);
       case AssetIssueContract:
         return new AssetIssueActuator(contract.getParameter(), manager);
-      case CreateTokenContract:
-        return new TokenCreateActuator(contract.getParameter(), manager);
+      case CreateTokenContract:{
+        switch (blockVersion){
+          case BLOCK_VERSION:
+          case BLOCK_VERSION_2:
+            return new TokenCreateActuator(contract.getParameter(), manager);
+          default:
+            return new TokenCreateActuatorV3(contract.getParameter(), manager);
+        }
+      }
+      case ExchangeTokenContract: {
+        return new TokenExchangeActuator(contract.getParameter(), manager);
+      }
       case TransferTokenOwnerContract:
         return new TokenTransferOwnerActuator(contract.getParameter(), manager);
       case ContributeTokenPoolFeeContract:{

@@ -95,6 +95,14 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
             tokenCap.setFeePool(tokenCap.getFeePool() + diffFeePool);
         }
 
+        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
+            tokenCap.setExchUnwNum(ctx.getExchUnxNum());
+        }
+
+        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
+            tokenCap.setExchTokenNum(ctx.getExchNum());
+        }
+
         dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
 
         chargeFee(ownerAddress, fee);
@@ -184,6 +192,14 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
               else if(diffFeePool < 0){
                   Assert.isTrue(availableFeePool + diffFeePool >= 0 && (accountCap.getBalance() - diffFeePool - calcFee() ) >= 0, "available fee pool not enough to lower down fee pool or balance not enough fee, require at least: " + diffFeePool + " fee :"+ calcFee());
               }
+          }
+
+          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
+              Assert.isTrue(ctx.getExchUnxNum() > 0, "exchange unw number must be positive");
+          }
+
+          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
+              Assert.isTrue(ctx.getExchNum() > 0, "exchange token number must be positive");
           }
 
           return true;

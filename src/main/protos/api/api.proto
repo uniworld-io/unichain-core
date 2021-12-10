@@ -186,6 +186,16 @@ service Wallet {
     };
   };
 
+  rpc ExchangeToken (TokenExchangeContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/exchangetoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/exchangetoken"
+      }
+    };
+  };
+
   rpc ContributeTokenFee (ContributeTokenPoolFeeContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/contributetokenfee"

@@ -119,6 +119,14 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.getAbbr();
   }
 
+  public long getExchUnw() {
+    return this.createTokenContract.getExchUnxNum();
+  }
+
+  public long getExchToken() {
+    return this.createTokenContract.getExchNum();
+  }
+
   public long getBurnedToken() {
     return createTokenContract.getBurned();
   }
@@ -146,6 +154,16 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
   public void setExtraFeeRate(long extraFeeRate) {
     this.createTokenContract = this.createTokenContract.toBuilder()
             .setExtraFeeRate(extraFeeRate).build();
+  }
+
+  public void setExchUnwNum(long exchUnwNum) {
+    this.createTokenContract = this.createTokenContract.toBuilder()
+            .setExchUnxNum(exchUnwNum).build();
+  }
+
+  public void setExchTokenNum(long exchTokenNum) {
+    this.createTokenContract = this.createTokenContract.toBuilder()
+            .setExchNum(exchTokenNum).build();
   }
 
   public void setTotalSupply(long amount) {

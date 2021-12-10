@@ -9,7 +9,6 @@ import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
@@ -111,82 +110,59 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (this.dbManager.getDynamicPropertiesStore().getAllowMultiSign() != 1) {
-      throw new ContractValidateException("multi sign is not allowed, need to be opened by the committee");
-    }
-    if (!this.contract.is(AccountPermissionUpdateContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [AccountPermissionUpdateContract],real type[" + contract.getClass() + "]");
-    }
-    final AccountPermissionUpdateContract accountPermissionUpdateContract;
     try {
-      accountPermissionUpdateContract = contract.unpack(AccountPermissionUpdateContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+
+      Assert.isTrue(this.dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1, "multi sign is not allowed, need to be opened by the committee");
+      Assert.isTrue(this.contract.is(AccountPermissionUpdateContract.class), "contract type error,expected type [AccountPermissionUpdateContract],real type[" + contract.getClass() + "]");
+
+      val accountPermissionUpdateContract= contract.unpack(AccountPermissionUpdateContract.class);
+      var ownerAddress = accountPermissionUpdateContract.getOwnerAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalidate ownerAddress");
+
+      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(accountCapsule, "OwnerAddress account does not exist");
+      Assert.isTrue(accountPermissionUpdateContract.hasOwner(), "Owner permission is missed");
+
+      if (accountCapsule.getIsWitness()) {
+        Assert.isTrue(accountPermissionUpdateContract.hasWitness(), "witness permission is missed");
+      } else {
+        Assert.isTrue(!accountPermissionUpdateContract.hasWitness(), "account isn't witness can't set witness permission");
+      }
+
+      Assert.isTrue(accountPermissionUpdateContract.getActivesCount() != 0, "active permission is missed");
+      Assert.isTrue(accountPermissionUpdateContract.getActivesCount() <= 8, "active permission is too many");
+
+      var owner = accountPermissionUpdateContract.getOwner();
+      var witness = accountPermissionUpdateContract.getWitness();
+      var actives = accountPermissionUpdateContract.getActivesList();
+
+      Assert.isTrue(owner.getType() == PermissionType.Owner, "owner permission type is error");
+
+      if (!checkPermission(owner)) {
+        return false;
+      }
+
+      if (accountCapsule.getIsWitness()) {
+        Assert.isTrue(witness.getType() == PermissionType.Witness, "witness permission type is error");
+        if (!checkPermission(witness)) {
+          return false;
+        }
+      }
+
+      for (Permission permission : actives) {
+        Assert.isTrue(permission.getType() == PermissionType.Active, "active permission type is error");
+        if (!checkPermission(permission)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    catch (Exception e){
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-    byte[] ownerAddress = accountPermissionUpdateContract.getOwnerAddress().toByteArray();
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("invalidate ownerAddress");
-    }
-    AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-    if (accountCapsule == null) {
-      throw new ContractValidateException("ownerAddress account does not exist");
-    }
-
-    if (!accountPermissionUpdateContract.hasOwner()) {
-      throw new ContractValidateException("owner permission is missed");
-    }
-
-    if (accountCapsule.getIsWitness()) {
-      if (!accountPermissionUpdateContract.hasWitness()) {
-        throw new ContractValidateException("witness permission is missed");
-      }
-    } else {
-      if (accountPermissionUpdateContract.hasWitness()) {
-        throw new ContractValidateException("account isn't witness can't set witness permission");
-      }
-    }
-
-    if (accountPermissionUpdateContract.getActivesCount() == 0) {
-      throw new ContractValidateException("active permission is missed");
-    }
-    if (accountPermissionUpdateContract.getActivesCount() > 8) {
-      throw new ContractValidateException("active permission is too many");
-    }
-
-    Permission owner = accountPermissionUpdateContract.getOwner();
-    Permission witness = accountPermissionUpdateContract.getWitness();
-    List<Permission> actives = accountPermissionUpdateContract.getActivesList();
-
-    if (owner.getType() != PermissionType.Owner) {
-      throw new ContractValidateException("owner permission type is error");
-    }
-    if (!checkPermission(owner)) {
-      return false;
-    }
-    if (accountCapsule.getIsWitness()) {
-      if (witness.getType() != PermissionType.Witness) {
-        throw new ContractValidateException("witness permission type is error");
-      }
-      if (!checkPermission(witness)) {
-        return false;
-      }
-    }
-    for (Permission permission : actives) {
-      if (permission.getType() != PermissionType.Active) {
-        throw new ContractValidateException("active permission type is error");
-      }
-      if (!checkPermission(permission)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   @Override

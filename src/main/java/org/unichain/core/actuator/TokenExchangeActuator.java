@@ -22,26 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.utils.TransactionUtil;
-import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract;
-import org.unichain.protos.Contract.CreateTokenContract;
+import org.unichain.protos.Contract.TokenExchangeContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
-
-import java.util.Arrays;
-
-import static org.unichain.core.config.Parameter.ChainConstant.*;
-import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_END_TIME;
-import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_START_TIME;
 
 @Slf4j(topic = "actuator")
 public class TokenExchangeActuator extends AbstractActuator {
@@ -55,30 +44,30 @@ public class TokenExchangeActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var accountStore = dbManager.getAccountStore();
-      var tokenStore = dbManager.getTokenPoolStore();
+      var tokenPoolStore = dbManager.getTokenPoolStore();
 
-      var ctx = contract.unpack(Contract.TokenExchangeContract.class);
+      var ctx = contract.unpack(TokenExchangeContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var ownerAccount = accountStore.get(ownerAddress);
 
       byte[] tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenPool = tokenStore.get(tokenKey);
+      var tokenPool = tokenPoolStore.get(tokenKey);
       var tokenOwnerAddress = tokenPool.getOwnerAddress().toByteArray();
       var tokenOwnerAcc = accountStore.get(tokenOwnerAddress);
 
-      var exchUnw = tokenPool.getExchUnw();
-      var exchToken = tokenPool.getExchToken();
-      var exchangedToken = ctx.getAmount() * exchToken / exchUnw; //@todo review ginza factor
+      var exchUnwFactor = tokenPool.getExchUnw();
+      var exchTokenFactor = tokenPool.getExchToken();
+      var exchangedToken = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
 
       ownerAccount.addToken(tokenKey, exchangedToken);
-      accountStore.put(ownerAddress, ownerAccount);
+      ownerAccount.setBalance(ownerAccount.getBalance() - ctx.getAmount() - fee);
 
       tokenOwnerAcc.burnToken(tokenKey, exchangedToken);
-
-      ownerAccount.setBalance(ownerAccount.getBalance() - ctx.getAmount() - fee);
       tokenOwnerAcc.setBalance(tokenOwnerAcc.getBalance() + ctx.getAmount());
+
       accountStore.put(ownerAddress, ownerAccount);
       accountStore.put(tokenOwnerAddress, tokenOwnerAcc);
+
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -94,26 +83,31 @@ public class TokenExchangeActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(CreateTokenContract.class), "contract type error,expected type [CreateTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(TokenExchangeContract.class), "contract type error,expected type [TokenExchangeContract],real type[" + contract.getClass() + "]");
 
       var accountStore = dbManager.getAccountStore();
       var tokenPoolStore = dbManager.getTokenPoolStore();
-      val ctx = this.contract.unpack(Contract.TokenExchangeContract.class);
+      val ctx = this.contract.unpack(TokenExchangeContract.class);
+      Assert.isTrue(ctx.getAmount() > 0, "Exchange UNW amount must be positive");
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       var ownerCap = accountStore.get(ownerAddress);
-      Assert.notNull(ownerCap, "Account not exists");
+      Assert.notNull(ownerCap, "Owner account not exists");
+      Assert.isTrue(ownerCap.getBalance() >= (ctx.getAmount() + calcFee()), "Not enough balance to exchange");
 
       byte[] tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = tokenPoolStore.get(tokenKey);
-      Assert.notNull(tokenPool, "Token pool not found");
+      Assert.notNull(tokenPool, "Token pool not exists");
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
 
-      var tokenOwnerAccount = accountStore.get(tokenPool.getOwnerAddress().toByteArray());
-      Assert.notNull(tokenOwnerAccount, "Token owner account not exists");
-      Assert.isTrue(tokenOwnerAccount.getTokenAvailable(tokenKey) >= ctx.getAmount(), "Not enough token to exchange");
-      Assert.isTrue(ownerCap.getBalance() >= calcFee(), "Not enough balance to exchange");
+      var tokenOwnerCap = accountStore.get(tokenPool.getOwnerAddress().toByteArray());
+      Assert.notNull(tokenOwnerCap, "Token owner account not exists");
+
+      var exchUnwFactor = tokenPool.getExchUnw();
+      var exchTokenFactor = tokenPool.getExchToken();
+      var estimatedExchangeToken = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
+      Assert.isTrue(tokenOwnerCap.getTokenAvailable(tokenKey) >= estimatedExchangeToken, "Not enough token liquidity to exchange");
       return true;
     }
     catch (Exception e){
@@ -124,11 +118,11 @@ public class TokenExchangeActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(Contract.TokenExchangeContract.class).getOwnerAddress();
+    return contract.unpack(TokenExchangeContract.class).getOwnerAddress();
   }
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getTransactionFee();//500 unw default
+    return 0L;
   }
 }

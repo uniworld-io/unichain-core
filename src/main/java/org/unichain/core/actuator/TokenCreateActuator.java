@@ -36,7 +36,8 @@ import org.unichain.protos.Contract.CreateTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import static org.unichain.core.config.Parameter.ChainConstant.*;
-import static org.unichain.core.services.http.utils.Util.*;
+import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_END_TIME;
+import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_START_TIME;
 
 @Slf4j(topic = "actuator")
 public class TokenCreateActuator extends AbstractActuator {

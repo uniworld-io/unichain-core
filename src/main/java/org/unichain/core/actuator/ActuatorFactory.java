@@ -77,9 +77,8 @@ public class ActuatorFactory {
             return new TokenCreateActuatorV3(contract.getParameter(), manager);
         }
       }
-      case ExchangeTokenContract: {
+      case ExchangeTokenContract:
         return new TokenExchangeActuator(contract.getParameter(), manager);
-      }
       case TransferTokenOwnerContract:
         return new TokenTransferOwnerActuator(contract.getParameter(), manager);
       case ContributeTokenPoolFeeContract:{

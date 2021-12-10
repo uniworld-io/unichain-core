@@ -41,36 +41,33 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
-    try {
-        var ctx = contract.unpack(ContributeTokenPoolFeeContract.class);
-        logger.debug("ContributeTokenPoolFee  {} ...!", ctx);
-        var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-        var contributeAmount =  ctx.getAmount();
-        var tokenCapsule = dbManager.getTokenPoolStore().get(tokenKey);
-        tokenCapsule.setFeePool(tokenCapsule.getFeePool() + contributeAmount);
-        dbManager.getTokenPoolStore().put(tokenKey, tokenCapsule);
+      long fee = calcFee();
+      try {
+          var ctx = contract.unpack(ContributeTokenPoolFeeContract.class);
+          var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
+          var contributeAmount = ctx.getAmount();
+          var tokenCapsule = dbManager.getTokenPoolStore().get(tokenKey);
+          tokenCapsule.setFeePool(tokenCapsule.getFeePool() + contributeAmount);
+          dbManager.getTokenPoolStore().put(tokenKey, tokenCapsule);
 
-        var ownerAddress = ctx.getOwnerAddress().toByteArray();
-        dbManager.adjustBalance(ownerAddress, -(ctx.getAmount() + fee));
-        dbManager.burnFee(fee);
-        ret.setStatus(fee, code.SUCESS);
-        logger.debug("ContributeTokenPoolFee  {} ...DONE!", ctx);
-    } catch (Exception e) {
-        logger.error("exec contribute token fee got error", e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    }
-    return true;
+          var ownerAddress = ctx.getOwnerAddress().toByteArray();
+          dbManager.adjustBalance(ownerAddress, -(ctx.getAmount() + fee));
+          dbManager.burnFee(fee);
+          ret.setStatus(fee, code.SUCESS);
+          return true;
+      } catch (Exception e) {
+          logger.error(e.getMessage(), e);
+          ret.setStatus(fee, code.FAILED);
+          throw new ContractExeException(e.getMessage());
+      }
   }
 
   @Override
   public boolean validate() throws ContractValidateException {
       try {
-          logger.debug("validate ContributeTokenPoolFee ...");
           Assert.notNull(contract, "No contract!");
           Assert.notNull(dbManager, "No dbManager!");
-          Assert.isTrue(contract.is(Contract.ContributeTokenPoolFeeContract.class), "contract type error,expected type [ContributeTokenPoolFeeContract],real type[" + contract.getClass() + "]");
+          Assert.isTrue(contract.is(Contract.ContributeTokenPoolFeeContract.class), "Contract type error,expected type [ContributeTokenPoolFeeContract],real type[" + contract.getClass() + "]");
 
           val ctx  = this.contract.unpack(ContributeTokenPoolFeeContract.class);
           var ownerAccount = dbManager.getAccountStore().get(ctx.getOwnerAddress().toByteArray());
@@ -84,11 +81,10 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
           Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
           Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
           Assert.isTrue(ownerAccount.getBalance() >= contributeAmount + calcFee(), "Not enough balance");
-          logger.debug("validate ContributeTokenPoolFee ...DONE!");
           return true;
       }
       catch (Exception e){
-          logger.error("validate contribute token fee got error -->", e);
+          logger.error(e.getMessage(), e);
           throw  new ContractValidateException(e.getMessage());
       }
   }

@@ -77,7 +77,7 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
             (receiverCapsule != null && receiverCapsule.getType() != AccountType.Contract)) {
           switch (unfreezeBalanceContract.getResource()) {
             case BANDWIDTH:
-              if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1
+              if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
                       && receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth() < unfreezeBalance) {
                 receiverCapsule.setAcquiredDelegatedFrozenBalanceForBandwidth(0);
               } else {
@@ -85,7 +85,7 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
               }
               break;
             case ENERGY:
-              if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1
+              if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
                       && receiverCapsule.getAcquiredDelegatedFrozenBalanceForEnergy() < unfreezeBalance) {
                 receiverCapsule.setAcquiredDelegatedFrozenBalanceForEnergy(0);
               } else {
@@ -271,7 +271,7 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
                       + "]");
             }
           } else {
-              if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() != 1
+              if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() != 1
                   && receiverCapsule != null
                   && receiverCapsule.getType() != AccountType.Contract
                   && receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth() < delegatedResourceCapsule.getFrozenBalanceForBandwidth()) {
@@ -300,7 +300,7 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
                           + "]");
             }
           } else {
-            if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() != 1
+            if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() != 1
                 && receiverCapsule != null
                 && receiverCapsule.getType() != AccountType.Contract
                 && receiverCapsule.getAcquiredDelegatedFrozenBalanceForEnergy() < delegatedResourceCapsule.getFrozenBalanceForEnergy()) {

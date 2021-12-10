@@ -14,7 +14,6 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.TransferTokenOwnerContract;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction.Result.code;

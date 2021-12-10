@@ -7,8 +7,7 @@ import org.springframework.stereotype.Component;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract;
-import org.unichain.protos.Contract.ExchangeInjectContract;
+import org.unichain.protos.Contract.TokenExchangeContract;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 
@@ -30,7 +29,7 @@ public class ExchangeTokenServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       boolean visible = Util.getVisiblePost(contract);
-      Contract.TokenExchangeContract.Builder build = Contract.TokenExchangeContract.newBuilder();
+      TokenExchangeContract.Builder build = TokenExchangeContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       Transaction tx = wallet
           .createTransactionCapsule(build.build(), ContractType.ExchangeTokenContract)
@@ -39,8 +38,8 @@ public class ExchangeTokenServlet extends HttpServlet {
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
       try {
+        logger.error(e.getMessage(), e);
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());

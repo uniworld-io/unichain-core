@@ -120,8 +120,15 @@ public class ActuatorFactory {
             return new TokenBurnActuatorV3(contract.getParameter(), manager);
         }
       }
-      case TransferTokenContract:
-        return new TokenTransferActuator(contract.getParameter(), manager);
+      case TransferTokenContract: {
+        switch (blockVersion) {
+          case BLOCK_VERSION:
+          case BLOCK_VERSION_2:
+            return new TokenTransferActuator(contract.getParameter(), manager);
+          default:
+            return new TokenTransferActuatorV3(contract.getParameter(), manager);
+        }
+      }
       case WithdrawFutureTokenContract:{
         switch (blockVersion){
           case BLOCK_VERSION:

@@ -32,6 +32,8 @@ import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.TokenExchangeContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import java.util.Arrays;
+
 @Slf4j(topic = "actuator")
 public class TokenExchangeActuator extends AbstractActuator {
 
@@ -103,6 +105,8 @@ public class TokenExchangeActuator extends AbstractActuator {
 
       var tokenOwnerCap = accountStore.get(tokenPool.getOwnerAddress().toByteArray());
       Assert.notNull(tokenOwnerCap, "Token owner account not exists");
+
+      Assert.isTrue(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()), "Token owner not allowed to exchange token");
 
       var exchUnwFactor = tokenPool.getExchUnw();
       var exchTokenFactor = tokenPool.getExchToken();

@@ -1,10 +1,10 @@
 /*
- * unichain-core is free software: you can redistribute it and/or modify
+ * Unichain-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * unichain-core is distributed in the hope that it will be useful,
+ * Unichain-core is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -41,7 +41,7 @@ public class TokenContributePoolFeeActuatorV3 extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
         var ctx = contract.unpack(ContributeTokenPoolFeeContract.class);
         var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
@@ -55,7 +55,7 @@ public class TokenContributePoolFeeActuatorV3 extends AbstractActuator {
         ret.setStatus(fee, code.SUCESS);
     }
     catch (Exception e) {
-        logger.error("exec contribute token fee got error", e);
+        logger.error(e.getMessage(), e);
         ret.setStatus(fee, code.FAILED);
         throw new ContractExeException(e.getMessage());
     }
@@ -65,10 +65,9 @@ public class TokenContributePoolFeeActuatorV3 extends AbstractActuator {
   @Override
   public boolean validate() throws ContractValidateException {
       try {
-          logger.debug("validate ContributeTokenPoolFee ...");
           Assert.notNull(contract, "No contract!");
           Assert.notNull(dbManager, "No dbManager!");
-          Assert.isTrue(contract.is(ContributeTokenPoolFeeContract.class), "contract type error,expected type [ContributeTokenPoolFeeContract],real type[" + contract.getClass() + "]");
+          Assert.isTrue(contract.is(ContributeTokenPoolFeeContract.class), "Contract type error,expected type [ContributeTokenPoolFeeContract],real type[" + contract.getClass() + "]");
 
           val ctx  = this.contract.unpack(ContributeTokenPoolFeeContract.class);
           var ownerAccount = dbManager.getAccountStore().get(ctx.getOwnerAddress().toByteArray());
@@ -82,11 +81,10 @@ public class TokenContributePoolFeeActuatorV3 extends AbstractActuator {
           Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
           Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
           Assert.isTrue(ownerAccount.getBalance() >= contributeAmount + calcFee(), "Not enough balance");
-          logger.debug("validate ContributeTokenPoolFee ...DONE!");
           return true;
       }
       catch (Exception e){
-          logger.error("validate contribute token fee got error -->", e);
+          logger.error(e.getMessage(), e);
           throw  new ContractValidateException(e.getMessage());
       }
   }

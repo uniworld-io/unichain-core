@@ -1,10 +1,10 @@
 /*
- * unichain-core is free software: you can redistribute it and/or modify
+ * Unichain-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * unichain-core is distributed in the hope that it will be useful,
+ * Unichain-core is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -42,7 +42,7 @@ public class TokenWithdrawFutureActuatorV3 extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
       var ctx = contract.unpack(WithdrawFutureTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
@@ -67,10 +67,10 @@ public class TokenWithdrawFutureActuatorV3 extends AbstractActuator {
   @Override
   public boolean validate() throws ContractValidateException {
     try {
-      long fee = calcFee();
+      var fee = calcFee();
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(WithdrawFutureTokenContract.class), "contract type error,expected type [Contract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(WithdrawFutureTokenContract.class), "Contract type error,expected type [Contract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(WithdrawFutureTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
@@ -84,7 +84,7 @@ public class TokenWithdrawFutureActuatorV3 extends AbstractActuator {
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
       Assert.isTrue (availableToWithdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp()), "Token unavailable to withdraw");
-      Assert.isTrue (tokenPool.getFeePool() >= fee, "not enough token pool fee balance");
+      Assert.isTrue (tokenPool.getFeePool() >= fee, "Not enough token pool fee balance");
       return true;
     }
     catch (Exception e){

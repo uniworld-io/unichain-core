@@ -1,10 +1,10 @@
 /*
- * unichain-core is free software: you can redistribute it and/or modify
+ * Unichain-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * unichain-core is distributed in the hope that it will be useful,
+ * Unichain-core is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -155,8 +155,8 @@ public class TransferAssetActuator extends AbstractActuator {
 
     AccountCapsule toAccount = this.dbManager.getAccountStore().get(toAddress);
     if (toAccount != null) {
-      //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
-      if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1 && toAccount.getType() == AccountType.Contract) {
+      //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
+      if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1 && toAccount.getType() == AccountType.Contract) {
         throw new ContractValidateException("Cannot transfer asset to smartContract.");
       }
 

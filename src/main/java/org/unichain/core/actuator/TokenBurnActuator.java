@@ -1,10 +1,10 @@
 /*
- * unichain-core is free software: you can redistribute it and/or modify
+ * nichain-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * unichain-core is distributed in the hope that it will be useful,
+ * Unichain-core is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -25,16 +25,13 @@ import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
-import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.BurnTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 @Slf4j(topic = "actuator")
 public class TokenBurnActuator extends AbstractActuator {
@@ -45,10 +42,9 @@ public class TokenBurnActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
       var ctx = contract.unpack(BurnTokenContract.class);
-      logger.debug("BurnTokenContract  {} ...", ctx);
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
       tokenCap.burnToken(ctx.getAmount());
@@ -61,10 +57,9 @@ public class TokenBurnActuator extends AbstractActuator {
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
-      logger.debug("BurnTokenContract  {} ...DONE!", ctx);
       return true;
     } catch (Exception e) {
-      logger.error("exec burn token got error", e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -75,7 +70,7 @@ public class TokenBurnActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(BurnTokenContract.class), "contract type error,expected type [BurnTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(BurnTokenContract.class), "Contract type error, expected type [BurnTokenContract], real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(BurnTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
@@ -96,7 +91,7 @@ public class TokenBurnActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error("validate TokenBurn got error -->", e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

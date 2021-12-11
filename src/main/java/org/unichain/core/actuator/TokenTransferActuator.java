@@ -1,10 +1,10 @@
 /*
- * unichain-core is free software: you can redistribute it and/or modify
+ * Unichain-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * unichain-core is distributed in the hope that it will be useful,
+ * Unichain-core is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -49,10 +49,9 @@ public class TokenTransferActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
       var ctx = contract.unpack(TransferTokenContract.class);
-      logger.debug("exec TokenTransferActuator from {} to {} token {} amount {}  ...", ctx.getOwnerAddress(), ctx.getToAddress(), ctx.getTokenName(), ctx.getAmount());
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
@@ -60,7 +59,6 @@ public class TokenTransferActuator extends AbstractActuator {
       var tokenPoolOwnerAddr = tokenPool.getOwnerAddress().toByteArray();
       var toAddress = ctx.getToAddress().toByteArray();
 
-      //create account of to_address if not exist.
       var toAccountCap = dbManager.getAccountStore().get(toAddress);
       if (toAccountCap == null) {
         var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
@@ -68,7 +66,6 @@ public class TokenTransferActuator extends AbstractActuator {
         fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
 
-      //transfer token
       if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){
         //owner of token transfer, don't charge fee
         ownerAccountCap.burnToken(tokenKey, ctx.getAmount());
@@ -107,10 +104,9 @@ public class TokenTransferActuator extends AbstractActuator {
       dbManager.burnFee(fee);
 
       ret.setStatus(fee, code.SUCESS);
-      logger.debug("exec TokenTransferActuator from {} to {} token {} amount {} ... DONE!", ctx.getOwnerAddress(), ctx.getToAddress(), ctx.getTokenName(), ctx.getAmount());
       return true;
     } catch (Exception e) {
-      logger.error("exec TokenTransferActuator {}" , e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -123,7 +119,7 @@ public class TokenTransferActuator extends AbstractActuator {
       Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(contract.is(TransferTokenContract.class), "contract type error,expected type [TransferTokenContract],real type[" + contract.getClass() + "]");
 
-      long fee = calcFee();
+      var fee = calcFee();
 
       val ctx = this.contract.unpack(TransferTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
@@ -137,11 +133,11 @@ public class TokenTransferActuator extends AbstractActuator {
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
 
       if (ctx.getAvailableTime() > 0) {
-        Assert.isTrue (ctx.getAvailableTime() > dbManager.getHeadBlockTimeStamp(), "block time passed available time");
+        Assert.isTrue (ctx.getAvailableTime() > dbManager.getHeadBlockTimeStamp(), "Block time passed available time");
         long maxAvailTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationToken();
-        Assert.isTrue (ctx.getAvailableTime() <= maxAvailTime, "available time limited. Max available timestamp: " + maxAvailTime);
-        Assert.isTrue(ctx.getAvailableTime() < tokenPool.getEndTime(), "available time exceeded token expired time");
-        Assert.isTrue(ctx.getAmount() >= tokenPool.getLot(),"future transfer require minimum amount of : " + tokenPool.getLot());
+        Assert.isTrue (ctx.getAvailableTime() <= maxAvailTime, "Available time limited. Max available timestamp: " + maxAvailTime);
+        Assert.isTrue(ctx.getAvailableTime() < tokenPool.getEndTime(), "Available time exceeded token expired time");
+        Assert.isTrue(ctx.getAmount() >= tokenPool.getLot(),"Future transfer require minimum amount of : " + tokenPool.getLot());
       }
 
       var toAddress = ctx.getToAddress().toByteArray();
@@ -167,8 +163,8 @@ public class TokenTransferActuator extends AbstractActuator {
 
       Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount() + tokenFee, "Not enough token balance");
 
-      //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
-      if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1
+      //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
+      if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
               && toAccountCap != null
               && toAccountCap.getType() == Protocol.AccountType.Contract) {
         throw new ContractValidateException("Cannot transfer token to smartContract.");

@@ -14,7 +14,6 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.TransferTokenOwnerContract;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
@@ -31,28 +30,26 @@ public class TokenTransferOwnerActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
       var ctx = contract.unpack(TransferTokenOwnerContract.class);
       var accountStore = dbManager.getAccountStore();
       var tokenStore = dbManager.getTokenPoolStore();
-      byte[] ownerAddress = ctx.getOwnerAddress().toByteArray();
-      byte[] toAddress = ctx.getToAddress().toByteArray();
-      byte[] tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var toAddress = ctx.getToAddress().toByteArray();
+      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = tokenStore.get(tokenKey);
 
-      AccountCapsule toAccount = accountStore.get(toAddress);
+      var toAccount = accountStore.get(toAddress);
       if (Objects.isNull(toAccount)) {
-        boolean withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
+        var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
         toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
 
-      //update new owner
       tokenPool.setOwnerAddress(ctx.getToAddress());
       tokenStore.put(tokenKey, tokenPool);
 
-      //transfer available token to new owner
       var ownerAccount = accountStore.get(ownerAddress);
       var tokenAvail = ownerAccount.burnAllAvailableToken(tokenKey);
       toAccount.addToken(tokenKey, tokenAvail);
@@ -74,17 +71,17 @@ public class TokenTransferOwnerActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(TransferTokenOwnerContract.class), "contract type error, expected type [TransferTokenOwnerContract], real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(TransferTokenOwnerContract.class), "Contract type error, expected type [TransferTokenOwnerContract], real type[" + contract.getClass() + "]");
 
       var fee = calcFee();
       var ctx = contract.unpack(TransferTokenOwnerContract.class);
 
-      byte[] ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       var ownerAccount = dbManager.getAccountStore().get(ownerAddress);
       Assert.notNull(ownerAccount, "Owner account not exists");
 
-      byte[] toAddress = ctx.getToAddress().toByteArray();
+      var toAddress = ctx.getToAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
       Assert.isTrue(!Arrays.equals(ownerAddress, toAddress), "Transfer owner to itself not allowed");
 
@@ -96,15 +93,14 @@ public class TokenTransferOwnerActuator extends AbstractActuator {
       Assert.isTrue(Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()), "Mismatched token owner not allowed");
 
       var toAccount = dbManager.getAccountStore().get(toAddress);
-      if (toAccount == null) {
+      if (Objects.isNull(toAccount)) {
         fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
 
-
       //after UvmSolidity059 proposal, send token/reassign token owner to smartContract by actuator is not allowed.
-      var transferToSmartContract  = (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1)
-              && toAccount != null
-              && toAccount.getType() == AccountType.Contract;
+      var transferToSmartContract  = (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1)
+              && (toAccount != null)
+              && (toAccount.getType() == AccountType.Contract);
       Assert.isTrue(!transferToSmartContract, "Cannot transfer token owner permission to smartContract");
 
       Assert.isTrue(ownerAccount.getBalance() >=  fee, "Balance is not sufficient");
@@ -112,6 +108,7 @@ public class TokenTransferOwnerActuator extends AbstractActuator {
       return true;
     }
     catch (IllegalArgumentException | InvalidProtocolBufferException | ArithmeticException e){
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

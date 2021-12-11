@@ -88,8 +88,8 @@ public class TransferFutureActuator extends AbstractActuator {
       if (toAccount == null) {
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
-      //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
-      if (dbManager.getDynamicPropertiesStore().getAllowTvmSolidity059() == 1
+      //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
+      if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
               && toAccount != null
               && toAccount.getType() == AccountType.Contract) {
         throw new ContractValidateException("Cannot transfer unw to smartContract.");

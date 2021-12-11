@@ -1,10 +1,10 @@
 /*
- * unichain-core is free software: you can redistribute it and/or modify
+ * Unichain-core is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * unichain-core is distributed in the hope that it will be useful,
+ * Unichain-core is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -42,25 +42,23 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
       var ctx = contract.unpack(WithdrawFutureTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
 
-      //withdraw
       withdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp());
 
-      //if success, charge pool fee
       tokenPool.setFeePool(tokenPool.getFeePool() - fee);
       tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException| ContractValidateException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -69,10 +67,10 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
   @Override
   public boolean validate() throws ContractValidateException {
     try {
-      long fee = calcFee();
+      var fee = calcFee();
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(WithdrawFutureTokenContract.class), "contract type error,expected type [Contract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(WithdrawFutureTokenContract.class), "Contract type error,expected type [Contract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(WithdrawFutureTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
@@ -85,13 +83,13 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
 
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
-      Assert.isTrue (isTokenFutureWithdrawable(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp()), "Token unavailable to withdraw");
-      Assert.isTrue (tokenPool.getFeePool() >= fee, "not enough token pool fee balance");
+      Assert.isTrue (availableTokenFutureWithdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp()), "Token unavailable to withdraw");
+      Assert.isTrue (tokenPool.getFeePool() >= fee, "Not enough token pool fee balance");
 
       return true;
     }
     catch (Exception e){
-      logger.error("validate token future withdraw got error -->", e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }
@@ -106,7 +104,7 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
     return Parameter.ChainConstant.TRANSFER_FEE;
   }
 
-  private boolean isTokenFutureWithdrawable(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) {
+  private boolean availableTokenFutureWithdraw(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) {
     var headBlockTickDay = Util.makeDayTick(headBlockTime);
     var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
     var summary = ownerAcc.getFutureTokenSummary(new String(tokenKey));
@@ -148,7 +146,7 @@ public class TokenWithdrawFutureActuator extends AbstractActuator {
     }
 
     /**
-     * all deals withdrawed: remove summary
+     * all deals withdraw: remove summary
      */
     if(tmpTickKeyBs == null){
       ownerAcc.clearFutureToken(tokenKey);

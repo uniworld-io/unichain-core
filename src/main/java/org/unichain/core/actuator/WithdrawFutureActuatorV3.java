@@ -50,9 +50,9 @@ public class WithdrawFutureActuatorV3 extends AbstractActuator {
     @Override
     public boolean validate() throws ContractValidateException {
         try {
-            Assert.isTrue(contract != null, "No contract!");
-            Assert.isTrue(dbManager != null, "No dbManager!");
-            Assert.isTrue(contract.is(FutureWithdrawContract.class), "contract type error,expected type [FutureWithdrawContract], real type[" + contract.getClass() + "]");
+            Assert.notNull(contract, "No contract!");
+            Assert.notNull(dbManager, "No dbManager!");
+            Assert.isTrue(contract.is(FutureWithdrawContract.class), "Contract type error,expected type [FutureWithdrawContract], real type[" + contract.getClass() + "]");
 
             val ctx = this.contract.unpack(FutureWithdrawContract.class);
             var ownerAddress = ctx.getOwnerAddress().toByteArray();
@@ -60,7 +60,7 @@ public class WithdrawFutureActuatorV3 extends AbstractActuator {
 
             var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
             var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-            Assert.isTrue(accountCapsule != null, ACCOUNT_EXCEPTION_STR + readableOwnerAddress + "] not exists");
+            Assert.notNull(accountCapsule, ACCOUNT_EXCEPTION_STR + readableOwnerAddress + "] not exists");
 
             var isGP = Args.getInstance()
                     .getGenesisBlock()
@@ -72,7 +72,7 @@ public class WithdrawFutureActuatorV3 extends AbstractActuator {
             return true;
         }
         catch (Exception e){
-            logger.error("validate withdraw future got error", e);
+            logger.error(e.getMessage(), e);
             throw new ContractValidateException(e.getMessage());
         }
     }
@@ -84,17 +84,17 @@ public class WithdrawFutureActuatorV3 extends AbstractActuator {
 
     @Override
     public long calcFee() {
-        return Parameter.ChainConstant.TRANSFER_FEE;
+        return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
     }
 
     private boolean availableToWithdraw(byte[] ownerAddress, long headBlockTime) {
         var headBlockTickDay = Util.makeDayTick(headBlockTime);
         var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
         var summary = ownerAcc.getFutureSummary();
-        if(Objects.isNull(summary) || (summary.getTotalDeal() <= 0) || (headBlockTickDay < summary.getLowerTime()) || (summary.getTotalBalance() <= 0))
-            return false;
-        else
-            return true;
+        return !((Objects.isNull(summary)
+                || (summary.getTotalDeal() <= 0)
+                || (headBlockTickDay < summary.getLowerTime())
+                || (summary.getTotalBalance() <= 0)));
     }
 
     private void withdraw(byte[] ownerAddress, long headBlockTime){
@@ -131,7 +131,7 @@ public class WithdrawFutureActuatorV3 extends AbstractActuator {
             }
 
             /**
-             * withdraw deal
+             * withdraw deals
              */
             withdrawAmount += tmpTick.getBalance();
             withdrawDeal ++;

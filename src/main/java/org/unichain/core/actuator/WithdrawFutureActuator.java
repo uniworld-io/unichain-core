@@ -20,6 +20,7 @@ import org.unichain.protos.Contract.FutureWithdrawContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import static org.unichain.core.actuator.ActuatorConstant.ACCOUNT_EXCEPTION_STR;
 
@@ -50,9 +51,9 @@ public class WithdrawFutureActuator extends AbstractActuator {
     @Override
     public boolean validate() throws ContractValidateException {
         try {
-            Assert.isTrue(contract != null, "No contract!");
-            Assert.isTrue(dbManager != null, "No dbManager!");
-            Assert.isTrue(contract.is(FutureWithdrawContract.class), "contract type error,expected type [FutureWithdrawContract],real type[" + contract.getClass() + "]");
+            Assert.notNull(contract , "No contract!");
+            Assert.notNull(dbManager, "No dbManager!");
+            Assert.isTrue(contract.is(FutureWithdrawContract.class), "Contract type error,expected type [FutureWithdrawContract], real type[" + contract.getClass() + "]");
 
             val ctx = this.contract.unpack(FutureWithdrawContract.class);
             var ownerAddress = ctx.getOwnerAddress().toByteArray();
@@ -68,11 +69,11 @@ public class WithdrawFutureActuator extends AbstractActuator {
                     .stream()
                     .anyMatch(witness -> Arrays.equals(ownerAddress, witness.getAddress()));
             Assert.isTrue(!isGP, ACCOUNT_EXCEPTION_STR + readableOwnerAddress + "] is a guard representative and is not allowed to withdraw Balance");
-            Assert.isTrue(isFutureWithdrawable(ownerAddress, dbManager.getHeadBlockTimeStamp()), "Account does not have any future balance");
+            Assert.isTrue(availableToWithdraw(ownerAddress, dbManager.getHeadBlockTimeStamp()), "Account does not have any future balance");
             return true;
         }
         catch (Exception e){
-            logger.error("validate withdraw future got error", e);
+            logger.error(e.getMessage(), e);
             throw new ContractValidateException(e.getMessage());
         }
     }
@@ -87,14 +88,14 @@ public class WithdrawFutureActuator extends AbstractActuator {
         return Parameter.ChainConstant.TRANSFER_FEE;
     }
 
-    private boolean isFutureWithdrawable(byte[] ownerAddress, long headBlockTime) {
+    private boolean availableToWithdraw(byte[] ownerAddress, long headBlockTime) {
         var headBlockTickDay = Util.makeDayTick(headBlockTime);
         var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
         var summary = ownerAcc.getFutureSummary();
-        if(summary == null || headBlockTickDay < summary.getLowerTime() || summary.getTotalDeal() <= 0 || summary.getTotalBalance() <= 0)
-            return false;
-        else
-            return true;
+        return !(summary == null
+                || headBlockTickDay < summary.getLowerTime()
+                || summary.getTotalDeal() <= 0
+                || summary.getTotalBalance() <= 0);
     }
 
     private void withdraw(byte[] ownerAddress, long headBlockTime){
@@ -104,9 +105,11 @@ public class WithdrawFutureActuator extends AbstractActuator {
         var summary = accountStore.get(ownerAddress).getFutureSummary();
         var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
 
-        Assert.isTrue(summary != null && summary.getLowerTime() <= headBlockTickDay, "No future deal to withdraw");
+        Assert.isTrue(Objects.nonNull(summary) && (summary.getLowerTime() <= headBlockTickDay), "No future deal to withdraw");
 
-        //then loop to withdraw, the most fastest way!!!
+        /**
+         * withdraw deals
+         */
         var tmpTickKeyBs = summary.getLowerTick();
         var withdrawAmount = 0;
         var withdrawDeal = 0;
@@ -116,10 +119,8 @@ public class WithdrawFutureActuator extends AbstractActuator {
             var tmpTick = futureStore.get(tmpTickKeyBs.toByteArray());
             if(tmpTick.getExpireTime() <= headBlockTickDay)
             {
-                //withdraw
                 withdrawAmount += tmpTick.getBalance();
                 withdrawDeal ++;
-                //delete
                 futureStore.delete(tmpTickKeyBs.toByteArray());
                 tmpTickKeyBs = tmpTick.getNextTick();
             }
@@ -128,7 +129,7 @@ public class WithdrawFutureActuator extends AbstractActuator {
         }
 
         /**
-         * all deals withdrawed: remove summary
+         * all deals withdraw: remove summary
          */
         if(tmpTickKeyBs == null){
             ownerAcc.clearFuture();
@@ -144,7 +145,9 @@ public class WithdrawFutureActuator extends AbstractActuator {
         newHead.setPrevTick(null);
         futureStore.put(tmpTickKeyBs.toByteArray(), newHead);
 
-        //save summary
+        /**
+         * save summary
+         */
         summary = summary.toBuilder()
                 .setTotalDeal(summary.getTotalDeal() - withdrawDeal)
                 .setTotalBalance(summary.getTotalBalance() - withdrawAmount)

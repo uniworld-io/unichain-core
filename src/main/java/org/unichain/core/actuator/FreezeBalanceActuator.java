@@ -4,7 +4,10 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
 import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
@@ -36,8 +39,8 @@ public class FreezeBalanceActuator extends AbstractActuator {
     final FreezeBalanceContract freezeBalanceContract;
     try {
       freezeBalanceContract = contract.unpack(FreezeBalanceContract.class);
-      byte[] txOwnerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
-      AccountCapsule ownerAccountCapsule = dbManager.getAccountStore().get(txOwnerAddress);
+      var txOwnerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
+      var ownerAccountCapsule = dbManager.getAccountStore().get(txOwnerAddress);
 
       long now = dbManager.getHeadBlockTimeStamp();
       long duration = freezeBalanceContract.getFrozenDuration() * 86_400_000;
@@ -46,8 +49,8 @@ public class FreezeBalanceActuator extends AbstractActuator {
 
       long frozenBalance = freezeBalanceContract.getFrozenBalance();
       long expireTime = now + duration;
-      byte[] ownerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
-      byte[] receiverAddress = freezeBalanceContract.getReceiverAddress().toByteArray();
+      var ownerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
+      var receiverAddress = freezeBalanceContract.getReceiverAddress().toByteArray();
 
       switch (freezeBalanceContract.getResource()) {
         case BANDWIDTH:
@@ -90,98 +93,65 @@ public class FreezeBalanceActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!contract.is(FreezeBalanceContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [FreezeBalanceContract],real type[" + contract.getClass() + "]");
-    }
-
-    final FreezeBalanceContract freezeBalanceContract;
     try {
-      freezeBalanceContract = this.contract.unpack(FreezeBalanceContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      throw new ContractValidateException(e.getMessage());
-    }
-    byte[] ownerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid address");
-    }
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(this.contract.is(FreezeBalanceContract.class), "contract type error,expected type [FreezeBalanceContract],real type[" + contract.getClass() + "]");
 
-    AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-    if (accountCapsule == null) {
-      String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-      throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
-    }
+      val freezeBalanceContract = this.contract.unpack(FreezeBalanceContract.class);
+      var ownerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
 
-    long frozenBalance = freezeBalanceContract.getFrozenBalance();
-    if (frozenBalance <= 0) {
-      throw new ContractValidateException("frozenBalance must be positive");
-    }
-    if (frozenBalance < 1_000_000L) {
-      throw new ContractValidateException("frozenBalance must be more than 1 UNW");
-    }
+      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(accountCapsule, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-    int frozenCount = accountCapsule.getFrozenCount();
-    if (!(frozenCount == 0 || frozenCount == 1)) {
-      throw new ContractValidateException("frozenCount must be 0 or 1");
-    }
-    if (frozenBalance > accountCapsule.getBalance()) {
-      throw new ContractValidateException("frozenBalance must be less than accountBalance");
-    }
+      long frozenBalance = freezeBalanceContract.getFrozenBalance();
+      Assert.isTrue(frozenBalance > 0, "frozenBalance must be positive");
+      Assert.isTrue(frozenBalance >= 1_000_000L, "frozenBalance must be more than 1 UNW");
+
+      int frozenCount = accountCapsule.getFrozenCount();
+      Assert.isTrue((frozenCount == 0 || frozenCount == 1), "frozenCount must be 0 or 1");
+      Assert.isTrue(frozenBalance <= accountCapsule.getBalance(), "frozenBalance must be less than accountBalance");
 
 //    long maxFrozenNumber = dbManager.getDynamicPropertiesStore().getMaxFrozenNumber();
 //    if (accountCapsule.getFrozenCount() >= maxFrozenNumber) {
 //      throw new ContractValidateException("max frozen number is: " + maxFrozenNumber);
 //    }
 
-    long frozenDuration = freezeBalanceContract.getFrozenDuration();
-    long minFrozenTime = dbManager.getDynamicPropertiesStore().getMinFrozenTime();
-    long maxFrozenTime = dbManager.getDynamicPropertiesStore().getMaxFrozenTime();
+      long frozenDuration = freezeBalanceContract.getFrozenDuration();
+      long minFrozenTime = dbManager.getDynamicPropertiesStore().getMinFrozenTime();
+      long maxFrozenTime = dbManager.getDynamicPropertiesStore().getMaxFrozenTime();
+      boolean needCheckFrozeTime = Args.getInstance().getCheckFrozenTime() == 1;//for test
+      Assert.isTrue(!(needCheckFrozeTime && !(frozenDuration >= minFrozenTime && frozenDuration <= maxFrozenTime)), "frozenDuration must be less than " + maxFrozenTime + " days " + "and more than " + minFrozenTime + " days");
 
-    boolean needCheckFrozeTime = Args.getInstance().getCheckFrozenTime() == 1;//for test
-    if (needCheckFrozeTime && !(frozenDuration >= minFrozenTime
-        && frozenDuration <= maxFrozenTime)) {
-      throw new ContractValidateException("frozenDuration must be less than " + maxFrozenTime + " days " + "and more than " + minFrozenTime + " days");
+      switch (freezeBalanceContract.getResource()) {
+        case BANDWIDTH:
+          break;
+        case ENERGY:
+          break;
+        default:
+          throw new ContractValidateException("ResourceCode error, valid ResourceCode[BANDWIDTH、ENERGY]");
+      }
+
+      //todo：need version control and config for delegating resource
+      var receiverAddress = freezeBalanceContract.getReceiverAddress().toByteArray();
+      //If the receiver is included in the contract, the receiver will receive the resource.
+      if (!ArrayUtils.isEmpty(receiverAddress) && dbManager.getDynamicPropertiesStore().supportDR()) {
+        Assert.isTrue(!(Arrays.equals(receiverAddress, ownerAddress)), "receiverAddress must not be the same as ownerAddress");
+        Assert.isTrue(Wallet.addressValid(receiverAddress), "Invalid receiverAddress");
+
+        var receiverCapsule = dbManager.getAccountStore().get(receiverAddress);
+        Assert.notNull(receiverCapsule, "Account[" + StringUtil.createReadableString(receiverAddress) + "] not exists");
+
+        boolean delegate = (dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 1 && receiverCapsule.getType() == AccountType.Contract);
+        Assert.isTrue(!delegate, "Do not allow delegate resources to contract addresses");
+      }
+
+      return true;
+    } catch (InvalidProtocolBufferException e) {
+      logger.debug(e.getMessage(), e);
+      throw new ContractValidateException(e.getMessage());
     }
-
-    switch (freezeBalanceContract.getResource()) {
-      case BANDWIDTH:
-        break;
-      case ENERGY:
-        break;
-      default:
-        throw new ContractValidateException("ResourceCode error, valid ResourceCode[BANDWIDTH、ENERGY]");
-    }
-
-    //todo：need version control and config for delegating resource
-    byte[] receiverAddress = freezeBalanceContract.getReceiverAddress().toByteArray();
-    //If the receiver is included in the contract, the receiver will receive the resource.
-    if (!ArrayUtils.isEmpty(receiverAddress) && dbManager.getDynamicPropertiesStore().supportDR()) {
-      if (Arrays.equals(receiverAddress, ownerAddress)) {
-        throw new ContractValidateException("receiverAddress must not be the same as ownerAddress");
-      }
-
-      if (!Wallet.addressValid(receiverAddress)) {
-        throw new ContractValidateException("Invalid receiverAddress");
-      }
-
-      AccountCapsule receiverCapsule = dbManager.getAccountStore().get(receiverAddress);
-      if (receiverCapsule == null) {
-        String readableOwnerAddress = StringUtil.createReadableString(receiverAddress);
-        throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
-      }
-
-      if (dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 1 && receiverCapsule.getType() == AccountType.Contract) {
-        throw new ContractValidateException("Do not allow delegate resources to contract addresses");
-      }
-    }
-
-    return true;
   }
 
   @Override
@@ -195,9 +165,9 @@ public class FreezeBalanceActuator extends AbstractActuator {
   }
 
   private void delegateResource(byte[] ownerAddress, byte[] receiverAddress, boolean isBandwidth, long balance, long expireTime) {
-    byte[] key = DelegatedResourceCapsule.createDbKey(ownerAddress, receiverAddress);
+    var key = DelegatedResourceCapsule.createDbKey(ownerAddress, receiverAddress);
     //modify DelegatedResourceStore
-    DelegatedResourceCapsule delegatedResourceCapsule = dbManager.getDelegatedResourceStore().get(key);
+    var delegatedResourceCapsule = dbManager.getDelegatedResourceStore().get(key);
     if (delegatedResourceCapsule != null) {
       if (isBandwidth) {
         delegatedResourceCapsule.addFrozenBalanceForBandwidth(balance, expireTime);
@@ -217,13 +187,13 @@ public class FreezeBalanceActuator extends AbstractActuator {
 
     //modify DelegatedResourceAccountIndexStore
     {
-      DelegatedResourceAccountIndexCapsule delegatedResourceAccountIndexCapsule = dbManager
+      var delegatedResourceAccountIndexCapsule = dbManager
           .getDelegatedResourceAccountIndexStore()
           .get(ownerAddress);
       if (delegatedResourceAccountIndexCapsule == null) {
         delegatedResourceAccountIndexCapsule = new DelegatedResourceAccountIndexCapsule(ByteString.copyFrom(ownerAddress));
       }
-      List<ByteString> toAccountsList = delegatedResourceAccountIndexCapsule.getToAccountsList();
+      var toAccountsList = delegatedResourceAccountIndexCapsule.getToAccountsList();
       if (!toAccountsList.contains(ByteString.copyFrom(receiverAddress))) {
         delegatedResourceAccountIndexCapsule.addToAccount(ByteString.copyFrom(receiverAddress));
       }
@@ -231,11 +201,11 @@ public class FreezeBalanceActuator extends AbstractActuator {
     }
 
     {
-      DelegatedResourceAccountIndexCapsule delegatedResourceAccountIndexCapsule = dbManager.getDelegatedResourceAccountIndexStore().get(receiverAddress);
+      var delegatedResourceAccountIndexCapsule = dbManager.getDelegatedResourceAccountIndexStore().get(receiverAddress);
       if (delegatedResourceAccountIndexCapsule == null) {
         delegatedResourceAccountIndexCapsule = new DelegatedResourceAccountIndexCapsule(ByteString.copyFrom(receiverAddress));
       }
-      List<ByteString> fromAccountsList = delegatedResourceAccountIndexCapsule.getFromAccountsList();
+      var fromAccountsList = delegatedResourceAccountIndexCapsule.getFromAccountsList();
       if (!fromAccountsList.contains(ByteString.copyFrom(ownerAddress))) {
         delegatedResourceAccountIndexCapsule.addFromAccount(ByteString.copyFrom(ownerAddress));
       }
@@ -243,7 +213,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
     }
 
     //modify AccountStore
-    AccountCapsule receiverCapsule = dbManager.getAccountStore().get(receiverAddress);
+    var receiverCapsule = dbManager.getAccountStore().get(receiverAddress);
     if (isBandwidth) {
       receiverCapsule.addAcquiredDelegatedFrozenBalanceForBandwidth(balance);
     } else {

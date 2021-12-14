@@ -47,42 +47,36 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
-      val participateAssetIssueContract = contract.unpack(Contract.ParticipateAssetIssueContract.class);
-      long cost = participateAssetIssueContract.getAmount();
+      val ctx = contract.unpack(Contract.ParticipateAssetIssueContract.class);
+      var cost = ctx.getAmount();
 
-      //subtract from owner address
-      var ownerAddress = participateAssetIssueContract.getOwnerAddress().toByteArray();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var ownerAccount = this.dbManager.getAccountStore().get(ownerAddress);
-      long balance = Math.subtractExact(ownerAccount.getBalance(), cost);
+      var balance = Math.subtractExact(ownerAccount.getBalance(), cost);
       balance = Math.subtractExact(balance, fee);
       ownerAccount.setBalance(balance);
-      var key = participateAssetIssueContract.getAssetName().toByteArray();
+      var key = ctx.getAssetName().toByteArray();
 
-      //calculate the exchange amount
       var assetIssueCapsule = this.dbManager.getAssetIssueStoreFinal().get(key);
 
-      long exchangeAmount = Math.multiplyExact(cost, assetIssueCapsule.getNum());
+      var exchangeAmount = Math.multiplyExact(cost, assetIssueCapsule.getNum());
       exchangeAmount = Math.floorDiv(exchangeAmount, assetIssueCapsule.getUnxNum());
       ownerAccount.addAssetAmountV2(key, exchangeAmount, dbManager);
 
-      //add to to_address
-      var toAddress = participateAssetIssueContract.getToAddress().toByteArray();
+      var toAddress = ctx.getToAddress().toByteArray();
       var toAccount = this.dbManager.getAccountStore().get(toAddress);
       toAccount.setBalance(Math.addExact(toAccount.getBalance(), cost));
-      if (!toAccount.reduceAssetAmountV2(key, exchangeAmount, dbManager)) {
-        throw new ContractExeException("reduceAssetAmount failed !");
-      }
+      Assert.isTrue(toAccount.reduceAssetAmountV2(key, exchangeAmount, dbManager), "ReduceAssetAmount failed !");
 
-      //write to db
       dbManager.getAccountStore().put(ownerAddress, ownerAccount);
       dbManager.getAccountStore().put(toAddress, toAccount);
       dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
       ret.setStatus(fee, Protocol.Transaction.Result.code.SUCESS);
       return true;
-    } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -93,15 +87,14 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(this.contract.is(ParticipateAssetIssueContract.class), "contract type error,expected type [ParticipateAssetIssueContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(this.contract.is(ParticipateAssetIssueContract.class), "Contract type error,expected type [ParticipateAssetIssueContract],real type[" + contract.getClass() + "]");
 
-      val participateAssetIssueContract = this.contract.unpack(ParticipateAssetIssueContract.class);
+      val ctx = this.contract.unpack(ParticipateAssetIssueContract.class);
 
-      //Parameters check
-      var ownerAddress = participateAssetIssueContract.getOwnerAddress().toByteArray();
-      var toAddress = participateAssetIssueContract.getToAddress().toByteArray();
-      var assetName = participateAssetIssueContract.getAssetName().toByteArray();
-      long amount = participateAssetIssueContract.getAmount();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var toAddress = ctx.getToAddress().toByteArray();
+      var assetName = ctx.getAssetName().toByteArray();
+      var amount = ctx.getAmount();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
 //
@@ -112,27 +105,23 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
       Assert.isTrue(amount > 0, "Amount must greater than 0!");
       Assert.isTrue(!Arrays.equals(ownerAddress, toAddress), "Cannot participate asset Issue yourself!");
 
-      //Whether the account exist
       AccountCapsule ownerAccount = this.dbManager.getAccountStore().get(ownerAddress);
       Assert.notNull(ownerAccount, "Account does not exist!");
 
       try {
-        //Whether the balance is enough
-        long fee = calcFee();
+        var fee = calcFee();
         Assert.isTrue(ownerAccount.getBalance() >= Math.addExact(amount, fee), "No enough balance !");
 
-        //Whether have the mapping
         var assetIssueCapsule = this.dbManager.getAssetIssueStoreFinal().get(assetName);
         Assert.notNull(assetIssueCapsule, "No asset named " + ByteArray.toStr(assetName));
         Assert.isTrue(Arrays.equals(toAddress, assetIssueCapsule.getOwnerAddress().toByteArray()), "The asset is not issued by " + ByteArray.toHexString(toAddress));
 
-        //Whether the exchange can be processed: to see if the exchange can be the exact int
-        long now = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderTimestamp();
+        var now = dbManager.getDynamicPropertiesStore().getLatestBlockHeaderTimestamp();
         Assert.isTrue(!(now >= assetIssueCapsule.getEndTime() || now < assetIssueCapsule.getStartTime()), "No longer valid period!");
 
-        int unxNum = assetIssueCapsule.getUnxNum();
-        int num = assetIssueCapsule.getNum();
-        long exchangeAmount = Math.multiplyExact(amount, num);
+        var unxNum = assetIssueCapsule.getUnxNum();
+        var num = assetIssueCapsule.getNum();
+        var exchangeAmount = Math.multiplyExact(amount, num);
         exchangeAmount = Math.floorDiv(exchangeAmount, unxNum);
         if (exchangeAmount <= 0) {
           throw new ContractValidateException("Can not process the exchange!");
@@ -142,13 +131,12 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
         Assert.notNull(toAccount, "To account does not exist!");
         Assert.isTrue(toAccount.assetBalanceEnoughV2(assetName, exchangeAmount, dbManager), "Asset balance is not enough !");
       } catch (ArithmeticException e) {
-        logger.debug(e.getMessage(), e);
         throw new ContractValidateException(e.getMessage());
       }
 
       return true;
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

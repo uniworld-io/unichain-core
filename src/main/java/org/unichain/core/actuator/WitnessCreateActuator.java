@@ -4,6 +4,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
@@ -29,7 +30,7 @@ public class WitnessCreateActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      final WitnessCreateContract witnessCreateContract = this.contract.unpack(WitnessCreateContract.class);
+      val witnessCreateContract = this.contract.unpack(WitnessCreateContract.class);
 
       final WitnessCapsule witnessCapsule = new WitnessCapsule(witnessCreateContract.getOwnerAddress(), 0, witnessCreateContract.getUrl().toStringUtf8());
 

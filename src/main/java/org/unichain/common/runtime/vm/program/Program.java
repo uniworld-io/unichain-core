@@ -688,8 +688,7 @@ public class Program {
       createAccountIfNotExist(deposit, contextAddress);
       if (!isTokenTransfer) {
         try {
-          TransferActuator
-              .validateForSmartContract(deposit, senderAddress, contextAddress, endowment);
+          TransferActuator.validateForSmartContract(deposit, senderAddress, contextAddress, endowment);
         } catch (ContractValidateException e) {
           if (VMConfig.allowTvmConstantinople()) {
             refundEnergy(msg.getEnergy().longValue(), "refund energy from message call");

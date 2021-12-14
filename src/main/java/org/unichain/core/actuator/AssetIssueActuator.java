@@ -23,7 +23,6 @@ import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.AssetIssueCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
@@ -32,12 +31,10 @@ import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.AssetIssueContract;
-import org.unichain.protos.Contract.AssetIssueContract.FrozenSupply;
 import org.unichain.protos.Protocol.Account.Frozen;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 @Slf4j(topic = "actuator")

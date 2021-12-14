@@ -9,7 +9,6 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.WitnessCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;

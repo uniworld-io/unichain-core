@@ -34,7 +34,7 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
       val exchangeWithdrawContract = this.contract.unpack(ExchangeWithdrawContract.class);
       var ownerAddress = exchangeWithdrawContract.getOwnerAddress().toByteArray();
@@ -43,11 +43,11 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
 
       var firstTokenID = exchangeCapsule.getFirstTokenId();
       var secondTokenID = exchangeCapsule.getSecondTokenId();
-      long firstTokenBalance = exchangeCapsule.getFirstTokenBalance();
-      long secondTokenBalance = exchangeCapsule.getSecondTokenBalance();
+      var firstTokenBalance = exchangeCapsule.getFirstTokenBalance();
+      var secondTokenBalance = exchangeCapsule.getSecondTokenBalance();
 
       var tokenID = exchangeWithdrawContract.getTokenId().toByteArray();
-      long tokenQuant = exchangeWithdrawContract.getQuant();
+      var tokenQuant = exchangeWithdrawContract.getQuant();
 
       byte[] anotherTokenID;
       long anotherTokenQuant;
@@ -71,7 +71,7 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
         exchangeCapsule.setBalance(firstTokenBalance - anotherTokenQuant, secondTokenBalance - tokenQuant);
       }
 
-      long newBalance = accountCapsule.getBalance() - calcFee();
+      var newBalance = accountCapsule.getBalance() - calcFee();
 
       if (Arrays.equals(tokenID, "_".getBytes())) {
         accountCapsule.setBalance(newBalance + tokenQuant);
@@ -131,10 +131,10 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
 
       var firstTokenID = exchangeCapsule.getFirstTokenId();
       var secondTokenID = exchangeCapsule.getSecondTokenId();
-      long firstTokenBalance = exchangeCapsule.getFirstTokenBalance();
-      long secondTokenBalance = exchangeCapsule.getSecondTokenBalance();
+      var firstTokenBalance = exchangeCapsule.getFirstTokenBalance();
+      var secondTokenBalance = exchangeCapsule.getSecondTokenBalance();
       var tokenID = contract.getTokenId().toByteArray();
-      long tokenQuant = contract.getQuant();
+      var tokenQuant = contract.getQuant();
       long anotherTokenQuant;
 
       if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 1) {

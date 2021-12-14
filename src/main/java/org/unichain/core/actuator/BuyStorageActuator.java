@@ -22,7 +22,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 @Slf4j(topic = "actuator")
 public class BuyStorageActuator extends AbstractActuator {
 
-  private StorageMarket storageMarket;
+  private final StorageMarket storageMarket;
 
   BuyStorageActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -32,12 +32,11 @@ public class BuyStorageActuator extends AbstractActuator {
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
-    final BuyStorageContract buyStorageContract;
     try {
-      buyStorageContract = contract.unpack(BuyStorageContract.class);
+      val buyStorageContract = contract.unpack(BuyStorageContract.class);
       var ownerAddress = buyStorageContract.getOwnerAddress().toByteArray();
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      long qty = buyStorageContract.getQuant();
+      var qty = buyStorageContract.getQuant();
       storageMarket.buyStorage(accountCapsule, qty);
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
@@ -64,12 +63,12 @@ public class BuyStorageActuator extends AbstractActuator {
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
       Assert.notNull(accountCapsule, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-      long quant = buyStorageContract.getQuant();
+      var quant = buyStorageContract.getQuant();
       Assert.isTrue(quant > 0, "quantity must be positive");
       Assert.isTrue(quant >= 1000_000L, "quantity must be larger than 1UNW");
       Assert.isTrue(quant <= accountCapsule.getBalance(), "quantity must be less than accountBalance");
 
-      long storage_bytes = storageMarket.tryBuyStorage(quant);
+      var storage_bytes = storageMarket.tryBuyStorage(quant);
       Assert.isTrue(storage_bytes >= 1L, "storage_bytes must be larger than 1,current storage_bytes[\" + storage_bytes + \"]");
 
 //    long storageBytes = storageMarket.exchange(quant, true);

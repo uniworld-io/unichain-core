@@ -12,22 +12,16 @@ import org.unichain.common.storage.Deposit;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.VotesCapsule;
 import org.unichain.core.config.Parameter.ChainConstant;
-import org.unichain.core.db.AccountStore;
 import org.unichain.core.db.Manager;
-import org.unichain.core.db.VotesStore;
-import org.unichain.core.db.WitnessStore;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.VoteWitnessContract;
-import org.unichain.protos.Contract.VoteWitnessContract.Vote;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.util.Iterator;
 import java.util.Objects;
 
 import static org.unichain.core.actuator.ActuatorConstant.*;
@@ -76,7 +70,7 @@ public class VoteWitnessActuator extends AbstractActuator {
       Assert.isTrue(contract.getVotesCount() <= maxVoteNumber, "VoteNumber more than maxVoteNumber " + maxVoteNumber);
 
       var iterator = contract.getVotesList().iterator();
-      Long sum = 0L;
+      long sum = 0L;
       while (iterator.hasNext()) {
         var vote = iterator.next();
         var witnessCandidate = vote.getVoteAddress().toByteArray();

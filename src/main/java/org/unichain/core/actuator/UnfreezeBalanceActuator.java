@@ -16,7 +16,6 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.UnfreezeBalanceContract;
 import org.unichain.protos.Protocol.Account.AccountResource;
 import org.unichain.protos.Protocol.Account.Frozen;

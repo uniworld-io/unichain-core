@@ -140,7 +140,7 @@ public class AssetIssueActuator extends AbstractActuator {
         Assert.isTrue(!assetIssueContract.getName().toStringUtf8().toLowerCase().equals("unx"), "assetName can't be unx");
       }
 
-      int precision = assetIssueContract.getPrecision();
+      var precision = assetIssueContract.getPrecision();
       if (precision != 0 && dbManager.getDynamicPropertiesStore().getAllowSameTokenName() != 0) {
         Assert.isTrue(!(precision < 0), "precision cannot less 0");
         Assert.isTrue(!(precision > 6), "precision cannot exceed 6");
@@ -174,9 +174,9 @@ public class AssetIssueActuator extends AbstractActuator {
               || assetIssueContract.getPublicFreeAssetNetLimit() >= dbManager.getDynamicPropertiesStore().getOneDayNetLimit();
       Assert.isTrue(!publicFreeAssetNetLimit, "Invalid PublicFreeAssetNetLimit");
 
-      long remainSupply = assetIssueContract.getTotalSupply();
-      long minFrozenSupplyTime = dbManager.getDynamicPropertiesStore().getMinFrozenSupplyTime();
-      long maxFrozenSupplyTime = dbManager.getDynamicPropertiesStore().getMaxFrozenSupplyTime();
+      var remainSupply = assetIssueContract.getTotalSupply();
+      var minFrozenSupplyTime = dbManager.getDynamicPropertiesStore().getMinFrozenSupplyTime();
+      var maxFrozenSupplyTime = dbManager.getDynamicPropertiesStore().getMaxFrozenSupplyTime();
       var frozenList = assetIssueContract.getFrozenSupplyList();
       var iterator = frozenList.iterator();
 

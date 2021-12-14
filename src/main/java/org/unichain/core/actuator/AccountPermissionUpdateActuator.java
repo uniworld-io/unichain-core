@@ -20,8 +20,6 @@ import org.unichain.protos.Protocol.Permission;
 import org.unichain.protos.Protocol.Permission.PermissionType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.util.List;
-
 import static java.util.stream.Collectors.toList;
 
 
@@ -60,14 +58,14 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
       Assert.isTrue(!(permission.getType() == PermissionType.Witness && permission.getKeysCount() != 1), "Witness permission's key count should be 1");
       Assert.isTrue(permission.getThreshold() > 0, "permission's threshold should be greater than 0");
 
-      String name = permission.getPermissionName();
+      var name = permission.getPermissionName();
       Assert.isTrue(!(!StringUtils.isEmpty(name) && name.length() > 32), "permission's name is too long");
 
       //check owner name
       Assert.isTrue(permission.getParentId() == 0, "permission's parent should be owner");
 
       long weightSum = 0;
-      List<ByteString> addressList = permission.getKeysList()
+      var addressList = permission.getKeysList()
               .stream()
               .map(x -> x.getAddress())
               .distinct()
@@ -83,7 +81,7 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
 
       Assert.isTrue(weightSum >= permission.getThreshold(), "sum of all key's weight should not be less than threshold in permission " + permission.getType());
 
-      ByteString operations = permission.getOperations();
+      var operations = permission.getOperations();
       if (permission.getType() != PermissionType.Active) {
         Assert.isTrue(operations.isEmpty(), permission.getType() + " permission needn't operations");
         return true;
@@ -92,7 +90,7 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
       //check operations
       Assert.isTrue((operations.size() == 32), "operations size must 32");
 
-      byte[] types1 = dbManager.getDynamicPropertiesStore().getAvailableContractType();
+      var types1 = dbManager.getDynamicPropertiesStore().getAvailableContractType();
       for (int i = 0; i < 256; i++) {
         boolean b = (operations.byteAt(i / 8) & (1 << (i % 8))) != 0;
         boolean t = ((types1[(i / 8)] & 0xff) & (1 << (i % 8))) != 0;

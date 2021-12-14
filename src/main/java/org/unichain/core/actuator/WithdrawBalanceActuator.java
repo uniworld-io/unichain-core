@@ -10,7 +10,6 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.Manager;

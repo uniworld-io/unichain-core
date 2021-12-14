@@ -22,7 +22,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 @Slf4j(topic = "actuator")
 public class BuyStorageBytesActuator extends AbstractActuator {
 
-  private StorageMarket storageMarket;
+  private final StorageMarket storageMarket;
 
   BuyStorageBytesActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -31,13 +31,12 @@ public class BuyStorageBytesActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
-    final BuyStorageBytesContract BuyStorageBytesContract;
+    var fee = calcFee();
     try {
-      BuyStorageBytesContract = contract.unpack(BuyStorageBytesContract.class);
+      val BuyStorageBytesContract = contract.unpack(BuyStorageBytesContract.class);
       var ownerAddress = BuyStorageBytesContract.getOwnerAddress().toByteArray();
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      long bytes = BuyStorageBytesContract.getBytes();
+      var bytes = BuyStorageBytesContract.getBytes();
       storageMarket.buyStorageBytes(accountCapsule, bytes);
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
@@ -64,11 +63,11 @@ public class BuyStorageBytesActuator extends AbstractActuator {
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
       Assert.notNull(accountCapsule, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-      long bytes = BuyStorageBytesContract.getBytes();
+      var bytes = BuyStorageBytesContract.getBytes();
       Assert.isTrue(bytes >= 0, "bytes must be positive");
       Assert.isTrue(bytes >= 1L, "bytes must be larger than 1, current storage_bytes[" + bytes + "]");
 
-      long quant = storageMarket.tryBuyStorageBytes(bytes);
+      var quant = storageMarket.tryBuyStorageBytes(bytes);
       Assert.isTrue(quant >= 1_000_000L, "bytes must be positive");
       Assert.isTrue(quant <= accountCapsule.getBalance(), "quantity must be less than accountBalance");
 

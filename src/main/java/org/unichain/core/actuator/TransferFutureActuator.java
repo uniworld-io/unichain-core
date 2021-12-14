@@ -61,8 +61,8 @@ public class TransferFutureActuator extends AbstractActuator {
   @Override
   public boolean validate() throws ContractValidateException {
     try {
-      Assert.isTrue(contract != null, "No contract!");
-      Assert.isTrue(dbManager != null, "No dbManager!");
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(contract.is(FutureTransferContract.class), "contract type error,expected type [FutureTransferContract],real type[" + contract.getClass() + "]");
 
       var fee = calcFee();

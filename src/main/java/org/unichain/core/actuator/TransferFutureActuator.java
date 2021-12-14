@@ -32,7 +32,7 @@ public class TransferFutureActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
       var ctx = contract.unpack(FutureTransferContract.class);
       var amount = ctx.getAmount();
@@ -40,7 +40,7 @@ public class TransferFutureActuator extends AbstractActuator {
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var toAccount = dbManager.getAccountStore().get(toAddress);
       if (Objects.isNull(toAccount)) {
-        boolean withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
+        var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
         toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         dbManager.getAccountStore().put(toAddress, toAccount);
         fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
@@ -52,7 +52,7 @@ public class TransferFutureActuator extends AbstractActuator {
       addFutureBalance(toAddress, amount, ctx.getExpireTime());
       return true;
     } catch (Exception e) {
-      logger.error("exec transfer future got error", e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -73,7 +73,7 @@ public class TransferFutureActuator extends AbstractActuator {
       var amount = ctx.getAmount();
       Assert.isTrue(amount > 0, "Amount must greater than 0.");
 
-      long maxExpireTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationUnw();
+      var maxExpireTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationUnw();
       Assert.isTrue((ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp()) && (ctx.getExpireTime() <= maxExpireTime),
                       "expire time must greater current block time, lower than maximum timestamp:" + maxExpireTime);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
@@ -81,7 +81,7 @@ public class TransferFutureActuator extends AbstractActuator {
       Assert.isTrue(!Arrays.equals(toAddress, ownerAddress), "Cannot transfer unw to yourself");
 
       AccountCapsule ownerAccount = dbManager.getAccountStore().get(ownerAddress);
-      Assert.isTrue(ownerAccount != null, "no OwnerAccount found");
+      Assert.notNull(ownerAccount, "no OwnerAccount found");
 
       var balance = ownerAccount.getBalance();
       var toAccount = dbManager.getAccountStore().get(toAddress);
@@ -89,22 +89,21 @@ public class TransferFutureActuator extends AbstractActuator {
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
-      if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
+      var transferToSmartContract = (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1)
               && toAccount != null
-              && toAccount.getType() == AccountType.Contract) {
-        throw new ContractValidateException("Cannot transfer unw to smartContract.");
-      }
+              && toAccount.getType() == AccountType.Contract;
+      Assert.isTrue(!transferToSmartContract, "Cannot transfer unw to smartContract.");
 
       Assert.isTrue(balance >= Math.addExact(amount, fee), "Validate TransferContract error, balance is not sufficient");
 
       if (toAccount != null) {
-        Math.addExact(toAccount.getBalance(), amount);
+        Math.addExact(toAccount.getBalance(), amount);//check if overflow
       }
 
       return true;
     }
     catch (Exception e){
-      logger.error("validate TransferFutureActuator got error --> ", e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

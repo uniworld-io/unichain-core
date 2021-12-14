@@ -4,16 +4,17 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.ProposalCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
-import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.exception.ItemNotFoundException;
 import org.unichain.protos.Contract.ProposalApproveContract;
 import org.unichain.protos.Protocol.Proposal.State;
 import org.unichain.protos.Protocol.Transaction.Result.code;
@@ -31,14 +32,14 @@ public class ProposalApproveActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
-      final ProposalApproveContract proposalApproveContract = this.contract.unpack(ProposalApproveContract.class);
-      byte[] ownerAddress = proposalApproveContract.getOwnerAddress().toByteArray();
-      ProposalCapsule proposalCapsule = (Objects.isNull(getDeposit())) ? dbManager.getProposalStore().get(ByteArray.fromLong(proposalApproveContract.getProposalId()))
-                  : getDeposit().getProposalCapsule(ByteArray.fromLong(proposalApproveContract.getProposalId()));
-      ByteString committeeAddress = proposalApproveContract.getOwnerAddress();
-      if (proposalApproveContract.getIsAddApproval()) {
+      val ctx = this.contract.unpack(ProposalApproveContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      ProposalCapsule proposalCapsule = (Objects.isNull(getDeposit())) ? dbManager.getProposalStore().get(ByteArray.fromLong(ctx.getProposalId()))
+                  : getDeposit().getProposalCapsule(ByteArray.fromLong(ctx.getProposalId()));
+      var committeeAddress = ctx.getOwnerAddress();
+      if (ctx.getIsAddApproval()) {
         proposalCapsule.addApproval(committeeAddress);
       } else {
         proposalCapsule.removeApproval(committeeAddress);
@@ -52,10 +53,8 @@ public class ProposalApproveActuator extends AbstractActuator {
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (ItemNotFoundException
-        | InvalidProtocolBufferException
-        | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -63,80 +62,55 @@ public class ProposalApproveActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (dbManager == null && (getDeposit() == null || getDeposit().getDbManager() == null)) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(ProposalApproveContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [ProposalApproveContract],real type[" + contract.getClass() + "]");
-    }
-
-    final ProposalApproveContract contract;
     try {
-      contract = this.contract.unpack(ProposalApproveContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      Assert.notNull(this.contract, "No contract!");
+      Assert.isTrue(!(dbManager == null && (getDeposit() == null || getDeposit().getDbManager() == null)), "No dbManager!");
+      Assert.isTrue(this.contract.is(ProposalApproveContract.class), "Contract type error,expected type [ProposalApproveContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(ProposalApproveContract.class);
+
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
+
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
+
+      if (!Objects.isNull(getDeposit())) {
+        Assert.notNull(getDeposit().getAccount(ownerAddress),ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+      } else{
+        Assert.isTrue(dbManager.getAccountStore().has(ownerAddress), ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+      }
+
+      if (!Objects.isNull(getDeposit())) {
+        Assert.notNull(getDeposit().getWitness(ownerAddress), WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+      } else{
+        Assert.isTrue(dbManager.getWitnessStore().has(ownerAddress),WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+      }
+
+      var latestProposalNum = Objects.isNull(getDeposit()) ? dbManager.getDynamicPropertiesStore().getLatestProposalNum()
+              : getDeposit().getLatestProposalNum();
+      Assert.isTrue(ctx.getProposalId() <= latestProposalNum, PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + NOT_EXIST_STR);
+
+      var now = dbManager.getHeadBlockTimeStamp();
+      var proposalCapsule  = Objects.isNull(getDeposit()) ? dbManager.getProposalStore().
+                get(ByteArray.fromLong(ctx.getProposalId())) :
+                getDeposit().getProposalCapsule(ByteArray.fromLong(ctx.getProposalId()));
+
+      Assert.isTrue(now < proposalCapsule.getExpirationTime(), PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + "] expired");
+
+      Assert.isTrue(proposalCapsule.getState() != State.CANCELED, PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + "] canceled");
+
+      if (!ctx.getIsAddApproval()) {
+        Assert.isTrue(proposalCapsule.getApprovals().contains(ctx.getOwnerAddress()), WITNESS_EXCEPTION_STR + readableOwnerAddress + "] has not approved proposal[" + ctx.getProposalId() + "] before");
+      } else {
+        Assert.isTrue(!proposalCapsule.getApprovals().contains(ctx.getOwnerAddress()), WITNESS_EXCEPTION_STR + readableOwnerAddress + "] has approved proposal[" + ctx.getProposalId() + "] before");
+      }
+
+      return true;
+    }
+    catch (Exception e){
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    byte[] ownerAddress = contract.getOwnerAddress().toByteArray();
-    String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid address");
-    }
-
-    if (!Objects.isNull(getDeposit())) {
-      if (Objects.isNull(getDeposit().getAccount(ownerAddress))) {
-        throw new ContractValidateException(ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
-      }
-    } else if (!dbManager.getAccountStore().has(ownerAddress)) {
-      throw new ContractValidateException(ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
-    }
-
-    if (!Objects.isNull(getDeposit())) {
-      if (Objects.isNull(getDeposit().getWitness(ownerAddress))) {
-        throw new ContractValidateException(WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
-      }
-    } else if (!dbManager.getWitnessStore().has(ownerAddress)) {
-      throw new ContractValidateException(WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
-    }
-
-    long latestProposalNum = Objects.isNull(getDeposit()) ? dbManager.getDynamicPropertiesStore().getLatestProposalNum()
-            : getDeposit().getLatestProposalNum();
-    if (contract.getProposalId() > latestProposalNum) {
-      throw new ContractValidateException(PROPOSAL_EXCEPTION_STR + contract.getProposalId() + NOT_EXIST_STR);
-    }
-
-    long now = dbManager.getHeadBlockTimeStamp();
-    ProposalCapsule proposalCapsule;
-    try {
-      proposalCapsule = Objects.isNull(getDeposit()) ? dbManager.getProposalStore().
-          get(ByteArray.fromLong(contract.getProposalId())) :
-          getDeposit().getProposalCapsule(ByteArray.fromLong(contract.getProposalId()));
-    } catch (ItemNotFoundException ex) {
-      throw new ContractValidateException(PROPOSAL_EXCEPTION_STR + contract.getProposalId() + NOT_EXIST_STR);
-    }
-
-    if (now >= proposalCapsule.getExpirationTime()) {
-      throw new ContractValidateException(PROPOSAL_EXCEPTION_STR + contract.getProposalId() + "] expired");
-    }
-
-    if (proposalCapsule.getState() == State.CANCELED) {
-      throw new ContractValidateException(PROPOSAL_EXCEPTION_STR + contract.getProposalId() + "] canceled");
-    }
-    if (!contract.getIsAddApproval()) {
-      if (!proposalCapsule.getApprovals().contains(contract.getOwnerAddress())) {
-        throw new ContractValidateException(WITNESS_EXCEPTION_STR + readableOwnerAddress + "]has not approved proposal[" + contract.getProposalId() + "] before");
-      }
-    } else {
-      if (proposalCapsule.getApprovals().contains(contract.getOwnerAddress())) {
-        throw new ContractValidateException(WITNESS_EXCEPTION_STR + readableOwnerAddress + "]has approved proposal[" + contract.getProposalId() + "] before");
-      }
-    }
-
-    return true;
   }
 
   @Override

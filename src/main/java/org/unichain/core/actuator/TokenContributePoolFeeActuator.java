@@ -41,7 +41,7 @@ public class TokenContributePoolFeeActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-      long fee = calcFee();
+      var fee = calcFee();
       try {
           var ctx = contract.unpack(ContributeTokenPoolFeeContract.class);
           var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());

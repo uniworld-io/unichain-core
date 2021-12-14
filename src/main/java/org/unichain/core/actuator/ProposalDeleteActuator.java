@@ -15,7 +15,6 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.exception.ItemNotFoundException;
 import org.unichain.protos.Contract.ProposalDeleteContract;
 import org.unichain.protos.Protocol.Proposal.State;
 import org.unichain.protos.Protocol.Transaction.Result.code;

@@ -33,7 +33,7 @@ public class ExchangeTransactionActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
       val exchangeTransactionContract = this.contract.unpack(ExchangeTransactionContract.class);
       var ownerAddress = exchangeTransactionContract.getOwnerAddress().toByteArray();
@@ -44,39 +44,33 @@ public class ExchangeTransactionActuator extends AbstractActuator {
       var secondTokenID = exchangeCapsule.getSecondTokenId();
 
       var tokenID = exchangeTransactionContract.getTokenId().toByteArray();
-      long tokenQuant = exchangeTransactionContract.getQuant();
+      var tokenQty = exchangeTransactionContract.getQuant();
 
-      byte[] anotherTokenID;
-      long anotherTokenQuant = exchangeCapsule.transaction(tokenID, tokenQuant);
+      var anotherTokenQty = exchangeCapsule.transaction(tokenID, tokenQty);
+      var anotherTokenID = (Arrays.equals(tokenID, firstTokenID)) ? secondTokenID : firstTokenID;
 
-      if (Arrays.equals(tokenID, firstTokenID)) {
-        anotherTokenID = secondTokenID;
-      } else {
-        anotherTokenID = firstTokenID;
-      }
-
-      long newBalance = accountCapsule.getBalance() - calcFee();
+      var newBalance = accountCapsule.getBalance() - calcFee();
       accountCapsule.setBalance(newBalance);
 
       if (Arrays.equals(tokenID, "_".getBytes())) {
-        accountCapsule.setBalance(newBalance - tokenQuant);
+        accountCapsule.setBalance(newBalance - tokenQty);
       } else {
-        accountCapsule.reduceAssetAmountV2(tokenID, tokenQuant, dbManager);
+        accountCapsule.reduceAssetAmountV2(tokenID, tokenQty, dbManager);
       }
 
       if (Arrays.equals(anotherTokenID, "_".getBytes())) {
-        accountCapsule.setBalance(newBalance + anotherTokenQuant);
+        accountCapsule.setBalance(newBalance + anotherTokenQty);
       } else {
-        accountCapsule.addAssetAmountV2(anotherTokenID, anotherTokenQuant, dbManager);
+        accountCapsule.addAssetAmountV2(anotherTokenID, anotherTokenQty, dbManager);
       }
       dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
       dbManager.putExchangeCapsule(exchangeCapsule);
       chargeFee(ownerAddress, fee);
-      ret.setExchangeReceivedAmount(anotherTokenQuant);
+      ret.setExchangeReceivedAmount(anotherTokenQty);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (ItemNotFoundException | InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -90,57 +84,57 @@ public class ExchangeTransactionActuator extends AbstractActuator {
       Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(this.contract.is(ExchangeTransactionContract.class), "contract type error,expected type [ExchangeTransactionContract],real type[" + contract.getClass() + "]");
 
-      val contract = this.contract.unpack(ExchangeTransactionContract.class);
-      var ownerAddress = contract.getOwnerAddress().toByteArray();
+      val ctx = this.contract.unpack(ExchangeTransactionContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
 
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
-      Assert.isTrue(this.dbManager.getAccountStore().has(ownerAddress), "account[" + readableOwnerAddress + "] not exists");
+      Assert.isTrue(this.dbManager.getAccountStore().has(ownerAddress), "Account[" + readableOwnerAddress + "] not exists");
 
       var accountCapsule = this.dbManager.getAccountStore().get(ownerAddress);
       Assert.isTrue(accountCapsule.getBalance() >= calcFee(), "No enough balance for exchange transaction fee!");
 
       ExchangeCapsule exchangeCapsule;
       try {
-        exchangeCapsule = dbManager.getExchangeStoreFinal().get(ByteArray.fromLong(contract.getExchangeId()));
+        exchangeCapsule = dbManager.getExchangeStoreFinal().get(ByteArray.fromLong(ctx.getExchangeId()));
       } catch (ItemNotFoundException ex) {
-        throw new ContractValidateException("Exchange[" + contract.getExchangeId() + "] not exists");
+        throw new ContractValidateException("Exchange[" + ctx.getExchangeId() + "] not exists");
       }
 
       var firstTokenID = exchangeCapsule.getFirstTokenId();
       var secondTokenID = exchangeCapsule.getSecondTokenId();
-      long firstTokenBalance = exchangeCapsule.getFirstTokenBalance();
-      long secondTokenBalance = exchangeCapsule.getSecondTokenBalance();
-      var tokenID = contract.getTokenId().toByteArray();
-      long tokenQuant = contract.getQuant();
-      long tokenExpected = contract.getExpected();
+      var firstTokenBalance = exchangeCapsule.getFirstTokenBalance();
+      var secondTokenBalance = exchangeCapsule.getSecondTokenBalance();
+      var tokenID = ctx.getTokenId().toByteArray();
+      var tokenQty = ctx.getQuant();
+      var tokenExpected = ctx.getExpected();
 
       if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 1) {
-        boolean tokenVaild = !Arrays.equals(tokenID, "_".getBytes()) && !TransactionUtil.isNumber(tokenID);
-        Assert.isTrue(!tokenVaild, "token id is not a valid number");
+        var validToken = !Arrays.equals(tokenID, "_".getBytes()) && !TransactionUtil.isNumber(tokenID);
+        Assert.isTrue(!validToken, "Token id is not a valid number");
       }
 
-      boolean tokenExchange = !Arrays.equals(tokenID, firstTokenID) && !Arrays.equals(tokenID, secondTokenID);
-      Assert.isTrue(!tokenExchange, "token is not in exchange");
-      Assert.isTrue(tokenQuant > 0, "token quant must greater than zero");
+      var tokenExchange = !Arrays.equals(tokenID, firstTokenID) && !Arrays.equals(tokenID, secondTokenID);
+      Assert.isTrue(!tokenExchange, "Token is not in exchange");
+      Assert.isTrue(tokenQty > 0, "token quant must greater than zero");
       Assert.isTrue(tokenExpected > 0, "token expected must greater than zero");
 
-      boolean token = firstTokenBalance == 0 || secondTokenBalance == 0;
+      var token = firstTokenBalance == 0 || secondTokenBalance == 0;
       Assert.isTrue(!token, "Token balance in exchange is equal with 0, the exchange has been closed");
 
-      long balanceLimit = dbManager.getDynamicPropertiesStore().getExchangeBalanceLimit();
-      long tokenBalance = (Arrays.equals(tokenID, firstTokenID) ? firstTokenBalance : secondTokenBalance);
-      tokenBalance += tokenQuant;
-      Assert.isTrue(tokenBalance <= balanceLimit, "token balance must less than " + balanceLimit);
+      var balanceLimit = dbManager.getDynamicPropertiesStore().getExchangeBalanceLimit();
+      var tokenBalance = (Arrays.equals(tokenID, firstTokenID) ? firstTokenBalance : secondTokenBalance);
+      tokenBalance += tokenQty;
+      Assert.isTrue(tokenBalance <= balanceLimit, "Token balance must less than " + balanceLimit);
 
       if (Arrays.equals(tokenID, "_".getBytes())) {
-        Assert.isTrue(accountCapsule.getBalance() >= (tokenQuant + calcFee()), "balance is not enough");
+        Assert.isTrue(accountCapsule.getBalance() >= (tokenQty + calcFee()), "Balance is not enough");
       } else {
-        Assert.isTrue(accountCapsule.assetBalanceEnoughV2(tokenID, tokenQuant, dbManager), "token balance is not enough");
+        Assert.isTrue(accountCapsule.assetBalanceEnoughV2(tokenID, tokenQty, dbManager), "Token balance is not enough");
       }
 
-      long anotherTokenQuant = exchangeCapsule.transaction(tokenID, tokenQuant);
-      Assert.isTrue(anotherTokenQuant >= tokenExpected, "token required must greater than expected");
+      var anotherTokenQty = exchangeCapsule.transaction(tokenID, tokenQty);
+      Assert.isTrue(anotherTokenQty >= tokenExpected, "Token required must greater than expected");
 
       return true;
     } catch (InvalidProtocolBufferException e) {

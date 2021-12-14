@@ -28,7 +28,7 @@ public class WitnessUpdateActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       final WitnessUpdateContract witnessUpdateContract = this.contract.unpack(WitnessUpdateContract.class);
-      byte[] ownerAddress = witnessUpdateContract.getOwnerAddress().toByteArray();
+      var ownerAddress = witnessUpdateContract.getOwnerAddress().toByteArray();
       WitnessCapsule witnessCapsule = this.dbManager.getWitnessStore().get(ownerAddress);
       witnessCapsule.setUrl(witnessUpdateContract.getUpdateUrl().toStringUtf8());
       this.dbManager.getWitnessStore().put(witnessCapsule.createDbKey(), witnessCapsule);

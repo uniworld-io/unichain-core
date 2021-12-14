@@ -6,6 +6,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
@@ -31,12 +32,11 @@ public class WitnessCreateActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       val witnessCreateContract = this.contract.unpack(WitnessCreateContract.class);
-
-      final WitnessCapsule witnessCapsule = new WitnessCapsule(witnessCreateContract.getOwnerAddress(), 0, witnessCreateContract.getUrl().toStringUtf8());
+      val witnessCapsule = new WitnessCapsule(witnessCreateContract.getOwnerAddress(), 0, witnessCreateContract.getUrl().toStringUtf8());
 
       logger.debug("createWitness, address[{}]", witnessCapsule.createReadableString());
       this.dbManager.getWitnessStore().put(witnessCapsule.createDbKey(), witnessCapsule);
-      AccountCapsule accountCapsule = this.dbManager.getAccountStore().get(witnessCapsule.createDbKey());
+      var accountCapsule = this.dbManager.getAccountStore().get(witnessCapsule.createDbKey());
       accountCapsule.setIsWitness(true);
       if (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1) {
         accountCapsule.setDefaultWitnessPermission(dbManager);
@@ -55,52 +55,32 @@ public class WitnessCreateActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(WitnessCreateContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [WitnessCreateContract],real type[" + contract.getClass() + "]");
-    }
-    final WitnessCreateContract contract;
     try {
-      contract = this.contract.unpack(WitnessCreateContract.class);
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(contract.is(WitnessCreateContract.class), "Contract type error,expected type [WitnessCreateContract], real type[" + contract.getClass() + "]");
+
+      val contract = this.contract.unpack(WitnessCreateContract.class);
+      var ownerAddress = contract.getOwnerAddress().toByteArray();
+      var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
+      Assert.isTrue(TransactionUtil.validUrl(contract.getUrl().toByteArray()), "Invalid url");
+
+      var accountCapsule = this.dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(accountCapsule, "account[" + readableOwnerAddress + "] not exists");
+
+      /* todo later
+      if (ArrayUtils.isEmpty(accountCapsule.getAccountName().toByteArray())) {
+        throw new ContractValidateException("account name not set");
+      } */
+
+      Assert.isTrue(!this.dbManager.getWitnessStore().has(ownerAddress), "Witness[" + readableOwnerAddress + "] has existed");
+      Assert.isTrue(accountCapsule.getBalance() >= calcFee(), "balance < AccountUpgradeCost");
+
+      return true;
     } catch (InvalidProtocolBufferException e) {
       throw new ContractValidateException(e.getMessage());
     }
-
-    byte[] ownerAddress = contract.getOwnerAddress().toByteArray();
-    String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid address");
-    }
-
-    if (!TransactionUtil.validUrl(contract.getUrl().toByteArray())) {
-      throw new ContractValidateException("Invalid url");
-    }
-
-    AccountCapsule accountCapsule = this.dbManager.getAccountStore().get(ownerAddress);
-
-    if (accountCapsule == null) {
-      throw new ContractValidateException("account[" + readableOwnerAddress + "] not exists");
-    }
-    /* todo later
-    if (ArrayUtils.isEmpty(accountCapsule.getAccountName().toByteArray())) {
-      throw new ContractValidateException("account name not set");
-    } */
-
-    if (this.dbManager.getWitnessStore().has(ownerAddress)) {
-      throw new ContractValidateException("Witness[" + readableOwnerAddress + "] has existed");
-    }
-
-    if (accountCapsule.getBalance() < calcFee()) {
-      throw new ContractValidateException("balance < AccountUpgradeCost");
-    }
-
-    return true;
   }
 
   @Override

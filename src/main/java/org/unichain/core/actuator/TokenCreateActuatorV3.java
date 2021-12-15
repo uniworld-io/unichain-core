@@ -27,6 +27,7 @@ import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
+import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -110,9 +111,8 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
       var maxTokenActive = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_ACTIVE;
       Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= maxTokenActive), "Invalid start time: must be greater than current block time and lower than limit timestamp:" +maxTokenActive);
 
-      long endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : (startTime + DEFAULT_TOKEN_AGE_V3);
-      long maxTokenAge = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_AGE_V3;
-
+      var endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : (startTime + DEFAULT_TOKEN_AGE_V3);
+      var maxTokenAge = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_AGE_V3;
       Assert.isTrue((endTime > 0)
               && (endTime > startTime )
               && (endTime > dbManager.getHeadBlockTimeStamp())
@@ -143,6 +143,6 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 unw default
+    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
   }
 }

@@ -104,28 +104,44 @@ public class TransferActuator extends AbstractActuator {
   }
 
   public static boolean validateForSmartContract(Deposit deposit, byte[] ownerAddress, byte[] toAddress, long amount) throws ContractValidateException {
-    try {
-      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-      Assert.isTrue(Wallet.addressValid(toAddress), "Invalid ownerAddress");
-      Assert.isTrue(!Arrays.equals(toAddress, ownerAddress), "Cannot transfer unw to yourself.");
-
-      var ownerAccount = deposit.getAccount(ownerAddress);
-      Assert.notNull(ownerAccount, "Validate InternalTransfer error, no OwnerAccount.");
-
-      var toAccount = deposit.getAccount(toAddress);
-      Assert.notNull(toAccount, "Validate InternalTransfer error, no ToAccount. And not allowed to create account in smart contract.");
-
-      var balance = ownerAccount.getBalance();
-      Assert.isTrue(amount >= 0, "Amount must greater than or equals 0.");
-
-      Assert.isTrue(balance >= amount, "Validate InternalTransfer error, balance is not sufficient.");
-      Math.addExact(toAccount.getBalance(), amount);
-      return true;
+    if (!Wallet.addressValid(ownerAddress)) {
+      throw new ContractValidateException("Invalid ownerAddress");
     }
-    catch (Exception e){
-      logger.error(e.getMessage(), e);
+    if (!Wallet.addressValid(toAddress)) {
+      throw new ContractValidateException("Invalid toAddress");
+    }
+
+    if (Arrays.equals(toAddress, ownerAddress)) {
+      throw new ContractValidateException("Cannot transfer unw to yourself.");
+    }
+
+    AccountCapsule ownerAccount = deposit.getAccount(ownerAddress);
+    if (ownerAccount == null) {
+      throw new ContractValidateException("Validate InternalTransfer error, no OwnerAccount.");
+    }
+
+    AccountCapsule toAccount = deposit.getAccount(toAddress);
+    if (toAccount == null) {
+      throw new ContractValidateException("Validate InternalTransfer error, no ToAccount. And not allowed to create account in smart contract.");
+    }
+
+    long balance = ownerAccount.getBalance();
+
+    if (amount < 0) {
+      throw new ContractValidateException("Amount must greater than or equals 0.");
+    }
+
+    try {
+      if (balance < amount) {
+        throw new ContractValidateException("Validate InternalTransfer error, balance is not sufficient.");
+      }
+      Math.addExact(toAccount.getBalance(), amount);
+    } catch (ArithmeticException e) {
+      logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
+
+    return true;
   }
 
   @Override

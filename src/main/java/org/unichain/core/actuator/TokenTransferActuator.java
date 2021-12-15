@@ -173,7 +173,7 @@ public class TokenTransferActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error("TokenTransfer got error -->", e);
+      logger.error("validate TokenTransfer got error -->", e);
       throw new ContractValidateException(e.getMessage());
     }
   }
@@ -335,7 +335,6 @@ public class TokenTransferActuator extends AbstractActuator {
         //save next tick
         var oldNextTick = tokenStore.get(oldNextTickKey.toByteArray());
         oldNextTick.setPrevTick(ByteString.copyFrom(tickKey));
-        tokenStore.put(oldNextTickKey.toByteArray(), oldNextTick);
 
         //save tick summary
         summary = summary.toBuilder()

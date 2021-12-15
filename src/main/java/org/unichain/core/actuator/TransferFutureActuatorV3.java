@@ -22,27 +22,28 @@ import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 @Slf4j(topic = "actuator")
-public class TransferFutureActuator extends AbstractActuator {
-  TransferFutureActuator(Any contract, Manager dbManager) {
+public class TransferFutureActuatorV3 extends AbstractActuator {
+  TransferFutureActuatorV3(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
       var ctx = contract.unpack(FutureTransferContract.class);
       var amount = ctx.getAmount();
       var toAddress = ctx.getToAddress().toByteArray();
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var toAccount = dbManager.getAccountStore().get(toAddress);
-      if (toAccount == null) {
-        boolean withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
+      if (Objects.isNull(toAccount)) {
+        var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
         toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         dbManager.getAccountStore().put(toAddress, toAccount);
-        fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
 
       chargeFee(ownerAddress, fee);
@@ -51,7 +52,7 @@ public class TransferFutureActuator extends AbstractActuator {
       addFutureBalance(toAddress, amount, ctx.getExpireTime());
       return true;
     } catch (Exception e) {
-      logger.error("exec transfer future got error", e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -60,8 +61,8 @@ public class TransferFutureActuator extends AbstractActuator {
   @Override
   public boolean validate() throws ContractValidateException {
     try {
-      Assert.isTrue(contract != null, "No contract!");
-      Assert.isTrue(dbManager != null, "No dbManager!");
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(contract.is(FutureTransferContract.class), "contract type error,expected type [FutureTransferContract],real type[" + contract.getClass() + "]");
 
       var fee = calcFee();
@@ -72,38 +73,37 @@ public class TransferFutureActuator extends AbstractActuator {
       var amount = ctx.getAmount();
       Assert.isTrue(amount > 0, "Amount must greater than 0.");
 
-      long maxExpireTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationUnw();
+      var maxExpireTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationUnw();
       Assert.isTrue((ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp()) && (ctx.getExpireTime() <= maxExpireTime),
-              "expire time must greater current block time, lower than maximum timestamp:" + maxExpireTime);
+                      "expire time must greater current block time, lower than maximum timestamp:" + maxExpireTime);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
       Assert.isTrue(!Arrays.equals(toAddress, ownerAddress), "Cannot transfer unw to yourself");
 
       AccountCapsule ownerAccount = dbManager.getAccountStore().get(ownerAddress);
-      Assert.isTrue(ownerAccount != null, "no OwnerAccount found");
+      Assert.notNull(ownerAccount, "no OwnerAccount found");
 
       var balance = ownerAccount.getBalance();
       var toAccount = dbManager.getAccountStore().get(toAddress);
       if (toAccount == null) {
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
-      //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
-      if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
+      //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
+      var transferToSmartContract = (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1)
               && toAccount != null
-              && toAccount.getType() == AccountType.Contract) {
-        throw new ContractValidateException("Cannot transfer unw to smartContract.");
-      }
+              && toAccount.getType() == AccountType.Contract;
+      Assert.isTrue(!transferToSmartContract, "Cannot transfer unw to smartContract.");
 
       Assert.isTrue(balance >= Math.addExact(amount, fee), "Validate TransferContract error, balance is not sufficient");
 
       if (toAccount != null) {
-        Math.addExact(toAccount.getBalance(), amount);
+        Math.addExact(toAccount.getBalance(), amount);//check if overflow
       }
 
       return true;
     }
     catch (Exception e){
-      logger.error("validate TransferFutureActuator got error --> ", e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }
@@ -130,26 +130,25 @@ public class TransferFutureActuator extends AbstractActuator {
      * tick exist: the fasted way!
      */
     if(futureStore.has(tickKey)){
-      //update tick
+      //save tick
       var tick = futureStore.get(tickKey);
       tick.addBalance(amount);
       futureStore.put(tickKey, tick);
 
-      //update account summary
-      summary = summary.toBuilder().setTotalBalance(summary.getTotalBalance() + amount).build();
+      //save summary
+      summary = summary.toBuilder()
+              .setTotalBalance(summary.getTotalBalance() + amount)
+              .build();
       toAcc.setFutureSummary(summary);
       accountStore.put(toAddress, toAcc);
       return;
     }
 
     /**
-     * tick not exist: but no other ticks exist
+     * first tick ever: add new tick, add summary
      */
-    if(summary == null){
-      /*
-        no deal exist: new tick, new summary
-       */
-      //new tick
+    if(Objects.isNull(summary)){
+      //save new tick
       var tick = Protocol.Future.newBuilder()
               .setFutureBalance(amount)
               .setExpireTime(tickDay)
@@ -173,17 +172,17 @@ public class TransferFutureActuator extends AbstractActuator {
     }
 
     /**
-     * other tick exist
+     * other ticks exist
      */
-    logger.info("exec transfer future: got summary {} is null ? {} ", summary, (summary == null) ? "true" : "false");
     var headKey = summary.getLowerTick().toByteArray();
     var head = futureStore.get(headKey);
     var headTime = head.getExpireTime();
+
     /**
      * if new tick is head
      */
     if(tickDay < headTime){
-      //new tick is just a new head
+      //save old head
       head.setPrevTick(ByteString.copyFrom(tickKey));
       futureStore.put(headKey, head);
 
@@ -196,7 +195,7 @@ public class TransferFutureActuator extends AbstractActuator {
               .build();
       futureStore.put(tickKey, new FutureTransferCapsule(newHead));
 
-      //update summary
+      //save summary
       summary = summary.toBuilder()
               .setLowerTime(tickDay)
               .setTotalDeal(summary.getTotalDeal() +1)
@@ -212,7 +211,7 @@ public class TransferFutureActuator extends AbstractActuator {
      * if new tick is tail
      */
     if(tickDay > headTime){
-      //new tail
+      //save new tail
       var oldTailKeyBs = summary.getUpperTick();
       var newTail = Protocol.Future.newBuilder()
               .setFutureBalance(amount)
@@ -222,12 +221,12 @@ public class TransferFutureActuator extends AbstractActuator {
               .build();
       futureStore.put(tickKey, new FutureTransferCapsule(newTail));
 
-      //update old tail
+      //save old tail
       var oldTail = futureStore.get(oldTailKeyBs.toByteArray());
       oldTail.setNextTick(ByteString.copyFrom(tickKey));
       futureStore.put(oldTailKeyBs.toByteArray(), oldTail);
 
-      //update summary
+      //save summary
       summary = summary.toBuilder()
               .setTotalDeal(summary.getTotalDeal() + 1)
               .setTotalBalance(summary.getTotalBalance() + amount)
@@ -240,36 +239,34 @@ public class TransferFutureActuator extends AbstractActuator {
     }
 
     /**
-     * lookup slot between head and tail
+     * otherwise: lookup slot to insert
      */
     var searchKeyBs = summary.getUpperTick();
     while (true){
       var searchTick = futureStore.get(searchKeyBs.toByteArray());
       if(searchTick.getExpireTime() < tickDay)
       {
-        /*
-          found: update & quit
-         */
-        //save new tick
         var oldNextTickKey = searchTick.getNextTick();
-        var newFuture = Protocol.Future.newBuilder()
+
+        //save new tick
+        var newTick = Protocol.Future.newBuilder()
                 .setExpireTime(tickDay)
                 .setFutureBalance(amount)
                 .setPrevTick(searchKeyBs)
                 .setNextTick(oldNextTickKey)
                 .build();
-        futureStore.put(tickKey, new FutureTransferCapsule(newFuture));
+        futureStore.put(tickKey, new FutureTransferCapsule(newTick));
 
-        //update prev
-
+        //save prev
         searchTick.setNextTick(ByteString.copyFrom(tickKey));
         futureStore.put(searchKeyBs.toByteArray(), searchTick);
 
-        //update next
+        //save next
         var oldNextTick = futureStore.get(oldNextTickKey.toByteArray());
         oldNextTick.setPrevTick(ByteString.copyFrom(tickKey));
+        futureStore.put(oldNextTickKey.toByteArray(), oldNextTick);
 
-        //update summary
+        //save summary
         summary = summary.toBuilder()
                 .setTotalBalance(summary.getTotalBalance() + amount)
                 .setTotalDeal(summary.getTotalDeal() +1)

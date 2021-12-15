@@ -120,6 +120,6 @@ public class TokenTransferOwnerActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 unw default
+    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
   }
 }

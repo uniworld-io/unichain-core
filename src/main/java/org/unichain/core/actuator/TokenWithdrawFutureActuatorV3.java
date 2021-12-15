@@ -57,8 +57,8 @@ public class TokenWithdrawFutureActuatorV3 extends AbstractActuator {
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException| ContractValidateException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -182,5 +182,5 @@ public class TokenWithdrawFutureActuatorV3 extends AbstractActuator {
       ownerAcc.setFutureTokenSummary(summary);
       ownerAcc.addToken(tokenKey, withdrawAmount);
       accountStore.put(ownerAddress, ownerAcc);
-    }
+  }
 }

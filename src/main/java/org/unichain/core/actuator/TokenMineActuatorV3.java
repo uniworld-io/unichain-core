@@ -109,6 +109,6 @@ public class TokenMineActuatorV3 extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getAssetUpdateFee();//2unw default
+    return dbManager.getDynamicPropertiesStore().getAssetUpdateFee();//2UNW default
   }
 }

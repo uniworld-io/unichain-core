@@ -92,7 +92,7 @@ public class TransferActuator extends AbstractActuator {
       Assert.isTrue(balance >= Math.addExact(amount, fee), "Validate TransferContract error, balance is not sufficient.");
 
       if (toAccount != null) {
-        Math.addExact(toAccount.getBalance(), amount);
+        Math.addExact(toAccount.getBalance(), amount); //check if overflow
       }
 
       return true;

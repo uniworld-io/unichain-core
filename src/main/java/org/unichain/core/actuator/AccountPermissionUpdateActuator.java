@@ -78,7 +78,7 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
       for (Key key : permission.getKeysList()) {
         Assert.isTrue(Wallet.addressValid(key.getAddress().toByteArray()), "key is not a validate address");
         Assert.isTrue(key.getWeight() > 0, "key's weight should be greater than 0");
-        weightSum = Math.addExact(weightSum, key.getWeight());
+        weightSum = Math.addExact(weightSum, key.getWeight());//check if overflow
       }
 
       Assert.isTrue(weightSum >= permission.getThreshold(), "sum of all key's weight should not be less than threshold in permission " + permission.getType());

@@ -4,9 +4,11 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.db.StorageMarket;
@@ -29,13 +31,12 @@ public class BuyStorageBytesActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
-    final BuyStorageBytesContract BuyStorageBytesContract;
+    var fee = calcFee();
     try {
-      BuyStorageBytesContract = contract.unpack(BuyStorageBytesContract.class);
-      byte[] ownerAddress = BuyStorageBytesContract.getOwnerAddress().toByteArray();
-      AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      long bytes = BuyStorageBytesContract.getBytes();
+      val BuyStorageBytesContract = contract.unpack(BuyStorageBytesContract.class);
+      var ownerAddress = BuyStorageBytesContract.getOwnerAddress().toByteArray();
+      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      var bytes = BuyStorageBytesContract.getBytes();
       storageMarket.buyStorageBytes(accountCapsule, bytes);
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
@@ -50,59 +51,36 @@ public class BuyStorageBytesActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!contract.is(BuyStorageBytesContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [BuyStorageBytesContract],real type[" + contract.getClass() + "]");
-    }
-
-    final BuyStorageBytesContract BuyStorageBytesContract;
     try {
-      BuyStorageBytesContract = this.contract.unpack(BuyStorageBytesContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      throw new ContractValidateException(e.getMessage());
-    }
-    byte[] ownerAddress = BuyStorageBytesContract.getOwnerAddress().toByteArray();
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid address");
-    }
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(contract.is(BuyStorageBytesContract.class), "contract type error,expected type [BuyStorageBytesContract],real type[" + contract.getClass() + "]");
 
-    AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-    if (accountCapsule == null) {
-      String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-      throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
-    }
+      val BuyStorageBytesContract = this.contract.unpack(BuyStorageBytesContract.class);
+      var ownerAddress = BuyStorageBytesContract.getOwnerAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
 
-    long bytes = BuyStorageBytesContract.getBytes();
-    if (bytes < 0) {
-      throw new ContractValidateException("bytes must be positive");
-    }
+      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(accountCapsule, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-    if (bytes < 1L) {
-      throw new ContractValidateException("bytes must be larger than 1, current storage_bytes[" + bytes + "]");
-    }
+      var bytes = BuyStorageBytesContract.getBytes();
+      Assert.isTrue(bytes >= 0, "bytes must be positive");
+      Assert.isTrue(bytes >= 1L, "bytes must be larger than 1, current storage_bytes[" + bytes + "]");
 
-    long quant = storageMarket.tryBuyStorageBytes(bytes);
-
-    if (quant < 1_000_000L) {
-      throw new ContractValidateException("quantity must be larger than 1 UNW");
-    }
-
-    if (quant > accountCapsule.getBalance()) {
-      throw new ContractValidateException("quantity must be less than accountBalance");
-    }
+      var quant = storageMarket.tryBuyStorageBytes(bytes);
+      Assert.isTrue(quant >= 1_000_000L, "quantity must be larger than 1 UNW");
+      Assert.isTrue(quant <= accountCapsule.getBalance(), "quantity must be less than accountBalance");
 
 //    long storageBytes = storageMarket.exchange(quant, true);
 //    if (storageBytes > dbManager.getDynamicPropertiesStore().getTotalStorageReserved()) {
 //      throw new ContractValidateException("storage is not enough");
 //    }
 
-    return true;
+      return true;
+    } catch (InvalidProtocolBufferException e) {
+      logger.debug(e.getMessage(), e);
+      throw new ContractValidateException(e.getMessage());
+    }
   }
 
   @Override

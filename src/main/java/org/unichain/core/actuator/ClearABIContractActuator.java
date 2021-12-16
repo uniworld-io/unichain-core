@@ -4,6 +4,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
@@ -29,19 +30,19 @@ public class ClearABIContractActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
-      ClearABIContract usContract = contract.unpack(ClearABIContract.class);
-      byte[] contractAddress = usContract.getContractAddress().toByteArray();
-      byte[] ownerAddress = usContract.getOwnerAddress().toByteArray();
-      ContractCapsule deployedContract = dbManager.getContractStore().get(contractAddress);
+      var usContract = contract.unpack(ClearABIContract.class);
+      var contractAddress = usContract.getContractAddress().toByteArray();
+      var ownerAddress = usContract.getOwnerAddress().toByteArray();
+      var deployedContract = dbManager.getContractStore().get(contractAddress);
       deployedContract.clearABI();
       dbManager.getContractStore().put(contractAddress, deployedContract);
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }

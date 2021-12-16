@@ -66,7 +66,7 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
       //check owner name
       Assert.isTrue(permission.getParentId() == 0, "permission's parent should be owner");
 
-      long weightSum = 0;
+      var weightSum = 0L;
       List<ByteString> addressList = permission.getKeysList()
               .stream()
               .map(x -> x.getAddress())
@@ -83,7 +83,7 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
 
       Assert.isTrue(weightSum >= permission.getThreshold(), "sum of all key's weight should not be less than threshold in permission " + permission.getType());
 
-      ByteString operations = permission.getOperations();
+      var operations = permission.getOperations();
       if (permission.getType() != PermissionType.Active) {
         Assert.isTrue(operations.isEmpty(), permission.getType() + " permission needn't operations");
         return true;
@@ -92,7 +92,7 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
       //check operations
       Assert.isTrue((operations.size() == 32), "operations size must 32");
 
-      byte[] types1 = dbManager.getDynamicPropertiesStore().getAvailableContractType();
+      var types1 = dbManager.getDynamicPropertiesStore().getAvailableContractType();
       for (int i = 0; i < 256; i++) {
         boolean b = (operations.byteAt(i / 8) & (1 << (i % 8))) != 0;
         boolean t = ((types1[(i / 8)] & 0xff) & (1 << (i % 8))) != 0;

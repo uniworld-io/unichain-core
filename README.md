@@ -1,6 +1,6 @@
 <p align="center">
   <a href="explorer.unichain.world">
-    <img alt="Unichain" src="https://imgur.com/a/xt2UgVe" width="250" />
+    <img alt="Unichain" src="https://i.imgur.com/vjSXXhU.png" width="250" />
   </a>
 </p>
 

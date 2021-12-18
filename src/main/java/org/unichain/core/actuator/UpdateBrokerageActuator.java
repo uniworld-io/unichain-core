@@ -4,11 +4,12 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.WitnessCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -25,12 +26,11 @@ public class UpdateBrokerageActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    final UpdateBrokerageContract updateBrokerageContract;
-    final long fee = calcFee();
+    val fee = calcFee();
     try {
-      updateBrokerageContract = contract.unpack(UpdateBrokerageContract.class);
-      byte[] ownerAddress = updateBrokerageContract.getOwnerAddress().toByteArray();
-      int brokerage = updateBrokerageContract.getBrokerage();
+      val updateBrokerageContract = contract.unpack(UpdateBrokerageContract.class);
+      var ownerAddress = updateBrokerageContract.getOwnerAddress().toByteArray();
+      var brokerage = updateBrokerageContract.getBrokerage();
       //@note review role of brokerage when charging fee
       dbManager.getDelegationStore().setBrokerage(ownerAddress, brokerage);
       chargeFee(ownerAddress, fee);
@@ -45,18 +45,11 @@ public class UpdateBrokerageActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (!dbManager.getDynamicPropertiesStore().allowChangeDelegation()) {
-      throw new ContractValidateException("contract type error,unexpected type [UpdateBrokerageContract]");
-    }
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(UpdateBrokerageContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [UpdateBrokerageContract],real type[" + contract.getClass() + "]");
-    }
+    Assert.isTrue(dbManager.getDynamicPropertiesStore().allowChangeDelegation(), "contract type error,unexpected type [UpdateBrokerageContract]");
+    Assert.notNull(contract, "No contract!");
+    Assert.notNull(dbManager, "No dbManager!");
+    Assert.isTrue(this.contract.is(UpdateBrokerageContract.class), "contract type error,expected type [UpdateBrokerageContract],real type[" + contract.getClass() + "]");
+
     final UpdateBrokerageContract updateBrokerageContract;
     try {
       updateBrokerageContract = contract.unpack(UpdateBrokerageContract.class);
@@ -64,26 +57,18 @@ public class UpdateBrokerageActuator extends AbstractActuator {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-    byte[] ownerAddress = updateBrokerageContract.getOwnerAddress().toByteArray();
-    int brokerage = updateBrokerageContract.getBrokerage();
+    var ownerAddress = updateBrokerageContract.getOwnerAddress().toByteArray();
+    var brokerage = updateBrokerageContract.getBrokerage();
 
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid ownerAddress");
-    }
+    Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
 
-    if (brokerage < 0 || brokerage > 100) {
-      throw new ContractValidateException("Invalid brokerage");
-    }
+    Assert.isTrue(!(brokerage < 0 || brokerage > 100), "Invalid brokerage");
 
-    WitnessCapsule witnessCapsule = dbManager.getWitnessStore().get(ownerAddress);
-    if (witnessCapsule == null) {
-      throw new ContractValidateException("Not exist witness:" + Hex.toHexString(ownerAddress));
-    }
+    var witnessCapsule = dbManager.getWitnessStore().get(ownerAddress);
+    Assert.notNull(witnessCapsule, "Not exist witness:" + Hex.toHexString(ownerAddress));
 
-    AccountCapsule account = dbManager.getAccountStore().get(ownerAddress);
-    if (account == null) {
-      throw new ContractValidateException("Account has not existed");
-    }
+    var account = dbManager.getAccountStore().get(ownerAddress);
+    Assert.notNull(account, "Account has not existed");
 
     return true;
   }

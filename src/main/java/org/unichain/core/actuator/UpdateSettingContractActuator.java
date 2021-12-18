@@ -4,12 +4,12 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.ContractCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.db.AccountStore;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -28,13 +28,13 @@ public class UpdateSettingContractActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
-      UpdateSettingContract usContract = contract.unpack(UpdateSettingContract.class);
-      byte[] ownerAddress = usContract.getOwnerAddress().toByteArray();
-      long newPercent = usContract.getConsumeUserResourcePercent();
-      byte[] contractAddress = usContract.getContractAddress().toByteArray();
-      ContractCapsule deployedContract = dbManager.getContractStore().get(contractAddress);
+      var usContract = contract.unpack(UpdateSettingContract.class);
+      var ownerAddress = usContract.getOwnerAddress().toByteArray();
+      var newPercent = usContract.getConsumeUserResourcePercent();
+      var contractAddress = usContract.getContractAddress().toByteArray();
+      var deployedContract = dbManager.getContractStore().get(contractAddress);
 
       dbManager.getContractStore().put(contractAddress, new ContractCapsule(deployedContract.getInstance().toBuilder().setConsumeUserResourcePercent(newPercent).build()));
       chargeFee(ownerAddress, fee);
@@ -49,18 +49,11 @@ public class UpdateSettingContractActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(UpdateSettingContract.class)) {
-      throw new ContractValidateException(
-          "contract type error,expected type [UpdateSettingContract],real type["
-              + contract
-              .getClass() + "]");
-    }
+    Assert.notNull(contract, "No contract!");
+    Assert.notNull(dbManager, "No dbManager!");
+    Assert.isTrue(this.contract.is(UpdateSettingContract.class), "contract type error,expected type [UpdateSettingContract],real type["
+            + contract
+            .getClass() + "]");
     final UpdateSettingContract contract;
     try {
       contract = this.contract.unpack(UpdateSettingContract.class);
@@ -68,41 +61,27 @@ public class UpdateSettingContractActuator extends AbstractActuator {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-    if (!Wallet.addressValid(contract.getOwnerAddress().toByteArray())) {
-      throw new ContractValidateException("Invalid address");
-    }
-    byte[] ownerAddress = contract.getOwnerAddress().toByteArray();
-    String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
+    Assert.isTrue(Wallet.addressValid(contract.getOwnerAddress().toByteArray()), "Invalid address");
+    var ownerAddress = contract.getOwnerAddress().toByteArray();
+    var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
 
-    AccountStore accountStore = dbManager.getAccountStore();
+    var accountStore = dbManager.getAccountStore();
 
-    AccountCapsule accountCapsule = accountStore.get(ownerAddress);
-    if (accountCapsule == null) {
-      throw new ContractValidateException(
-          "Account[" + readableOwnerAddress + "] not exists");
-    }
+    var accountCapsule = accountStore.get(ownerAddress);
+    Assert.notNull(accountCapsule, "Account[" + readableOwnerAddress + "] not exists");
 
-    long newPercent = contract.getConsumeUserResourcePercent();
-    if (newPercent > 100 || newPercent < 0) {
-      throw new ContractValidateException(
-          "percent not in [0, 100]");
-    }
+    var newPercent = contract.getConsumeUserResourcePercent();
+    Assert.isTrue(!(newPercent > 100 || newPercent < 0), "percent not in [0, 100]");
 
-    byte[] contractAddress = contract.getContractAddress().toByteArray();
-    ContractCapsule deployedContract = dbManager.getContractStore().get(contractAddress);
+    var contractAddress = contract.getContractAddress().toByteArray();
+    var deployedContract = dbManager.getContractStore().get(contractAddress);
 
-    if (deployedContract == null) {
-      throw new ContractValidateException(
-          "Contract not exists");
-    }
+    Assert.notNull(deployedContract, "Contract not exists");
 
-    byte[] deployedContractOwnerAddress = deployedContract.getInstance().getOriginAddress()
+    var deployedContractOwnerAddress = deployedContract.getInstance().getOriginAddress()
         .toByteArray();
 
-    if (!Arrays.equals(ownerAddress, deployedContractOwnerAddress)) {
-      throw new ContractValidateException(
-          "Account[" + readableOwnerAddress + "] is not the owner of the contract");
-    }
+    Assert.isTrue(Arrays.equals(ownerAddress, deployedContractOwnerAddress), "Account[" + readableOwnerAddress + "] is not the owner of the contract");
 
     return true;
   }

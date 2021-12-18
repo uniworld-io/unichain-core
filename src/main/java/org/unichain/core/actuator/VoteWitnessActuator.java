@@ -5,26 +5,22 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.storage.Deposit;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.VotesCapsule;
 import org.unichain.core.config.Parameter.ChainConstant;
-import org.unichain.core.db.AccountStore;
 import org.unichain.core.db.Manager;
-import org.unichain.core.db.VotesStore;
-import org.unichain.core.db.WitnessStore;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.VoteWitnessContract;
-import org.unichain.protos.Contract.VoteWitnessContract.Vote;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.util.Iterator;
 import java.util.Objects;
 
 import static org.unichain.core.actuator.ActuatorConstant.*;
@@ -38,10 +34,10 @@ public class VoteWitnessActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
-      VoteWitnessContract voteContract = contract.unpack(VoteWitnessContract.class);
-      byte[] ownerAddress = voteContract.getOwnerAddress().toByteArray();
+      var voteContract = contract.unpack(VoteWitnessContract.class);
+      var ownerAddress = voteContract.getOwnerAddress().toByteArray();
       countVoteAccount(voteContract, getDeposit());
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
@@ -55,15 +51,11 @@ public class VoteWitnessActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (dbManager == null && (getDeposit() == null || getDeposit().getDbManager() == null)) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(VoteWitnessContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [VoteWitnessContract],real type[" + contract.getClass() + "]");
-    }
+    Assert.notNull(contract, "No contract!");
+    var dbManagerCheck = dbManager == null && (getDeposit() == null || getDeposit().getDbManager() == null);
+    Assert.isTrue(!dbManagerCheck, "No contract!");
+    Assert.isTrue(this.contract.is(VoteWitnessContract.class), "contract type error,expected type [VoteWitnessContract],real type[" + contract.getClass() + "]");
+
     final VoteWitnessContract contract;
     try {
       contract = this.contract.unpack(VoteWitnessContract.class);
@@ -71,75 +63,54 @@ public class VoteWitnessActuator extends AbstractActuator {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-    if (!Wallet.addressValid(contract.getOwnerAddress().toByteArray())) {
-      throw new ContractValidateException("Invalid address");
-    }
-    byte[] ownerAddress = contract.getOwnerAddress().toByteArray();
-    String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
+    Assert.isTrue(Wallet.addressValid(contract.getOwnerAddress().toByteArray()), "Invalid address");
 
-    AccountStore accountStore = dbManager.getAccountStore();
-    WitnessStore witnessStore = dbManager.getWitnessStore();
+    var ownerAddress = contract.getOwnerAddress().toByteArray();
+    var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
 
-    if (contract.getVotesCount() == 0) {
-      throw new ContractValidateException(
-          "VoteNumber must more than 0");
-    }
-    int maxVoteNumber = ChainConstant.MAX_VOTE_NUMBER;
-    if (contract.getVotesCount() > maxVoteNumber) {
-      throw new ContractValidateException(
-          "VoteNumber more than maxVoteNumber " + maxVoteNumber);
-    }
+    var accountStore = dbManager.getAccountStore();
+    var witnessStore = dbManager.getWitnessStore();
+
+    Assert.isTrue(contract.getVotesCount() != 0, "VoteNumber must more than 0");
+
+    var maxVoteNumber = ChainConstant.MAX_VOTE_NUMBER;
+    Assert.isTrue(contract.getVotesCount() <= maxVoteNumber, "VoteNumber more than maxVoteNumber " + maxVoteNumber);
+
     try {
-      Iterator<Vote> iterator = contract.getVotesList().iterator();
+      var iterator = contract.getVotesList().iterator();
       Long sum = 0L;
       while (iterator.hasNext()) {
-        Vote vote = iterator.next();
-        byte[] witnessCandidate = vote.getVoteAddress().toByteArray();
-        if (!Wallet.addressValid(witnessCandidate)) {
-          throw new ContractValidateException("Invalid vote address!");
-        }
-        long voteCount = vote.getVoteCount();
-        if (voteCount <= 0) {
-          throw new ContractValidateException("vote count must be greater than 0");
-        }
-        String readableWitnessAddress = StringUtil.createReadableString(vote.getVoteAddress());
+        var vote = iterator.next();
+        var witnessCandidate = vote.getVoteAddress().toByteArray();
+        Assert.isTrue(Wallet.addressValid(witnessCandidate), "Invalid vote address!");
+
+        var voteCount = vote.getVoteCount();
+        Assert.isTrue(voteCount > 0, "vote count must be greater than 0");
+
+        var readableWitnessAddress = StringUtil.createReadableString(vote.getVoteAddress());
         if (!Objects.isNull(getDeposit())) {
-          if (Objects.isNull(getDeposit().getAccount(witnessCandidate))) {
-            throw new ContractValidateException(
-                ACCOUNT_EXCEPTION_STR + readableWitnessAddress + NOT_EXIST_STR);
-          }
-        } else if (!accountStore.has(witnessCandidate)) {
-          throw new ContractValidateException(
-              ACCOUNT_EXCEPTION_STR + readableWitnessAddress + NOT_EXIST_STR);
+          Assert.notNull(getDeposit().getAccount(witnessCandidate), ACCOUNT_EXCEPTION_STR + readableWitnessAddress + NOT_EXIST_STR);
+        } else {
+          Assert.isTrue(accountStore.has(witnessCandidate), ACCOUNT_EXCEPTION_STR + readableWitnessAddress + NOT_EXIST_STR);
         }
         if (!Objects.isNull(getDeposit())) {
-          if (Objects.isNull(getDeposit().getWitness(witnessCandidate))) {
-            throw new ContractValidateException(
-                WITNESS_EXCEPTION_STR + readableWitnessAddress + NOT_EXIST_STR);
-          }
-        } else if (!witnessStore.has(witnessCandidate)) {
-          throw new ContractValidateException(
-              WITNESS_EXCEPTION_STR + readableWitnessAddress + NOT_EXIST_STR);
+          Assert.notNull(getDeposit().getWitness(witnessCandidate), WITNESS_EXCEPTION_STR + readableWitnessAddress + NOT_EXIST_STR);
+        } else {
+          Assert.isTrue(witnessStore.has(witnessCandidate), WITNESS_EXCEPTION_STR + readableWitnessAddress + NOT_EXIST_STR);
         }
         sum = LongMath.checkedAdd(sum, vote.getVoteCount());
       }
 
-      AccountCapsule accountCapsule =
+      var accountCapsule =
           (Objects.isNull(getDeposit())) ? accountStore.get(ownerAddress)
               : getDeposit().getAccount(ownerAddress);
-      if (accountCapsule == null) {
-        throw new ContractValidateException(
-            ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
-      }
+      Assert.notNull(accountCapsule, ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
 
-      long unichainPower = accountCapsule.getUnichainPower();
+      var unichainPower = accountCapsule.getUnichainPower();
 
       sum = LongMath.checkedMultiply(sum, 1000000L); //unx -> drop. The vote count is based on UNW
-      if (sum > unichainPower) {
-        throw new ContractValidateException(
-            "The total number of votes[" + sum + "] is greater than the unichainPower[" + unichainPower
-                + "]");
-      }
+      Assert.isTrue(sum <= unichainPower, "The total number of votes[" + sum + "] is greater than the unichainPower[" + unichainPower
+              + "]");
     } catch (ArithmeticException e) {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
@@ -149,19 +120,19 @@ public class VoteWitnessActuator extends AbstractActuator {
   }
 
   private void countVoteAccount(VoteWitnessContract voteContract, Deposit deposit) {
-    byte[] ownerAddress = voteContract.getOwnerAddress().toByteArray();
+    var ownerAddress = voteContract.getOwnerAddress().toByteArray();
 
     VotesCapsule votesCapsule;
-    VotesStore votesStore = dbManager.getVotesStore();
-    AccountStore accountStore = dbManager.getAccountStore();
+    var votesStore = dbManager.getVotesStore();
+    var accountStore = dbManager.getAccountStore();
 
     //withdraw reward
     dbManager.getDelegationService().withdrawReward(ownerAddress, getDeposit());
 
-    AccountCapsule accountCapsule = (Objects.isNull(getDeposit())) ? accountStore.get(ownerAddress) : getDeposit().getAccount(ownerAddress);
+    var accountCapsule = (Objects.isNull(getDeposit())) ? accountStore.get(ownerAddress) : getDeposit().getAccount(ownerAddress);
 
     if (!Objects.isNull(getDeposit())) {
-      VotesCapsule vCapsule = getDeposit().getVotesCapsule(ownerAddress);
+      var vCapsule = getDeposit().getVotesCapsule(ownerAddress);
       if (Objects.isNull(vCapsule)) {
         votesCapsule = new VotesCapsule(voteContract.getOwnerAddress(), accountCapsule.getVotesList());
       } else {

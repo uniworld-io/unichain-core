@@ -1,6 +1,6 @@
 <p align="center">
   <a href="explorer.unichain.world">
-    <img alt="Solana" src="https://miro.medium.com/max/720/1*RkrXVq-its7PCq3xYoHvEg.jpeg" width="250" />
+    <img alt="unichain" src="" width="250" />
   </a>
 </p>
 

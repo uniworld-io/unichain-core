@@ -235,7 +235,7 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
 
       var receiverCapsule = dbManager.getAccountStore().get(receiverAddress);
       var accountNotExists = dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 0 && receiverCapsule == null;
-      Assert.isTrue(accountNotExists, "Receiver Account[" + StringUtil.createReadableString(receiverAddress) + "] not exists");
+      Assert.isTrue(!accountNotExists, "Receiver Account[" + StringUtil.createReadableString(receiverAddress) + "] not exists");
 
       var key = DelegatedResourceCapsule.createDbKey(unfreezeBalanceContract.getOwnerAddress().toByteArray(), unfreezeBalanceContract.getReceiverAddress().toByteArray());
       var delegatedResourceCapsule = dbManager.getDelegatedResourceStore().get(key);
@@ -248,7 +248,7 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
           if (dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 0) {
             var balanceForBandwidth = receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth()
                     >= delegatedResourceCapsule.getFrozenBalanceForBandwidth();
-            Assert.isTrue(!balanceForBandwidth, "AcquiredDelegatedFrozenBalanceForBandwidth["
+            Assert.isTrue(balanceForBandwidth, "AcquiredDelegatedFrozenBalanceForBandwidth["
                     + receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth() + "] < delegatedBandwidth["
                     + delegatedResourceCapsule.getFrozenBalanceForBandwidth()
                     + "]");

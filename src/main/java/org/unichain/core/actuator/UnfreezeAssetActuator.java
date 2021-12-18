@@ -5,9 +5,11 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
@@ -29,19 +31,19 @@ public class UnfreezeAssetActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
-      final UnfreezeAssetContract unfreezeAssetContract = contract.unpack(UnfreezeAssetContract.class);
-      byte[] ownerAddress = unfreezeAssetContract.getOwnerAddress().toByteArray();
+      val unfreezeAssetContract = contract.unpack(UnfreezeAssetContract.class);
+      var ownerAddress = unfreezeAssetContract.getOwnerAddress().toByteArray();
 
-      AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
       long unfreezeAsset = 0L;
       List<Frozen> frozenList = Lists.newArrayList();
       frozenList.addAll(accountCapsule.getFrozenSupplyList());
       Iterator<Frozen> iterator = frozenList.iterator();
-      long now = dbManager.getHeadBlockTimeStamp();
+      var now = dbManager.getHeadBlockTimeStamp();
       while (iterator.hasNext()) {
-        Frozen next = iterator.next();
+        var next = iterator.next();
         if (next.getExpireTime() <= now) {
           unfreezeAsset += next.getFrozenBalance();
           iterator.remove();
@@ -71,15 +73,10 @@ public class UnfreezeAssetActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(UnfreezeAssetContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [UnfreezeAssetContract],real type[" + contract.getClass() + "]");
-    }
+    Assert.notNull(contract, "No contract!");
+    Assert.notNull(dbManager, "No dbManager!");
+    Assert.isTrue(this.contract.is(UnfreezeAssetContract.class), "contract type error,expected type [UnfreezeAssetContract],real type[" + contract.getClass() + "]");
+
     final UnfreezeAssetContract unfreezeAssetContract;
     try {
       unfreezeAssetContract = this.contract.unpack(UnfreezeAssetContract.class);
@@ -87,37 +84,24 @@ public class UnfreezeAssetActuator extends AbstractActuator {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-    byte[] ownerAddress = unfreezeAssetContract.getOwnerAddress().toByteArray();
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid address");
-    }
+    var ownerAddress = unfreezeAssetContract.getOwnerAddress().toByteArray();
+    Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
 
-    AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-    if (accountCapsule == null) {
-      String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-      throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
-    }
+    var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+    Assert.notNull(accountCapsule, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-    if (accountCapsule.getFrozenSupplyCount() <= 0) {
-      throw new ContractValidateException("no frozen supply balance");
-    }
+    Assert.isTrue(accountCapsule.getFrozenSupplyCount() > 0, "no frozen supply balance");
 
     if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
-      if (accountCapsule.getAssetIssuedName().isEmpty()) {
-        throw new ContractValidateException("this account did not issue any asset");
-      }
+      Assert.isTrue(!accountCapsule.getAssetIssuedName().isEmpty(), "this account did not issue any asset");
     } else {
-      if (accountCapsule.getAssetIssuedID().isEmpty()) {
-        throw new ContractValidateException("this account did not issue any asset");
-      }
+      Assert.isTrue(!accountCapsule.getAssetIssuedID().isEmpty(), "this account did not issue any asset");
     }
 
-    long now = dbManager.getHeadBlockTimeStamp();
-    long allowedUnfreezeCount = accountCapsule.getFrozenSupplyList().stream()
+    var now = dbManager.getHeadBlockTimeStamp();
+    var allowedUnfreezeCount = accountCapsule.getFrozenSupplyList().stream()
         .filter(frozen -> frozen.getExpireTime() <= now).count();
-    if (allowedUnfreezeCount <= 0) {
-      throw new ContractValidateException("It's not time to unfreeze asset supply");
-    }
+    Assert.isTrue(allowedUnfreezeCount > 0, "It's not time to unfreeze asset supply");
 
     return true;
   }

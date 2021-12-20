@@ -42,7 +42,7 @@ public class UpdateSettingContractActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -53,9 +53,7 @@ public class UpdateSettingContractActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(this.contract.is(UpdateSettingContract.class), "Contract type error,expected type [UpdateSettingContract],real type["
-              + contract
-              .getClass() + "]");
+      Assert.isTrue(this.contract.is(UpdateSettingContract.class), "Contract type error,expected type [UpdateSettingContract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(UpdateSettingContract.class);
       Assert.isTrue(Wallet.addressValid(ctx.getOwnerAddress().toByteArray()), "Invalid address");
@@ -73,12 +71,11 @@ public class UpdateSettingContractActuator extends AbstractActuator {
       var deployedContract = dbManager.getContractStore().get(contractAddress);
       Assert.notNull(deployedContract, "Contract not exists");
 
-      var deployedContractOwnerAddress = deployedContract.getInstance().getOriginAddress()
-          .toByteArray();
+      var deployedContractOwnerAddress = deployedContract.getInstance().getOriginAddress().toByteArray();
       Assert.isTrue(Arrays.equals(ownerAddress, deployedContractOwnerAddress), "Account[" + readableOwnerAddress + "] is not the owner of the contract");
       return true;
     } catch (Exception e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

@@ -31,9 +31,9 @@ public class ClearABIContractActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var usContract = contract.unpack(ClearABIContract.class);
-      var contractAddress = usContract.getContractAddress().toByteArray();
-      var ownerAddress = usContract.getOwnerAddress().toByteArray();
+      var ctx = contract.unpack(ClearABIContract.class);
+      var contractAddress = ctx.getContractAddress().toByteArray();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var deployedContract = dbManager.getContractStore().get(contractAddress);
       deployedContract.clearABI();
       dbManager.getContractStore().put(contractAddress, deployedContract);
@@ -50,21 +50,21 @@ public class ClearABIContractActuator extends AbstractActuator {
   @Override
   public boolean validate() throws ContractValidateException {
     try {
-      Assert.isTrue(VMConfig.allowTvmConstantinople(), "contract type error,unexpected type [ClearABIContract]");
+      Assert.isTrue(VMConfig.allowTvmConstantinople(), "Contract type error,unexpected type [ClearABIContract]");
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(this.contract.is(ClearABIContract.class), "contract type error,expected type [ClearABIContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(this.contract.is(ClearABIContract.class), "Contract type error,expected type [ClearABIContract],real type[" + contract.getClass() + "]");
 
-      val contract = this.contract.unpack(ClearABIContract.class);
-      Assert.isTrue(Wallet.addressValid(contract.getOwnerAddress().toByteArray()), "Invalid address");
+      val ctx = this.contract.unpack(ClearABIContract.class);
+      Assert.isTrue(Wallet.addressValid(ctx.getOwnerAddress().toByteArray()), "Invalid address");
 
-      var ownerAddress = contract.getOwnerAddress().toByteArray();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
       var accountStore = dbManager.getAccountStore();
       var accountCapsule = accountStore.get(ownerAddress);
       Assert.notNull(accountCapsule, "Account[" + readableOwnerAddress + "] not exists");
 
-      var contractAddress = contract.getContractAddress().toByteArray();
+      var contractAddress = ctx.getContractAddress().toByteArray();
       var deployedContract = dbManager.getContractStore().get(contractAddress);
       Assert.notNull(deployedContract, "Contract not exists");
 
@@ -72,8 +72,8 @@ public class ClearABIContractActuator extends AbstractActuator {
       Assert.isTrue(Arrays.equals(ownerAddress, deployedContractOwnerAddress), "Account[" + readableOwnerAddress + "] is not the owner of the contract");
 
       return true;
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

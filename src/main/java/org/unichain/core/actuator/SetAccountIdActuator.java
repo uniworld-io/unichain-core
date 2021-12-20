@@ -28,13 +28,13 @@ public class SetAccountIdActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     val fee = calcFee();
     try {
-      val setAccountIdContract = contract.unpack(SetAccountIdContract.class);
-      var ownerAddress = setAccountIdContract.getOwnerAddress().toByteArray();
+      val ctx = contract.unpack(SetAccountIdContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
       var accountIdIndexStore = dbManager.getAccountIdIndexStore();
       var ownerAccount = accountStore.get(ownerAddress);
 
-      ownerAccount.setAccountId(setAccountIdContract.getAccountId().toByteArray());
+      ownerAccount.setAccountId(ctx.getAccountId().toByteArray());
       accountStore.put(ownerAddress, ownerAccount);
       accountIdIndexStore.put(ownerAccount);
       chargeFee(ownerAddress, fee);
@@ -42,7 +42,7 @@ public class SetAccountIdActuator extends AbstractActuator {
       return true;
     }
     catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -55,9 +55,9 @@ public class SetAccountIdActuator extends AbstractActuator {
       Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(this.contract.is(SetAccountIdContract.class), "contract type error,expected type [SetAccountIdContract],real type[" + contract.getClass() + "]");
 
-      val setAccountIdContract = contract.unpack(SetAccountIdContract.class);
-      var ownerAddress = setAccountIdContract.getOwnerAddress().toByteArray();
-      var accountId = setAccountIdContract.getAccountId().toByteArray();
+      val ctx = contract.unpack(SetAccountIdContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var accountId = ctx.getAccountId().toByteArray();
       Assert.isTrue(TransactionUtil.validAccountId(accountId), "Invalid accountId");
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
 
@@ -69,8 +69,8 @@ public class SetAccountIdActuator extends AbstractActuator {
       Assert.isTrue(!dbManager.getAccountIdIndexStore().has(accountId), "This id has existed");
 
       return true;
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

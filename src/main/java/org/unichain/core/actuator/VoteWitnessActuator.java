@@ -44,7 +44,7 @@ public class VoteWitnessActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -54,24 +54,24 @@ public class VoteWitnessActuator extends AbstractActuator {
   public boolean validate() throws ContractValidateException {
     try {
       Assert.notNull(contract, "No contract!");
-      var dbManagerCheck = dbManager == null && (getDeposit() == null || getDeposit().getDbManager() == null);
+      var dbManagerCheck = (dbManager == null) && (getDeposit() == null || getDeposit().getDbManager() == null);
       Assert.isTrue(!dbManagerCheck, "No contract!");
       Assert.isTrue(this.contract.is(VoteWitnessContract.class), "contract type error,expected type [VoteWitnessContract],real type[" + contract.getClass() + "]");
 
-      val contract = this.contract.unpack(VoteWitnessContract.class);
+      val ctx = this.contract.unpack(VoteWitnessContract.class);
 
-      Assert.isTrue(Wallet.addressValid(contract.getOwnerAddress().toByteArray()), "Invalid address");
+      Assert.isTrue(Wallet.addressValid(ctx.getOwnerAddress().toByteArray()), "Invalid address");
 
-      var ownerAddress = contract.getOwnerAddress().toByteArray();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
       var accountStore = dbManager.getAccountStore();
       var witnessStore = dbManager.getWitnessStore();
-      Assert.isTrue(contract.getVotesCount() != 0, "VoteNumber must more than 0");
+      Assert.isTrue(ctx.getVotesCount() > 0, "VoteNumber must more than 0");
 
       var maxVoteNumber = ChainConstant.MAX_VOTE_NUMBER;
-      Assert.isTrue(contract.getVotesCount() <= maxVoteNumber, "VoteNumber more than maxVoteNumber " + maxVoteNumber);
+      Assert.isTrue(ctx.getVotesCount() <= maxVoteNumber, "VoteNumber more than maxVoteNumber " + maxVoteNumber);
 
-      var iterator = contract.getVotesList().iterator();
+      var iterator = ctx.getVotesList().iterator();
       Long sum = 0L;
       while (iterator.hasNext()) {
         var vote = iterator.next();
@@ -79,7 +79,7 @@ public class VoteWitnessActuator extends AbstractActuator {
         Assert.isTrue(Wallet.addressValid(witnessCandidate), "Invalid vote address!");
 
         var voteCount = vote.getVoteCount();
-        Assert.isTrue(voteCount > 0, "vote count must be greater than 0");
+        Assert.isTrue(voteCount > 0, "Vote count must be greater than 0");
 
         var readableWitnessAddress = StringUtil.createReadableString(vote.getVoteAddress());
 
@@ -98,20 +98,17 @@ public class VoteWitnessActuator extends AbstractActuator {
         sum = LongMath.checkedAdd(sum, vote.getVoteCount());
       }
 
-      var accountCapsule =
-          (Objects.isNull(getDeposit())) ? accountStore.get(ownerAddress)
-              : getDeposit().getAccount(ownerAddress);
+      var accountCapsule = (Objects.isNull(getDeposit())) ? accountStore.get(ownerAddress) : getDeposit().getAccount(ownerAddress);
       Assert.notNull(accountCapsule, ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
 
       var unichainPower = accountCapsule.getUnichainPower();
 
       sum = LongMath.checkedMultiply(sum, 1000000L); //unx -> drop. The vote count is based on UNW
-      Assert.isTrue(sum <= unichainPower, "The total number of votes[" + sum + "] is greater than the unichainPower[" + unichainPower
-              + "]");
+      Assert.isTrue(sum <= unichainPower, "The total number of votes[" + sum + "] is greater than the unichainPower[" + unichainPower + "]");
 
       return true;
-    } catch (ArithmeticException | InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }
@@ -146,7 +143,6 @@ public class VoteWitnessActuator extends AbstractActuator {
     votesCapsule.clearNewVotes();
 
     voteContract.getVotesList().forEach(vote -> {
-      logger.debug("countVoteAccount,address[{}]", ByteArray.toHexString(vote.getVoteAddress().toByteArray()));
       votesCapsule.addNewVotes(vote.getVoteAddress(), vote.getVoteCount());
       accountCapsule.addVotes(vote.getVoteAddress(), vote.getVoteCount());
     });
@@ -155,7 +151,6 @@ public class VoteWitnessActuator extends AbstractActuator {
       accountStore.put(accountCapsule.createDbKey(), accountCapsule);
       votesStore.put(ownerAddress, votesCapsule);
     } else {
-      // cache
       deposit.putAccountValue(accountCapsule.createDbKey(), accountCapsule);
       deposit.putVoteValue(ownerAddress, votesCapsule);
     }

@@ -32,8 +32,6 @@ public class WitnessCreateActuator extends AbstractActuator {
     try {
       val ctx = this.contract.unpack(WitnessCreateContract.class);
       val witnessCapsule = new WitnessCapsule(ctx.getOwnerAddress(), 0, ctx.getUrl().toStringUtf8());
-
-      logger.debug("createWitness, address[{}]", witnessCapsule.createReadableString());
       this.dbManager.getWitnessStore().put(witnessCapsule.createDbKey(), witnessCapsule);
       var accountCapsule = this.dbManager.getAccountStore().get(witnessCapsule.createDbKey());
       accountCapsule.setIsWitness(true);
@@ -46,7 +44,7 @@ public class WitnessCreateActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }

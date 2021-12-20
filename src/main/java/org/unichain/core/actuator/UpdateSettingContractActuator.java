@@ -4,6 +4,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
@@ -30,10 +31,10 @@ public class UpdateSettingContractActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var usContract = contract.unpack(UpdateSettingContract.class);
-      var ownerAddress = usContract.getOwnerAddress().toByteArray();
-      var newPercent = usContract.getConsumeUserResourcePercent();
-      var contractAddress = usContract.getContractAddress().toByteArray();
+      var ctx = contract.unpack(UpdateSettingContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var newPercent = ctx.getConsumeUserResourcePercent();
+      var contractAddress = ctx.getContractAddress().toByteArray();
       var deployedContract = dbManager.getContractStore().get(contractAddress);
 
       dbManager.getContractStore().put(contractAddress, new ContractCapsule(deployedContract.getInstance().toBuilder().setConsumeUserResourcePercent(newPercent).build()));
@@ -49,41 +50,37 @@ public class UpdateSettingContractActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    Assert.notNull(contract, "No contract!");
-    Assert.notNull(dbManager, "No dbManager!");
-    Assert.isTrue(this.contract.is(UpdateSettingContract.class), "contract type error,expected type [UpdateSettingContract],real type["
-            + contract
-            .getClass() + "]");
-    final UpdateSettingContract contract;
     try {
-      contract = this.contract.unpack(UpdateSettingContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(this.contract.is(UpdateSettingContract.class), "Contract type error,expected type [UpdateSettingContract],real type["
+              + contract
+              .getClass() + "]");
+
+      val ctx = this.contract.unpack(UpdateSettingContract.class);
+      Assert.isTrue(Wallet.addressValid(ctx.getOwnerAddress().toByteArray()), "Invalid address");
+
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
+      var accountStore = dbManager.getAccountStore();
+      var accountCapsule = accountStore.get(ownerAddress);
+      Assert.notNull(accountCapsule, "Account[" + readableOwnerAddress + "] not exists");
+
+      var newPercent = ctx.getConsumeUserResourcePercent();
+      Assert.isTrue(!(newPercent > 100 || newPercent < 0), "Percent not in [0, 100]");
+
+      var contractAddress = ctx.getContractAddress().toByteArray();
+      var deployedContract = dbManager.getContractStore().get(contractAddress);
+      Assert.notNull(deployedContract, "Contract not exists");
+
+      var deployedContractOwnerAddress = deployedContract.getInstance().getOriginAddress()
+          .toByteArray();
+      Assert.isTrue(Arrays.equals(ownerAddress, deployedContractOwnerAddress), "Account[" + readableOwnerAddress + "] is not the owner of the contract");
+      return true;
+    } catch (Exception e) {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-    Assert.isTrue(Wallet.addressValid(contract.getOwnerAddress().toByteArray()), "Invalid address");
-    var ownerAddress = contract.getOwnerAddress().toByteArray();
-    var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-
-    var accountStore = dbManager.getAccountStore();
-
-    var accountCapsule = accountStore.get(ownerAddress);
-    Assert.notNull(accountCapsule, "Account[" + readableOwnerAddress + "] not exists");
-
-    var newPercent = contract.getConsumeUserResourcePercent();
-    Assert.isTrue(!(newPercent > 100 || newPercent < 0), "percent not in [0, 100]");
-
-    var contractAddress = contract.getContractAddress().toByteArray();
-    var deployedContract = dbManager.getContractStore().get(contractAddress);
-
-    Assert.notNull(deployedContract, "Contract not exists");
-
-    var deployedContractOwnerAddress = deployedContract.getInstance().getOriginAddress()
-        .toByteArray();
-
-    Assert.isTrue(Arrays.equals(ownerAddress, deployedContractOwnerAddress), "Account[" + readableOwnerAddress + "] is not the owner of the contract");
-
-    return true;
   }
 
   @Override

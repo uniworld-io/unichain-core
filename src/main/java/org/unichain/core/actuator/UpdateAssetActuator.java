@@ -4,12 +4,13 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.AssetIssueCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
-import org.unichain.core.db.AssetIssueStore;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
@@ -27,35 +28,32 @@ public class UpdateAssetActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
-      final UpdateAssetContract updateAssetContract = this.contract.unpack(UpdateAssetContract.class);
-      byte[] ownerAddress = updateAssetContract.getOwnerAddress().toByteArray();
-      long newLimit = updateAssetContract.getNewLimit();
-      long newPublicLimit = updateAssetContract.getNewPublicLimit();
-
-      ByteString newUrl = updateAssetContract.getUrl();
-      ByteString newDescription = updateAssetContract.getDescription();
-
-      AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      val ctx = this.contract.unpack(UpdateAssetContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var newLimit = ctx.getNewLimit();
+      var newPublicLimit = ctx.getNewPublicLimit();
+      var newUrl = ctx.getUrl();
+      var newDescription = ctx.getDescription();
+      var capsule = dbManager.getAccountStore().get(ownerAddress);
 
       AssetIssueCapsule assetIssueCapsule, assetIssueCapsuleV2;
 
-      AssetIssueStore assetIssueStoreV2 = dbManager.getAssetIssueV2Store();
-      assetIssueCapsuleV2 = assetIssueStoreV2.get(accountCapsule.getAssetIssuedID().toByteArray());
+      var assetIssueStoreV2 = dbManager.getAssetIssueV2Store();
+      assetIssueCapsuleV2 = assetIssueStoreV2.get(capsule.getAssetIssuedID().toByteArray());
       assetIssueCapsuleV2.setFreeAssetNetLimit(newLimit);
       assetIssueCapsuleV2.setPublicFreeAssetNetLimit(newPublicLimit);
       assetIssueCapsuleV2.setUrl(newUrl);
       assetIssueCapsuleV2.setDescription(newDescription);
 
-      if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
-        AssetIssueStore assetIssueStore = dbManager.getAssetIssueStore();
-        assetIssueCapsule = assetIssueStore.get(accountCapsule.getAssetIssuedName().toByteArray());
+      if(dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
+        var assetIssueStore = dbManager.getAssetIssueStore();
+        assetIssueCapsule = assetIssueStore.get(capsule.getAssetIssuedName().toByteArray());
         assetIssueCapsule.setFreeAssetNetLimit(newLimit);
         assetIssueCapsule.setPublicFreeAssetNetLimit(newPublicLimit);
         assetIssueCapsule.setUrl(newUrl);
         assetIssueCapsule.setDescription(newDescription);
-
         dbManager.getAssetIssueStore().put(assetIssueCapsule.createDbKey(), assetIssueCapsule);
         dbManager.getAssetIssueV2Store().put(assetIssueCapsuleV2.createDbV2Key(), assetIssueCapsuleV2);
       } else {
@@ -66,7 +64,7 @@ public class UpdateAssetActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -74,74 +72,44 @@ public class UpdateAssetActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(UpdateAssetContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [UpdateAssetContract],real type[" + contract.getClass() + "]");
-    }
-    final UpdateAssetContract updateAssetContract;
     try {
-      updateAssetContract = this.contract.unpack(UpdateAssetContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(this.contract.is(UpdateAssetContract.class), "Contract type error,expected type [UpdateAssetContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(UpdateAssetContract.class);
+      var newLimit = ctx.getNewLimit();
+      var newPublicLimit = ctx.getNewPublicLimit();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var newUrl = ctx.getUrl();
+      var newDescription = ctx.getDescription();
+
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
+
+      var account = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(account, "Account has not existed");
+
+      if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
+        Assert.isTrue(!account.getAssetIssuedName().isEmpty(), "Account has not issue any asset");
+        Assert.notNull(dbManager.getAssetIssueStore().get(account.getAssetIssuedName().toByteArray()), "Asset not exists in AssetIssueStore");
+      } else {
+        Assert.isTrue(!account.getAssetIssuedID().isEmpty(), "Account has not issue any asset");
+        Assert.notNull(dbManager.getAssetIssueV2Store().get(account.getAssetIssuedID().toByteArray()), "Asset not exists  in AssetIssueV2Store");
+      }
+
+      Assert.isTrue(TransactionUtil.validUrl(newUrl.toByteArray()), "Invalid url");
+      Assert.isTrue(TransactionUtil.validAssetDescription(newDescription.toByteArray()), "Invalid description");
+
+      var freeAssetNetLimit = newLimit < 0 || newLimit >= dbManager.getDynamicPropertiesStore().getOneDayNetLimit();
+      Assert.isTrue(!freeAssetNetLimit, "Invalid FreeAssetNetLimit");
+
+      var publicFreeAssetNetLimit = newPublicLimit < 0 || newPublicLimit >= dbManager.getDynamicPropertiesStore().getOneDayNetLimit();
+      Assert.isTrue(!publicFreeAssetNetLimit, "Invalid PublicFreeAssetNetLimit");
+      return true;
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    long newLimit = updateAssetContract.getNewLimit();
-    long newPublicLimit = updateAssetContract.getNewPublicLimit();
-    byte[] ownerAddress = updateAssetContract.getOwnerAddress().toByteArray();
-    ByteString newUrl = updateAssetContract.getUrl();
-    ByteString newDescription = updateAssetContract.getDescription();
-
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid ownerAddress");
-    }
-
-    AccountCapsule account = dbManager.getAccountStore().get(ownerAddress);
-    if (account == null) {
-      throw new ContractValidateException("Account has not existed");
-    }
-
-    if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
-      if (account.getAssetIssuedName().isEmpty()) {
-        throw new ContractValidateException("Account has not issue any asset");
-      }
-
-      if (dbManager.getAssetIssueStore().get(account.getAssetIssuedName().toByteArray()) == null) {
-        throw new ContractValidateException("Asset not exists in AssetIssueStore");
-      }
-    } else {
-      if (account.getAssetIssuedID().isEmpty()) {
-        throw new ContractValidateException("Account has not issue any asset");
-      }
-
-      if (dbManager.getAssetIssueV2Store().get(account.getAssetIssuedID().toByteArray()) == null) {
-        throw new ContractValidateException("Asset not exists  in AssetIssueV2Store");
-      }
-    }
-
-    if (!TransactionUtil.validUrl(newUrl.toByteArray())) {
-      throw new ContractValidateException("Invalid url");
-    }
-
-    if (!TransactionUtil.validAssetDescription(newDescription.toByteArray())) {
-      throw new ContractValidateException("Invalid description");
-    }
-
-    if (newLimit < 0 || newLimit >= dbManager.getDynamicPropertiesStore().getOneDayNetLimit()) {
-      throw new ContractValidateException("Invalid FreeAssetNetLimit");
-    }
-
-    if (newPublicLimit < 0 || newPublicLimit >=
-        dbManager.getDynamicPropertiesStore().getOneDayNetLimit()) {
-      throw new ContractValidateException("Invalid PublicFreeAssetNetLimit");
-    }
-
-    return true;
   }
 
   @Override

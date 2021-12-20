@@ -5,9 +5,11 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.Manager;
@@ -30,104 +32,78 @@ public class WithdrawBalanceActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
-    final WithdrawBalanceContract withdrawBalanceContract;
+    var fee = calcFee();
     try {
-      withdrawBalanceContract = contract.unpack(WithdrawBalanceContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      val ctx = contract.unpack(WithdrawBalanceContract.class);
+      dbManager.getDelegationService().withdrawReward(ctx.getOwnerAddress().toByteArray(), getDeposit());
+      var accountCapsule = (Objects.isNull(getDeposit())) ?
+              dbManager.getAccountStore().get(ctx.getOwnerAddress().toByteArray())
+              : getDeposit().getAccount(ctx.getOwnerAddress().toByteArray());
+      var oldBalance = accountCapsule.getBalance();
+      var allowance = accountCapsule.getAllowance();
+      var now = dbManager.getHeadBlockTimeStamp();
+      accountCapsule.setInstance(accountCapsule.getInstance().toBuilder()
+          .setBalance(oldBalance + allowance)
+          .setAllowance(0L)
+          .setLatestWithdrawTime(now)
+          .build());
+      if (Objects.isNull(getDeposit())) {
+        dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
+      } else {
+        // cache
+        deposit.putAccountValue(accountCapsule.createDbKey(), accountCapsule);
+      }
+
+      ret.setWithdrawAmount(allowance);
+      ret.setStatus(fee, code.SUCESS);
+
+      return true;
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-
-    dbManager.getDelegationService().withdrawReward(withdrawBalanceContract.getOwnerAddress().toByteArray(), getDeposit());
-
-    AccountCapsule accountCapsule = (Objects.isNull(getDeposit())) ?
-            dbManager.getAccountStore().get(withdrawBalanceContract.getOwnerAddress().toByteArray())
-            : getDeposit().getAccount(withdrawBalanceContract.getOwnerAddress().toByteArray());
-    long oldBalance = accountCapsule.getBalance();
-    long allowance = accountCapsule.getAllowance();
-
-    long now = dbManager.getHeadBlockTimeStamp();
-    accountCapsule.setInstance(accountCapsule.getInstance().toBuilder()
-        .setBalance(oldBalance + allowance)
-        .setAllowance(0L)
-        .setLatestWithdrawTime(now)
-        .build());
-    if (Objects.isNull(getDeposit())) {
-      dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
-    } else {
-      // cache
-      deposit.putAccountValue(accountCapsule.createDbKey(), accountCapsule);
-    }
-
-    ret.setWithdrawAmount(allowance);
-    ret.setStatus(fee, code.SUCESS);
-
-    return true;
   }
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (dbManager == null && (getDeposit() == null || getDeposit().getDbManager() == null)) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(WithdrawBalanceContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [WithdrawBalanceContract],real type[" + contract.getClass() + "]");
-    }
-    final WithdrawBalanceContract withdrawBalanceContract;
     try {
-      withdrawBalanceContract = this.contract.unpack(WithdrawBalanceContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      throw new ContractValidateException(e.getMessage());
-    }
-    byte[] ownerAddress = withdrawBalanceContract.getOwnerAddress().toByteArray();
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid address");
-    }
+      Assert.notNull(contract, "No contract!");
+      var dbManagerCheck = (dbManager == null) && (getDeposit() == null || getDeposit().getDbManager() == null);
+      Assert.isTrue(!dbManagerCheck, "No dbManager!");
+      Assert.isTrue(this.contract.is(WithdrawBalanceContract.class), "Contract type error,expected type [WithdrawBalanceContract],real type[" + contract.getClass() + "]");
 
-    AccountCapsule accountCapsule = Objects.isNull(getDeposit()) ? dbManager.getAccountStore().get(ownerAddress) : getDeposit().getAccount(ownerAddress);
-    if (accountCapsule == null) {
-      String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-      throw new ContractValidateException(ACCOUNT_EXCEPTION_STR + readableOwnerAddress + "] not exists");
-    }
+      val ctx = this.contract.unpack(WithdrawBalanceContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
 
-    String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
+      var accountCapsule = Objects.isNull(getDeposit()) ? dbManager.getAccountStore().get(ownerAddress) : getDeposit().getAccount(ownerAddress);
+      Assert.notNull(accountCapsule, ACCOUNT_EXCEPTION_STR + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-    boolean isGP = Args.getInstance()
-                      .getGenesisBlock()
-                      .getWitnesses()
-                      .stream()
-                      .anyMatch(witness -> Arrays.equals(ownerAddress, witness.getAddress()));
-    if (isGP) {
-      throw new ContractValidateException(ACCOUNT_EXCEPTION_STR + readableOwnerAddress + "] is a guard representative and is not allowed to withdraw Balance");
-    }
+      var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
+      var isGP = Args.getInstance()
+                        .getGenesisBlock()
+                        .getWitnesses()
+                        .stream()
+                        .anyMatch(witness -> Arrays.equals(ownerAddress, witness.getAddress()));
+      Assert.isTrue(!isGP, ACCOUNT_EXCEPTION_STR + readableOwnerAddress + "] is a guard representative and is not allowed to withdraw Balance");
 
-    long latestWithdrawTime = accountCapsule.getLatestWithdrawTime();
-    long now = dbManager.getHeadBlockTimeStamp();
-    long witnessAllowanceFrozenTime = Objects.isNull(getDeposit()) ?
-        dbManager.getDynamicPropertiesStore().getWitnessAllowanceFrozenTime() * 86_400_000L :
-        getDeposit().getWitnessAllowanceFrozenTime() * 86_400_000L;
+      var latestWithdrawTime = accountCapsule.getLatestWithdrawTime();
+      var now = dbManager.getHeadBlockTimeStamp();
+      var witnessAllowanceFrozenTime = Objects.isNull(getDeposit()) ?
+          dbManager.getDynamicPropertiesStore().getWitnessAllowanceFrozenTime() * 86_400_000L :
+          getDeposit().getWitnessAllowanceFrozenTime() * 86_400_000L;
 
-    if (now - latestWithdrawTime < witnessAllowanceFrozenTime) {
-      throw new ContractValidateException("The last withdraw time is " + latestWithdrawTime + ",less than 24 hours");
-    }
-
-    if (accountCapsule.getAllowance() <= 0 && dbManager.getDelegationService().queryReward(ownerAddress) <= 0) {
-      throw new ContractValidateException("witnessAccount does not have any reward");
-    }
-    try {
+      Assert.isTrue(now - latestWithdrawTime >= witnessAllowanceFrozenTime, "The last withdraw time is " + latestWithdrawTime + ",less than 24 hours");
+      var witnessAccount = accountCapsule.getAllowance() <= 0 && dbManager.getDelegationService().queryReward(ownerAddress) <= 0;
+      Assert.isTrue(!witnessAccount, "witnessAccount does not have any reward");
       LongMath.checkedAdd(accountCapsule.getBalance(), accountCapsule.getAllowance());
-    } catch (ArithmeticException e) {
-      logger.debug(e.getMessage(), e);
+
+      return true;
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    return true;
   }
 
   @Override

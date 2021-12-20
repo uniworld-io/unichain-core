@@ -4,6 +4,9 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.ProposalCapsule;
@@ -31,29 +34,29 @@ public class ProposalCreateActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
-      final ProposalCreateContract proposalCreateContract = this.contract.unpack(ProposalCreateContract.class);
-      byte[] ownerAddress = proposalCreateContract.getOwnerAddress().toByteArray();
-      long id = (Objects.isNull(getDeposit())) ?
+      val ctx = this.contract.unpack(ProposalCreateContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var id = (Objects.isNull(getDeposit())) ?
           dbManager.getDynamicPropertiesStore().getLatestProposalNum() + 1 :
           getDeposit().getLatestProposalNum() + 1;
 
-      ProposalCapsule proposalCapsule = new ProposalCapsule(proposalCreateContract.getOwnerAddress(), id);
+      var proposalCapsule = new ProposalCapsule(ctx.getOwnerAddress(), id);
 
-      proposalCapsule.setParameters(proposalCreateContract.getParametersMap());
+      proposalCapsule.setParameters(ctx.getParametersMap());
 
-      long now = dbManager.getHeadBlockTimeStamp();
-      long maintenanceTimeInterval = (Objects.isNull(getDeposit())) ?
+      var now = dbManager.getHeadBlockTimeStamp();
+      var maintenanceTimeInterval = (Objects.isNull(getDeposit())) ?
           dbManager.getDynamicPropertiesStore().getMaintenanceTimeInterval() :
           getDeposit().getMaintenanceTimeInterval();
       proposalCapsule.setCreateTime(now);
 
-      long currentMaintenanceTime = (Objects.isNull(getDeposit())) ? dbManager.getDynamicPropertiesStore().getNextMaintenanceTime()
+      var currentMaintenanceTime = (Objects.isNull(getDeposit())) ? dbManager.getDynamicPropertiesStore().getNextMaintenanceTime()
               : getDeposit().getNextMaintenanceTime();
-      long now3 = now + Args.getInstance().getProposalExpireTime();
-      long round = (now3 - currentMaintenanceTime) / maintenanceTimeInterval;
-      long expirationTime = currentMaintenanceTime + (round + 1) * maintenanceTimeInterval;
+      var now3 = now + Args.getInstance().getProposalExpireTime();
+      var round = (now3 - currentMaintenanceTime) / maintenanceTimeInterval;
+      var expirationTime = currentMaintenanceTime + (round + 1) * maintenanceTimeInterval;
       proposalCapsule.setExpirationTime(expirationTime);
 
       if (Objects.isNull(deposit)) {
@@ -68,7 +71,7 @@ public class ProposalCreateActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -76,54 +79,41 @@ public class ProposalCreateActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (dbManager == null && (deposit == null || deposit.getDbManager() == null)) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(ProposalCreateContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [ProposalCreateContract],real type[" + contract.getClass() + "]");
-    }
-    final ProposalCreateContract contract;
     try {
-      contract = this.contract.unpack(ProposalCreateContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      Assert.notNull(contract, "No contract!");
+
+      var dbManagerCheck = (dbManager == null) && (deposit == null || deposit.getDbManager() == null);
+      Assert.isTrue(!dbManagerCheck, "No dbManager!");
+      Assert.isTrue(this.contract.is(ProposalCreateContract.class), "contract type error,expected type [ProposalCreateContract],real type[" + contract.getClass() + "]");
+
+      val contract = this.contract.unpack(ProposalCreateContract.class);
+      var ownerAddress = contract.getOwnerAddress().toByteArray();
+      var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
+
+      if (!Objects.isNull(deposit)) {
+        Assert.notNull(deposit.getAccount(ownerAddress), ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+      } else {
+        Assert.isTrue(dbManager.getAccountStore().has(ownerAddress), ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+      }
+
+      if (!Objects.isNull(getDeposit())) {
+        Assert.notNull(getDeposit().getWitness(ownerAddress), WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+      } else {
+        Assert.isTrue(dbManager.getWitnessStore().has(ownerAddress), WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
+      }
+
+      Assert.isTrue(contract.getParametersMap().size() != 0, "This proposal has no parameter.");
+
+      for (Map.Entry<Long, Long> entry : contract.getParametersMap().entrySet()) {
+        validateValue(entry);
+      }
+
+      return true;
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    byte[] ownerAddress = contract.getOwnerAddress().toByteArray();
-    String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid address");
-    }
-
-    if (!Objects.isNull(deposit)) {
-      if (Objects.isNull(deposit.getAccount(ownerAddress))) {
-        throw new ContractValidateException(ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
-      }
-    } else if (!dbManager.getAccountStore().has(ownerAddress)) {
-      throw new ContractValidateException(ACCOUNT_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
-    }
-
-    if (!Objects.isNull(getDeposit())) {
-      if (Objects.isNull(getDeposit().getWitness(ownerAddress))) {
-        throw new ContractValidateException(WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
-      }
-    } else if (!dbManager.getWitnessStore().has(ownerAddress)) {
-      throw new ContractValidateException(WITNESS_EXCEPTION_STR + readableOwnerAddress + NOT_EXIST_STR);
-    }
-
-    if (contract.getParametersMap().size() == 0) {
-      throw new ContractValidateException("This proposal has no parameter.");
-    }
-
-    for (Map.Entry<Long, Long> entry : contract.getParametersMap().entrySet()) {
-      validateValue(entry);
-    }
-
-    return true;
   }
 
   private void validateValue(Map.Entry<Long, Long> entry) throws ContractValidateException {

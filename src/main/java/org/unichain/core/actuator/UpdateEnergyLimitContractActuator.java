@@ -4,6 +4,8 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
 import org.unichain.core.capsule.ContractCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -14,7 +16,7 @@ import org.unichain.protos.Contract.UpdateEnergyLimitContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 @Slf4j(topic = "actuator")
-  public class UpdateEnergyLimitContractActuator extends AbstractActuator {
+public class UpdateEnergyLimitContractActuator extends AbstractActuator {
 
   UpdateEnergyLimitContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -22,13 +24,13 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    val fee = calcFee();
     try {
-      UpdateEnergyLimitContract usContract = contract.unpack(UpdateEnergyLimitContract.class);
-      byte[] ownerAddress = usContract.getOwnerAddress().toByteArray();
-      long newOriginEnergyLimit = usContract.getOriginEnergyLimit();
-      byte[] contractAddress = usContract.getContractAddress().toByteArray();
-      ContractCapsule deployedContract = dbManager.getContractStore().get(contractAddress);
+      var ctx = contract.unpack(UpdateEnergyLimitContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var newOriginEnergyLimit = ctx.getOriginEnergyLimit();
+      var contractAddress = ctx.getContractAddress().toByteArray();
+      var deployedContract = dbManager.getContractStore().get(contractAddress);
       dbManager.getContractStore().put(contractAddress, new ContractCapsule(deployedContract.getInstance().toBuilder().setOriginEnergyLimit(newOriginEnergyLimit).build()));
 
       chargeFee(ownerAddress, fee);
@@ -43,8 +45,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
   @Override
   public boolean validate() throws ContractValidateException {
-    throw new ContractValidateException(
-          "contract type error,unexpected type [UpdateEnergyLimitContract]");
+    throw new ContractValidateException("contract type error,unexpected type [UpdateEnergyLimitContract]");
 
     //Nothing to do :)
     /*

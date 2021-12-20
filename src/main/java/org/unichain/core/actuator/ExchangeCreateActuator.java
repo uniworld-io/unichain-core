@@ -4,9 +4,11 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.ExchangeCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
@@ -28,17 +30,17 @@ public class ExchangeCreateActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
-      final ExchangeCreateContract exchangeCreateContract = this.contract.unpack(ExchangeCreateContract.class);
-      AccountCapsule accountCapsule = dbManager.getAccountStore().get(exchangeCreateContract.getOwnerAddress().toByteArray());
+      val ctx = this.contract.unpack(ExchangeCreateContract.class);
+      var accountCapsule = dbManager.getAccountStore().get(ctx.getOwnerAddress().toByteArray());
 
-      byte[] firstTokenID = exchangeCreateContract.getFirstTokenId().toByteArray();
-      byte[] secondTokenID = exchangeCreateContract.getSecondTokenId().toByteArray();
-      long firstTokenBalance = exchangeCreateContract.getFirstTokenBalance();
-      long secondTokenBalance = exchangeCreateContract.getSecondTokenBalance();
+      var firstTokenID = ctx.getFirstTokenId().toByteArray();
+      var secondTokenID = ctx.getSecondTokenId().toByteArray();
+      var firstTokenBalance = ctx.getFirstTokenBalance();
+      var secondTokenBalance = ctx.getSecondTokenBalance();
 
-      long newBalance = accountCapsule.getBalance() - fee;
+      var newBalance = accountCapsule.getBalance() - fee;
       accountCapsule.setBalance(newBalance);
 
       if (Arrays.equals(firstTokenID, "_".getBytes())) {
@@ -53,13 +55,13 @@ public class ExchangeCreateActuator extends AbstractActuator {
         accountCapsule.reduceAssetAmountV2(secondTokenID, secondTokenBalance, dbManager);
       }
 
-      long id = dbManager.getDynamicPropertiesStore().getLatestExchangeNum() + 1;
-      long now = dbManager.getHeadBlockTimeStamp();
+      var id = dbManager.getDynamicPropertiesStore().getLatestExchangeNum() + 1;
+      var now = dbManager.getHeadBlockTimeStamp();
       if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
         //save to old asset store
-        ExchangeCapsule exchangeCapsule =
+        var exchangeCapsule =
             new ExchangeCapsule(
-                exchangeCreateContract.getOwnerAddress(),
+                ctx.getOwnerAddress(),
                 id,
                 now,
                 firstTokenID,
@@ -70,20 +72,20 @@ public class ExchangeCreateActuator extends AbstractActuator {
 
         //save to new asset store
         if (!Arrays.equals(firstTokenID, "_".getBytes())) {
-          String firstTokenRealID = dbManager.getAssetIssueStore().get(firstTokenID).getId();
+          var firstTokenRealID = dbManager.getAssetIssueStore().get(firstTokenID).getId();
           firstTokenID = firstTokenRealID.getBytes();
         }
         if (!Arrays.equals(secondTokenID, "_".getBytes())) {
-          String secondTokenRealID = dbManager.getAssetIssueStore().get(secondTokenID).getId();
+          var secondTokenRealID = dbManager.getAssetIssueStore().get(secondTokenID).getId();
           secondTokenID = secondTokenRealID.getBytes();
         }
       }
 
       {
         // only save to new asset store
-        ExchangeCapsule exchangeCapsuleV2 =
+        var exchangeCapsuleV2 =
             new ExchangeCapsule(
-                exchangeCreateContract.getOwnerAddress(),
+                ctx.getOwnerAddress(),
                 id,
                 now,
                 firstTokenID,
@@ -99,102 +101,66 @@ public class ExchangeCreateActuator extends AbstractActuator {
 
       ret.setExchangeId(id);
       ret.setStatus(fee, code.SUCESS);
-    } catch (BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      return true;
+    } catch (BalanceInsufficientException | InvalidProtocolBufferException e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
   }
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(ExchangeCreateContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [ExchangeCreateContract],real type[" + contract.getClass() + "]");
-    }
-    final ExchangeCreateContract contract;
     try {
-      contract = this.contract.unpack(ExchangeCreateContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(this.contract.is(ExchangeCreateContract.class), "contract type error,expected type [ExchangeCreateContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(ExchangeCreateContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
+      Assert.isTrue(this.dbManager.getAccountStore().has(ownerAddress), "Account[" + readableOwnerAddress + "] not exists");
+
+      var accountCapsule = this.dbManager.getAccountStore().get(ownerAddress);
+      Assert.isTrue(accountCapsule.getBalance() >= calcFee(), "Not enough balance for exchange create fee!");
+
+      var firstTokenID = ctx.getFirstTokenId().toByteArray();
+      var secondTokenID = ctx.getSecondTokenId().toByteArray();
+      var firstTokenBalance = ctx.getFirstTokenBalance();
+      var secondTokenBalance = ctx.getSecondTokenBalance();
+
+      if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 1) {
+        var firstTokenInvalid = !Arrays.equals(firstTokenID, "_".getBytes()) && !TransactionUtil.isNumber(firstTokenID);
+        Assert.isTrue(!firstTokenInvalid, "First token id is not a valid number");
+
+        var secondTokenInvalid = !Arrays.equals(secondTokenID, "_".getBytes()) && !TransactionUtil.isNumber(secondTokenID);
+        Assert.isTrue(!secondTokenInvalid, "Second token id is not a valid number");
+      }
+
+      Assert.isTrue(!(Arrays.equals(firstTokenID, secondTokenID)), "Cannot exchange same tokens");
+      Assert.isTrue(!(firstTokenBalance <= 0 || secondTokenBalance <= 0), "Token balance must greater than zero");
+
+      var balanceLimit = dbManager.getDynamicPropertiesStore().getExchangeBalanceLimit();
+      Assert.isTrue(!(firstTokenBalance > balanceLimit || secondTokenBalance > balanceLimit), "Token balance must less than " + balanceLimit);
+
+      if (Arrays.equals(firstTokenID, "_".getBytes())) {
+        Assert.isTrue(accountCapsule.getBalance() >= (firstTokenBalance + calcFee()), "Balance is not enough");
+      } else {
+        Assert.isTrue(accountCapsule.assetBalanceEnoughV2(firstTokenID, firstTokenBalance, dbManager), "First token balance is not enough");
+      }
+
+      if (Arrays.equals(secondTokenID, "_".getBytes())) {
+        Assert.isTrue(accountCapsule.getBalance() >= (secondTokenBalance + calcFee()), "Balance is not enough");
+      } else {
+        Assert.isTrue(accountCapsule.assetBalanceEnoughV2(secondTokenID, secondTokenBalance, dbManager), "Second token balance is not enough");
+      }
+
+      return true;
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    byte[] ownerAddress = contract.getOwnerAddress().toByteArray();
-    String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid address");
-    }
-
-    if (!this.dbManager.getAccountStore().has(ownerAddress)) {
-      throw new ContractValidateException("account[" + readableOwnerAddress + "] not exists");
-    }
-
-    AccountCapsule accountCapsule = this.dbManager.getAccountStore().get(ownerAddress);
-
-    if (accountCapsule.getBalance() < calcFee()) {
-      throw new ContractValidateException("No enough balance for exchange create fee!");
-    }
-
-    byte[] firstTokenID = contract.getFirstTokenId().toByteArray();
-    byte[] secondTokenID = contract.getSecondTokenId().toByteArray();
-    long firstTokenBalance = contract.getFirstTokenBalance();
-    long secondTokenBalance = contract.getSecondTokenBalance();
-
-    if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 1) {
-      if (!Arrays.equals(firstTokenID, "_".getBytes()) && !TransactionUtil.isNumber(firstTokenID)) {
-        throw new ContractValidateException("first token id is not a valid number");
-      }
-      if (!Arrays.equals(secondTokenID, "_".getBytes()) && !TransactionUtil
-          .isNumber(secondTokenID)) {
-        throw new ContractValidateException("second token id is not a valid number");
-      }
-    }
-
-    if (Arrays.equals(firstTokenID, secondTokenID)) {
-      throw new ContractValidateException("cannot exchange same tokens");
-    }
-
-    if (firstTokenBalance <= 0 || secondTokenBalance <= 0) {
-      throw new ContractValidateException("token balance must greater than zero");
-    }
-
-    long balanceLimit = dbManager.getDynamicPropertiesStore().getExchangeBalanceLimit();
-    if (firstTokenBalance > balanceLimit || secondTokenBalance > balanceLimit) {
-      throw new ContractValidateException("token balance must less than " + balanceLimit);
-    }
-
-    if (Arrays.equals(firstTokenID, "_".getBytes())) {
-      if (accountCapsule.getBalance() < (firstTokenBalance + calcFee())) {
-        throw new ContractValidateException("balance is not enough");
-      }
-    } else {
-      if (!accountCapsule.assetBalanceEnoughV2(firstTokenID, firstTokenBalance, dbManager)) {
-        throw new ContractValidateException("first token balance is not enough");
-      }
-    }
-
-    if (Arrays.equals(secondTokenID, "_".getBytes())) {
-      if (accountCapsule.getBalance() < (secondTokenBalance + calcFee())) {
-        throw new ContractValidateException("balance is not enough");
-      }
-    } else {
-      if (!accountCapsule.assetBalanceEnoughV2(secondTokenID, secondTokenBalance, dbManager)) {
-        throw new ContractValidateException("second token balance is not enough");
-      }
-    }
-
-    return true;
   }
 
 

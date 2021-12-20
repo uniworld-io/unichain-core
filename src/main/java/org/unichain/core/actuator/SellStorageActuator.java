@@ -4,6 +4,9 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
@@ -28,19 +31,18 @@ public class SellStorageActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
-    final SellStorageContract sellStorageContract;
+    var fee = calcFee();
     try {
-      sellStorageContract = contract.unpack(SellStorageContract.class);
-      byte[] ownerAddress = sellStorageContract.getOwnerAddress().toByteArray();
-      AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      long bytes = sellStorageContract.getStorageBytes();
+      val ctx = contract.unpack(SellStorageContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      var bytes = ctx.getStorageBytes();
       storageMarket.sellStorage(accountCapsule, bytes);
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -48,51 +50,33 @@ public class SellStorageActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!contract.is(SellStorageContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [SellStorageContract],real type[" + contract.getClass() + "]");
-    }
-    final SellStorageContract sellStorageContract;
     try {
-      sellStorageContract = this.contract.unpack(SellStorageContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(contract.is(SellStorageContract.class), "Contract type error,expected type [SellStorageContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(SellStorageContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
+
+      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(accountCapsule, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
+
+      var bytes = ctx.getStorageBytes();
+      Assert.isTrue(bytes > 0, "bytes must be positive");
+
+      var currentStorageLimit = accountCapsule.getStorageLimit();
+      var currentUnusedStorage = currentStorageLimit - accountCapsule.getStorageUsage();
+      Assert.isTrue(bytes <= currentUnusedStorage, "bytes must be less than currentUnusedStorage[" + currentUnusedStorage + "]");
+
+      var quantity = storageMarket.trySellStorage(bytes);
+      Assert.isTrue(quantity > 1_000_000L, "quantity must be larger than 1UNW,current quantity[" + quantity + "]");
+
+      return true;
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-    byte[] ownerAddress = sellStorageContract.getOwnerAddress().toByteArray();
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid address");
-    }
-
-    AccountCapsule accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-    if (accountCapsule == null) {
-      String readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-      throw new ContractValidateException("Account[" + readableOwnerAddress + "] not exists");
-    }
-
-    long bytes = sellStorageContract.getStorageBytes();
-    if (bytes <= 0) {
-      throw new ContractValidateException("bytes must be positive");
-    }
-
-    long currentStorageLimit = accountCapsule.getStorageLimit();
-    long currentUnusedStorage = currentStorageLimit - accountCapsule.getStorageUsage();
-
-    if (bytes > currentUnusedStorage) {
-      throw new ContractValidateException("bytes must be less than currentUnusedStorage[" + currentUnusedStorage + "]");
-    }
-
-    long quantity = storageMarket.trySellStorage(bytes);
-    if (quantity <= 1_000_000L) {
-      throw new ContractValidateException("quantity must be larger than 1UNW,current quantity[" + quantity + "]");
-    }
-
-    return true;
   }
 
   @Override

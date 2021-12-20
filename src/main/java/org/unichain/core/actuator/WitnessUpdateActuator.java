@@ -4,9 +4,11 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import lombok.var;
+import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.WitnessCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
@@ -24,13 +26,13 @@ public class WitnessUpdateActuator extends AbstractActuator {
 
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    long fee = calcFee();
+    var fee = calcFee();
     try {
-      final WitnessUpdateContract witnessUpdateContract = this.contract.unpack(WitnessUpdateContract.class);
-      byte[] ownerAddress = witnessUpdateContract.getOwnerAddress().toByteArray();
-      WitnessCapsule witnessCapsule = this.dbManager.getWitnessStore().get(ownerAddress);
-      witnessCapsule.setUrl(witnessUpdateContract.getUpdateUrl().toStringUtf8());
-      this.dbManager.getWitnessStore().put(witnessCapsule.createDbKey(), witnessCapsule);
+      val ctx = this.contract.unpack(WitnessUpdateContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var capsule = this.dbManager.getWitnessStore().get(ownerAddress);
+      capsule.setUrl(ctx.getUpdateUrl().toStringUtf8());
+      this.dbManager.getWitnessStore().put(capsule.createDbKey(), capsule);
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -43,41 +45,24 @@ public class WitnessUpdateActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    if (this.contract == null) {
-      throw new ContractValidateException("No contract!");
-    }
-    if (this.dbManager == null) {
-      throw new ContractValidateException("No dbManager!");
-    }
-    if (!this.contract.is(WitnessUpdateContract.class)) {
-      throw new ContractValidateException("contract type error,expected type [WitnessUpdateContract],real type[" + contract.getClass() + "]");
-    }
-    final WitnessUpdateContract contract;
     try {
-      contract = this.contract.unpack(WitnessUpdateContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      Assert.notNull(this.contract, "No contract!");
+      Assert.notNull(this.dbManager, "No dbManager!");
+      Assert.isTrue(this.contract.is(WitnessUpdateContract.class), "Contract type error,expected type [WitnessUpdateContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(WitnessUpdateContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
+      Assert.isTrue(this.dbManager.getAccountStore().has(ownerAddress), "Account does not exist");
+      Assert.isTrue(TransactionUtil.validUrl(ctx.getUpdateUrl().toByteArray()), "Invalid url");
+      Assert.isTrue(this.dbManager.getWitnessStore().has(ownerAddress), "Witness does not exist");
+
+      return true;
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    byte[] ownerAddress = contract.getOwnerAddress().toByteArray();
-    if (!Wallet.addressValid(ownerAddress)) {
-      throw new ContractValidateException("Invalid address");
-    }
-
-    if (!this.dbManager.getAccountStore().has(ownerAddress)) {
-      throw new ContractValidateException("account does not exist");
-    }
-
-    if (!TransactionUtil.validUrl(contract.getUpdateUrl().toByteArray())) {
-      throw new ContractValidateException("Invalid url");
-    }
-
-    if (!this.dbManager.getWitnessStore().has(ownerAddress)) {
-      throw new ContractValidateException("Witness does not exist");
-    }
-
-    return true;
   }
 
   @Override

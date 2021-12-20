@@ -51,7 +51,7 @@ public class TransferFutureActuator extends AbstractActuator {
       addFutureBalance(toAddress, amount, ctx.getExpireTime());
       return true;
     } catch (Exception e) {
-      logger.error("exec transfer future got error", e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -62,11 +62,10 @@ public class TransferFutureActuator extends AbstractActuator {
     try {
       Assert.isTrue(contract != null, "No contract!");
       Assert.isTrue(dbManager != null, "No dbManager!");
-      Assert.isTrue(contract.is(FutureTransferContract.class), "contract type error,expected type [FutureTransferContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(FutureTransferContract.class), "Contract type error,expected type [FutureTransferContract],real type[" + contract.getClass() + "]");
 
       var fee = calcFee();
       val ctx = contract.unpack(FutureTransferContract.class);
-
       var toAddress = ctx.getToAddress().toByteArray();
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var amount = ctx.getAmount();
@@ -74,13 +73,13 @@ public class TransferFutureActuator extends AbstractActuator {
 
       long maxExpireTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationUnw();
       Assert.isTrue((ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp()) && (ctx.getExpireTime() <= maxExpireTime),
-              "expire time must greater current block time, lower than maximum timestamp:" + maxExpireTime);
+              "Expire time must greater current block time, lower than maximum timestamp: " + maxExpireTime);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
       Assert.isTrue(!Arrays.equals(toAddress, ownerAddress), "Cannot transfer unw to yourself");
 
-      AccountCapsule ownerAccount = dbManager.getAccountStore().get(ownerAddress);
-      Assert.isTrue(ownerAccount != null, "no OwnerAccount found");
+      var ownerAccount = dbManager.getAccountStore().get(ownerAddress);
+      Assert.isTrue(ownerAccount != null, "No OwnerAccount found");
 
       var balance = ownerAccount.getBalance();
       var toAccount = dbManager.getAccountStore().get(toAddress);
@@ -88,12 +87,10 @@ public class TransferFutureActuator extends AbstractActuator {
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
       //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
-      if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
+      var transferToSmartContract = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
               && toAccount != null
-              && toAccount.getType() == AccountType.Contract) {
-        throw new ContractValidateException("Cannot transfer unw to smartContract.");
-      }
-
+              && toAccount.getType() == AccountType.Contract;
+      Assert.isTrue(!transferToSmartContract, "Cannot transfer unw to smartContract.");
       Assert.isTrue(balance >= Math.addExact(amount, fee), "Validate TransferContract error, balance is not sufficient");
 
       if (toAccount != null) {
@@ -103,7 +100,7 @@ public class TransferFutureActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error("validate TransferFutureActuator got error --> ", e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

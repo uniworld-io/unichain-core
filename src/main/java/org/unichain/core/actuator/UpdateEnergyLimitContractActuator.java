@@ -26,10 +26,10 @@ public class UpdateEnergyLimitContractActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     val fee = calcFee();
     try {
-      var usContract = contract.unpack(UpdateEnergyLimitContract.class);
-      var ownerAddress = usContract.getOwnerAddress().toByteArray();
-      var newOriginEnergyLimit = usContract.getOriginEnergyLimit();
-      var contractAddress = usContract.getContractAddress().toByteArray();
+      var ctx = contract.unpack(UpdateEnergyLimitContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var newOriginEnergyLimit = ctx.getOriginEnergyLimit();
+      var contractAddress = ctx.getContractAddress().toByteArray();
       var deployedContract = dbManager.getContractStore().get(contractAddress);
       dbManager.getContractStore().put(contractAddress, new ContractCapsule(deployedContract.getInstance().toBuilder().setOriginEnergyLimit(newOriginEnergyLimit).build()));
 

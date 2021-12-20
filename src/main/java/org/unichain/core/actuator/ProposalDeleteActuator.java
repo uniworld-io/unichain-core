@@ -35,10 +35,10 @@ public class ProposalDeleteActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      val proposalDeleteContract = this.contract.unpack(ProposalDeleteContract.class);
+      val ctx = this.contract.unpack(ProposalDeleteContract.class);
       var proposalCapsule = (Objects.isNull(deposit)) ?
-              dbManager.getProposalStore().get(ByteArray.fromLong(proposalDeleteContract.getProposalId()))
-              : deposit.getProposalCapsule(ByteArray.fromLong(proposalDeleteContract.getProposalId()));
+              dbManager.getProposalStore().get(ByteArray.fromLong(ctx.getProposalId()))
+              : deposit.getProposalCapsule(ByteArray.fromLong(ctx.getProposalId()));
       proposalCapsule.setState(State.CANCELED);
       if (Objects.isNull(deposit)) {
         dbManager.getProposalStore().put(proposalCapsule.createDbKey(), proposalCapsule);
@@ -47,16 +47,13 @@ public class ProposalDeleteActuator extends AbstractActuator {
       }
 
       ret.setStatus(fee, code.SUCESS);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
-    } catch (ItemNotFoundException e) {
-      logger.debug(e.getMessage(), e);
+      return true;
+    } catch (InvalidProtocolBufferException | ItemNotFoundException e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-    return true;
+
   }
 
   @Override
@@ -64,12 +61,12 @@ public class ProposalDeleteActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
 
-      var dbManagerCheck = dbManager == null && (deposit == null || deposit.getDbManager() == null);
+      var dbManagerCheck = (dbManager == null) && (deposit == null || deposit.getDbManager() == null);
       Assert.isTrue(!dbManagerCheck, "No dbManager!");
       Assert.isTrue(this.contract.is(ProposalDeleteContract.class), "contract type error,expected type [ProposalDeleteContract],real type[" + contract.getClass() + "]");
 
-      val contract = this.contract.unpack(ProposalDeleteContract.class);
-      var ownerAddress = contract.getOwnerAddress().toByteArray();
+      val ctx = this.contract.unpack(ProposalDeleteContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
 
@@ -80,24 +77,25 @@ public class ProposalDeleteActuator extends AbstractActuator {
       }
 
       var latestProposalNum = Objects.isNull(deposit) ? dbManager.getDynamicPropertiesStore().getLatestProposalNum() : deposit.getLatestProposalNum();
-      Assert.isTrue(contract.getProposalId() <= latestProposalNum, PROPOSAL_EXCEPTION_STR + contract.getProposalId() + NOT_EXIST_STR);
+      Assert.isTrue(ctx.getProposalId() <= latestProposalNum, PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + NOT_EXIST_STR);
 
       ProposalCapsule proposalCapsule;
       try {
         proposalCapsule = Objects.isNull(getDeposit()) ?
-                dbManager.getProposalStore().get(ByteArray.fromLong(contract.getProposalId()))
-                : deposit.getProposalCapsule(ByteArray.fromLong(contract.getProposalId()));
+                dbManager.getProposalStore().get(ByteArray.fromLong(ctx.getProposalId()))
+                : deposit.getProposalCapsule(ByteArray.fromLong(ctx.getProposalId()));
       } catch (ItemNotFoundException ex) {
-        throw new ContractValidateException(PROPOSAL_EXCEPTION_STR + contract.getProposalId() + NOT_EXIST_STR);
+        throw new ContractValidateException(PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + NOT_EXIST_STR);
       }
 
       var now = dbManager.getHeadBlockTimeStamp();
-      Assert.isTrue(proposalCapsule.getProposalAddress().equals(contract.getOwnerAddress()), PROPOSAL_EXCEPTION_STR + contract.getProposalId() + "] " + "is not proposed by " + readableOwnerAddress);
-      Assert.isTrue(now < proposalCapsule.getExpirationTime(), PROPOSAL_EXCEPTION_STR + contract.getProposalId() + "] expired");
-      Assert.isTrue(proposalCapsule.getState() != State.CANCELED, PROPOSAL_EXCEPTION_STR + contract.getProposalId() + "] canceled");
+      Assert.isTrue(proposalCapsule.getProposalAddress().equals(ctx.getOwnerAddress()), PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + "] " + "is not proposed by " + readableOwnerAddress);
+      Assert.isTrue(now < proposalCapsule.getExpirationTime(), PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + "] expired");
+      Assert.isTrue(proposalCapsule.getState() != State.CANCELED, PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + "] canceled");
 
       return true;
-    } catch (InvalidProtocolBufferException e) {
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

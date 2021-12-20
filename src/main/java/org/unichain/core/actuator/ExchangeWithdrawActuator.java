@@ -37,83 +37,75 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      val exchangeWithdrawContract = this.contract.unpack(ExchangeWithdrawContract.class);
-      var ownerAddress = exchangeWithdrawContract.getOwnerAddress().toByteArray();
+      val ctx = this.contract.unpack(ExchangeWithdrawContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      var exchangeCapsule = dbManager.getExchangeStoreFinal().get(ByteArray.fromLong(exchangeWithdrawContract.getExchangeId()));
+      var exchangeCapsule = dbManager.getExchangeStoreFinal().get(ByteArray.fromLong(ctx.getExchangeId()));
 
       var firstTokenID = exchangeCapsule.getFirstTokenId();
       var secondTokenID = exchangeCapsule.getSecondTokenId();
       var firstTokenBalance = exchangeCapsule.getFirstTokenBalance();
       var secondTokenBalance = exchangeCapsule.getSecondTokenBalance();
 
-      var tokenID = exchangeWithdrawContract.getTokenId().toByteArray();
-      var tokenQuant = exchangeWithdrawContract.getQuant();
+      var tokenID = ctx.getTokenId().toByteArray();
+      var tokenQty = ctx.getQuant();
 
       byte[] anotherTokenID;
-      long anotherTokenQuant;
+      long anotherTokenQty;
 
       var bigFirstTokenBalance = new BigInteger(String.valueOf(firstTokenBalance));
       var bigSecondTokenBalance = new BigInteger(String.valueOf(secondTokenBalance));
-      var bigTokenQuant = new BigInteger(String.valueOf(tokenQuant));
+      var bigTokenQty = new BigInteger(String.valueOf(tokenQty));
       if (Arrays.equals(tokenID, firstTokenID)) {
         anotherTokenID = secondTokenID;
-//      anotherTokenQuant = Math
-//            .floorDiv(Math.multiplyExact(secondTokenBalance, tokenQuant), firstTokenBalance);
-        anotherTokenQuant = bigSecondTokenBalance.multiply(bigTokenQuant)
+        anotherTokenQty = bigSecondTokenBalance.multiply(bigTokenQty)
                 .divide(bigFirstTokenBalance)
                 .longValueExact();
-        exchangeCapsule.setBalance(firstTokenBalance - tokenQuant, secondTokenBalance - anotherTokenQuant);
+        exchangeCapsule.setBalance(firstTokenBalance - tokenQty, secondTokenBalance - anotherTokenQty);
       } else {
         anotherTokenID = firstTokenID;
-//        anotherTokenQuant = Math
-//            .floorDiv(Math.multiplyExact(firstTokenBalance, tokenQuant), secondTokenBalance);
-        anotherTokenQuant = bigFirstTokenBalance.multiply(bigTokenQuant).divide(bigSecondTokenBalance).longValueExact();
-        exchangeCapsule.setBalance(firstTokenBalance - anotherTokenQuant, secondTokenBalance - tokenQuant);
+        anotherTokenQty = bigFirstTokenBalance.multiply(bigTokenQty).divide(bigSecondTokenBalance).longValueExact();
+        exchangeCapsule.setBalance(firstTokenBalance - anotherTokenQty, secondTokenBalance - tokenQty);
       }
 
       var newBalance = accountCapsule.getBalance() - calcFee();
 
       if (Arrays.equals(tokenID, "_".getBytes())) {
-        accountCapsule.setBalance(newBalance + tokenQuant);
+        accountCapsule.setBalance(newBalance + tokenQty);
       } else {
-        accountCapsule.addAssetAmountV2(tokenID, tokenQuant, dbManager);
+        accountCapsule.addAssetAmountV2(tokenID, tokenQty, dbManager);
       }
 
       if (Arrays.equals(anotherTokenID, "_".getBytes())) {
-        accountCapsule.setBalance(newBalance + anotherTokenQuant);
+        accountCapsule.setBalance(newBalance + anotherTokenQty);
       } else {
-        accountCapsule.addAssetAmountV2(anotherTokenID, anotherTokenQuant, dbManager);
+        accountCapsule.addAssetAmountV2(anotherTokenID, anotherTokenQty, dbManager);
       }
-
 
       dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
       dbManager.putExchangeCapsule(exchangeCapsule);
 
       chargeFee(ownerAddress, fee);
 
-      ret.setExchangeWithdrawAnotherAmount(anotherTokenQuant);
+      ret.setExchangeWithdrawAnotherAmount(anotherTokenQty);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (ItemNotFoundException
-        | InvalidProtocolBufferException
-        | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (ItemNotFoundException | InvalidProtocolBufferException | BalanceInsufficientException e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
   }
-
 
   @Override
   public boolean validate() throws ContractValidateException {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(this.contract.is(ExchangeWithdrawContract.class), "contract type error,expected type [ExchangeWithdrawContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(this.contract.is(ExchangeWithdrawContract.class), "Contract type error,expected type [ExchangeWithdrawContract],real type[" + contract.getClass() + "]");
 
-      val contract = this.contract.unpack(ExchangeWithdrawContract.class);
-      var ownerAddress = contract.getOwnerAddress().toByteArray();
+      val ctx = this.contract.unpack(ExchangeWithdrawContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
       Assert.isTrue(this.dbManager.getAccountStore().has(ownerAddress), "account[" + readableOwnerAddress + "] not exists");
@@ -123,9 +115,9 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
 
       ExchangeCapsule exchangeCapsule;
       try {
-        exchangeCapsule = dbManager.getExchangeStoreFinal().get(ByteArray.fromLong(contract.getExchangeId()));
+        exchangeCapsule = dbManager.getExchangeStoreFinal().get(ByteArray.fromLong(ctx.getExchangeId()));
       } catch (ItemNotFoundException ex) {
-        throw new ContractValidateException("Exchange[" + contract.getExchangeId() + "] not exists");
+        throw new ContractValidateException("Exchange[" + ctx.getExchangeId() + "] not exists");
       }
 
       Assert.isTrue(accountCapsule.getAddress().equals(exchangeCapsule.getCreatorAddress()), "account[" + readableOwnerAddress + "] is not creator");
@@ -135,55 +127,54 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
       var firstTokenBalance = exchangeCapsule.getFirstTokenBalance();
       var secondTokenBalance = exchangeCapsule.getSecondTokenBalance();
 
-      var tokenID = contract.getTokenId().toByteArray();
-      var tokenQuant = contract.getQuant();
+      var tokenID = ctx.getTokenId().toByteArray();
+      var tokenQty = ctx.getQuant();
 
-      long anotherTokenQuant;
+      long anotherTokenQty;
 
       if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 1) {
-        var tokenValid = !Arrays.equals(tokenID, "_".getBytes()) && !TransactionUtil.isNumber(tokenID);
-        Assert.isTrue(!tokenValid, "token id is not a valid number");
+        var tokenIdInvalid = !Arrays.equals(tokenID, "_".getBytes()) && !TransactionUtil.isNumber(tokenID);
+        Assert.isTrue(!tokenIdInvalid, "Token id is not a valid number");
       }
 
-      var tokenExchange = !Arrays.equals(tokenID, firstTokenID) && !Arrays.equals(tokenID, secondTokenID);
-      Assert.isTrue(!tokenExchange, "token is not in exchange");
-      Assert.isTrue(tokenQuant > 0, "withdraw token quant must greater than zero");
+      var tokenNotInExchange = !Arrays.equals(tokenID, firstTokenID) && !Arrays.equals(tokenID, secondTokenID);
+      Assert.isTrue(!tokenNotInExchange, "Token is not in exchange");
+      Assert.isTrue(tokenQty > 0, "Withdraw token qty must greater than zero");
       Assert.isTrue(!(firstTokenBalance == 0 || secondTokenBalance == 0), "Token balance in exchange is equal with 0, the exchange has been closed");
 
       var bigFirstTokenBalance = new BigDecimal(String.valueOf(firstTokenBalance));
       var bigSecondTokenBalance = new BigDecimal(String.valueOf(secondTokenBalance));
-      var bigTokenQuant = new BigDecimal(String.valueOf(tokenQuant));
+      var bigTokenQty = new BigDecimal(String.valueOf(tokenQty));
       if (Arrays.equals(tokenID, firstTokenID)) {
 //      anotherTokenQuant = Math
 //          .floorDiv(Math.multiplyExact(secondTokenBalance, tokenQuant), firstTokenBalance);
-        anotherTokenQuant = bigSecondTokenBalance.multiply(bigTokenQuant)
+        anotherTokenQty = bigSecondTokenBalance.multiply(bigTokenQty)
                                                   .divideToIntegralValue(bigFirstTokenBalance)
                                                   .longValueExact();
-        var exchangeBalance = firstTokenBalance < tokenQuant || secondTokenBalance < anotherTokenQuant;
-        Assert.isTrue(!exchangeBalance, "exchange balance is not enough");
-        Assert.isTrue(anotherTokenQuant > 0, "withdraw another token quant must greater than zero");
+        var exchangeBalance = firstTokenBalance < tokenQty || secondTokenBalance < anotherTokenQty;
+        Assert.isTrue(!exchangeBalance, "Exchange balance is not enough");
+        Assert.isTrue(anotherTokenQty > 0, "Withdraw another token quant must greater than zero");
 
-        var remainder = bigSecondTokenBalance.multiply(bigTokenQuant)
+        var remainder = bigSecondTokenBalance.multiply(bigTokenQty)
                                                 .divide(bigFirstTokenBalance, 4, BigDecimal.ROUND_HALF_UP)
                                                 .doubleValue()
-                           - anotherTokenQuant;
-        Assert.isTrue(remainder / anotherTokenQuant <= 0.0001, "Not precise enough");
+                           - anotherTokenQty;
+        Assert.isTrue(remainder / anotherTokenQty <= 0.0001, "Not precise enough");
 
       } else {
 //      anotherTokenQuant = Math
 //          .floorDiv(Math.multiplyExact(firstTokenBalance, tokenQuant), secondTokenBalance);
-        anotherTokenQuant = bigFirstTokenBalance.multiply(bigTokenQuant)
+        anotherTokenQty = bigFirstTokenBalance.multiply(bigTokenQty)
                                                   .divideToIntegralValue(bigSecondTokenBalance)
                                                   .longValueExact();
-        var exchangeBalance = secondTokenBalance < tokenQuant || firstTokenBalance < anotherTokenQuant;
-        Assert.isTrue(!exchangeBalance, "exchange balance is not enough");
-        Assert.isTrue(anotherTokenQuant > 0, "withdraw another token quant must greater than zero");
+        Assert.isTrue(!(secondTokenBalance < tokenQty || firstTokenBalance < anotherTokenQty), "Exchange balance is not enough");
+        Assert.isTrue(anotherTokenQty > 0, "Withdraw another token qty must greater than zero");
 
-        var remainder = bigFirstTokenBalance.multiply(bigTokenQuant)
+        var remainder = bigFirstTokenBalance.multiply(bigTokenQty)
                                                 .divide(bigSecondTokenBalance, 4, BigDecimal.ROUND_HALF_UP)
                                                 .doubleValue()
-                - anotherTokenQuant;
-        Assert.isTrue(remainder / anotherTokenQuant <= 0.0001, "Not precise enough");
+                - anotherTokenQty;
+        Assert.isTrue(remainder / anotherTokenQty <= 0.0001, "Not precise enough");
       }
 
       return true;

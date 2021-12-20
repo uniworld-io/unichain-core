@@ -51,7 +51,7 @@ public class TransferFutureActuator extends AbstractActuator {
       addFutureBalance(toAddress, amount, ctx.getExpireTime());
       return true;
     } catch (Exception e) {
-      logger.error("exec transfer future got error", e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -87,10 +87,10 @@ public class TransferFutureActuator extends AbstractActuator {
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
       //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
-      var transfer = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
+      var transferToSmartContract = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
               && toAccount != null
               && toAccount.getType() == AccountType.Contract;
-      Assert.isTrue(!transfer, "Cannot transfer unw to smartContract.");
+      Assert.isTrue(!transferToSmartContract, "Cannot transfer unw to smartContract.");
       Assert.isTrue(balance >= Math.addExact(amount, fee), "Validate TransferContract error, balance is not sufficient");
 
       if (toAccount != null) {
@@ -100,7 +100,7 @@ public class TransferFutureActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error("validate TransferFutureActuator got error --> ", e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

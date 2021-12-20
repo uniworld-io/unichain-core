@@ -62,10 +62,8 @@ public class UnfreezeAssetActuator extends AbstractActuator {
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (InvalidProtocolBufferException
-        | ArithmeticException
-        | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -93,13 +91,12 @@ public class UnfreezeAssetActuator extends AbstractActuator {
       }
 
       var now = dbManager.getHeadBlockTimeStamp();
-      var count = capsule.getFrozenSupplyList().stream()
-          .filter(frozen -> frozen.getExpireTime() <= now).count();
+      var count = capsule.getFrozenSupplyList().stream().filter(frozen -> frozen.getExpireTime() <= now).count();
       Assert.isTrue(count > 0, "It's not time to unfreeze asset supply");
 
       return true;
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

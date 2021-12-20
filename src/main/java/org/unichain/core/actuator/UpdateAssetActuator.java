@@ -47,14 +47,13 @@ public class UpdateAssetActuator extends AbstractActuator {
       assetIssueCapsuleV2.setUrl(newUrl);
       assetIssueCapsuleV2.setDescription(newDescription);
 
-      if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
+      if(dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
         var assetIssueStore = dbManager.getAssetIssueStore();
         assetIssueCapsule = assetIssueStore.get(capsule.getAssetIssuedName().toByteArray());
         assetIssueCapsule.setFreeAssetNetLimit(newLimit);
         assetIssueCapsule.setPublicFreeAssetNetLimit(newPublicLimit);
         assetIssueCapsule.setUrl(newUrl);
         assetIssueCapsule.setDescription(newDescription);
-
         dbManager.getAssetIssueStore().put(assetIssueCapsule.createDbKey(), assetIssueCapsule);
         dbManager.getAssetIssueV2Store().put(assetIssueCapsuleV2.createDbV2Key(), assetIssueCapsuleV2);
       } else {
@@ -65,7 +64,7 @@ public class UpdateAssetActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -104,13 +103,11 @@ public class UpdateAssetActuator extends AbstractActuator {
       var freeAssetNetLimit = newLimit < 0 || newLimit >= dbManager.getDynamicPropertiesStore().getOneDayNetLimit();
       Assert.isTrue(!freeAssetNetLimit, "Invalid FreeAssetNetLimit");
 
-      var publicFreeAssetNetLimit = newPublicLimit < 0 || newPublicLimit >=
-              dbManager.getDynamicPropertiesStore().getOneDayNetLimit();
+      var publicFreeAssetNetLimit = newPublicLimit < 0 || newPublicLimit >= dbManager.getDynamicPropertiesStore().getOneDayNetLimit();
       Assert.isTrue(!publicFreeAssetNetLimit, "Invalid PublicFreeAssetNetLimit");
-
       return true;
     } catch (Exception e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

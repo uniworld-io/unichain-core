@@ -62,7 +62,7 @@ public class TransferActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(TransferContract.class), "contract type error,expected type [TransferContract], real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(TransferContract.class), "Contract type error,expected type [TransferContract], real type[" + contract.getClass() + "]");
 
       var fee = calcFee();
       var ctx = contract.unpack(TransferContract.class);
@@ -79,13 +79,12 @@ public class TransferActuator extends AbstractActuator {
       Assert.notNull(ownerAccount, "Validate TransferContract error, no OwnerAccount!");
 
       var balance = ownerAccount.getBalance();
-
       var toAccount = dbManager.getAccountStore().get(toAddress);
       if (toAccount == null) {
         fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
-      boolean transferToSmartContract  = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
+      var transferToSmartContract  = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
               && toAccount != null
               && toAccount.getType() == AccountType.Contract;
       Assert.isTrue(!transferToSmartContract, "Cannot transfer unw to smartContract");

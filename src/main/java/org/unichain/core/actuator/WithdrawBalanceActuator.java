@@ -58,8 +58,8 @@ public class WithdrawBalanceActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
 
       return true;
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -69,7 +69,7 @@ public class WithdrawBalanceActuator extends AbstractActuator {
   public boolean validate() throws ContractValidateException {
     try {
       Assert.notNull(contract, "No contract!");
-      var dbManagerCheck = dbManager == null && (getDeposit() == null || getDeposit().getDbManager() == null);
+      var dbManagerCheck = (dbManager == null) && (getDeposit() == null || getDeposit().getDbManager() == null);
       Assert.isTrue(!dbManagerCheck, "No dbManager!");
       Assert.isTrue(this.contract.is(WithdrawBalanceContract.class), "Contract type error,expected type [WithdrawBalanceContract],real type[" + contract.getClass() + "]");
 
@@ -100,7 +100,7 @@ public class WithdrawBalanceActuator extends AbstractActuator {
       LongMath.checkedAdd(accountCapsule.getBalance(), accountCapsule.getAllowance());
 
       return true;
-    } catch (ArithmeticException | InvalidProtocolBufferException e) {
+    } catch (Exception e) {
       logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }

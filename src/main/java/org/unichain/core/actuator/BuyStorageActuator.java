@@ -34,16 +34,16 @@ public class BuyStorageActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      val buyStorageContract = contract.unpack(BuyStorageContract.class);
-      var ownerAddress = buyStorageContract.getOwnerAddress().toByteArray();
+      val ctx = contract.unpack(BuyStorageContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      var qty = buyStorageContract.getQuant();
+      var qty = ctx.getQuant();
       storageMarket.buyStorage(accountCapsule, qty);
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -54,21 +54,21 @@ public class BuyStorageActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(BuyStorageContract.class), "contract type error,expected type [BuyStorageContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(BuyStorageContract.class), "Contract type error,expected type [BuyStorageContract],real type[" + contract.getClass() + "]");
 
-      val buyStorageContract = this.contract.unpack(BuyStorageContract.class);
-      var ownerAddress = buyStorageContract.getOwnerAddress().toByteArray();
+      val ctx = this.contract.unpack(BuyStorageContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
       Assert.notNull(accountCapsule, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-      var quant = buyStorageContract.getQuant();
-      Assert.isTrue(quant > 0, "quantity must be positive");
-      Assert.isTrue(quant >= 1000_000L, "quantity must be larger than 1UNW");
-      Assert.isTrue(quant <= accountCapsule.getBalance(), "quantity must be less than accountBalance");
+      var qty = ctx.getQuant();
+      Assert.isTrue(qty > 0, "Quantity must be positive");
+      Assert.isTrue(qty >= 1000_000L, "Quantity must be larger than 1UNW");
+      Assert.isTrue(qty <= accountCapsule.getBalance(), "Quantity must be less than accountBalance");
 
-      var storage_bytes = storageMarket.tryBuyStorage(quant);
+      var storage_bytes = storageMarket.tryBuyStorage(qty);
       Assert.isTrue(storage_bytes >= 1L, "storage_bytes must be larger than 1,current storage_bytes[" + storage_bytes + "]");
 
 //    long storageBytes = storageMarket.exchange(quant, true);
@@ -77,8 +77,8 @@ public class BuyStorageActuator extends AbstractActuator {
 //    }
 
       return true;
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

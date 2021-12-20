@@ -29,15 +29,15 @@ public class CreateAccountActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var accountCreateContract = contract.unpack(AccountCreateContract.class);
+      var ctx = contract.unpack(AccountCreateContract.class);
       var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
-      var accountCapsule = new AccountCapsule(accountCreateContract, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-      dbManager.getAccountStore().put(accountCreateContract.getAccountAddress().toByteArray(), accountCapsule);
-      chargeFee(accountCreateContract.getOwnerAddress().toByteArray(), fee);
+      var accountCapsule = new AccountCapsule(ctx, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+      dbManager.getAccountStore().put(ctx.getAccountAddress().toByteArray(), accountCapsule);
+      chargeFee(ctx.getOwnerAddress().toByteArray(), fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -48,13 +48,9 @@ public class CreateAccountActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(AccountCreateContract.class), "contract type error,expected type [AccountCreateContract],real type[" + contract.getClass() + "]");
-
-      val contract = this.contract.unpack(AccountCreateContract.class);
-//    if (contract.getAccountName().isEmpty()) {
-//      throw new ContractValidateException("AccountName is null");
-//    }
-      var ownerAddress = contract.getOwnerAddress().toByteArray();
+      Assert.isTrue(contract.is(AccountCreateContract.class), "Contract type error,expected type [AccountCreateContract],real type[" + contract.getClass() + "]");
+      val ctx = this.contract.unpack(AccountCreateContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
@@ -63,17 +59,13 @@ public class CreateAccountActuator extends AbstractActuator {
       val fee = calcFee();
       Assert.isTrue(accountCapsule.getBalance() >= fee, "Validate CreateAccountActuator error, insufficient fee.");
 
-      var accountAddress = contract.getAccountAddress().toByteArray();
+      var accountAddress = ctx.getAccountAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(accountAddress), "Invalid account address");
 
-//    if (contract.getType() == null) {
-//      throw new ContractValidateException("Type is null");
-//    }
-
-      Assert.isTrue(!(dbManager.getAccountStore().has(accountAddress)), "Account has existed");
+      Assert.isTrue(!dbManager.getAccountStore().has(accountAddress), "Account has existed");
       return true;
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

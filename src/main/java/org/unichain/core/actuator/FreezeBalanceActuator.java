@@ -35,21 +35,21 @@ public class FreezeBalanceActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      val freezeBalanceContract = contract.unpack(FreezeBalanceContract.class);
-      var txOwnerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
+      val ctx = contract.unpack(FreezeBalanceContract.class);
+      var txOwnerAddress = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCapsule = dbManager.getAccountStore().get(txOwnerAddress);
 
       var now = dbManager.getHeadBlockTimeStamp();
-      var duration = freezeBalanceContract.getFrozenDuration() * 86_400_000;
+      var duration = ctx.getFrozenDuration() * 86_400_000;
 
-      var newBalance = ownerAccountCapsule.getBalance() - freezeBalanceContract.getFrozenBalance();
+      var newBalance = ownerAccountCapsule.getBalance() - ctx.getFrozenBalance();
 
-      var frozenBalance = freezeBalanceContract.getFrozenBalance();
+      var frozenBalance = ctx.getFrozenBalance();
       var expireTime = now + duration;
-      var ownerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
-      var receiverAddress = freezeBalanceContract.getReceiverAddress().toByteArray();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var receiverAddress = ctx.getReceiverAddress().toByteArray();
 
-      switch (freezeBalanceContract.getResource()) {
+      switch (ctx.getResource()) {
         case BANDWIDTH:
           if (!ArrayUtils.isEmpty(receiverAddress) && dbManager.getDynamicPropertiesStore().supportDR()) {
             delegateResource(ownerAddress, receiverAddress, true, frozenBalance, expireTime);
@@ -81,7 +81,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -93,39 +93,38 @@ public class FreezeBalanceActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(FreezeBalanceContract.class), "contract type error,expected type [FreezeBalanceContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(FreezeBalanceContract.class), "Contract type error,expected type [FreezeBalanceContract],real type[" + contract.getClass() + "]");
 
-      val freezeBalanceContract = this.contract.unpack(FreezeBalanceContract.class);
-      var ownerAddress = freezeBalanceContract.getOwnerAddress().toByteArray();
+      val ctx = this.contract.unpack(FreezeBalanceContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
       Assert.notNull(accountCapsule, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-      var frozenBalance = freezeBalanceContract.getFrozenBalance();
-      Assert.isTrue(frozenBalance > 0, "frozenBalance must be positive");
-      Assert.isTrue(frozenBalance >= 1_000_000L, "frozenBalance must be more than 1 UNW");
+      var frozenBalance = ctx.getFrozenBalance();
+      Assert.isTrue(frozenBalance > 0, "FrozenBalance must be positive");
+      Assert.isTrue(frozenBalance >= 1_000_000L, "FrozenBalance must be more than 1 UNW");
 
       var frozenCount = accountCapsule.getFrozenCount();
-      Assert.isTrue(frozenCount == 0 || frozenCount == 1, "frozenCount must be 0 or 1");
-      Assert.isTrue(frozenBalance <= accountCapsule.getBalance(), "frozenBalance must be less than accountBalance");
+      Assert.isTrue(frozenCount == 0 || frozenCount == 1, "FrozenCount must be 0 or 1");
+      Assert.isTrue(frozenBalance <= accountCapsule.getBalance(), "FrozenBalance must be less than accountBalance");
 
 //    long maxFrozenNumber = dbManager.getDynamicPropertiesStore().getMaxFrozenNumber();
 //    if (accountCapsule.getFrozenCount() >= maxFrozenNumber) {
 //      throw new ContractValidateException("max frozen number is: " + maxFrozenNumber);
 //    }
 
-      var frozenDuration = freezeBalanceContract.getFrozenDuration();
+      var frozenDuration = ctx.getFrozenDuration();
       var minFrozenTime = dbManager.getDynamicPropertiesStore().getMinFrozenTime();
       var maxFrozenTime = dbManager.getDynamicPropertiesStore().getMaxFrozenTime();
 
       var needCheckFrozeTime = Args.getInstance().getCheckFrozenTime() == 1;//for test
       var frozenDurationCheck = needCheckFrozeTime && !(frozenDuration >= minFrozenTime && frozenDuration <= maxFrozenTime);
-      Assert.isTrue(!frozenDurationCheck, "frozenDuration must be less than " + maxFrozenTime + " days " + "and more than " + minFrozenTime + " days");
+      Assert.isTrue(!frozenDurationCheck, "FrozenDuration must be less than " + maxFrozenTime + " days " + "and more than " + minFrozenTime + " days");
 
-      switch (freezeBalanceContract.getResource()) {
+      switch (ctx.getResource()) {
         case BANDWIDTH:
-          break;
         case ENERGY:
           break;
         default:
@@ -133,11 +132,11 @@ public class FreezeBalanceActuator extends AbstractActuator {
       }
 
       //todo：need version control and config for delegating resource
-      var receiverAddress = freezeBalanceContract.getReceiverAddress().toByteArray();
+      var receiverAddress = ctx.getReceiverAddress().toByteArray();
       //If the receiver is included in the contract, the receiver will receive the resource.
       if (!ArrayUtils.isEmpty(receiverAddress) && dbManager.getDynamicPropertiesStore().supportDR()) {
         var checkAddress = Arrays.equals(receiverAddress, ownerAddress);
-        Assert.isTrue(!checkAddress, "receiverAddress must not be the same as ownerAddress");
+        Assert.isTrue(!checkAddress, "ReceiverAddress must not be the same as ownerAddress");
         Assert.isTrue(Wallet.addressValid(receiverAddress), "Invalid receiverAddress");
 
         var receiverCapsule = dbManager.getAccountStore().get(receiverAddress);
@@ -148,8 +147,8 @@ public class FreezeBalanceActuator extends AbstractActuator {
       }
 
       return true;
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

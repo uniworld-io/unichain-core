@@ -39,34 +39,31 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-        val unfreezeBalanceContract = contract.unpack(UnfreezeBalanceContract.class);
-
-        var ownerAddress = unfreezeBalanceContract.getOwnerAddress().toByteArray();
+        val ctx = contract.unpack(UnfreezeBalanceContract.class);
+        var ownerAddress = ctx.getOwnerAddress().toByteArray();
 
         //@note withdraw reward
         dbManager.getDelegationService().withdrawReward(ownerAddress, getDeposit());
 
         var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
         var oldBalance = accountCapsule.getBalance();
-
         long unfreezeBalance = 0L;
-
-        var receiverAddress = unfreezeBalanceContract.getReceiverAddress().toByteArray();
+        var receiverAddress = ctx.getReceiverAddress().toByteArray();
         //If the receiver is not included in the contract, unfreeze frozen balance for this account.
         //otherwise,unfreeze delegated frozen balance provided this account.
         if (!ArrayUtils.isEmpty(receiverAddress) && dbManager.getDynamicPropertiesStore().supportDR()) {
-        var key = DelegatedResourceCapsule.createDbKey(unfreezeBalanceContract.getOwnerAddress().toByteArray(), unfreezeBalanceContract.getReceiverAddress().toByteArray());
-        var delegatedResourceCapsule = dbManager.getDelegatedResourceStore().get(key);
+        var key = DelegatedResourceCapsule.createDbKey(ctx.getOwnerAddress().toByteArray(), ctx.getReceiverAddress().toByteArray());
+        var delegatedCapsule = dbManager.getDelegatedResourceStore().get(key);
 
-        switch (unfreezeBalanceContract.getResource()) {
+        switch (ctx.getResource()) {
           case BANDWIDTH:
-            unfreezeBalance = delegatedResourceCapsule.getFrozenBalanceForBandwidth();
-            delegatedResourceCapsule.setFrozenBalanceForBandwidth(0, 0);
+            unfreezeBalance = delegatedCapsule.getFrozenBalanceForBandwidth();
+            delegatedCapsule.setFrozenBalanceForBandwidth(0, 0);
             accountCapsule.addDelegatedFrozenBalanceForBandwidth(-unfreezeBalance);
             break;
           case ENERGY:
-            unfreezeBalance = delegatedResourceCapsule.getFrozenBalanceForEnergy();
-            delegatedResourceCapsule.setFrozenBalanceForEnergy(0, 0);
+            unfreezeBalance = delegatedCapsule.getFrozenBalanceForEnergy();
+            delegatedCapsule.setFrozenBalanceForEnergy(0, 0);
             accountCapsule.addDelegatedFrozenBalanceForEnergy(-unfreezeBalance);
             break;
           default:
@@ -77,7 +74,7 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
         var receiverCapsule = dbManager.getAccountStore().get(receiverAddress);
         if (dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 0 ||
             (receiverCapsule != null && receiverCapsule.getType() != AccountType.Contract)) {
-          switch (unfreezeBalanceContract.getResource()) {
+          switch (ctx.getResource()) {
             case BANDWIDTH:
               if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
                       && receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth() < unfreezeBalance) {
@@ -103,40 +100,40 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
 
         accountCapsule.setBalance(oldBalance + unfreezeBalance);
 
-        if (delegatedResourceCapsule.getFrozenBalanceForBandwidth() == 0
-            && delegatedResourceCapsule.getFrozenBalanceForEnergy() == 0) {
+        if (delegatedCapsule.getFrozenBalanceForBandwidth() == 0
+            && delegatedCapsule.getFrozenBalanceForEnergy() == 0) {
           dbManager.getDelegatedResourceStore().delete(key);
 
           //modify DelegatedResourceAccountIndexStore
           {
-            var delegatedResourceAccountIndexCapsule = dbManager
+            var indexCapsule = dbManager
                 .getDelegatedResourceAccountIndexStore()
                 .get(ownerAddress);
-            if (delegatedResourceAccountIndexCapsule != null) {
-              List<ByteString> toAccountsList = new ArrayList<>(delegatedResourceAccountIndexCapsule.getToAccountsList());
+            if (indexCapsule != null) {
+              List<ByteString> toAccountsList = new ArrayList<>(indexCapsule.getToAccountsList());
               toAccountsList.remove(ByteString.copyFrom(receiverAddress));
-              delegatedResourceAccountIndexCapsule.setAllToAccounts(toAccountsList);
-              dbManager.getDelegatedResourceAccountIndexStore().put(ownerAddress, delegatedResourceAccountIndexCapsule);
+              indexCapsule.setAllToAccounts(toAccountsList);
+              dbManager.getDelegatedResourceAccountIndexStore().put(ownerAddress, indexCapsule);
             }
           }
 
           {
-            var delegatedResourceAccountIndexCapsule = dbManager
+            var indexCapsule = dbManager
                 .getDelegatedResourceAccountIndexStore()
                 .get(receiverAddress);
-            if (delegatedResourceAccountIndexCapsule != null) {
-              List<ByteString> fromAccountsList = new ArrayList<>(delegatedResourceAccountIndexCapsule.getFromAccountsList());
+            if (indexCapsule != null) {
+              List<ByteString> fromAccountsList = new ArrayList<>(indexCapsule.getFromAccountsList());
               fromAccountsList.remove(ByteString.copyFrom(ownerAddress));
-              delegatedResourceAccountIndexCapsule.setAllFromAccounts(fromAccountsList);
-              dbManager.getDelegatedResourceAccountIndexStore().put(receiverAddress, delegatedResourceAccountIndexCapsule);
+                indexCapsule.setAllFromAccounts(fromAccountsList);
+              dbManager.getDelegatedResourceAccountIndexStore().put(receiverAddress, indexCapsule);
             }
           }
 
         } else {
-          dbManager.getDelegatedResourceStore().put(key, delegatedResourceCapsule);
+          dbManager.getDelegatedResourceStore().put(key, delegatedCapsule);
         }
         } else {
-        switch (unfreezeBalanceContract.getResource()) {
+        switch (ctx.getResource()) {
           case BANDWIDTH:
             List<Frozen> frozenList = Lists.newArrayList();
             frozenList.addAll(accountCapsule.getFrozenList());
@@ -171,7 +168,7 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
         }
         }
 
-        switch (unfreezeBalanceContract.getResource()) {
+        switch (ctx.getResource()) {
         case BANDWIDTH:
           dbManager.getDynamicPropertiesStore().addTotalNetWeight(-unfreezeBalance / 1_000_000L);
           break;
@@ -185,9 +182,9 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
 
         VotesCapsule votesCapsule;
         if (!dbManager.getVotesStore().has(ownerAddress)) {
-        votesCapsule = new VotesCapsule(unfreezeBalanceContract.getOwnerAddress(), accountCapsule.getVotesList());
+          votesCapsule = new VotesCapsule(ctx.getOwnerAddress(), accountCapsule.getVotesList());
         } else {
-        votesCapsule = dbManager.getVotesStore().get(ownerAddress);
+          votesCapsule = dbManager.getVotesStore().get(ownerAddress);
         }
         accountCapsule.clearVotes();
         votesCapsule.clearNewVotes();
@@ -207,115 +204,105 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    Assert.notNull(contract, "No contract!");
-    Assert.notNull(dbManager, "No dbManager!");
-    Assert.isTrue(this.contract.is(UnfreezeBalanceContract.class), "contract type error,expected type [UnfreezeBalanceContract],real type[" + contract.getClass() + "]");
-
-    final UnfreezeBalanceContract unfreezeBalanceContract;
     try {
-      unfreezeBalanceContract = this.contract.unpack(UnfreezeBalanceContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
-      throw new ContractValidateException(e.getMessage());
-    }
-    var ownerAddress = unfreezeBalanceContract.getOwnerAddress().toByteArray();
-    Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
+        Assert.notNull(contract, "No contract!");
+        Assert.notNull(dbManager, "No dbManager!");
+        Assert.isTrue(this.contract.is(UnfreezeBalanceContract.class), "Contract type error,expected type [UnfreezeBalanceContract],real type[" + contract.getClass() + "]");
 
-    var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-    Assert.notNull(accountCapsule, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
+        val ctx = this.contract.unpack(UnfreezeBalanceContract.class);
+        var ownerAddress = ctx.getOwnerAddress().toByteArray();
+        Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
 
-    var now = dbManager.getHeadBlockTimeStamp();
-    var receiverAddress = unfreezeBalanceContract.getReceiverAddress().toByteArray();
-    //If the receiver is not included in the contract, unfreeze frozen balance for this account.
-    //otherwise,unfreeze delegated frozen balance provided this account.
-    if (!ArrayUtils.isEmpty(receiverAddress) && dbManager.getDynamicPropertiesStore().supportDR()) {
-      Assert.isTrue(!Arrays.equals(receiverAddress, ownerAddress), "receiverAddress must not be the same as ownerAddress");
+        var capsule = dbManager.getAccountStore().get(ownerAddress);
+        Assert.notNull(capsule, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-      Assert.isTrue(Wallet.addressValid(receiverAddress), "Invalid receiverAddress");
+        var now = dbManager.getHeadBlockTimeStamp();
+        var receiverAddress = ctx.getReceiverAddress().toByteArray();
+        //If the receiver is not included in the contract, unfreeze frozen balance for this account.
+        //otherwise,unfreeze delegated frozen balance provided this account.
+        if (!ArrayUtils.isEmpty(receiverAddress) && dbManager.getDynamicPropertiesStore().supportDR()) {
+          Assert.isTrue(!Arrays.equals(receiverAddress, ownerAddress), "ReceiverAddress must not be the same as ownerAddress");
+          Assert.isTrue(Wallet.addressValid(receiverAddress), "Invalid receiverAddress");
 
-      var receiverCapsule = dbManager.getAccountStore().get(receiverAddress);
-      var accountNotExists = dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 0 && receiverCapsule == null;
-      Assert.isTrue(!accountNotExists, "Receiver Account[" + StringUtil.createReadableString(receiverAddress) + "] not exists");
+          var receiverCapsule = dbManager.getAccountStore().get(receiverAddress);
+          var accountNotExists = dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 0 && receiverCapsule == null;
+          Assert.isTrue(!accountNotExists, "Receiver Account[" + StringUtil.createReadableString(receiverAddress) + "] not exists");
 
-      var key = DelegatedResourceCapsule.createDbKey(unfreezeBalanceContract.getOwnerAddress().toByteArray(), unfreezeBalanceContract.getReceiverAddress().toByteArray());
-      var delegatedResourceCapsule = dbManager.getDelegatedResourceStore().get(key);
-      Assert.notNull(delegatedResourceCapsule, "delegated Resource not exists");
+          var key = DelegatedResourceCapsule.createDbKey(ctx.getOwnerAddress().toByteArray(), ctx.getReceiverAddress().toByteArray());
+          var delegatedCapsule = dbManager.getDelegatedResourceStore().get(key);
+          Assert.notNull(delegatedCapsule, "Delegated Resource not exists");
 
-      switch (unfreezeBalanceContract.getResource()) {
-        case BANDWIDTH:
-          Assert.isTrue(delegatedResourceCapsule.getFrozenBalanceForBandwidth() > 0, "no delegatedFrozenBalance(BANDWIDTH)");
+          switch (ctx.getResource()) {
+            case BANDWIDTH:
+              Assert.isTrue(delegatedCapsule.getFrozenBalanceForBandwidth() > 0, "no delegatedFrozenBalance(BANDWIDTH)");
 
-          if (dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 0) {
-            var balanceForBandwidth = receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth()
-                    >= delegatedResourceCapsule.getFrozenBalanceForBandwidth();
-            Assert.isTrue(balanceForBandwidth, "AcquiredDelegatedFrozenBalanceForBandwidth["
-                    + receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth() + "] < delegatedBandwidth["
-                    + delegatedResourceCapsule.getFrozenBalanceForBandwidth()
-                    + "]");
-          } else {
-            // @todo: condition is always false
-            var balanceForBandwidth = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() != 1
-                    && receiverCapsule != null
-                    && receiverCapsule.getType() != AccountType.Contract
-                    && receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth() < delegatedResourceCapsule.getFrozenBalanceForBandwidth();
-            Assert.isTrue(!balanceForBandwidth, "AcquiredDelegatedFrozenBalanceForBandwidth["
-                    + receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth() + "] < delegatedBandwidth["
-                    + delegatedResourceCapsule.getFrozenBalanceForBandwidth()
-                    + "]");
+              if (dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 0) {
+                var frozenBalanceBandwidthCheck = receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth()
+                        >= delegatedCapsule.getFrozenBalanceForBandwidth();
+                Assert.isTrue(frozenBalanceBandwidthCheck, "AcquiredDelegatedFrozenBalanceForBandwidth["
+                        + receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth() + "] < delegatedBandwidth["
+                        + delegatedCapsule.getFrozenBalanceForBandwidth()
+                        + "]");
+              } else {
+                var frozenBalanceBandwidthCheck = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() != 1
+                        && receiverCapsule != null
+                        && receiverCapsule.getType() != AccountType.Contract
+                        && receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth() < delegatedCapsule.getFrozenBalanceForBandwidth();
+                Assert.isTrue(!frozenBalanceBandwidthCheck, "AcquiredDelegatedFrozenBalanceForBandwidth["
+                        + receiverCapsule.getAcquiredDelegatedFrozenBalanceForBandwidth() + "] < delegatedBandwidth["
+                        + delegatedCapsule.getFrozenBalanceForBandwidth()
+                        + "]");
+              }
+              Assert.isTrue(delegatedCapsule.getExpireTimeForBandwidth() <= now, "It's not time to unfreeze.");
+              break;
+            case ENERGY:
+              Assert.isTrue(delegatedCapsule.getFrozenBalanceForEnergy() > 0, "no delegateFrozenBalance(Energy)");
+              if (dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 0) {
+                Assert.isTrue(receiverCapsule.getAcquiredDelegatedFrozenBalanceForEnergy() >= delegatedCapsule.getFrozenBalanceForEnergy(),
+                        "AcquiredDelegatedFrozenBalanceForEnergy["
+                                + receiverCapsule.getAcquiredDelegatedFrozenBalanceForEnergy()
+                                + "] < delegatedEnergy["
+                                + delegatedCapsule.getFrozenBalanceForEnergy()
+                                + "]");
+              } else {
+                var frozenBalanceEnergyCheck = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() != 1
+                        && receiverCapsule != null
+                        && receiverCapsule.getType() != AccountType.Contract
+                        && receiverCapsule.getAcquiredDelegatedFrozenBalanceForEnergy() < delegatedCapsule.getFrozenBalanceForEnergy();
+                Assert.isTrue(!frozenBalanceEnergyCheck, "AcquiredDelegatedFrozenBalanceForEnergy["
+                        + receiverCapsule.getAcquiredDelegatedFrozenBalanceForEnergy()
+                        + "] < delegatedEnergy["
+                        + delegatedCapsule.getFrozenBalanceForEnergy()
+                        + "]");
+              }
+              Assert.isTrue(delegatedCapsule.getExpireTimeForEnergy(dbManager) <= now, "It's not time to unfreeze.");
+              break;
+            default:
+              throw new ContractValidateException("ResourceCode error.valid ResourceCode[BANDWIDTH、Energy]");
           }
+        } else {
+          switch (ctx.getResource()) {
+            case BANDWIDTH:
+              Assert.isTrue(capsule.getFrozenCount() > 0, "no frozenBalance(BANDWIDTH)");
 
-          Assert.isTrue(delegatedResourceCapsule.getExpireTimeForBandwidth() <= now, "It's not time to unfreeze.");
-          break;
-        case ENERGY:
-          Assert.isTrue(delegatedResourceCapsule.getFrozenBalanceForEnergy() > 0, "no delegateFrozenBalance(Energy)");
-          if (dbManager.getDynamicPropertiesStore().getAllowTvmConstantinople() == 0) {
-            Assert.isTrue(receiverCapsule.getAcquiredDelegatedFrozenBalanceForEnergy() >= delegatedResourceCapsule.getFrozenBalanceForEnergy(),
-                    "AcquiredDelegatedFrozenBalanceForEnergy["
-                            + receiverCapsule.getAcquiredDelegatedFrozenBalanceForEnergy()
-                            + "] < delegatedEnergy["
-                            + delegatedResourceCapsule.getFrozenBalanceForEnergy()
-                            + "]");
-          } else {
-            // @todo: condition is always false
-            var balanceForEnergy = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() != 1
-                    && receiverCapsule != null
-                    && receiverCapsule.getType() != AccountType.Contract
-                    && receiverCapsule.getAcquiredDelegatedFrozenBalanceForEnergy() < delegatedResourceCapsule.getFrozenBalanceForEnergy();
-            Assert.isTrue(!balanceForEnergy, "AcquiredDelegatedFrozenBalanceForEnergy["
-                    + receiverCapsule.getAcquiredDelegatedFrozenBalanceForEnergy()
-                    + "] < delegatedEnergy["
-                    + delegatedResourceCapsule.getFrozenBalanceForEnergy()
-                    + "]");
+              var allowedUnfreezeCount = capsule.getFrozenList().stream().filter(frozen -> frozen.getExpireTime() <= now).count();
+              Assert.isTrue(allowedUnfreezeCount > 0, "It's not time to unfreeze(BANDWIDTH).");
+              break;
+            case ENERGY:
+              var frozenBalanceForEnergy = capsule.getAccountResource().getFrozenBalanceForEnergy();
+              Assert.isTrue(frozenBalanceForEnergy.getFrozenBalance() > 0, "no frozenBalance(Energy)");
+              Assert.isTrue(frozenBalanceForEnergy.getExpireTime() <= now, "It's not time to unfreeze(Energy).");
+              break;
+            default:
+              throw new ContractValidateException("ResourceCode error.valid ResourceCode[BANDWIDTH、Energy]");
           }
+        }
 
-          Assert.isTrue(delegatedResourceCapsule.getExpireTimeForEnergy(dbManager) <= now, "It's not time to unfreeze.");
-          break;
-        default:
-          throw new ContractValidateException(
-              "ResourceCode error.valid ResourceCode[BANDWIDTH、Energy]");
-      }
-
-    } else {
-      switch (unfreezeBalanceContract.getResource()) {
-        case BANDWIDTH:
-          Assert.isTrue(accountCapsule.getFrozenCount() > 0, "no frozenBalance(BANDWIDTH)");
-
-          var allowedUnfreezeCount = accountCapsule.getFrozenList().stream().filter(frozen -> frozen.getExpireTime() <= now).count();
-          Assert.isTrue(allowedUnfreezeCount > 0, "It's not time to unfreeze(BANDWIDTH).");
-          break;
-        case ENERGY:
-          var frozenBalanceForEnergy = accountCapsule.getAccountResource().getFrozenBalanceForEnergy();
-          Assert.isTrue(frozenBalanceForEnergy.getFrozenBalance() > 0, "no frozenBalance(Energy)");
-          Assert.isTrue(frozenBalanceForEnergy.getExpireTime() <= now, "It's not time to unfreeze(Energy).");
-
-          break;
-        default:
-          throw new ContractValidateException("ResourceCode error.valid ResourceCode[BANDWIDTH、Energy]");
-      }
-
+        return true;
+    } catch (Exception e) {
+        logger.debug(e.getMessage(), e);
+        throw new ContractValidateException(e.getMessage());
     }
-
-    return true;
   }
 
   @Override

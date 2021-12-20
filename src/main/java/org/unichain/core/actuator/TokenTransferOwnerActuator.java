@@ -48,6 +48,7 @@ public class TokenTransferOwnerActuator extends AbstractActuator {
       }
 
       tokenPool.setOwnerAddress(ctx.getToAddress());
+      tokenPool.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
       tokenStore.put(tokenKey, tokenPool);
 
       var ownerAccount = accountStore.get(ownerAddress);

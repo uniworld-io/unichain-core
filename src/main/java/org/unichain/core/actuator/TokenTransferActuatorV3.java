@@ -41,6 +41,8 @@ import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_CRITICAL_UPDATE_TIME_GUARD;
+
 @Slf4j(topic = "actuator")
 public class TokenTransferActuatorV3 extends AbstractActuator {
   TokenTransferActuatorV3(Any contract, Manager dbManager) {
@@ -131,6 +133,10 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
       Assert.notNull(tokenPool, "Token pool not found: " + ctx.getTokenName());
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+
+      //prevent critical token update cause this tx to be wrong affected!
+      var guardTime = dbManager.getHeadBlockTimeStamp() - tokenPool.getCriticalUpdateTime();
+      Assert.isTrue(guardTime >= TOKEN_CRITICAL_UPDATE_TIME_GUARD, "Critical token update found! Please wait up to 3 minutes before retry.");
 
       if (ctx.getAvailableTime() > 0) {
         Assert.isTrue (ctx.getAvailableTime() > dbManager.getHeadBlockTimeStamp(), "Block time passed available time");

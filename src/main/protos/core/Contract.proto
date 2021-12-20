@@ -132,6 +132,7 @@ message CreateTokenContract {
   int64 fee_pool_origin = 16;
   int64 exch_unx_num = 17; //#unw
   int64 exch_num = 18; //exchange to #token
+  int64 critical_update_time = 19;//critical update time, ex: fee, ownership...
 }
 
 message TransferTokenOwnerContract {

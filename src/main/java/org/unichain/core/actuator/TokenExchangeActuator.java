@@ -34,6 +34,8 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
+import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_CRITICAL_UPDATE_TIME_GUARD;
+
 @Slf4j(topic = "actuator")
 public class TokenExchangeActuator extends AbstractActuator {
 
@@ -102,6 +104,10 @@ public class TokenExchangeActuator extends AbstractActuator {
       Assert.notNull(tokenPool, "Token pool not exists");
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+
+      //prevent critical token update cause this tx to be wrong affected!
+      var guardTime = dbManager.getHeadBlockTimeStamp() - tokenPool.getCriticalUpdateTime();
+      Assert.isTrue(guardTime >= TOKEN_CRITICAL_UPDATE_TIME_GUARD, "Critical token update found! Please wait up to 3 minutes before retry.");
 
       var tokenOwnerCap = accountStore.get(tokenPool.getOwnerAddress().toByteArray());
       Assert.notNull(tokenOwnerCap, "Token owner account not exists");

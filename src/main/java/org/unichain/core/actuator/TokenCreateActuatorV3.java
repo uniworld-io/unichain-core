@@ -67,6 +67,7 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
       capsule.setBurnedToken(0L);
       capsule.setTokenName(capsule.getTokenName().toUpperCase());
       capsule.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      capsule.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
       capsule.setOriginFeePool(ctx.getFeePool());
       dbManager.getTokenPoolStore().put(capsule.createDbKey(), capsule);
 

@@ -16,11 +16,14 @@
 package org.unichain.core.capsule;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.CreateTokenContract;
+
+import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_CRITICAL_TIME;
 
 @Slf4j(topic = "capsule")
 public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContract> {
@@ -85,6 +88,15 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
 
   public Long getLatestOperationTime() {
     return this.createTokenContract.getLatestOperationTime();
+  }
+
+  /**
+   * In the case with old token model (block version < 3) set to zero!
+   * @return
+   */
+  public Long getCriticalUpdateTime() {
+    return this.createTokenContract.hasField(TOKEN_CREATE_FIELD_CRITICAL_TIME) ?
+            this.createTokenContract.getCriticalUpdateTime() : 0;
   }
 
   public String getUrl() {
@@ -187,8 +199,12 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     this.createTokenContract = this.createTokenContract.toBuilder().setFeePoolOrigin(originFeePool).build();
   }
 
-  public void setLatestOperationTime(long latestOpTime) {
-    this.createTokenContract = this.createTokenContract.toBuilder().setLatestOperationTime(latestOpTime).build();
+  public void setLatestOperationTime(long timestamp) {
+    this.createTokenContract = this.createTokenContract.toBuilder().setLatestOperationTime(timestamp).build();
+  }
+
+  public void setCriticalUpdateTime(long timestamp) {
+    this.createTokenContract = this.createTokenContract.toBuilder().setCriticalUpdateTime(timestamp).build();
   }
 
   public void setFeePool(long feePool) {

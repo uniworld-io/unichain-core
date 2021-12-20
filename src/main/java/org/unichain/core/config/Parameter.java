@@ -61,6 +61,7 @@ public class Parameter {
     public static final long DEFAULT_TOKEN_AGE_V3 = 50*31536000000L;//50 years
     public static final long MAX_TOKEN_AGE_V3 = 200*31536000000L;//200 years
     public static final long MIN_TOKEN_POOL_FEE = 10*1000000L;//10 UNW
+    public static final long TOKEN_CRITICAL_UPDATE_TIME_GUARD = 180*1000L;//3 minutes
   }
 
   public class NodeConstant {

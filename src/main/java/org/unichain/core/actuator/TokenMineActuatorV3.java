@@ -46,9 +46,10 @@ public class TokenMineActuatorV3 extends AbstractActuator {
     try {
       var ctx = contract.unpack(MineTokenContract.class);
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenCapsule = dbManager.getTokenPoolStore().get(tokenKey);
-      tokenCapsule.setTotalSupply(tokenCapsule.getTotalSupply() + ctx.getAmount());
-      dbManager.getTokenPoolStore().put(tokenKey, tokenCapsule);
+      var tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
+      tokenCap.setTotalSupply(tokenCap.getTotalSupply() + ctx.getAmount());
+      tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+      dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
 
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);

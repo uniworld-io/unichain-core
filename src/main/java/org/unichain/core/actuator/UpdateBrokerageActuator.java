@@ -28,9 +28,9 @@ public class UpdateBrokerageActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     val fee = calcFee();
     try {
-      val updateBrokerageContract = contract.unpack(UpdateBrokerageContract.class);
-      var ownerAddress = updateBrokerageContract.getOwnerAddress().toByteArray();
-      var brokerage = updateBrokerageContract.getBrokerage();
+      val ctx = contract.unpack(UpdateBrokerageContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var brokerage = ctx.getBrokerage();
       //@note review role of brokerage when charging fee
       dbManager.getDelegationStore().setBrokerage(ownerAddress, brokerage);
       chargeFee(ownerAddress, fee);
@@ -45,32 +45,30 @@ public class UpdateBrokerageActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    Assert.isTrue(dbManager.getDynamicPropertiesStore().allowChangeDelegation(), "contract type error,unexpected type [UpdateBrokerageContract]");
-    Assert.notNull(contract, "No contract!");
-    Assert.notNull(dbManager, "No dbManager!");
-    Assert.isTrue(this.contract.is(UpdateBrokerageContract.class), "contract type error,expected type [UpdateBrokerageContract],real type[" + contract.getClass() + "]");
-
-    final UpdateBrokerageContract updateBrokerageContract;
     try {
-      updateBrokerageContract = contract.unpack(UpdateBrokerageContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      Assert.isTrue(dbManager.getDynamicPropertiesStore().allowChangeDelegation(), "Contract type error,unexpected type [UpdateBrokerageContract]");
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(this.contract.is(UpdateBrokerageContract.class), "Contract type error,expected type [UpdateBrokerageContract],real type[" + contract.getClass() + "]");
+
+      val ctx = contract.unpack(UpdateBrokerageContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var brokerage = ctx.getBrokerage();
+
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
+      Assert.isTrue(!(brokerage < 0 || brokerage > 100), "Invalid brokerage");
+
+      var witnessCapsule = dbManager.getWitnessStore().get(ownerAddress);
+      Assert.notNull(witnessCapsule, "Not exist witness:" + Hex.toHexString(ownerAddress));
+
+      var account = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(account, "Account has not existed");
+
+      return true;
+    } catch (Exception e) {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-    var ownerAddress = updateBrokerageContract.getOwnerAddress().toByteArray();
-    var brokerage = updateBrokerageContract.getBrokerage();
-
-    Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-
-    Assert.isTrue(!(brokerage < 0 || brokerage > 100), "Invalid brokerage");
-
-    var witnessCapsule = dbManager.getWitnessStore().get(ownerAddress);
-    Assert.notNull(witnessCapsule, "Not exist witness:" + Hex.toHexString(ownerAddress));
-
-    var account = dbManager.getAccountStore().get(ownerAddress);
-    Assert.notNull(account, "Account has not existed");
-
-    return true;
   }
 
   @Override

@@ -28,13 +28,13 @@ public class UpdateAccountActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     val fee = calcFee();
     try {
-      val accountUpdateContract = contract.unpack(AccountUpdateContract.class);
-      var ownerAddress = accountUpdateContract.getOwnerAddress().toByteArray();
+      val ctx = contract.unpack(AccountUpdateContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
       var accountIndexStore = dbManager.getAccountIndexStore();
       var account = accountStore.get(ownerAddress);
 
-      account.setAccountName(accountUpdateContract.getAccountName().toByteArray());
+      account.setAccountName(ctx.getAccountName().toByteArray());
       accountStore.put(ownerAddress, account);
       accountIndexStore.put(account);
       chargeFee(ownerAddress, fee);
@@ -49,34 +49,34 @@ public class UpdateAccountActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    Assert.notNull(contract, "No contract!");
-    Assert.notNull(dbManager, "No dbManager!");
-    Assert.isTrue(this.contract.is(AccountUpdateContract.class), "contract type error,expected type [AccountUpdateContract],real type[" + contract.getClass() + "]");
-
-    final AccountUpdateContract accountUpdateContract;
     try {
-      accountUpdateContract = contract.unpack(AccountUpdateContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(this.contract.is(AccountUpdateContract.class), "Contract type error,expected type [AccountUpdateContract],real type[" + contract.getClass() + "]");
+
+      val ctx = contract.unpack(AccountUpdateContract.class);
+
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var accountName = ctx.getAccountName().toByteArray();
+      Assert.isTrue(TransactionUtil.validAccountName(accountName), "Invalid accountName");
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
+
+      var account = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(account, "Account has not existed");
+
+      var accountNameExist = account.getAccountName() != null && !account.getAccountName().isEmpty()
+              && dbManager.getDynamicPropertiesStore().getAllowUpdateAccountName() == 0;
+      Assert.isTrue(!accountNameExist, "This account name already exist");
+
+      var nameExist = dbManager.getAccountIndexStore().has(accountName)
+              && dbManager.getDynamicPropertiesStore().getAllowUpdateAccountName() == 0;
+      Assert.isTrue(!nameExist, "This name has existed");
+
+      return true;
+    } catch (Exception e) {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-    var ownerAddress = accountUpdateContract.getOwnerAddress().toByteArray();
-    var accountName = accountUpdateContract.getAccountName().toByteArray();
-    Assert.isTrue(TransactionUtil.validAccountName(accountName), "Invalid accountName");
-    Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-
-    var account = dbManager.getAccountStore().get(ownerAddress);
-    Assert.notNull(account, "Account has not existed");
-
-    var accountNameExist = account.getAccountName() != null && !account.getAccountName().isEmpty()
-            && dbManager.getDynamicPropertiesStore().getAllowUpdateAccountName() == 0;
-    Assert.isTrue(!accountNameExist, "This account name already exist");
-
-    var nameExist = dbManager.getAccountIndexStore().has(accountName)
-            && dbManager.getDynamicPropertiesStore().getAllowUpdateAccountName() == 0;
-    Assert.isTrue(!nameExist, "This name has existed");
-
-    return true;
   }
 
   @Override

@@ -28,11 +28,11 @@ public class WitnessUpdateActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      val witnessUpdateContract = this.contract.unpack(WitnessUpdateContract.class);
-      var ownerAddress = witnessUpdateContract.getOwnerAddress().toByteArray();
-      var witnessCapsule = this.dbManager.getWitnessStore().get(ownerAddress);
-      witnessCapsule.setUrl(witnessUpdateContract.getUpdateUrl().toStringUtf8());
-      this.dbManager.getWitnessStore().put(witnessCapsule.createDbKey(), witnessCapsule);
+      val ctx = this.contract.unpack(WitnessUpdateContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var capsule = this.dbManager.getWitnessStore().get(ownerAddress);
+      capsule.setUrl(ctx.getUpdateUrl().toStringUtf8());
+      this.dbManager.getWitnessStore().put(capsule.createDbKey(), capsule);
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -45,28 +45,24 @@ public class WitnessUpdateActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    Assert.notNull(this.contract, "No contract!");
-    Assert.notNull(this.dbManager, "No dbManager!");
-    Assert.isTrue(this.contract.is(WitnessUpdateContract.class), "contract type error,expected type [WitnessUpdateContract],real type[" + contract.getClass() + "]");
-
-    final WitnessUpdateContract contract;
     try {
-      contract = this.contract.unpack(WitnessUpdateContract.class);
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+      Assert.notNull(this.contract, "No contract!");
+      Assert.notNull(this.dbManager, "No dbManager!");
+      Assert.isTrue(this.contract.is(WitnessUpdateContract.class), "Contract type error,expected type [WitnessUpdateContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(WitnessUpdateContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
+      Assert.isTrue(this.dbManager.getAccountStore().has(ownerAddress), "Account does not exist");
+      Assert.isTrue(TransactionUtil.validUrl(ctx.getUpdateUrl().toByteArray()), "Invalid url");
+      Assert.isTrue(this.dbManager.getWitnessStore().has(ownerAddress), "Witness does not exist");
+
+      return true;
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    var ownerAddress = contract.getOwnerAddress().toByteArray();
-    Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
-
-    Assert.isTrue(this.dbManager.getAccountStore().has(ownerAddress), "account does not exist");
-
-    Assert.isTrue(TransactionUtil.validUrl(contract.getUpdateUrl().toByteArray()), "Invalid url");
-
-    Assert.isTrue(this.dbManager.getWitnessStore().has(ownerAddress), "Witness does not exist");
-
-    return true;
   }
 
   @Override

@@ -30,9 +30,8 @@ public class WitnessCreateActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      val witnessCreateContract = this.contract.unpack(WitnessCreateContract.class);
-
-      val witnessCapsule = new WitnessCapsule(witnessCreateContract.getOwnerAddress(), 0, witnessCreateContract.getUrl().toStringUtf8());
+      val ctx = this.contract.unpack(WitnessCreateContract.class);
+      val witnessCapsule = new WitnessCapsule(ctx.getOwnerAddress(), 0, ctx.getUrl().toStringUtf8());
 
       logger.debug("createWitness, address[{}]", witnessCapsule.createReadableString());
       this.dbManager.getWitnessStore().put(witnessCapsule.createDbKey(), witnessCapsule);
@@ -43,7 +42,7 @@ public class WitnessCreateActuator extends AbstractActuator {
       }
       this.dbManager.getAccountStore().put(accountCapsule.createDbKey(), accountCapsule);
       dbManager.getDynamicPropertiesStore().addTotalCreateWitnessCost(fee);
-      chargeFee(witnessCreateContract.getOwnerAddress().toByteArray(), fee);
+      chargeFee(ctx.getOwnerAddress().toByteArray(), fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
@@ -55,37 +54,34 @@ public class WitnessCreateActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    Assert.notNull(contract, "No contract!");
-    Assert.notNull(dbManager, "No dbManager!");
-    Assert.isTrue(this.contract.is(WitnessCreateContract.class), "contract type error,expected type [WitnessCreateContract],real type[" + contract.getClass() + "]");
-
-    final WitnessCreateContract contract;
     try {
-      contract = this.contract.unpack(WitnessCreateContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(this.contract.is(WitnessCreateContract.class), "Contract type error,expected type [WitnessCreateContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(WitnessCreateContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
+
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
+      Assert.isTrue(TransactionUtil.validUrl(ctx.getUrl().toByteArray()), "Invalid url");
+
+      var accountCapsule = this.dbManager.getAccountStore().get(ownerAddress);
+
+      Assert.notNull(accountCapsule, "Account[" + readableOwnerAddress + "] not exists");
+      /* todo later
+      if (ArrayUtils.isEmpty(accountCapsule.getAccountName().toByteArray())) {
+        throw new ContractValidateException("account name not set");
+      } */
+
+      Assert.isTrue(!this.dbManager.getWitnessStore().has(ownerAddress), "Witness[" + readableOwnerAddress + "] has existed");
+      Assert.isTrue(accountCapsule.getBalance() >= calcFee(), "Balance < AccountUpgradeCost");
+
+      return true;
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    var ownerAddress = contract.getOwnerAddress().toByteArray();
-    var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
-
-    Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
-
-    Assert.isTrue(TransactionUtil.validUrl(contract.getUrl().toByteArray()), "Invalid url");
-
-    var accountCapsule = this.dbManager.getAccountStore().get(ownerAddress);
-
-    Assert.notNull(accountCapsule, "account[" + readableOwnerAddress + "] not exists");
-    /* todo later
-    if (ArrayUtils.isEmpty(accountCapsule.getAccountName().toByteArray())) {
-      throw new ContractValidateException("account name not set");
-    } */
-
-    Assert.isTrue(!this.dbManager.getWitnessStore().has(ownerAddress), "Witness[" + readableOwnerAddress + "] has existed");
-
-    Assert.isTrue(accountCapsule.getBalance() >= calcFee(), "balance < AccountUpgradeCost");
-
-    return true;
   }
 
   @Override

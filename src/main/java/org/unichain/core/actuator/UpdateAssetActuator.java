@@ -30,20 +30,18 @@ public class UpdateAssetActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      val updateAssetContract = this.contract.unpack(UpdateAssetContract.class);
-      var ownerAddress = updateAssetContract.getOwnerAddress().toByteArray();
-      var newLimit = updateAssetContract.getNewLimit();
-      var newPublicLimit = updateAssetContract.getNewPublicLimit();
-
-      var newUrl = updateAssetContract.getUrl();
-      var newDescription = updateAssetContract.getDescription();
-
-      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      val ctx = this.contract.unpack(UpdateAssetContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var newLimit = ctx.getNewLimit();
+      var newPublicLimit = ctx.getNewPublicLimit();
+      var newUrl = ctx.getUrl();
+      var newDescription = ctx.getDescription();
+      var capsule = dbManager.getAccountStore().get(ownerAddress);
 
       AssetIssueCapsule assetIssueCapsule, assetIssueCapsuleV2;
 
       var assetIssueStoreV2 = dbManager.getAssetIssueV2Store();
-      assetIssueCapsuleV2 = assetIssueStoreV2.get(accountCapsule.getAssetIssuedID().toByteArray());
+      assetIssueCapsuleV2 = assetIssueStoreV2.get(capsule.getAssetIssuedID().toByteArray());
       assetIssueCapsuleV2.setFreeAssetNetLimit(newLimit);
       assetIssueCapsuleV2.setPublicFreeAssetNetLimit(newPublicLimit);
       assetIssueCapsuleV2.setUrl(newUrl);
@@ -51,7 +49,7 @@ public class UpdateAssetActuator extends AbstractActuator {
 
       if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
         var assetIssueStore = dbManager.getAssetIssueStore();
-        assetIssueCapsule = assetIssueStore.get(accountCapsule.getAssetIssuedName().toByteArray());
+        assetIssueCapsule = assetIssueStore.get(capsule.getAssetIssuedName().toByteArray());
         assetIssueCapsule.setFreeAssetNetLimit(newLimit);
         assetIssueCapsule.setPublicFreeAssetNetLimit(newPublicLimit);
         assetIssueCapsule.setUrl(newUrl);
@@ -75,49 +73,46 @@ public class UpdateAssetActuator extends AbstractActuator {
 
   @Override
   public boolean validate() throws ContractValidateException {
-    Assert.notNull(contract, "No contract!");
-    Assert.notNull(dbManager, "No dbManager!");
-    Assert.isTrue(this.contract.is(UpdateAssetContract.class), "contract type error,expected type [UpdateAssetContract],real type[" + contract.getClass() + "]");
-
-    final UpdateAssetContract updateAssetContract;
     try {
-      updateAssetContract = this.contract.unpack(UpdateAssetContract.class);
-    } catch (InvalidProtocolBufferException e) {
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(this.contract.is(UpdateAssetContract.class), "Contract type error,expected type [UpdateAssetContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(UpdateAssetContract.class);
+      var newLimit = ctx.getNewLimit();
+      var newPublicLimit = ctx.getNewPublicLimit();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var newUrl = ctx.getUrl();
+      var newDescription = ctx.getDescription();
+
+      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
+
+      var account = dbManager.getAccountStore().get(ownerAddress);
+      Assert.notNull(account, "Account has not existed");
+
+      if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
+        Assert.isTrue(!account.getAssetIssuedName().isEmpty(), "Account has not issue any asset");
+        Assert.notNull(dbManager.getAssetIssueStore().get(account.getAssetIssuedName().toByteArray()), "Asset not exists in AssetIssueStore");
+      } else {
+        Assert.isTrue(!account.getAssetIssuedID().isEmpty(), "Account has not issue any asset");
+        Assert.notNull(dbManager.getAssetIssueV2Store().get(account.getAssetIssuedID().toByteArray()), "Asset not exists  in AssetIssueV2Store");
+      }
+
+      Assert.isTrue(TransactionUtil.validUrl(newUrl.toByteArray()), "Invalid url");
+      Assert.isTrue(TransactionUtil.validAssetDescription(newDescription.toByteArray()), "Invalid description");
+
+      var freeAssetNetLimit = newLimit < 0 || newLimit >= dbManager.getDynamicPropertiesStore().getOneDayNetLimit();
+      Assert.isTrue(!freeAssetNetLimit, "Invalid FreeAssetNetLimit");
+
+      var publicFreeAssetNetLimit = newPublicLimit < 0 || newPublicLimit >=
+              dbManager.getDynamicPropertiesStore().getOneDayNetLimit();
+      Assert.isTrue(!publicFreeAssetNetLimit, "Invalid PublicFreeAssetNetLimit");
+
+      return true;
+    } catch (Exception e) {
       logger.debug(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
-
-    var newLimit = updateAssetContract.getNewLimit();
-    var newPublicLimit = updateAssetContract.getNewPublicLimit();
-    var ownerAddress = updateAssetContract.getOwnerAddress().toByteArray();
-    var newUrl = updateAssetContract.getUrl();
-    var newDescription = updateAssetContract.getDescription();
-
-    Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-
-    var account = dbManager.getAccountStore().get(ownerAddress);
-    Assert.notNull(account, "Account has not existed");
-
-    if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
-      Assert.isTrue(!account.getAssetIssuedName().isEmpty(), "Account has not issue any asset");
-      Assert.notNull(dbManager.getAssetIssueStore().get(account.getAssetIssuedName().toByteArray()), "Asset not exists in AssetIssueStore");
-    } else {
-      Assert.isTrue(!account.getAssetIssuedID().isEmpty(), "Account has not issue any asset");
-      Assert.notNull(dbManager.getAssetIssueV2Store().get(account.getAssetIssuedID().toByteArray()), "Asset not exists  in AssetIssueV2Store");
-    }
-
-    Assert.isTrue(TransactionUtil.validUrl(newUrl.toByteArray()), "Invalid url");
-
-    Assert.isTrue(TransactionUtil.validAssetDescription(newDescription.toByteArray()), "Invalid description");
-
-    var freeAssetNetLimit = newLimit < 0 || newLimit >= dbManager.getDynamicPropertiesStore().getOneDayNetLimit();
-    Assert.isTrue(!freeAssetNetLimit, "Invalid FreeAssetNetLimit");
-
-    var publicFreeAssetNetLimit = newPublicLimit < 0 || newPublicLimit >=
-            dbManager.getDynamicPropertiesStore().getOneDayNetLimit();
-    Assert.isTrue(!publicFreeAssetNetLimit, "Invalid PublicFreeAssetNetLimit");
-
-    return true;
   }
 
   @Override

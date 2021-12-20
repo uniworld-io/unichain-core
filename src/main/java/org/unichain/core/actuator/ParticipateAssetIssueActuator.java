@@ -89,13 +89,13 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(this.contract.is(ParticipateAssetIssueContract.class), "Contract type error,expected type [ParticipateAssetIssueContract],real type[" + contract.getClass() + "]");
-      val participateAssetIssueContract = this.contract.unpack(ParticipateAssetIssueContract.class);
+      val ctx = this.contract.unpack(ParticipateAssetIssueContract.class);
 
       //Parameters check
-      var ownerAddress = participateAssetIssueContract.getOwnerAddress().toByteArray();
-      var toAddress = participateAssetIssueContract.getToAddress().toByteArray();
-      var assetName = participateAssetIssueContract.getAssetName().toByteArray();
-      var amount = participateAssetIssueContract.getAmount();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var toAddress = ctx.getToAddress().toByteArray();
+      var assetName = ctx.getAssetName().toByteArray();
+      var amount = ctx.getAmount();
 
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
@@ -137,7 +137,6 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
         logger.debug(e.getMessage(), e);
         throw new ContractValidateException(e.getMessage());
       }
-
       return true;
     } catch (Exception e) {
       logger.error(e.getMessage(), e);

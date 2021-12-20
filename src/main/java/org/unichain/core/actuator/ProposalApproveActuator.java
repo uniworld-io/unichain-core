@@ -36,12 +36,12 @@ public class ProposalApproveActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      val proposalApproveContract = this.contract.unpack(ProposalApproveContract.class);
-      var ownerAddress = proposalApproveContract.getOwnerAddress().toByteArray();
-      var proposalCapsule = (Objects.isNull(getDeposit())) ? dbManager.getProposalStore().get(ByteArray.fromLong(proposalApproveContract.getProposalId()))
-                  : getDeposit().getProposalCapsule(ByteArray.fromLong(proposalApproveContract.getProposalId()));
-      var committeeAddress = proposalApproveContract.getOwnerAddress();
-      if (proposalApproveContract.getIsAddApproval()) {
+      val ctx = this.contract.unpack(ProposalApproveContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var proposalCapsule = (Objects.isNull(getDeposit())) ? dbManager.getProposalStore().get(ByteArray.fromLong(ctx.getProposalId()))
+                  : getDeposit().getProposalCapsule(ByteArray.fromLong(ctx.getProposalId()));
+      var committeeAddress = ctx.getOwnerAddress();
+      if (ctx.getIsAddApproval()) {
         proposalCapsule.addApproval(committeeAddress);
       } else {
         proposalCapsule.removeApproval(committeeAddress);
@@ -55,10 +55,8 @@ public class ProposalApproveActuator extends AbstractActuator {
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (ItemNotFoundException
-        | InvalidProtocolBufferException
-        | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (ItemNotFoundException | InvalidProtocolBufferException | BalanceInsufficientException e) {
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -69,12 +67,12 @@ public class ProposalApproveActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
 
-      var dbManagerCheck = dbManager == null && (getDeposit() == null || getDeposit().getDbManager() == null);
+      var dbManagerCheck = (dbManager == null) && (getDeposit() == null || getDeposit().getDbManager() == null);
       Assert.isTrue(!dbManagerCheck, "No dbManager!");
-      Assert.isTrue(this.contract.is(ProposalApproveContract.class), "contract type error,expected type [ProposalApproveContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(this.contract.is(ProposalApproveContract.class), "Contract type error,expected type [ProposalApproveContract],real type[" + contract.getClass() + "]");
 
-      val contract = this.contract.unpack(ProposalApproveContract.class);
-      var ownerAddress = contract.getOwnerAddress().toByteArray();
+      val ctx = this.contract.unpack(ProposalApproveContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid address");
 
@@ -92,29 +90,30 @@ public class ProposalApproveActuator extends AbstractActuator {
 
       var latestProposalNum = Objects.isNull(getDeposit()) ? dbManager.getDynamicPropertiesStore().getLatestProposalNum()
               : getDeposit().getLatestProposalNum();
-      Assert.isTrue(contract.getProposalId() <= latestProposalNum, PROPOSAL_EXCEPTION_STR + contract.getProposalId() + NOT_EXIST_STR);
+      Assert.isTrue(ctx.getProposalId() <= latestProposalNum, PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + NOT_EXIST_STR);
 
       var now = dbManager.getHeadBlockTimeStamp();
       ProposalCapsule proposalCapsule;
       try {
         proposalCapsule = Objects.isNull(getDeposit()) ? dbManager.getProposalStore().
-            get(ByteArray.fromLong(contract.getProposalId())) :
-            getDeposit().getProposalCapsule(ByteArray.fromLong(contract.getProposalId()));
+            get(ByteArray.fromLong(ctx.getProposalId())) :
+            getDeposit().getProposalCapsule(ByteArray.fromLong(ctx.getProposalId()));
       } catch (ItemNotFoundException ex) {
-        throw new ContractValidateException(PROPOSAL_EXCEPTION_STR + contract.getProposalId() + NOT_EXIST_STR);
+        throw new ContractValidateException(PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + NOT_EXIST_STR);
       }
 
-      Assert.isTrue(now < proposalCapsule.getExpirationTime(), PROPOSAL_EXCEPTION_STR + contract.getProposalId() + "] expired");
-      Assert.isTrue(proposalCapsule.getState() != State.CANCELED, PROPOSAL_EXCEPTION_STR + contract.getProposalId() + "] canceled");
+      Assert.isTrue(now < proposalCapsule.getExpirationTime(), PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + "] expired");
+      Assert.isTrue(proposalCapsule.getState() != State.CANCELED, PROPOSAL_EXCEPTION_STR + ctx.getProposalId() + "] canceled");
 
-      if (!contract.getIsAddApproval()) {
-        Assert.isTrue(proposalCapsule.getApprovals().contains(contract.getOwnerAddress()), WITNESS_EXCEPTION_STR + readableOwnerAddress + "]has not approved proposal[" + contract.getProposalId() + "] before");
+      if (!ctx.getIsAddApproval()) {
+        Assert.isTrue(proposalCapsule.getApprovals().contains(ctx.getOwnerAddress()), WITNESS_EXCEPTION_STR + readableOwnerAddress + "]has not approved proposal[" + ctx.getProposalId() + "] before");
       } else {
-        Assert.isTrue(!proposalCapsule.getApprovals().contains(contract.getOwnerAddress()), WITNESS_EXCEPTION_STR + readableOwnerAddress + "]has approved proposal[" + contract.getProposalId() + "] before");
+        Assert.isTrue(!proposalCapsule.getApprovals().contains(ctx.getOwnerAddress()), WITNESS_EXCEPTION_STR + readableOwnerAddress + "]has approved proposal[" + ctx.getProposalId() + "] before");
       }
 
       return true;
-    } catch (InvalidProtocolBufferException e) {
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

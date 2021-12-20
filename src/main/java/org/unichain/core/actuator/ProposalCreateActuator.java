@@ -36,15 +36,15 @@ public class ProposalCreateActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      val proposalCreateContract = this.contract.unpack(ProposalCreateContract.class);
-      var ownerAddress = proposalCreateContract.getOwnerAddress().toByteArray();
+      val ctx = this.contract.unpack(ProposalCreateContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var id = (Objects.isNull(getDeposit())) ?
           dbManager.getDynamicPropertiesStore().getLatestProposalNum() + 1 :
           getDeposit().getLatestProposalNum() + 1;
 
-      var proposalCapsule = new ProposalCapsule(proposalCreateContract.getOwnerAddress(), id);
+      var proposalCapsule = new ProposalCapsule(ctx.getOwnerAddress(), id);
 
-      proposalCapsule.setParameters(proposalCreateContract.getParametersMap());
+      proposalCapsule.setParameters(ctx.getParametersMap());
 
       var now = dbManager.getHeadBlockTimeStamp();
       var maintenanceTimeInterval = (Objects.isNull(getDeposit())) ?
@@ -71,7 +71,7 @@ public class ProposalCreateActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -82,7 +82,7 @@ public class ProposalCreateActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
 
-      var dbManagerCheck = dbManager == null && (deposit == null || deposit.getDbManager() == null);
+      var dbManagerCheck = (dbManager == null) && (deposit == null || deposit.getDbManager() == null);
       Assert.isTrue(!dbManagerCheck, "No dbManager!");
       Assert.isTrue(this.contract.is(ProposalCreateContract.class), "contract type error,expected type [ProposalCreateContract],real type[" + contract.getClass() + "]");
 
@@ -110,7 +110,8 @@ public class ProposalCreateActuator extends AbstractActuator {
       }
 
       return true;
-    } catch (InvalidProtocolBufferException e) {
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

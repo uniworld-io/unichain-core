@@ -56,17 +56,20 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
         var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
 
         TokenPoolCapsule tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
+        var updateCriticalParams = false;
 
         if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
-          tokenCap.setFee(ctx.getAmount());
+            tokenCap.setFee(ctx.getAmount());
+            updateCriticalParams = true;
         }
 
         if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
-          tokenCap.setExtraFeeRate(ctx.getExtraFeeRate());
+            tokenCap.setExtraFeeRate(ctx.getExtraFeeRate());
+            updateCriticalParams = true;
         }
 
         if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_LOT)) {
-          tokenCap.setLot(ctx.getLot());
+            tokenCap.setLot(ctx.getLot());
         }
 
         if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_URL)) {
@@ -84,6 +87,7 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
             var ownerAccount = dbManager.getAccountStore().get(ownerAddress);
             ownerAccount.addToken(tokenKey, totalSupplyDiff);
             dbManager.getAccountStore().put(ownerAddress, ownerAccount);
+            updateCriticalParams = true;
         }
 
         if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_POOL)) {
@@ -97,11 +101,16 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
 
         if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
             tokenCap.setExchUnwNum(ctx.getExchUnxNum());
+            updateCriticalParams = true;
         }
 
         if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
             tokenCap.setExchTokenNum(ctx.getExchNum());
+            updateCriticalParams = true;
         }
+
+        if(updateCriticalParams)
+            tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
 
         dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
 

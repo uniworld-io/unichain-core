@@ -47,16 +47,15 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      val participateAssetIssueContract = contract.unpack(Contract.ParticipateAssetIssueContract.class);
-      var cost = participateAssetIssueContract.getAmount();
-
+      val ctx = contract.unpack(Contract.ParticipateAssetIssueContract.class);
+      var cost = ctx.getAmount();
       //subtract from owner address
-      var ownerAddress = participateAssetIssueContract.getOwnerAddress().toByteArray();
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var ownerAccount = this.dbManager.getAccountStore().get(ownerAddress);
       var balance = Math.subtractExact(ownerAccount.getBalance(), cost);
       balance = Math.subtractExact(balance, fee);
       ownerAccount.setBalance(balance);
-      var key = participateAssetIssueContract.getAssetName().toByteArray();
+      var key = ctx.getAssetName().toByteArray();
 
       //calculate the exchange amount
       var assetIssueCapsule = this.dbManager.getAssetIssueStoreFinal().get(key);
@@ -66,7 +65,7 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
       ownerAccount.addAssetAmountV2(key, exchangeAmount, dbManager);
 
       //add to to_address
-      var toAddress = participateAssetIssueContract.getToAddress().toByteArray();
+      var toAddress = ctx.getToAddress().toByteArray();
       var toAccount = this.dbManager.getAccountStore().get(toAddress);
       toAccount.setBalance(Math.addExact(toAccount.getBalance(), cost));
       Assert.isTrue(toAccount.reduceAssetAmountV2(key, exchangeAmount, dbManager), "reduceAssetAmount failed !");
@@ -78,7 +77,7 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
       ret.setStatus(fee, Protocol.Transaction.Result.code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException e) {
-      logger.debug(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -89,7 +88,7 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(this.contract.is(ParticipateAssetIssueContract.class), "contract type error,expected type [ParticipateAssetIssueContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(this.contract.is(ParticipateAssetIssueContract.class), "Contract type error,expected type [ParticipateAssetIssueContract],real type[" + contract.getClass() + "]");
       val participateAssetIssueContract = this.contract.unpack(ParticipateAssetIssueContract.class);
 
       //Parameters check
@@ -140,8 +139,8 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
       }
 
       return true;
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

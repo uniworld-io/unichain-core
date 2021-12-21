@@ -76,6 +76,7 @@ public class TokenContributePoolFeeActuatorV3 extends AbstractActuator {
           var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
           var contributeAmount = ctx.getAmount();
           var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
+          tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
           Assert.notNull(tokenPool, "TokenName not exist: " + ctx.getTokenName());
 
           Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));

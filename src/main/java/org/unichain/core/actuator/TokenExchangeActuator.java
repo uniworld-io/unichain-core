@@ -71,7 +71,8 @@ public class TokenExchangeActuator extends AbstractActuator {
 
       accountStore.put(ownerAddress, ownerAccount);
       accountStore.put(tokenOwnerAddress, tokenOwnerAcc);
-
+      tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      tokenPoolStore.put(tokenKey, tokenPool);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;

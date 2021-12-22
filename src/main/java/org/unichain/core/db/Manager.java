@@ -661,8 +661,8 @@ public class Manager {
     this.getAccountStore().put(account.createDbKey(), account);
   }
 
-  void validateTxAgainBlockVersion(TransactionCapsule unx, BlockCapsule blockCapsule) throws ContractValidateException{
-    val blockVersion = findBlockVersion(blockCapsule);
+  void validateTxAgainBlockVersion(TransactionCapsule unx, BlockCapsule block) throws ContractValidateException{
+    val blockVersion = findBlockVersion(block);
     var txs = unx.getInstance().getRawData().getContractList();
     for(var tx : txs){
         if(blockVersion < TransactionCapsule.getMinSupportedBlockVersion(tx.getType()))
@@ -759,8 +759,8 @@ public class Manager {
     return true;
   }
 
-  public void consumeMultiSignFee(TransactionCapsule unx, TransactionTrace trace, BlockCapsule blockCapsule) throws AccountResourceInsufficientException, ContractExeException {
-    val blockVersion = findBlockVersion(blockCapsule);
+  public void consumeMultiSignFee(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws AccountResourceInsufficientException, ContractExeException {
+    val blockVersion = findBlockVersion(block);
     switch (blockVersion){
       case BLOCK_VERSION:
         consumeMultiSignFeeV1(unx, trace);
@@ -834,8 +834,8 @@ public class Manager {
     }
   }
 
-  public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule blockCapsule) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    int blockVersion = findBlockVersion(blockCapsule);
+  public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
+    int blockVersion = findBlockVersion(block);
     switch (blockVersion){
       case BLOCK_VERSION:
         (new BandwidthProcessor(this)).consume(unx, trace);
@@ -1248,7 +1248,7 @@ public class Manager {
   /**
    * Process transaction.
    */
-    public TransactionInfo processTransaction(final TransactionCapsule txCap, final BlockCapsule blockCap)
+    public TransactionInfo processTransaction(final TransactionCapsule txCap, final BlockCapsule block)
           throws ValidateSignatureException, ContractValidateException, ContractExeException,
                   AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException,
                   TooBigTransactionResultException, DupTransactionException, TaposException, ReceiptCheckErrException,
@@ -1257,7 +1257,7 @@ public class Manager {
       return null;
     }
 
-    validateTxAgainBlockVersion(txCap, blockCap);
+    validateTxAgainBlockVersion(txCap, block);
     validateTapos(txCap);
     validateCommon(txCap);
 
@@ -1274,8 +1274,8 @@ public class Manager {
     TransactionTrace trace = new TransactionTrace(txCap, this);
     txCap.setUnxTrace(trace);
 
-    consumeBandwidth(txCap, trace, blockCap);
-    consumeMultiSignFee(txCap, trace, blockCap);
+    consumeBandwidth(txCap, trace, block);
+    consumeMultiSignFee(txCap, trace, block);
 
     VMConfig.initVmHardFork();
     VMConfig.initAllowMultiSign(dynamicPropertiesStore.getAllowMultiSign());
@@ -1283,7 +1283,7 @@ public class Manager {
     VMConfig.initAllowTvmConstantinople(dynamicPropertiesStore.getAllowTvmConstantinople());
     VMConfig.initAllowTvmSolidity059(dynamicPropertiesStore.getAllowUvmSolidity059());
 
-    trace.init(blockCap, findBlockVersion(blockCap), eventPluginLoaded);
+    trace.init(block, findBlockVersion(block), eventPluginLoaded);
     trace.checkIsConstant();
 
     /**
@@ -1292,13 +1292,13 @@ public class Manager {
      */
     trace.exec();
 
-    if (Objects.nonNull(blockCap)) {
+    if (Objects.nonNull(block)) {
       trace.setResult();
-      if (!blockCap.getInstance().getBlockHeader().getWitnessSignature().isEmpty()) {
+      if (!block.getInstance().getBlockHeader().getWitnessSignature().isEmpty()) {
         if (trace.checkNeedRetry()) {
           String txId = Hex.toHexString(txCap.getTransactionId().getBytes());
           logger.info("Retry for tx id: {}", txId);
-          trace.init(blockCap, findBlockVersion(blockCap), eventPluginLoaded);
+          trace.init(block, findBlockVersion(block), eventPluginLoaded);
           trace.checkIsConstant();
           trace.exec();
           trace.setResult();
@@ -1312,9 +1312,9 @@ public class Manager {
      * + charge energy fee with smart contract call or deploy
      * + with token transfer, dont use energy so don't charge fee
      */
-    trace.finalization(findBlockVersion(blockCap));
+    trace.finalization(findBlockVersion(block));
 
-    if (Objects.nonNull(blockCap) && getDynamicPropertiesStore().supportVM()) {
+    if (Objects.nonNull(block) && getDynamicPropertiesStore().supportVM()) {
       txCap.setResult(trace.getRuntime());
     }
     transactionStore.put(txCap.getTransactionId().getBytes(), txCap);
@@ -1322,7 +1322,7 @@ public class Manager {
     Optional.ofNullable(transactionCache)
           .ifPresent(t -> t.put(txCap.getTransactionId().getBytes(), new BytesCapsule(ByteArray.fromLong(txCap.getBlockNum()))));
 
-    TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, blockCap, trace);
+    TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, block, trace);
 
     postContractTrigger(trace, false);
     Contract contract = txCap.getInstance().getRawData().getContract(0);

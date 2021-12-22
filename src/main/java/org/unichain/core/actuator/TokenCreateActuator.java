@@ -51,6 +51,7 @@ public class TokenCreateActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(CreateTokenContract.class);
+      logger.info("TokenCreateActuator {}", ctx);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var capsule = new TokenPoolCapsule(ctx);
       if(!ctx.hasField(TOKEN_CREATE_FIELD_START_TIME))

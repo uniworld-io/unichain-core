@@ -334,7 +334,7 @@ public class Util {
         }
         contracts.add(jsonContract);
       } catch (InvalidProtocolBufferException e) {
-        logger.debug("InvalidProtocolBufferException: {}", e.getMessage());
+        logger.error(e.getMessage(), e);
       }
     });
 
@@ -584,7 +584,7 @@ public class Util {
           contracts.add(contract);
         }
       } catch (ParseException e) {
-        logger.debug("ParseException: {}", e.getMessage());
+        logger.error("ParseException: {}", e.getMessage(), e);
       }
     }
     rawData.put("contract", contracts);
@@ -594,7 +594,7 @@ public class Util {
       JsonFormat.merge(jsonTransaction.toJSONString(), transactionBuilder, selfType);
       return transactionBuilder.build();
     } catch (ParseException e) {
-      logger.debug("ParseException: {}", e.getMessage());
+      logger.error("ParseException: {}", e.getMessage(), e);
       return null;
     }
   }

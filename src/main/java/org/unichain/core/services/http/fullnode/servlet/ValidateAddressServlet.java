@@ -76,7 +76,7 @@ public class ValidateAddressServlet extends HttpServlet {
       JSONObject jsonAddress = JSON.parseObject(input);
       response.getWriter().println(validAddress(jsonAddress.getString("address")));
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error(e.getMessage(), e);
     }
   }
 }

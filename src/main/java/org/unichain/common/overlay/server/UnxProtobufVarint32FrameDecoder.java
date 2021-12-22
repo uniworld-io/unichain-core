@@ -28,8 +28,7 @@ public class UnxProtobufVarint32FrameDecoder extends ByteToMessageDecoder {
     int preIndex = in.readerIndex();
     int length = readRawVarint32(in);
     if (length >= maxMsgLength) {
-      logger.error("recv a big msg, host : {}, msg length is : {}", ctx.channel().remoteAddress(),
-          length);
+      logger.error("Recv a big msg, host : {}, msg length is : {}", ctx.channel().remoteAddress(), length);
       in.clear();
       channel.close();
       return;

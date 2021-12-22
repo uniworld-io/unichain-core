@@ -11,7 +11,6 @@ import org.unichain.protos.Protocol.Transaction.Contract;
 
 import java.util.List;
 
-import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION;
 import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION_2;
 
 @Slf4j(topic = "actuator")
@@ -46,24 +45,11 @@ public class ActuatorFactory {
       case TransferContract:
         return new TransferActuator(contract.getParameter(), manager);
       case FutureTransferContract:
-      {
-        switch (blockVersion){
-          case BLOCK_VERSION:
-          case BLOCK_VERSION_2:
-            return new TransferFutureActuator(contract.getParameter(), manager);
-          default:
-            return new TransferFutureActuatorV3(contract.getParameter(), manager);
-        }
-      }
-      case FutureWithdrawContract:{
-        switch (blockVersion){
-          case BLOCK_VERSION:
-          case BLOCK_VERSION_2:
-            return new WithdrawFutureActuator(contract.getParameter(), manager);
-          default:
-            return new WithdrawFutureActuatorV3(contract.getParameter(), manager);
-        }
-      }
+        return (blockVersion <= BLOCK_VERSION_2) ?
+                new TransferFutureActuator(contract.getParameter(), manager) : new TransferFutureActuatorV3(contract.getParameter(), manager);
+      case FutureWithdrawContract:
+        return (blockVersion <= BLOCK_VERSION_2) ?
+                new WithdrawFutureActuator(contract.getParameter(), manager) : new WithdrawFutureActuatorV3(contract.getParameter(), manager);
       case TransferAssetContract:
         return new TransferAssetActuator(contract.getParameter(), manager);
       case VoteAssetContract:
@@ -76,76 +62,31 @@ public class ActuatorFactory {
         return new CreateAccountActuator(contract.getParameter(), manager);
       case AssetIssueContract:
         return new AssetIssueActuator(contract.getParameter(), manager);
-      case CreateTokenContract:{
-        switch (blockVersion){
-          case BLOCK_VERSION:
-          case BLOCK_VERSION_2:
-            return new TokenCreateActuator(contract.getParameter(), manager);
-          default:
-            return new TokenCreateActuatorV3(contract.getParameter(), manager);
-        }
-      }
+      case CreateTokenContract:
+        return (blockVersion <= BLOCK_VERSION_2) ?
+                new TokenCreateActuator(contract.getParameter(), manager) : new TokenCreateActuatorV3(contract.getParameter(), manager);
       case ExchangeTokenContract:
         return new TokenExchangeActuator(contract.getParameter(), manager);
       case TransferTokenOwnerContract:
         return new TokenTransferOwnerActuator(contract.getParameter(), manager);
-      case ContributeTokenPoolFeeContract:{
-        switch (blockVersion){
-          case BLOCK_VERSION:
-          case BLOCK_VERSION_2:
-            return new TokenContributePoolFeeActuator(contract.getParameter(), manager);
-          default:
-            return new TokenContributePoolFeeActuatorV3(contract.getParameter(), manager);
-        }
-      }
+      case ContributeTokenPoolFeeContract:
+        return (blockVersion <= BLOCK_VERSION_2) ?
+                new TokenContributePoolFeeActuator(contract.getParameter(), manager) : new TokenContributePoolFeeActuatorV3(contract.getParameter(), manager);
       case UpdateTokenParamsContract:
-      {
-        switch (blockVersion){
-          case BLOCK_VERSION:
-          case BLOCK_VERSION_2:
-            return new TokenUpdateParamsActuator(contract.getParameter(), manager);
-          default:
-            return new TokenUpdateParamsActuatorV3(contract.getParameter(), manager);
-        }
-      }
+        return (blockVersion <= BLOCK_VERSION_2) ?
+                new TokenUpdateParamsActuator(contract.getParameter(), manager) : new TokenUpdateParamsActuatorV3(contract.getParameter(), manager);
       case MineTokenContract:
-      {
-        switch (blockVersion){
-          case BLOCK_VERSION:
-          case BLOCK_VERSION_2:
-            return new TokenMineActuator(contract.getParameter(), manager);
-          default:
-            return new TokenMineActuatorV3(contract.getParameter(), manager);
-        }
-      }
+        return (blockVersion <= BLOCK_VERSION_2) ?
+                new TokenMineActuator(contract.getParameter(), manager) : new TokenMineActuatorV3(contract.getParameter(), manager);
       case BurnTokenContract:
-      {
-        switch (blockVersion){
-          case BLOCK_VERSION:
-          case BLOCK_VERSION_2:
-            return new TokenBurnActuator(contract.getParameter(), manager);
-          default:
-            return new TokenBurnActuatorV3(contract.getParameter(), manager);
-        }
-      }
-      case TransferTokenContract: {
-        switch (blockVersion) {
-          case BLOCK_VERSION:
-          case BLOCK_VERSION_2:
-            return new TokenTransferActuator(contract.getParameter(), manager);
-          default:
-            return new TokenTransferActuatorV3(contract.getParameter(), manager);
-        }
-      }
-      case WithdrawFutureTokenContract:{
-        switch (blockVersion){
-          case BLOCK_VERSION:
-          case BLOCK_VERSION_2:
-            return new TokenWithdrawFutureActuator(contract.getParameter(), manager);
-          default:
-            return new TokenWithdrawFutureActuatorV3(contract.getParameter(), manager);
-        }
-      }
+        return (blockVersion <= BLOCK_VERSION_2) ?
+                new TokenBurnActuator(contract.getParameter(), manager) : new TokenBurnActuatorV3(contract.getParameter(), manager);
+      case TransferTokenContract:
+        return (blockVersion <= BLOCK_VERSION_2) ?
+                new TokenTransferActuator(contract.getParameter(), manager) : new TokenTransferActuatorV3(contract.getParameter(), manager);
+      case WithdrawFutureTokenContract:
+        return (blockVersion <= BLOCK_VERSION_2) ?
+                new TokenWithdrawFutureActuator(contract.getParameter(), manager) : new TokenWithdrawFutureActuatorV3(contract.getParameter(), manager);
       case UnfreezeAssetContract:
         return new UnfreezeAssetActuator(contract.getParameter(), manager);
       case WitnessUpdateContract:

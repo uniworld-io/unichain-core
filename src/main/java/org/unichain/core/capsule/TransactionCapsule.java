@@ -948,7 +948,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case FutureWithdrawContract:
         return BLOCK_VERSION_2;
       default:
-        return BLOCK_VERSION;
+        return BLOCK_VERSION_1;
     }
   }
 }

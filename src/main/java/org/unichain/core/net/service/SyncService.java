@@ -90,7 +90,9 @@ public class SyncService {
     syncNext(peer);
   }
 
-  //@note build chain sync summary & send request sync of blocks to peer
+  /**
+   *  Build chain sync summary & send request sync of blocks to peer
+   */
   public void syncNext(PeerConnection peer) {
     try {
       if (peer.getSyncChainRequested() != null) {

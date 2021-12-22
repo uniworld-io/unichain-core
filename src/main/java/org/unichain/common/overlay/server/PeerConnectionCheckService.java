@@ -42,7 +42,7 @@ public class PeerConnectionCheckService {
 
   @PostConstruct
   public void check() {
-    logger.info("start the PeerConnectionCheckService");
+    logger.info("Start the PeerConnectionCheckService");
     scheduledExecutorService
         .scheduleWithFixedDelay(new CheckDataTransferTask(), 5, 5, TimeUnit.MINUTES);
     if (Args.getInstance().isOpenFullTcpDisconnect()) {
@@ -90,7 +90,7 @@ public class PeerConnectionCheckService {
     @Override
     public void run() {
       if (pool.getActivePeers().size() >= Args.getInstance().getNodeMaxActiveNodes()) {
-        logger.warn("connection pool is full");
+        logger.warn("Connection pool is full");
         List<PeerConnection> peerList = new ArrayList<>();
         for (PeerConnection peer : pool.getActivePeers()) {
           if (!peer.isTrustPeer() && !peer.getNodeStatistics().isPredefined()) {
@@ -103,8 +103,7 @@ public class PeerConnectionCheckService {
           peerList = CollectionUtils.truncateRandom(peerList, 2, 1);
         }
         for (PeerConnection peerConnection : peerList) {
-          logger.warn("connection pool is full, disconnect the peer : {}",
-              peerConnection.getInetAddress());
+          logger.warn("Connection pool is full, disconnect the peer : {}", peerConnection.getInetAddress());
           peerConnection.disconnect(ReasonCode.RESET);
         }
       }

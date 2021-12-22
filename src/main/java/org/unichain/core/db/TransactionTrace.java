@@ -29,7 +29,7 @@ import org.unichain.protos.Protocol.Transaction.Result.contractResult;
 import java.util.Objects;
 
 import static org.unichain.common.runtime.vm.program.InternalTransaction.UnxType.*;
-import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION;
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION_1;
 
 @Slf4j(topic = "TransactionTrace")
 public class TransactionTrace {
@@ -87,11 +87,11 @@ public class TransactionTrace {
     return this.unxType == UNW_CONTRACT_CALL_TYPE || this.unxType == UNW_CONTRACT_CREATION_TYPE;
   }
 
-  public void init(BlockCapsule blockCap, boolean eventPluginLoaded) {
+  public void init(BlockCapsule blockCap, int blockVersion, boolean eventPluginLoaded) {
     blockCapsule = blockCap;
     txStartTimeInMs = System.currentTimeMillis();
     DepositImpl deposit = DepositImpl.createRoot(dbManager);
-    runtime = new RuntimeImpl(this, blockCap, deposit, new ProgramInvokeFactoryImpl());
+    runtime = new RuntimeImpl(this, blockCap, blockVersion, deposit, new ProgramInvokeFactoryImpl());
     runtime.setEnableEventListener(eventPluginLoaded);
   }
 
@@ -148,7 +148,7 @@ public class TransactionTrace {
   public void finalization(int blockVersion) throws ContractExeException {
     try {
       switch (blockVersion){
-        case BLOCK_VERSION:
+        case BLOCK_VERSION_1:
           payEnergyV1();
           break;
         default:
@@ -162,7 +162,7 @@ public class TransactionTrace {
   }
 
   /**
-   * @note pay energy bill using v2 which directly charge fee from balance
+   * Pay energy bill using v2 which directly charge fee from balance
    */
   public void payEnergyV2() throws BalanceInsufficientException {
     byte[] originAccount;

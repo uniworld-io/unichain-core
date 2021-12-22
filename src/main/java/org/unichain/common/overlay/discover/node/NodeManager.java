@@ -66,7 +66,7 @@ public class NodeManager implements EventHandler {
       bootNodes.add(Node.instanceOf(boot));
     }
 
-    logger.info("homeNode : {}", homeNode);
+    logger.info("HomeNode : {}", homeNode);
 
     table = new NodeTable(homeNode);
 

@@ -31,7 +31,7 @@ public class UpdateBrokerageActuator extends AbstractActuator {
       val ctx = contract.unpack(UpdateBrokerageContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var brokerage = ctx.getBrokerage();
-      //@note review role of brokerage when charging fee
+      //review role of brokerage when charging fee
       dbManager.getDelegationStore().setBrokerage(ownerAddress, brokerage);
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);

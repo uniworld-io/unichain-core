@@ -42,7 +42,7 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
         val ctx = contract.unpack(UnfreezeBalanceContract.class);
         var ownerAddress = ctx.getOwnerAddress().toByteArray();
 
-        //@note withdraw reward
+        //withdraw reward
         dbManager.getDelegationService().withdrawReward(ownerAddress, getDeposit());
 
         var accountCapsule = dbManager.getAccountStore().get(ownerAddress);

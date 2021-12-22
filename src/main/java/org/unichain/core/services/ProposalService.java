@@ -269,7 +269,6 @@ public class ProposalService {
       }
 
       case HARD_FORK: {
-        logger.info("validating hardfork proposal --> {}", value);
         int valueInt = Long.valueOf(value).intValue();
         Assert.isTrue(valueInt >= 2 && valueInt <= Integer.MAX_VALUE, "hardfork version should greater than version 1 and not greater than MAX_INTEGER :" + Integer.MAX_VALUE);
         Assert.isTrue(Parameter.BLOCK_VERSION_SUPPORTED.contains(valueInt), "hardfork version not supported by software :" + valueInt);
@@ -277,20 +276,17 @@ public class ProposalService {
         break;
       }
       case MAX_FUTURE_TRANSFER_TIME_RANGE_UNW: {
-        logger.info("validating MAX_FUTURE_TRANSFER_TIME_RANGE_UNW proposal --> {}", value);
         Assert.isTrue(value > 0 && value <= MAX_FUTURE_TRANSFER_UNW_TIME_RANGE_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: "+ MAX_FUTURE_TRANSFER_UNW_TIME_RANGE_UPPER_BOUND);
         Assert.isTrue(manager.getDynamicPropertiesStore().getHardForkVersion() >= BLOCK_VERSION_2, "require at least block version: " + BLOCK_VERSION_2);
         break;
       }
       case MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN: {
-        logger.info("validating MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN proposal --> {}", value);
         Assert.isTrue(value > 0 && value <= MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: "+ MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_UPPER_BOUND);
         Assert.isTrue(manager.getDynamicPropertiesStore().getHardForkVersion() >= BLOCK_VERSION_2, "require at least block version: " + BLOCK_VERSION_2);
         break;
       }
 
       case TOKEN_UPDATE_FEE: {
-        logger.info("validating TOKEN_UPDATE_FEE proposal --> {}", value);
         if (value < 0 || value > LONG_VALUE) {
           throw new ContractValidateException(LONG_VALUE_ERROR);
         }
@@ -304,9 +300,6 @@ public class ProposalService {
     }
   }
 
-  /**
-   * @note process proposals
-   */
   public static boolean process(Manager manager, ProposalCapsule proposalCapsule) {
     Map<Long, Long> map = proposalCapsule.getInstance().getParametersMap();
     boolean find = true;
@@ -464,12 +457,11 @@ public class ProposalService {
           break;
         }
         /**
-         * @note:
          * - if some hard fork proposals created/approved in the same maintain time, they will be processed sequentially
          * - the last proposal will win.
          */
         case HARD_FORK: {
-          logger.info("saving hardfork proposal --> {}", entry.getValue());
+          logger.info("Saving hardfork proposal --> {}", entry.getValue());
           manager.getDynamicPropertiesStore().saveHardForkVersion(entry.getValue());
           break;
         }
@@ -479,12 +471,12 @@ public class ProposalService {
           break;
         }
         case MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN: {
-          logger.info("saving max future transfer time range token --> {}", entry.getValue());
+          logger.info("Saving max future transfer time range token --> {}", entry.getValue());
           manager.getDynamicPropertiesStore().saveMaxFutureTransferToken(entry.getValue());
           break;
         }
         case TOKEN_UPDATE_FEE: {
-          logger.info("saving token update fee --> {}", entry.getValue());
+          logger.info("Saving token update fee --> {}", entry.getValue());
           manager.getDynamicPropertiesStore().saveAssetUpdateFee(entry.getValue());
           break;
         }

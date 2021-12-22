@@ -36,14 +36,13 @@ public class CreateTokenServlet extends HttpServlet {
       var build = CreateTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
-      logger.info("createToken: {} --> {} ", Wallet.encode58Check(tokenCtx.getOwnerAddress().toByteArray()), tokenCtx);
       var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.CreateTokenContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
       try {
-        logger.error("createToken got error --> ", e);
+        logger.error(e.getMessage(), e);
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.error("IOException: {}", ioe.getMessage());

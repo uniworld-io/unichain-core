@@ -58,11 +58,11 @@ public class DefaultConfig {
       } else if (dbVersion == 2) {
         revokingDatabase = new SnapshotManager();
       } else {
-        throw new RuntimeException("db version is error.");
+        throw new RuntimeException("DB version is error.");
       }
       return revokingDatabase;
     } finally {
-      logger.info("key-value data source created.");
+      logger.info("Key-value data source created.");
     }
   }
 

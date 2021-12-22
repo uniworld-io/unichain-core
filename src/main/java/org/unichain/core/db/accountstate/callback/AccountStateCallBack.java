@@ -177,7 +177,7 @@ public class AccountStateCallBack {
       @Override
       public void doOnValue(byte[] nodeHash, Node node, byte[] key, byte[] value) {
         try {
-          logger.info("account info : {}", AccountStateEntity.parse(value));
+          logger.info("Account info : {}", AccountStateEntity.parse(value));
         } catch (Exception e) {
           logger.error("", e);
         }

@@ -11,7 +11,7 @@ public class Parameter {
    * @critical: all supported version add here
    */
   public static final Set<Integer> BLOCK_VERSION_SUPPORTED = new HashSet<>(Arrays.asList(
-          ChainConstant.BLOCK_VERSION,
+          ChainConstant.BLOCK_VERSION_1,
           ChainConstant.BLOCK_VERSION_2,
           ChainConstant.BLOCK_VERSION_3));
 
@@ -42,9 +42,9 @@ public class Parameter {
     public static final int MAX_FROZEN_NUMBER = 1;
 
     /**
-     * @note critical: all available block version must declare here
+     * Critical: all available block version must declare here
      */
-    public static final int BLOCK_VERSION = 1;
+    public static final int BLOCK_VERSION_1 = 1;
     public static final int BLOCK_VERSION_2 = 2;
     public static final int BLOCK_VERSION_3 = 3;
 

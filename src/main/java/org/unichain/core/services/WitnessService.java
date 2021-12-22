@@ -128,7 +128,7 @@ public class WitnessService implements Service {
             }
             this.blockProductionLoop();
           } catch (Throwable throwable) {
-            logger.error("unknown throwable happened in witness loop", throwable);
+            logger.error("Unknown throwable happened in witness loop", throwable);
           }
         }
       };
@@ -154,7 +154,7 @@ public class WitnessService implements Service {
    * Generate and broadcast blocks
    */
   private BlockProductionCondition tryProduceBlock() throws InterruptedException {
-    logger.info("try to produce block");
+    logger.info("Try to produce block");
     long now = DateTime.now().getMillis() + 50L;
     if (this.needSyncCheck) {
       long nexSlotTime = controller.getSlotTime(1);

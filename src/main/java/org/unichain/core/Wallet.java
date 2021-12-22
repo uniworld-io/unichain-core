@@ -378,7 +378,7 @@ public class Wallet {
             .filter(p -> !p.isNeedSyncFromUs() && !p.isNeedSyncFromPeer())
             .count();
 
-        //@note if active peer < min: don't
+        //if active peer < min: drop tx
         if (count < minEffectiveConnection) {
           String info = "effective connection:" + count + " lt minEffectiveConnection:" + minEffectiveConnection;
           logger.warn("Broadcast transaction {} failed, {}.", tx.getTransactionId(), info);

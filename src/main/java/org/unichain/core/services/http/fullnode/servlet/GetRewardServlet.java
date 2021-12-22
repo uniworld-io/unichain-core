@@ -34,7 +34,7 @@ public class GetRewardServlet extends HttpServlet {
       }
       response.getWriter().println("{\"reward\": " + value + "}");
     } catch (Exception e) {
-      logger.error("", e);
+      logger.error(e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {

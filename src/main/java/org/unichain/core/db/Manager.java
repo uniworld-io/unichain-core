@@ -1283,7 +1283,7 @@ public class Manager {
     VMConfig.initAllowTvmConstantinople(dynamicPropertiesStore.getAllowTvmConstantinople());
     VMConfig.initAllowTvmSolidity059(dynamicPropertiesStore.getAllowUvmSolidity059());
 
-    trace.init(blockCap, eventPluginLoaded);
+    trace.init(blockCap, findBlockVersion(blockCap), eventPluginLoaded);
     trace.checkIsConstant();
 
     /**
@@ -1298,7 +1298,7 @@ public class Manager {
         if (trace.checkNeedRetry()) {
           String txId = Hex.toHexString(txCap.getTransactionId().getBytes());
           logger.info("Retry for tx id: {}", txId);
-          trace.init(blockCap, eventPluginLoaded);
+          trace.init(blockCap, findBlockVersion(blockCap), eventPluginLoaded);
           trace.checkIsConstant();
           trace.exec();
           trace.setResult();

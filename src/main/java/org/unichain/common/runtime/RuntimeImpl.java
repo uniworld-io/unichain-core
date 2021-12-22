@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 import org.unichain.common.logsfilter.EventPluginLoader;
@@ -94,7 +95,7 @@ public class RuntimeImpl implements Runtime {
   /**
    * For blockCap's unx run
    */
-  public RuntimeImpl(TransactionTrace trace, BlockCapsule block, Deposit deposit, ProgramInvokeFactory programInvokeFactory) {
+  public RuntimeImpl(TransactionTrace trace, BlockCapsule block, int blockVersion, Deposit deposit, ProgramInvokeFactory programInvokeFactory) {
     this.trace = trace;
     this.unx = trace.getUnx().getInstance();
 
@@ -102,7 +103,10 @@ public class RuntimeImpl implements Runtime {
       this.blockCap = block;
       this.executorType = ExecutorType.ET_NORMAL_TYPE;
     } else {
-      this.blockCap = new BlockCapsule(Block.newBuilder().build());
+      //@fixme set block version
+      var headerRaw = Protocol.BlockHeader.raw.newBuilder().setVersion(blockVersion).build();
+      var header = Protocol.BlockHeader.newBuilder().setRawData(headerRaw).build();
+      this.blockCap = new BlockCapsule(Block.newBuilder().setBlockHeader(header).build());
       this.executorType = ExecutorType.ET_PRE_TYPE;
     }
     this.deposit = deposit;

@@ -87,11 +87,11 @@ public class TransactionTrace {
     return this.unxType == UNW_CONTRACT_CALL_TYPE || this.unxType == UNW_CONTRACT_CREATION_TYPE;
   }
 
-  public void init(BlockCapsule blockCap, boolean eventPluginLoaded) {
+  public void init(BlockCapsule blockCap, int blockVersion, boolean eventPluginLoaded) {
     blockCapsule = blockCap;
     txStartTimeInMs = System.currentTimeMillis();
     DepositImpl deposit = DepositImpl.createRoot(dbManager);
-    runtime = new RuntimeImpl(this, blockCap, deposit, new ProgramInvokeFactoryImpl());
+    runtime = new RuntimeImpl(this, blockCap, blockVersion, deposit, new ProgramInvokeFactoryImpl());
     runtime.setEnableEventListener(eventPluginLoaded);
   }
 

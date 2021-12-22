@@ -3,7 +3,6 @@ package org.unichain.core.actuator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.db.Manager;
@@ -12,7 +11,6 @@ import org.unichain.protos.Protocol.Transaction.Contract;
 
 import java.util.List;
 
-import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION;
 import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION_2;
 
 @Slf4j(topic = "actuator")

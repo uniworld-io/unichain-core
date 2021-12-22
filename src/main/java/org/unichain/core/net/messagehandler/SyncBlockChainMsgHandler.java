@@ -24,11 +24,11 @@ public class SyncBlockChainMsgHandler implements UnichainMsgHandler {
   @Autowired
   private UnichainNetDelegate unichainNetDelegate;
 
-  /*
-    @note
-    - got summary chain
-    - verify & send back actual lost blocks id on my main chain
-    - update sync status: remain, last block
+  /**
+   * Process message:
+  *     - got summary chain
+  *     - verify & send back actual lost blocks id on my main chain
+  *     - update sync status: remain, last block
    */
   @Override
   public void processMessage(PeerConnection peer, UnichainMessage msg) throws P2pException {

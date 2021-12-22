@@ -36,13 +36,12 @@ public class TransferTokenServlet extends HttpServlet {
       var build = TransferTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var transferCtx = build.build();
-      logger.info("transferToken --> {} --> {} : {}" , Wallet.encode58Check(transferCtx.getOwnerAddress().toByteArray()), Wallet.encode58Check(transferCtx.getToAddress().toByteArray()), transferCtx);
       var tx = wallet.createTransactionCapsule(transferCtx, ContractType.TransferTokenContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error(e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {

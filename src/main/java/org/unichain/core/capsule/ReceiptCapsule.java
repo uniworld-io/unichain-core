@@ -96,7 +96,7 @@ public class ReceiptCapsule {
   }
 
   /**
-   * @note: pay energy bill block version 2: directly charge from account's balance
+   * Pay energy bill block version 2: directly charge from account's balance
    */
   public void payEnergyBillV2(Manager manager, AccountCapsule origin, AccountCapsule caller, long sharedPercent) throws BalanceInsufficientException {
     if (receipt.getEnergyUsageTotal() <= 0) {
@@ -208,9 +208,9 @@ public class ReceiptCapsule {
   }
 
   /**
-   @note
-    - charge origin fee at most
-    - return actually usage
+   *  ChargeOriginUsage
+   *     - charge origin fee at most
+   *     - return actually usage
    */
   private long chargeOriginUsage(Manager manager, AccountCapsule origin, long usage) {
     long ginzaEnergyFactor = manager.loadEnergyGinzaFactor();

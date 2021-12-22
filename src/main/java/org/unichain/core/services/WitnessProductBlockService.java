@@ -105,8 +105,7 @@ public class WitnessProductBlockService {
         historyBlockCapsuleCache.put(block.getNum(), block);
       }
     } catch (Exception e) {
-      logger.error("valid witness same time product two block fail! blockNum: {}, blockHash: {}",
-          block.getNum(), block.getBlockId().toString(), e);
+      logger.error("Valid witness same time product two block fail! blockNum: {}, blockHash: {}", block.getNum(), block.getBlockId().toString(), e);
     }
   }
 

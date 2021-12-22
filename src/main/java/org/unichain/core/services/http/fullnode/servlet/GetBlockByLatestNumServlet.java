@@ -37,7 +37,7 @@ public class GetBlockByLatestNumServlet extends HttpServlet {
       }
       response.getWriter().println("{}");
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error(e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
@@ -63,7 +63,7 @@ public class GetBlockByLatestNumServlet extends HttpServlet {
       }
       response.getWriter().println("{}");
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error(e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {

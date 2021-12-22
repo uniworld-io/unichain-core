@@ -50,7 +50,7 @@ public class PeerServer {
       b.handler(new LoggingHandler());
       b.childHandler(unichainChannelInitializer);
 
-      // Start the client.
+      //Start the client.
       logger.info("TCP listener started, bind port {}", port);
 
       channelFuture = b.bind(port).sync();

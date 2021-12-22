@@ -324,8 +324,8 @@ public class Manager {
     if (CollectionUtils.isNotEmpty(blocks)) {
       return blocks.get(0);
     } else {
-      logger.info("Header block Not Found");
-      throw new HeaderNotFound("Header block Not Found");
+      logger.error("Header block fot found");
+      throw new HeaderNotFound("Header block not found");
     }
   }
 
@@ -378,9 +378,9 @@ public class Manager {
               TimeUnit.MILLISECONDS.sleep(50L);
             }
           } catch (Exception ex) {
-            logger.error("unknown exception happened in repush loop", ex);
+            logger.error("Unknown exception happened in repush loop", ex);
           } catch (Throwable throwable) {
-            logger.error("unknown throwable happened in repush loop", throwable);
+            logger.error("Unknown throwable happened in repush loop", throwable);
           } finally {
             if (tx != null) {
               getRepushTransactions().remove(tx);
@@ -401,9 +401,9 @@ public class Manager {
             logger.info(ex.getMessage());
             Thread.currentThread().interrupt();
           } catch (Exception ex) {
-            logger.error("unknown exception happened in process capsule loop", ex);
+            logger.error("Unknown exception happened in process capsule loop", ex);
           } catch (Throwable throwable) {
-            logger.error("unknown throwable happened in process capsule loop", throwable);
+            logger.error("Unknown throwable happened in process capsule loop", throwable);
           }
         }
       };
@@ -491,17 +491,17 @@ public class Manager {
     } else {
       if (this.hasBlocks()) {
         //block tree diverged > must reset current chain dbs
-        logger.error("genesis block modify, please delete database directory({}) and restart", Args.getInstance().getOutputDirectory());
+        logger.error("Genesis block modify, please delete database directory({}) and restart", Args.getInstance().getOutputDirectory());
         System.exit(1);
       } else {
         //empty node
-        logger.info("create genesis block");
+        logger.info("Create genesis block");
         Args.getInstance().setChainId(this.genesisBlock.getBlockId().toString());
 
         blockStore.put(this.genesisBlock.getBlockId().getBytes(), this.genesisBlock);
         this.blockIndexStore.put(this.genesisBlock.getBlockId());
 
-        logger.info("save block: " + this.genesisBlock);
+        logger.info("Save block: " + this.genesisBlock);
         // init DynamicPropertiesStore
         this.dynamicPropertiesStore.saveLatestBlockHeaderNumber(0);
         this.dynamicPropertiesStore.saveLatestBlockHeaderHash(this.genesisBlock.getBlockId().getByteString());
@@ -569,7 +569,7 @@ public class Manager {
   }
 
   public void initCacheTxs() {
-    logger.info("begin to init txs cache.");
+    logger.info("Begin to init txs cache.");
     int dbVersion = Args.getInstance().getStorage().getDbVersion();
     if (dbVersion != 2) {
       return;
@@ -594,8 +594,8 @@ public class Manager {
                 .map(bytes -> Maps.immutableEntry(bytes, Longs.toByteArray(blockNum)))
                 .forEach(e -> transactionCache.put(e.getKey(), new BytesCapsule(e.getValue())));
           } catch (ItemNotFoundException | BadItemException e) {
-            logger.info("init txs cache error.");
-            throw new IllegalStateException("init txs cache error.");
+            logger.info("Init txs cache error.");
+            throw new IllegalStateException("Init txs cache error.");
           }
         })));
 
@@ -762,7 +762,7 @@ public class Manager {
   public void consumeMultiSignFee(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws AccountResourceInsufficientException, ContractExeException {
     val blockVersion = findBlockVersion(block);
     switch (blockVersion){
-      case BLOCK_VERSION:
+      case BLOCK_VERSION_1:
         consumeMultiSignFeeV1(unx, trace);
         break;
       default:
@@ -835,19 +835,14 @@ public class Manager {
   }
 
   public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    int blockVersion = findBlockVersion(block);
-    switch (blockVersion){
-      case BLOCK_VERSION:
-        (new BandwidthProcessor(this)).consume(unx, trace);
-        break;
-      default:
-        (new BandwidthProcessorV2(this)).consume(unx, trace);
-        break;
-    }
+    if(findBlockVersion(block) <= BLOCK_VERSION_1)
+      (new BandwidthProcessor(this)).consume(unx, trace);
+    else
+      (new BandwidthProcessorV2(this)).consume(unx, trace);
   }
 
   /**
-   * @note when switch fork need erase blocks on fork branch.
+   * When switch fork need erase blocks on fork branch.
    */
   public synchronized void eraseBlock() {
     session.reset();
@@ -881,7 +876,7 @@ public class Manager {
   }
 
   /**
-    @note apply block
+    Apply block
     - apply block on main chain
     - if any error when process blocks (tx ..), then throw exception
     - index main chain block: block store & index
@@ -907,13 +902,13 @@ public class Manager {
   }
 
   /**
-    @note
-   - assume input is longer, valid branch
-   - then revert main branch
-   - apply fork branch
-   - if error occurred:
-     + revert fork chain
-     + remove all blocks on fork branch from khaos db
+   * Switch branch:
+   *    - assume input is longer, valid branch
+   *    - then revert main branch
+   *    - apply fork branch
+   *    - if error occurred:
+   *      + revert fork chain
+   *      + remove all blocks on fork branch from Khaos DB
    */
   private void switchFork(BlockCapsule newHead)
       throws ValidateSignatureException, ContractValidateException, ContractExeException,
@@ -1031,10 +1026,9 @@ public class Manager {
       }
 
       /**
-      @note
-        - put to KhaosDB, return higher block as head:
-        - if a block of forked chain come with invalid order, it will be rejected due to unlinked block
-        - khaos db make sure that it maintain valid block that build a tree having root is genesis block
+       *  - put to KhaosDB, return higher block as head:
+       *  - if a block of forked chain come with invalid order, it will be rejected due to unlinked block
+       *  - KhaosDB make sure that it maintain valid block that build a tree having root is genesis block
        */
       BlockCapsule newBlock = this.khaosDb.push(block);
 
@@ -1045,22 +1039,22 @@ public class Manager {
         }
       } else {
         /**
-          @note this means:
-          - if we got a forked, lower block: just put in khaos db, don't apply it > nice!
-          - if it's a forward block, just apply it
-          - if it's a longer, valid fork branch: switch to forked branch
+         *  This means:
+         *  - if we got a forked, lower block: just put in Khaos DB, don't apply it > nice!
+         *  - if it's a forward block, just apply it
+         *  - if it's a longer, valid fork branch: switch to forked branch
          */
         if (newBlock.getNum() <= getDynamicPropertiesStore().getLatestBlockHeaderNumber()) {
           return;
         }
 
         /**
-          @note switch fork:
-          - newBlock always the higher block. if incoming block is valid, lower, current head returned so no fork found
-          - else switch fork, also means:
-            + prefer higher blocks, mean prefer longer chain
-            + set head to new block, apply all blocks
-            + revert old branch effect using snapshot manager
+         *  Switch fork:
+         *           - newBlock always the higher block. if incoming block is valid, lower, current head returned so no fork found
+         *           - else switch fork, also means:
+         *             + prefer higher blocks, mean prefer longer chain
+         *             + set head to new block, apply all blocks
+         *             + revert old branch effect using snapshot manager
          */
         if (!newBlock.getParentHash().equals(getDynamicPropertiesStore().getLatestBlockHeaderHash())) {
           logger.warn("switch fork! new head num = {}, blockId = {}", newBlock.getNum(), newBlock.getBlockId());
@@ -1104,10 +1098,9 @@ public class Manager {
         }
 
         /**
-          @note
-          + advance new session to apply this block
-          + apply block to main chain
-          + commit to next stage
+         * - advance new session to apply this block
+         * - apply block to main chain
+         * - commit to next stage
          */
         try (ISession tmpSession = revokingStore.buildSession()) {
           applyBlock(newBlock);
@@ -1167,9 +1160,9 @@ public class Manager {
     this.dynamicPropertiesStore.saveLatestBlockHeaderHash(block.getBlockId().getByteString());
     this.dynamicPropertiesStore.saveLatestBlockHeaderNumber(block.getNum());
     this.dynamicPropertiesStore.saveLatestBlockHeaderTimestamp(block.getTimeStamp());
-    //@note set max snapshot size that can be revoked
+    //set max snapshot size that can be revoked
     revokingStore.setMaxSize((int) (dynamicPropertiesStore.getLatestBlockHeaderNumber() - dynamicPropertiesStore.getLatestSolidifiedBlockNum() + 1));
-    //@note max khaos DB size to maintain
+    //max khaos DB size to maintain
     khaosDb.setMaxSize((int)(dynamicPropertiesStore.getLatestBlockHeaderNumber() - dynamicPropertiesStore.getLatestSolidifiedBlockNum() + 1));
   }
 
@@ -1208,9 +1201,8 @@ public class Manager {
   }
 
   /**
-   *   @note
    *   - all blocks of main chain stored in block store
-   *   - khaos block stored in khaos DB
+   *   - Khaos block stored in Khaos DB
    */
   public boolean containBlockInMainChain(BlockId blockId) {
     try {
@@ -1308,9 +1300,9 @@ public class Manager {
       }
     }
 
-    /** @note
-     * + charge energy fee with smart contract call or deploy
-     * + with token transfer, dont use energy so don't charge fee
+    /**
+     * - charge energy fee with smart contract call or deploy
+     * - with token transfer, dont use energy so don't charge fee
      */
     trace.finalization(findBlockVersion(block));
 
@@ -1377,9 +1369,8 @@ public class Manager {
     val blockCapsule = new BlockCapsule(blockVersion, number + 1, preHash, when, witnessCapsule.getAddress());
     blockCapsule.generatedByMyself = true;
     /**
-      @note
-      - revoke/drop current tmp snapshot, get back to stable point
-      - create new snapshot to apply all block's tx
+     *  - revoke/drop current tmp snapshot, get back to stable point
+     *  - create new snapshot to apply all block's tx
      */
     session.reset();
     session.setValue(revokingStore.buildSession());
@@ -1428,10 +1419,9 @@ public class Manager {
         tx.setVerified(false);
       }
       /**
-        @note
-        - create new session for only one tx
-        - process tx
-        - merge back to common session and create one consistent block's view
+       *  - create new session for only one tx
+       *  - process tx
+       *  - merge back to common session and create one consistent block's view
        */
       try (ISession tmpSession = revokingStore.buildSession()) {
         accountStateCallBack.preExeTrans();
@@ -1485,11 +1475,10 @@ public class Manager {
     accountStateCallBack.executeGenerateFinish();
 
     /**
-      @note
-      - after all tx & result of tx put on block, reset back to stable point again
-      - why ? because this block will be:
-       + push to ledger & re-process again, make the same result and create new snapshot as final commit
-       + broadcast to #peer that will be processed like this
+     *  - after all tx & result of tx put on block, reset back to stable point again
+     *  - why ? because this block will be:
+     *    + push to ledger & re-process again, make the same result and create new snapshot as final commit
+     *    + broadcast to #peer that will be processed like this
      */
     session.reset();
     if (postponedUnxCount > 0) {
@@ -1506,9 +1495,8 @@ public class Manager {
     }
     try {
       /**
-        @note
-        - put block to ledger
-        - process again & make one stable system status (commit session)
+       *     - put block to ledger
+       *     - process again & make one stable system status (commit session)
        */
       this.pushBlock(blockCapsule);
       return blockCapsule;
@@ -1692,7 +1680,7 @@ public class Manager {
   }
 
   /**
-   * @note return block# to sync = head - revoking size
+   * Return block# to sync = head - revoking size
    */
   public long getSyncBeginNumber() {
     logger.info("headNumber:" + dynamicPropertiesStore.getLatestBlockHeaderNumber());

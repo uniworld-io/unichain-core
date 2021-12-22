@@ -40,7 +40,6 @@ public class GetTokenFutureServlet extends HttpServlet {
       FutureTokenQuery.Builder build = FutureTokenQuery.newBuilder();
       JsonFormat.merge(filter, build, visible);
       var query = build.build();
-      logger.info("getTokenFuture --> {} {}" , Wallet.encode58Check(query.getOwnerAddress().toByteArray()), query.getTokenName());
       Protocol.FutureTokenPack reply = wallet.getFutureToken(query);
       if (reply != null) {
         if (visible) {

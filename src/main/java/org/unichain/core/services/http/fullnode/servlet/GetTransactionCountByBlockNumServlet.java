@@ -28,7 +28,7 @@ public class GetTransactionCountByBlockNumServlet extends HttpServlet {
       long count = wallet.getTransactionCountByBlockNum(num);
       response.getWriter().println("{\"count\": " + count + "}");
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error(e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
@@ -47,7 +47,7 @@ public class GetTransactionCountByBlockNumServlet extends HttpServlet {
       long count = wallet.getTransactionCountByBlockNum(build.getNum());
       response.getWriter().println("{\"count\": " + count + "}");
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error(e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {

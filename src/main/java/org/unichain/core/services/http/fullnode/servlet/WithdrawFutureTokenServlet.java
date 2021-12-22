@@ -37,7 +37,6 @@ public class WithdrawFutureTokenServlet extends HttpServlet {
       var build = Contract.WithdrawFutureTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var withdrawCtx = build.build();
-      logger.info("withdrawFutureToken --> {} {}" , Wallet.encode58Check(withdrawCtx.getOwnerAddress().toByteArray()), withdrawCtx);
       var tx = wallet.createTransactionCapsule(withdrawCtx, ContractType.WithdrawFutureTokenContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);

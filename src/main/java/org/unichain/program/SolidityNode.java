@@ -168,7 +168,7 @@ public class SolidityNode {
     Args.setParam(args, Constant.TESTNET_CONF);
     Args cfgArgs = Args.getInstance();
 
-    logger.info("index switch is {}", BooleanUtils.toStringOnOff(BooleanUtils.toBoolean(cfgArgs.getStorage().getIndexSwitch())));
+    logger.info("Index switch is {}", BooleanUtils.toStringOnOff(BooleanUtils.toBoolean(cfgArgs.getStorage().getIndexSwitch())));
 
     if (StringUtils.isEmpty(cfgArgs.getTrustNodeAddr())) {
       logger.error("Trust node not set.");

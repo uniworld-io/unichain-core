@@ -36,13 +36,12 @@ public class BurnTokenServlet extends HttpServlet {
       var build = BurnTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var burnCtx = build.build();
-      logger.info("burnToken --> {} {}  {}" , Wallet.encode58Check(burnCtx.getOwnerAddress().toByteArray()), burnCtx.getTokenName(), burnCtx.getAmount());
       var tx = wallet.createTransactionCapsule(burnCtx, ContractType.BurnTokenContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error(e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {

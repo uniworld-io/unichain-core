@@ -173,7 +173,7 @@ public class TokenTransferActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error("validate TokenTransfer got error -->", e);
+      logger.error(e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

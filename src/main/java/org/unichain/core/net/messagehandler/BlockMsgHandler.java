@@ -45,7 +45,7 @@ public class BlockMsgHandler implements UnichainMsgHandler {
   private boolean fastForward = Args.getInstance().isFastForward();
 
   /**
-   * @note handle block from peers
+   * Process block from peers
    * - include fresh generated blocks & sync-request block
    * - process sync block or fresh blocks
    */

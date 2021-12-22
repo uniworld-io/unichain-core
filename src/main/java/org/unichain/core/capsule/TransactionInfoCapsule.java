@@ -158,7 +158,7 @@ public class TransactionInfoCapsule implements ProtoCapsule<TransactionInfo> {
 
     builder.setId(ByteString.copyFrom(unxCap.getTransactionId().getBytes()));
     ProgramResult programResult = trace.getRuntimeResult();
-    //@note fee = [ret fee that charged by actuator] + [energy fee from deploy/call smart contract] + [netFee] + [multi-sign fee]
+    //fee = [ret fee that charged by actuator] + [energy fee from deploy/call smart contract] + [netFee] + [multi-sign fee]
     long fee = programResult.getRet().getFee() + traceReceipt.getEnergyFee() + traceReceipt.getNetFee() + traceReceipt.getMultiSignFee();
     ByteString contractResult = ByteString.copyFrom(programResult.getHReturn());
     ByteString ContractAddress = ByteString.copyFrom(programResult.getContractAddress());

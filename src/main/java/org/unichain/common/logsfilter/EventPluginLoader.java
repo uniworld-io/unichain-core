@@ -249,7 +249,7 @@ public class EventPluginLoader {
 
     NativeMessageQueue.getInstance().stop();
 
-    logger.info("eventPlugin stopped");
+    logger.info("EventPlugin stopped");
   }
 
   public void postBlockTrigger(BlockLogTrigger trigger) {

@@ -19,10 +19,10 @@ import java.util.List;
 import java.util.Map;
 import org.unichain.protos.Contract.WithdrawFutureTokenContract;
 /**
- * @note charge bandwidth directly from account balance:
- * - dont use global net
- * - dont use account net
- * - dont use account free net
+ * Charge bandwidth directly from account balance:
+ * - don't use global net
+ * - don't use account net
+ * - don't use account free net
  */
 @Slf4j(topic = "DB")
 public class BandwidthProcessorV2 extends ResourceProcessor {

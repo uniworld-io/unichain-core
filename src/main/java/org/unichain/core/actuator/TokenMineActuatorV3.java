@@ -49,6 +49,7 @@ public class TokenMineActuatorV3 extends AbstractActuator {
       var tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
       tokenCap.setTotalSupply(tokenCap.getTotalSupply() + ctx.getAmount());
       tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+      tokenCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
 
       var ownerAddress = ctx.getOwnerAddress().toByteArray();

@@ -48,6 +48,7 @@ public class TokenBurnActuatorV3 extends AbstractActuator {
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
       tokenCap.burnToken(ctx.getAmount());
+      tokenCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
 

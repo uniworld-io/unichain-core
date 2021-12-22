@@ -110,8 +110,11 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
         }
 
         if(updateCriticalParams)
+        {
             tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+        }
 
+        tokenCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
         dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
 
         chargeFee(ownerAddress, fee);

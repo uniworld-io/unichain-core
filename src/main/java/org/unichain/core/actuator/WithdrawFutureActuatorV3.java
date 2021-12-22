@@ -61,13 +61,6 @@ public class WithdrawFutureActuatorV3 extends AbstractActuator {
             var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
             var readableOwnerAddress = StringUtil.createReadableString(ownerAddress);
             Assert.notNull(accountCapsule, ACCOUNT_EXCEPTION_STR + readableOwnerAddress + "] not exists");
-
-            var isGP = Args.getInstance()
-                    .getGenesisBlock()
-                    .getWitnesses()
-                    .stream()
-                    .anyMatch(witness -> Arrays.equals(ownerAddress, witness.getAddress()));
-            Assert.isTrue(!isGP, ACCOUNT_EXCEPTION_STR + readableOwnerAddress + "] is a guard representative and is not allowed to withdraw Balance");
             Assert.isTrue(availableToWithdraw(ownerAddress, dbManager.getHeadBlockTimeStamp()), "Account does not have any future balance");
             return true;
         }

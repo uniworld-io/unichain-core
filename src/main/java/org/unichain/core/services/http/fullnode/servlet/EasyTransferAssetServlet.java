@@ -62,7 +62,7 @@ public class EasyTransferAssetServlet extends HttpServlet {
       responseBuild.setResult(retur);
       response.getWriter().println(Util.printEasyTransferResponse(responseBuild.build(), visible));
     } catch (ParseException e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Api error: {} --> ", e.getMessage(), e);
       returnBuilder.setResult(false).setCode(response_code.OTHER_ERROR).setMessage(ByteString.copyFromUtf8(e.getMessage()));
       responseBuild.setResult(returnBuilder.build());
       try {

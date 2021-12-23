@@ -47,7 +47,7 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
       result.setStatus(fee, code.SUCESS);
       return true;
     } catch (BalanceInsufficientException | InvalidProtocolBufferException e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       result.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -103,7 +103,7 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error(e.getMessage(), e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }
@@ -160,7 +160,7 @@ public class AccountPermissionUpdateActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error(e.getMessage(), e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

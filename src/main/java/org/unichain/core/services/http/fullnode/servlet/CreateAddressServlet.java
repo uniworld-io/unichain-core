@@ -42,7 +42,7 @@ public class CreateAddressServlet extends HttpServlet {
       jsonAddress.put("value", hexString);
       response.getWriter().println(jsonAddress.toJSONString());
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error("Api error: {} --> ", e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {

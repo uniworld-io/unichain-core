@@ -186,7 +186,7 @@ service Wallet {
     };
   };
 
-  rpc ExchangeToken (TokenExchangeContract) returns (Transaction) {
+  rpc ExchangeToken (ExchangeTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/exchangetoken"
       body: "*"

@@ -44,7 +44,7 @@ public class UpdateEnergyLimitServlet extends HttpServlet {
 
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error("Api error: {} --> ", e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {

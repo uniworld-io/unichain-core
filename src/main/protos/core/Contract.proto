@@ -141,7 +141,7 @@ message TransferTokenOwnerContract {
   string token_name = 3;
 }
 
-message TokenExchangeContract {
+message ExchangeTokenContract {
   bytes owner_address = 1;
   string token_name = 2;
   int64 amount =3;

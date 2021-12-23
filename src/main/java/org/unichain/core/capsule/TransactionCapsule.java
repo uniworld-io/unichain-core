@@ -444,7 +444,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           owner = contractParameter.unpack(FutureWithdrawContract.class).getOwnerAddress();
           break;
         case ExchangeTokenContract:
-          owner = contractParameter.unpack(TokenExchangeContract.class).getOwnerAddress();
+          owner = contractParameter.unpack(ExchangeTokenContract.class).getOwnerAddress();
           break;
         case TransferTokenOwnerContract:
           owner = contractParameter.unpack(TransferTokenOwnerContract.class).getOwnerAddress();
@@ -747,17 +747,14 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   /**
    * validate signature
    */
-  public boolean validateSignature(Manager manager)
-      throws ValidateSignatureException {
+  public boolean validateSignature(Manager manager) throws ValidateSignatureException {
     if (isVerified == true) {
       return true;
     }
-    if (this.transaction.getSignatureCount() <= 0
-        || this.transaction.getRawData().getContractCount() <= 0) {
+    if (this.transaction.getSignatureCount() <= 0 || this.transaction.getRawData().getContractCount() <= 0) {
       throw new ValidateSignatureException("miss sig or contract");
     }
-    if (this.transaction.getSignatureCount() > manager.getDynamicPropertiesStore()
-        .getTotalSignNum()) {
+    if (this.transaction.getSignatureCount() > manager.getDynamicPropertiesStore().getTotalSignNum()) {
       throw new ValidateSignatureException("too many signatures");
     }
     byte[] hash = this.getRawHash().getBytes();

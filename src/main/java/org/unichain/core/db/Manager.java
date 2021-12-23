@@ -1485,7 +1485,7 @@ public class Manager {
       logger.info("{} transactions over the block size limit", postponedUnxCount);
     }
 
-    logger.info("postponedUnxCount[" + postponedUnxCount + "],UnxLeft[" + pendingTransactions.size() + "],repushUnxCount[" + repushTransactions.size() + "]");
+    logger.info("postponedUnxCount[" + postponedUnxCount + "],UnxLeft[" + pendingTransactions.size() + "], repushUnxCount[" + repushTransactions.size() + "]");
     blockCapsule.setMerkleRoot();
     blockCapsule.sign(privateKey);
     blockCapsule.setResult(txRetCapsule);

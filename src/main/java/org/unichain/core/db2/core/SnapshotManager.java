@@ -239,7 +239,7 @@ public class SnapshotManager implements RevokingDatabase {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     } catch (ExecutionException e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Snapshot manager error: {} --> ", e.getMessage(), e);
     }
   }
 

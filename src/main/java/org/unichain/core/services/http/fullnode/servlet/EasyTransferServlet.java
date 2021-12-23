@@ -62,9 +62,9 @@ public class EasyTransferServlet extends HttpServlet {
       responseBuild.setResult(retur);
       response.getWriter().println(Util.printEasyTransferResponse(responseBuild.build(), visible));
     } catch (ParseException e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Api error: {} --> ", e.getMessage(), e);
     } catch (IOException e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Api error: {} --> ", e.getMessage(), e);
     } catch (ContractValidateException e) {
       returnBuilder.setResult(false)
               .setCode(response_code.CONTRACT_VALIDATE_ERROR)
@@ -73,7 +73,7 @@ public class EasyTransferServlet extends HttpServlet {
       try {
         response.getWriter().println(JsonFormat.printToString(responseBuild.build(), visible));
       } catch (IOException ioe) {
-        logger.error(e.getMessage(), e);
+        logger.error("Api error: {} --> ", e.getMessage(), e);
       }
       return;
     } catch (Exception e) {

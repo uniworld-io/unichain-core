@@ -51,7 +51,7 @@ public class TransferFutureActuator extends AbstractActuator {
       addFutureBalance(toAddress, amount, ctx.getExpireTime());
       return true;
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -100,7 +100,7 @@ public class TransferFutureActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error(e.getMessage(), e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

@@ -40,7 +40,7 @@ public class GetContractServlet extends HttpServlet {
       JSONObject jsonSmartContract = JSONObject.parseObject(JsonFormat.printToString(smartContract, visible));
       response.getWriter().println(jsonSmartContract.toJSONString());
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Api error: {} --> ", e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
@@ -67,7 +67,7 @@ public class GetContractServlet extends HttpServlet {
       JSONObject jsonSmartContract = JSONObject.parseObject(JsonFormat.printToString(smartContract, visible));
       response.getWriter().println(jsonSmartContract.toJSONString());
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Api error: {} --> ", e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {

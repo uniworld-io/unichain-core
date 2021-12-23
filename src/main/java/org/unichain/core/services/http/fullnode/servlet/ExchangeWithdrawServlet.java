@@ -39,7 +39,7 @@ public class ExchangeWithdrawServlet extends HttpServlet {
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error(e.getMessage());
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {

@@ -39,7 +39,7 @@ public class ExchangeTokenServlet extends HttpServlet {
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
       try {
-        logger.error(e.getMessage(), e);
+        logger.error("Api error: {} --> ", e.getMessage(), e);
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());

@@ -44,7 +44,7 @@ public class ShowFutureDealServlet extends HttpServlet {
       response.getWriter().println(ret);
     } catch (Exception e) {
       try {
-        logger.error(e.getMessage(), e);
+        logger.error("Api error: {} --> ", e.getMessage(), e);
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());

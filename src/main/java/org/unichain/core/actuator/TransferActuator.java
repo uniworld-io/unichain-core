@@ -51,7 +51,7 @@ public class TransferActuator extends AbstractActuator {
       dbManager.adjustBalance(toAddress, amount);
       return true;
     } catch (BalanceInsufficientException | ArithmeticException | InvalidProtocolBufferException e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -97,7 +97,7 @@ public class TransferActuator extends AbstractActuator {
       return true;
     }
     catch (IllegalArgumentException | InvalidProtocolBufferException | ArithmeticException e){
-      logger.error(e.getMessage(), e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

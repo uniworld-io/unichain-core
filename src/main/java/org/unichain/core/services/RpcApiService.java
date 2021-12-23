@@ -1102,15 +1102,11 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void updateAsset(Contract.UpdateAssetContract request,
-        StreamObserver<Transaction> responseObserver) {
+    public void updateAsset(Contract.UpdateAssetContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(
-            createTransactionCapsule(request,
-                ContractType.UpdateAssetContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.UpdateAssetContract).getInstance());
       } catch (ContractValidateException e) {
-        responseObserver
-            .onNext(null);
+        responseObserver.onNext(null);
         logger.debug("ContractValidateException", e.getMessage());
       }
       responseObserver.onCompleted();

@@ -33,7 +33,7 @@ public class GetExchangeByIdServlet extends HttpServlet {
       long id = Util.getJsonLongValue(jsonObject, "id", true);
       response.getWriter().println(JsonFormat.printToString(wallet.getExchangeById(ByteString.copyFrom(ByteArray.fromLong(id))), visible));
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error(e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
@@ -48,7 +48,7 @@ public class GetExchangeByIdServlet extends HttpServlet {
       String input = request.getParameter("id");
       response.getWriter().println(JsonFormat.printToString(wallet.getExchangeById(ByteString.copyFrom(ByteArray.fromLong(Long.parseLong(input)))), visible));
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error(e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {

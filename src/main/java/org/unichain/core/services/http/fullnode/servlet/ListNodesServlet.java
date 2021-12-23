@@ -30,7 +30,7 @@ public class ListNodesServlet extends HttpServlet {
         response.getWriter().println("{}");
       }
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Api error: {} --> ", e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {

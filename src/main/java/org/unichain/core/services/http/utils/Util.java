@@ -294,8 +294,8 @@ public class Util {
             contractJson = JSONObject.parseObject(JsonFormat.printToString(transferTokenOwnerContract, selfType));
             break;
           case ExchangeTokenContract:
-            TokenExchangeContract tokenExchangeContract = contractParameter.unpack(TokenExchangeContract.class);
-            contractJson = JSONObject.parseObject(JsonFormat.printToString(tokenExchangeContract, selfType));
+            ExchangeTokenContract exchangeTokenContract = contractParameter.unpack(ExchangeTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(exchangeTokenContract, selfType));
             break;
           case ContributeTokenPoolFeeContract:
             ContributeTokenPoolFeeContract contributeTokenPoolFeeContract = contractParameter.unpack(ContributeTokenPoolFeeContract.class);
@@ -540,10 +540,10 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferTokenOwnerContractBuilder, selfType);
             any = Any.pack(transferTokenOwnerContractBuilder.build());
             break;
-          case "TokenExchangeContract":
-            TokenExchangeContract.Builder tokenExchangeContractBuilder = TokenExchangeContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), tokenExchangeContractBuilder, selfType);
-            any = Any.pack(tokenExchangeContractBuilder.build());
+          case "ExchangeTokenContract":
+            ExchangeTokenContract.Builder exchangeTokenContractBuilder = ExchangeTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), exchangeTokenContractBuilder, selfType);
+            any = Any.pack(exchangeTokenContractBuilder.build());
             break;
           case "ContributeTokenPoolFeeContract":
             ContributeTokenPoolFeeContract.Builder contributeTokenPoolContractBuilder = ContributeTokenPoolFeeContract.newBuilder();

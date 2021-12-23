@@ -29,7 +29,7 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.TokenExchangeContract;
+import org.unichain.protos.Contract.ExchangeTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -50,7 +50,7 @@ public class TokenExchangeActuator extends AbstractActuator {
       var accountStore = dbManager.getAccountStore();
       var tokenPoolStore = dbManager.getTokenPoolStore();
 
-      var ctx = contract.unpack(TokenExchangeContract.class);
+      var ctx = contract.unpack(ExchangeTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var ownerAccount = accountStore.get(ownerAddress);
 
@@ -88,11 +88,11 @@ public class TokenExchangeActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(TokenExchangeContract.class), "contract type error,expected type [TokenExchangeContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(ExchangeTokenContract.class), "contract type error,expected type [ExchangeTokenContract],real type[" + contract.getClass() + "]");
 
       var accountStore = dbManager.getAccountStore();
       var tokenPoolStore = dbManager.getTokenPoolStore();
-      val ctx = this.contract.unpack(TokenExchangeContract.class);
+      val ctx = this.contract.unpack(ExchangeTokenContract.class);
       Assert.isTrue(ctx.getAmount() > 0, "Exchange UNW amount must be positive");
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
@@ -129,7 +129,7 @@ public class TokenExchangeActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(TokenExchangeContract.class).getOwnerAddress();
+    return contract.unpack(ExchangeTokenContract.class).getOwnerAddress();
   }
 
   @Override

@@ -1203,7 +1203,7 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void exchangeToken(Contract.TokenExchangeContract request, StreamObserver<Transaction> responseObserver) {
+    public void exchangeToken(Contract.ExchangeTokenContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.ExchangeTokenContract).getInstance());
       } catch (ContractValidateException e) {

@@ -64,6 +64,10 @@ public class TokenCreateActuator extends AbstractActuator {
         capsule.setEndTime(startTime + Parameter.ChainConstant.URC30_DEFAULT_AGE);
       }
 
+      //with block ver <= 2, pre-set factors to zero
+      capsule.setExchTokenNum(0L);
+      capsule.setExchUnwNum(0L);
+
       capsule.setBurnedToken(0L);
       capsule.setTokenName(capsule.getTokenName().toUpperCase());
       capsule.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());

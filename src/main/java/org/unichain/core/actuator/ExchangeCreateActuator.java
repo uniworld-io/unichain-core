@@ -103,7 +103,7 @@ public class ExchangeCreateActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (BalanceInsufficientException | InvalidProtocolBufferException e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -158,7 +158,7 @@ public class ExchangeCreateActuator extends AbstractActuator {
 
       return true;
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
       throw new ContractValidateException(e.getMessage());
     }
   }

@@ -61,7 +61,7 @@ public class TokenCreateActuator extends AbstractActuator {
       var startTime = capsule.getStartTime();
       if(!ctx.hasField(TOKEN_CREATE_FIELD_END_TIME))
       {
-        capsule.setEndTime(startTime + Parameter.ChainConstant.DEFAULT_TOKEN_AGE);
+        capsule.setEndTime(startTime + Parameter.ChainConstant.URC30_DEFAULT_AGE);
       }
 
       capsule.setBurnedToken(0L);
@@ -108,11 +108,11 @@ public class TokenCreateActuator extends AbstractActuator {
       Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
 
       var startTime = ctx.hasField(TOKEN_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
-      var maxTokenActive = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_ACTIVE;
+      var maxTokenActive = dbManager.getHeadBlockTimeStamp() + URC30_MAX_ACTIVE;
       Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= maxTokenActive), "Invalid start time: must be greater than current block time and lower than limit timestamp:" +maxTokenActive);
 
-      var endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : (startTime + Parameter.ChainConstant.DEFAULT_TOKEN_AGE);
-      var maxTokenAge = dbManager.getHeadBlockTimeStamp() + MAX_TOKEN_AGE;
+      var endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : (startTime + Parameter.ChainConstant.URC30_DEFAULT_AGE);
+      var maxTokenAge = dbManager.getHeadBlockTimeStamp() + URC30_MAX_AGE;
       Assert.isTrue((endTime > 0)
               && (endTime > startTime )
               && (endTime > dbManager.getHeadBlockTimeStamp())

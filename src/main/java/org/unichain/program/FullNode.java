@@ -53,9 +53,9 @@ public class FullNode {
     }
 
     if (Args.getInstance().isDebug()) {
-      logger.info("in debug mode, it won't check energy time");
+      logger.info("In debug mode, it won't check energy time");
     } else {
-      logger.info("not in debug mode, it will check energy time");
+      logger.info("Not in debug mode, it will check energy time");
     }
 
     DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
@@ -78,7 +78,7 @@ public class FullNode {
     FullNodeHttpApiService httpApiService = context.getBean(FullNodeHttpApiService.class);
     appT.addService(httpApiService);
 
-    // fullnode and soliditynode fuse together, provide solidity rpc and http server on the fullnode.
+    // full node and solidity node fuse together, provide solidity rpc and http server on the full node.
     if (Args.getInstance().getStorage().getDbVersion() == 2) {
       RpcApiServiceOnSolidity rpcApiServiceOnSolidity = context.getBean(RpcApiServiceOnSolidity.class);
       appT.addService(rpcApiServiceOnSolidity);

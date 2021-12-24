@@ -147,14 +147,10 @@ public class TransactionTrace {
 
   public void finalization(int blockVersion) throws ContractExeException {
     try {
-      switch (blockVersion){
-        case BLOCK_VERSION_1:
-          payEnergyV1();
-          break;
-        default:
-          payEnergyV2();
-          break;
-      }
+      if(blockVersion <= BLOCK_VERSION_1)
+        payEnergyV1();
+      else
+        payEnergyV2();
     } catch (BalanceInsufficientException e) {
       throw new ContractExeException(e.getMessage());
     }

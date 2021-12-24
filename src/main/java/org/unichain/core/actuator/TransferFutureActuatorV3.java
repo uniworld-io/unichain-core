@@ -52,7 +52,7 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       addFutureBalance(toAddress, amount, ctx.getExpireTime());
       return true;
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -73,7 +73,7 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       var amount = ctx.getAmount();
       Assert.isTrue(amount > 0, "Amount must greater than 0.");
 
-      var maxExpireTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationUnw();
+      var maxExpireTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationUnwV3();
       Assert.isTrue((ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp()) && (ctx.getExpireTime() <= maxExpireTime),
                       "expire time must greater current block time, lower than maximum timestamp:" + maxExpireTime);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
@@ -103,7 +103,7 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error(e.getMessage(), e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
       throw new ContractValidateException(e.getMessage());
     }
   }

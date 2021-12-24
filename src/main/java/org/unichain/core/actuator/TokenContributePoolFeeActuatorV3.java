@@ -55,7 +55,7 @@ public class TokenContributePoolFeeActuatorV3 extends AbstractActuator {
         ret.setStatus(fee, code.SUCESS);
     }
     catch (Exception e) {
-        logger.error(e.getMessage(), e);
+        logger.error("Actuator error: {} --> ", e.getMessage(), e);;
         ret.setStatus(fee, code.FAILED);
         throw new ContractExeException(e.getMessage());
     }
@@ -85,7 +85,7 @@ public class TokenContributePoolFeeActuatorV3 extends AbstractActuator {
           return true;
       }
       catch (Exception e){
-          logger.error(e.getMessage(), e);
+          logger.error("Actuator error: {} --> ", e.getMessage(), e);;
           throw  new ContractValidateException(e.getMessage());
       }
   }

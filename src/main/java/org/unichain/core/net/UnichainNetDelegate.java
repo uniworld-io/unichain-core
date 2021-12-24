@@ -220,6 +220,6 @@ public class UnichainNetDelegate {
   }
 
   public int getRunningBlockVersion(){
-    return dbManager.getDynamicPropertiesStore().getHardForkVersion();
+    return dbManager.getDynamicPropertiesStore().getBlockVersion();
   }
 }

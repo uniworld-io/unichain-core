@@ -283,7 +283,7 @@ public class ProposalService {
       }
       case MAX_FUTURE_TRANSFER_TIME_RANGE_UNW: {
         try {
-          Assert.isTrue(value > 0 && value <= MAX_FUTURE_TRANSFER_UNW_TIME_RANGE_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: " + MAX_FUTURE_TRANSFER_UNW_TIME_RANGE_UPPER_BOUND);
+          Assert.isTrue(value > 0 && value <= UNW_MAX_FUTURE_TRANSFER_TIME_RANGE_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: " + UNW_MAX_FUTURE_TRANSFER_TIME_RANGE_UPPER_BOUND);
           Assert.isTrue(manager.getDynamicPropertiesStore().getBlockVersion() >= BLOCK_VERSION_2, "require at least block version: " + BLOCK_VERSION_2);
         }
         catch (Exception e){
@@ -293,7 +293,7 @@ public class ProposalService {
       }
       case MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN: {
         try {
-          Assert.isTrue(value > 0 && value <= MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: " + MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_UPPER_BOUND);
+          Assert.isTrue(value > 0 && value <= URC30_MAX_FUTURE_TRANSFER_TIME_RANGE_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: " + URC30_MAX_FUTURE_TRANSFER_TIME_RANGE_UPPER_BOUND);
           Assert.isTrue(manager.getDynamicPropertiesStore().getBlockVersion() >= BLOCK_VERSION_2, "require at least block version: " + BLOCK_VERSION_2);
         }
         catch (Exception e){

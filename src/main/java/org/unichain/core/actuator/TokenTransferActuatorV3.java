@@ -41,7 +41,7 @@ import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_CRITICAL_UPDATE_TIME_GUARD;
+import static org.unichain.core.config.Parameter.ChainConstant.URC30_CRITICAL_UPDATE_TIME_GUARD;
 
 @Slf4j(topic = "actuator")
 public class TokenTransferActuatorV3 extends AbstractActuator {
@@ -136,7 +136,7 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
 
       //prevent critical token update cause this tx to be wrong affected!
       var guardTime = dbManager.getHeadBlockTimeStamp() - tokenPool.getCriticalUpdateTime();
-      Assert.isTrue(guardTime >= TOKEN_CRITICAL_UPDATE_TIME_GUARD, "Critical token update found! Please wait up to 3 minutes before retry.");
+      Assert.isTrue(guardTime >= URC30_CRITICAL_UPDATE_TIME_GUARD, "Critical token update found! Please wait up to 3 minutes before retry.");
 
       if (ctx.getAvailableTime() > 0) {
         Assert.isTrue (ctx.getAvailableTime() > dbManager.getHeadBlockTimeStamp(), "Block time passed available time");

@@ -1629,28 +1629,28 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
     return Optional.ofNullable(getUnchecked(MAX_FUTURE_TRANSFER_TIME_RANGE_UNW))
             .map(BytesCapsule::getData)
             .map(ByteArray::toLong)
-            .orElse(Parameter.ChainConstant.MAX_FUTURE_TRANSFER_TIME_RANGE_UNW);
+            .orElse(Parameter.ChainConstant.UNW_MAX_FUTURE_TRANSFER_TIME_RANGE);
   }
 
   public long getMaxFutureTransferTimeRangeUnwV3() {
     return Optional.ofNullable(getUnchecked(MAX_FUTURE_TRANSFER_TIME_RANGE_UNW))
             .map(BytesCapsule::getData)
             .map(ByteArray::toLong)
-            .orElse(ChainConstant.MAX_FUTURE_TRANSFER_TIME_RANGE_UNW_V3);
+            .orElse(ChainConstant.UNW_MAX_FUTURE_TRANSFER_TIME_RANGE_V3);
   }
 
   public long getMaxFutureTransferTimeRangeToken() {
     return Optional.ofNullable(getUnchecked(MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN))
             .map(BytesCapsule::getData)
             .map(ByteArray::toLong)
-            .orElse(Parameter.ChainConstant.MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN);
+            .orElse(Parameter.ChainConstant.URC30_MAX_FUTURE_TRANSFER_TIME_RANGE);
   }
 
   public long getMaxFutureTransferTimeRangeTokenV3() {
     return Optional.ofNullable(getUnchecked(MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN))
             .map(BytesCapsule::getData)
             .map(ByteArray::toLong)
-            .orElse(ChainConstant.MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_V3);
+            .orElse(ChainConstant.URC30_MAX_FUTURE_TRANSFER_TIME_RANGE_V3);
   }
 
 

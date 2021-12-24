@@ -856,7 +856,7 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
    * - if not set that means version 1
    * - if upgraded by proposal, load it from system properties
    */
-  public int getHardForkVersion() {
+  public int getBlockVersion() {
     return Optional.ofNullable(getUnchecked(HARD_FORK_VERSION))
             .map(BytesCapsule::getData)
             .map(ByteArray::toLong)

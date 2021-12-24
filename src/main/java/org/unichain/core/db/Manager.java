@@ -1373,7 +1373,7 @@ public class Manager {
     }
 
     long postponedUnxCount = 0;
-    val blockVersion = this.dynamicPropertiesStore.getHardForkVersion();
+    val blockVersion = this.dynamicPropertiesStore.getBlockVersion();
     val blockCapsule = new BlockCapsule(blockVersion, number + 1, preHash, when, witnessCapsule.getAddress());
     blockCapsule.generatedByMyself = true;
     /**
@@ -2078,7 +2078,7 @@ public class Manager {
     return dynamicEnergyFee > 0 ? dynamicEnergyFee : Constant.GINZA_PER_ENERGY;
   }
 
-  public int findBlockVersion(BlockCapsule blockCapsule){
-    return  (blockCapsule == null) ? this.dynamicPropertiesStore.getHardForkVersion() : blockCapsule.getInstance().getBlockHeader().getRawData().getVersion();
+  public int findBlockVersion(BlockCapsule block){
+    return  (block == null) ? this.dynamicPropertiesStore.getBlockVersion() : block.getInstance().getBlockHeader().getRawData().getVersion();
   }
 }

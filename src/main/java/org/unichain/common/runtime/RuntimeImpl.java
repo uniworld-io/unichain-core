@@ -701,6 +701,6 @@ public class RuntimeImpl implements Runtime {
   }
 
   private int findBlockVersion(){
-    return  (blockCap == null) ? deposit.getDbManager().getDynamicPropertiesStore().getHardForkVersion() : blockCap.getInstance().getBlockHeader().getRawData().getVersion();
+    return  (blockCap == null) ? deposit.getDbManager().getDynamicPropertiesStore().getBlockVersion() : blockCap.getInstance().getBlockHeader().getRawData().getVersion();
   }
 }

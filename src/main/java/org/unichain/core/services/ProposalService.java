@@ -103,6 +103,7 @@ public class ProposalService {
     }
   }
 
+  //@todo refactor validation
   public static void validator(Manager manager, long code, long value) throws ContractValidateException {
     ProposalType proposalType = ProposalType.getEnum(code);
     switch (proposalType) {
@@ -269,29 +270,47 @@ public class ProposalService {
       }
 
       case HARD_FORK: {
-        int valueInt = Long.valueOf(value).intValue();
-        Assert.isTrue(valueInt >= 2 && valueInt <= Integer.MAX_VALUE, "hardfork version should greater than version 1 and not greater than MAX_INTEGER :" + Integer.MAX_VALUE);
-        Assert.isTrue(Parameter.BLOCK_VERSION_SUPPORTED.contains(valueInt), "hardfork version not supported by software :" + valueInt);
-        Assert.isTrue(valueInt > manager.getDynamicPropertiesStore().getHardForkVersion(), "hardfork version must be greater than current version: " + manager.getDynamicPropertiesStore().getHardForkVersion());
-        break;
+        try {
+          int valueInt = Long.valueOf(value).intValue();
+          Assert.isTrue(valueInt >= 2 && valueInt <= Integer.MAX_VALUE, "block version should greater than version 1 and not greater than MAX_INTEGER :" + Integer.MAX_VALUE);
+          Assert.isTrue(Parameter.BLOCK_VERSION_SUPPORTED.contains(valueInt), "block version not supported by software :" + valueInt);
+          Assert.isTrue(valueInt > manager.getDynamicPropertiesStore().getBlockVersion(), "block version must be greater than current version: " + manager.getDynamicPropertiesStore().getBlockVersion());
+        }
+        catch (Exception e){
+          throw new ContractValidateException(e.getMessage());
+        }
+          break;
       }
       case MAX_FUTURE_TRANSFER_TIME_RANGE_UNW: {
-        Assert.isTrue(value > 0 && value <= MAX_FUTURE_TRANSFER_UNW_TIME_RANGE_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: "+ MAX_FUTURE_TRANSFER_UNW_TIME_RANGE_UPPER_BOUND);
-        Assert.isTrue(manager.getDynamicPropertiesStore().getHardForkVersion() >= BLOCK_VERSION_2, "require at least block version: " + BLOCK_VERSION_2);
+        try {
+          Assert.isTrue(value > 0 && value <= MAX_FUTURE_TRANSFER_UNW_TIME_RANGE_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: " + MAX_FUTURE_TRANSFER_UNW_TIME_RANGE_UPPER_BOUND);
+          Assert.isTrue(manager.getDynamicPropertiesStore().getBlockVersion() >= BLOCK_VERSION_2, "require at least block version: " + BLOCK_VERSION_2);
+        }
+        catch (Exception e){
+          throw new ContractValidateException(e.getMessage());
+        }
         break;
       }
       case MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN: {
-        Assert.isTrue(value > 0 && value <= MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: "+ MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_UPPER_BOUND);
-        Assert.isTrue(manager.getDynamicPropertiesStore().getHardForkVersion() >= BLOCK_VERSION_2, "require at least block version: " + BLOCK_VERSION_2);
+        try {
+          Assert.isTrue(value > 0 && value <= MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_UPPER_BOUND, "max future transfer time range must be positive and lower than upper bound value: " + MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_UPPER_BOUND);
+          Assert.isTrue(manager.getDynamicPropertiesStore().getBlockVersion() >= BLOCK_VERSION_2, "require at least block version: " + BLOCK_VERSION_2);
+        }
+        catch (Exception e){
+          throw new ContractValidateException(e.getMessage());
+        }
         break;
       }
 
       case TOKEN_UPDATE_FEE: {
-        if (value < 0 || value > LONG_VALUE) {
-          throw new ContractValidateException(LONG_VALUE_ERROR);
+        try {
+          Assert.isTrue(!(value < 0 || value > LONG_VALUE), LONG_VALUE_ERROR);
+          Assert.isTrue(value > 0 && value <= LONG_VALUE, "max future transfer time range must be positive and lower than upper bound value: " + LONG_VALUE);
+          Assert.isTrue(manager.getDynamicPropertiesStore().getBlockVersion() >= BLOCK_VERSION_3, "require at least block version: " + BLOCK_VERSION_3);
         }
-        Assert.isTrue(value > 0 && value <= LONG_VALUE, "max future transfer time range must be positive and lower than upper bound value: "+ LONG_VALUE);
-        Assert.isTrue(manager.getDynamicPropertiesStore().getHardForkVersion() >= BLOCK_VERSION_3, "require at least block version: " + BLOCK_VERSION_3);
+        catch (Exception e){
+          throw new ContractValidateException(e.getMessage());
+        }
         break;
       }
 

@@ -347,8 +347,16 @@ public class Manager {
     return getDynamicPropertiesStore().getMaxFutureTransferTimeRangeUnw();
   }
 
+  public long getMaxFutureTransferTimeDurationUnwV3() {
+    return getDynamicPropertiesStore().getMaxFutureTransferTimeRangeUnwV3();
+  }
+
   public long getMaxFutureTransferTimeDurationToken() {
     return getDynamicPropertiesStore().getMaxFutureTransferTimeRangeToken();
+  }
+
+  public long getMaxFutureTransferTimeDurationTokenV3() {
+    return getDynamicPropertiesStore().getMaxFutureTransferTimeRangeTokenV3();
   }
 
   public void clearAndWriteNeighbours(Set<Node> nodes) {

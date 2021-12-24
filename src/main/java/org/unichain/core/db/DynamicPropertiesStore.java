@@ -1632,12 +1632,27 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
             .orElse(Parameter.ChainConstant.MAX_FUTURE_TRANSFER_TIME_RANGE_UNW);
   }
 
+  public long getMaxFutureTransferTimeRangeUnwV3() {
+    return Optional.ofNullable(getUnchecked(MAX_FUTURE_TRANSFER_TIME_RANGE_UNW))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElse(ChainConstant.MAX_FUTURE_TRANSFER_TIME_RANGE_UNW_V3);
+  }
+
   public long getMaxFutureTransferTimeRangeToken() {
     return Optional.ofNullable(getUnchecked(MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN))
             .map(BytesCapsule::getData)
             .map(ByteArray::toLong)
             .orElse(Parameter.ChainConstant.MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN);
   }
+
+  public long getMaxFutureTransferTimeRangeTokenV3() {
+    return Optional.ofNullable(getUnchecked(MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElse(ChainConstant.MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN_V3);
+  }
+
 
   /**
    * get number of global latest block.

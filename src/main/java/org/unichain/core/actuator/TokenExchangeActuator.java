@@ -61,6 +61,8 @@ public class TokenExchangeActuator extends AbstractActuator {
 
       var exchUnwFactor = tokenPool.getExchUnw();
       var exchTokenFactor = tokenPool.getExchToken();
+      Assert.isTrue(exchUnwFactor > 0, "Exchange unw factor must be positive");
+      Assert.isTrue(exchTokenFactor > 0, "Exchange token factor must be positive");
       var exchangedToken = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
 
       ownerAccount.addToken(tokenKey, exchangedToken);
@@ -117,6 +119,8 @@ public class TokenExchangeActuator extends AbstractActuator {
 
       var exchUnwFactor = tokenPool.getExchUnw();
       var exchTokenFactor = tokenPool.getExchToken();
+      Assert.isTrue(exchUnwFactor > 0, "Exchange unw factor must be positive");
+      Assert.isTrue(exchTokenFactor > 0, "Exchange token factor must be positive");
       var estimatedExchangeToken = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
       Assert.isTrue(tokenOwnerCap.getTokenAvailable(tokenKey) >= estimatedExchangeToken, "Not enough token liquidity to exchange");
       return true;

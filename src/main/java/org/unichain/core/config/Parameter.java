@@ -44,6 +44,7 @@ public class Parameter {
     /**
      * Critical: all available block version must declare here
      */
+    public static final int BLOCK_VERSION_0 = 0;
     public static final int BLOCK_VERSION_1 = 1;
     public static final int BLOCK_VERSION_2 = 2;
     public static final int BLOCK_VERSION_3 = 3;

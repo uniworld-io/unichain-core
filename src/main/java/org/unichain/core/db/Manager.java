@@ -855,10 +855,19 @@ public class Manager {
   }
 
   public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    if(findBlockVersion(block) <= BLOCK_VERSION_1)
-      (new BandwidthProcessor(this)).consume(unx, trace);
-    else
-      (new BandwidthProcessorV2(this)).consume(unx, trace);
+    int blockVer = findBlockVersion(block);
+    switch (blockVer){
+      case BLOCK_VERSION_0:
+      case BLOCK_VERSION_1:
+        (new BandwidthProcessor(this)).consume(unx, trace);
+        break;
+      case BLOCK_VERSION_2:
+        (new BandwidthProcessorV2(this)).consume(unx, trace);
+        break;
+      default:
+        (new BandwidthProcessorV3(this)).consume(unx, trace);
+        break;
+    }
   }
 
   /**

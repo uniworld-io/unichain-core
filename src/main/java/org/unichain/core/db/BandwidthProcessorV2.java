@@ -93,7 +93,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
       try {
         if (isContractCreateNewAccount(contract)) {
           if (contract.getType() == ContractType.TransferTokenContract)
-            consumeForCreateNewAccount4TokenTransfer(contract, trace);
+            consumeForCreateNewAccountIfTokenTransfer(ownerAccountCap, contract, trace);
           else
             consumeForCreateNewAccount(ownerAccountCap, trace);
           continue;
@@ -133,7 +133,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
     }
   }
 
-  private boolean useTransactionFee(AccountCapsule accountCapsule, long bytes, TransactionTrace trace) {
+  protected boolean useTransactionFee(AccountCapsule accountCapsule, long bytes, TransactionTrace trace) {
     long bwFee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytes;
     if (consumeFee(accountCapsule, bwFee)) {
       trace.setNetBill(0, bwFee);
@@ -144,7 +144,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
     }
   }
 
-  private boolean useTransactionFee4TokenPool(byte[] tokenKey, long bytes, TransactionTrace trace) {
+  protected boolean useTransactionFee4TokenPool(byte[] tokenKey, long bytes, TransactionTrace trace) {
       long bwFee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytes;
       if (consumeFeeTokenPool(tokenKey, bwFee)) {
         trace.setNetBill(0, bwFee);
@@ -155,9 +155,9 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
       }
   }
 
-  private void consumeForCreateNewAccount(AccountCapsule accountCapsule, TransactionTrace trace) throws AccountResourceInsufficientException {
+  protected void consumeForCreateNewAccount(AccountCapsule ownerAccountCapsule, TransactionTrace trace) throws AccountResourceInsufficientException {
     long fee = dbManager.getDynamicPropertiesStore().getCreateAccountFee();
-    if (consumeFee(accountCapsule, fee)) {
+    if (consumeFee(ownerAccountCapsule, fee)) {
       trace.setNetBill(0, fee);
       dbManager.getDynamicPropertiesStore().addTotalCreateAccountCost(fee);
       return;
@@ -166,7 +166,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
     }
   }
 
-  private void consumeForCreateNewAccount4TokenTransfer(Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
+  protected void consumeForCreateNewAccountIfTokenTransfer(AccountCapsule ownerAccountCapsule, Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
     try {
       var ctx = contract.getParameter().unpack(TransferTokenContract.class);
       long fee = dbManager.getDynamicPropertiesStore().getCreateAccountFee();

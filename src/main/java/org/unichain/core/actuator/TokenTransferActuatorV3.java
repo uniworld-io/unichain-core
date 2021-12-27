@@ -62,10 +62,12 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
       var toAddress = ctx.getToAddress().toByteArray();
 
       var toAccountCap = dbManager.getAccountStore().get(toAddress);
+      var createAccFee = 0L;
       if (toAccountCap == null) {
         var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        createAccFee =  dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        dbManager.adjustBalanceNoPut(ownerAccountCap, -createAccFee);
       }
 
       if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){
@@ -103,8 +105,9 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
       tokenPool.setFeePool(tokenPool.getFeePool() - fee);
       tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
-      dbManager.burnFee(fee);
 
+      fee += createAccFee;
+      dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (Exception e) {
@@ -152,21 +155,12 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
 
       var toAccountCap = dbManager.getAccountStore().get(toAddress);
       if (toAccountCap == null) {
-        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        var createAccountFee = dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        Assert.isTrue(ownerAccountCap.getBalance() >= createAccountFee, "Not enough balance in owner account to create new account");
       }
 
       Assert.isTrue(tokenPool.getFeePool() >= fee, "Not enough token pool fee balance");
-
       Assert.isTrue (ctx.getAmount() > 0, "Invalid transfer amount, expect positive number");
-
-      //estimate new fee
-      long tokenFee;
-      if (Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray())) {
-        tokenFee = 0;
-      } else {
-        tokenFee = tokenPool.getFee() + LongMath.divide(ctx.getAmount() * tokenPool.getExtraFeeRate(), 100, RoundingMode.CEILING);
-      }
-
       Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount(), "Not enough token balance");
 
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.

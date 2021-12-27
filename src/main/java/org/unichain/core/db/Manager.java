@@ -654,6 +654,18 @@ public class Manager {
     this.getAccountStore().put(account.getAddress().toByteArray(), account);
   }
 
+  public void adjustBalanceNoPut(AccountCapsule account, long amount) throws BalanceInsufficientException {
+    long balance = account.getBalance();
+    if (amount == 0) {
+      return;
+    }
+
+    if (amount < 0 && balance < -amount) {
+      throw new BalanceInsufficientException(StringUtil.createReadableString(account.createDbKey()) + " insufficient balance");
+    }
+    account.setBalance(Math.addExact(balance, amount));
+  }
+
 
   public void adjustAllowance(byte[] accountAddress, long amount) throws BalanceInsufficientException {
     AccountCapsule account = getAccountStore().getUnchecked(accountAddress);
@@ -843,10 +855,19 @@ public class Manager {
   }
 
   public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    if(findBlockVersion(block) <= BLOCK_VERSION_1)
-      (new BandwidthProcessor(this)).consume(unx, trace);
-    else
-      (new BandwidthProcessorV2(this)).consume(unx, trace);
+    int blockVer = findBlockVersion(block);
+    switch (blockVer){
+      case BLOCK_VERSION_0:
+      case BLOCK_VERSION_1:
+        (new BandwidthProcessor(this)).consume(unx, trace);
+        break;
+      case BLOCK_VERSION_2:
+        (new BandwidthProcessorV2(this)).consume(unx, trace);
+        break;
+      default:
+        (new BandwidthProcessorV3(this)).consume(unx, trace);
+        break;
+    }
   }
 
   /**

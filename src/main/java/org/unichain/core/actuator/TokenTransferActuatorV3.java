@@ -71,7 +71,7 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
       }
 
       if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){
-        //owner of token transfer, don't charge fee
+        //owner of token transfer, don't charge fee token
         ownerAccountCap.burnToken(tokenKey, ctx.getAmount());
         dbManager.getAccountStore().put(ownerAddr, ownerAccountCap);
 
@@ -92,6 +92,7 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
         ownerAccountCap.burnToken(tokenKey, ctx.getAmount());
         dbManager.getAccountStore().put(ownerAddr, ownerAccountCap);
         var realTransfer = ctx.getAmount() - tokenFee;
+        Assert.isTrue(realTransfer > 0, "Not enough token balance to cover transfers fee");
         if(ctx.getAvailableTime() <= 0)
         {
           toAccountCap.addToken(tokenKey, realTransfer);
@@ -122,7 +123,7 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(TransferTokenContract.class), "contract type error,expected type [TransferTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(TransferTokenContract.class), "Contract type error,expected type [TransferTokenContract],real type[" + contract.getClass() + "]");
 
       var fee = calcFee();
 
@@ -133,6 +134,7 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
 
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
+      var tokenPoolOwnerAddr = tokenPool.getOwnerAddress().toByteArray();
       Assert.notNull(tokenPool, "Token pool not found: " + ctx.getTokenName());
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
@@ -163,6 +165,11 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
       Assert.isTrue (ctx.getAmount() > 0, "Invalid transfer amount, expect positive number");
       Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount(), "Not enough token balance");
 
+      //validate transfer amount vs fee
+      if(!Arrays.equals(ownerAddress, tokenPoolOwnerAddr)){
+        var tokenFee = tokenPool.getFee() + LongMath.divide(ctx.getAmount() * tokenPool.getExtraFeeRate(), 100, RoundingMode.CEILING);
+        Assert.isTrue(ctx.getAmount() > tokenFee, "Not enough token balance to cover transfer fee");
+      }
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
               && toAccountCap != null

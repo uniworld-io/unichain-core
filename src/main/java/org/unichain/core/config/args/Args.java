@@ -119,8 +119,7 @@ public class Args {
   @Parameter(names = {"--storage-db-version"}, description = "Storage db version.(1 or 2)")
   private String storageDbVersion = "";
 
-  @Parameter(names = {
-      "--storage-db-engine"}, description = "Storage db engine.(leveldb or rocksdb)")
+  @Parameter(names = {"--storage-db-engine"}, description = "Storage db engine.(leveldb or rocksdb)")
   private String storageDbEngine = "";
 
   @Parameter(names = {
@@ -246,6 +245,10 @@ public class Args {
   @Getter
   @Setter
   private boolean solidityNode = false;
+
+  @Getter
+  @Setter
+  private boolean explorerNode = false;
 
   @Getter
   @Setter

@@ -13,7 +13,7 @@ plugins {
 }
 
 group 'org.unichain'
-version '2.0.4'
+version '2.0.5-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
@@ -351,6 +351,7 @@ def binaryRelease(taskName, jarName, mainClass) {
 artifacts {
     archives(binaryRelease('buildRelayNodeJar', 'relay-node', 'org.unichain.program.SolidityNode'),
             binaryRelease('buildUniChainCoreJar', 'unichain-core', 'org.unichain.program.FullNode'),
+            binaryRelease('buildUniExplorerJar', 'explorer-node', 'org.unichain.program.ExplorerNode'),
             binaryRelease('buildKeystoreFactoryJar', 'KeystoreFactory', 'org.unichain.program.KeystoreFactory'),
             binaryRelease('buildDBConvertJar', 'DBConvert', 'org.unichain.program.DBConvert'))
 }

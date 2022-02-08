@@ -363,14 +363,13 @@ message UpdateBrokerageContract {
   Create NFT message
  */
 message NFTTemplate {
-  bytes id = 1;
-  bytes symbol = 2;
-  string name = 3;
-  int64 total_supply = 4;
-  bytes token_index = 5;
-  int64 minter = 6;
-  google.protobuf.Timestamp last_operation = 7;
-  Permission owner = 8;
+  bytes symbol = 1;
+  string name = 2;
+  int64 total_supply = 3;
+  bytes token_index = 4;
+  int64 minter = 5;
+  google.protobuf.Timestamp last_operation = 6;
+  bytes owner = 7;
 }
 
 message NFTItem {

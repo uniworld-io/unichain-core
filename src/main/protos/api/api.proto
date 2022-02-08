@@ -1252,8 +1252,8 @@ message TransactionApprovedList {
   TransactionExtention transaction = 5;
 }
 
-service NftContract {
-  rpc GetNftContract (NFTTemplate) returns (NFTTemplateAccount) {
+service Nft {
+  rpc createNftTemplate (NFTTemplate) returns (CreateNftContract) {
     option (google.api.http) = {
       post: "/createnfttemplate/posttransaction"
       body: "*"

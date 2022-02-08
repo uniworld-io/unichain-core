@@ -372,7 +372,7 @@ message NFTTemplate {
   bytes owner = 7;
 }
 
-message NFTItem {
+message CreateNftContract {
   bytes nft_template_id = 1;
   bytes id = 2;
   bytes owner_address = 3;

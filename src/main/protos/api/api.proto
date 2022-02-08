@@ -1251,3 +1251,15 @@ message TransactionApprovedList {
   Result result = 4;
   TransactionExtention transaction = 5;
 }
+
+service NftContract {
+  rpc GetNftContract (NFTTemplate) returns (NFTTemplateAccount) {
+    option (google.api.http) = {
+      post: "/createnfttemplate/posttransaction"
+      body: "*"
+      additional_bindings {
+        get: "/shownfttemplate/gettransaction"
+      }
+    };
+  }
+}

@@ -13,6 +13,9 @@ import org.unichain.protos.Protocol.Transaction.Result.contractResult;
 
 import java.util.Objects;
 
+/**
+ * @todo safely doing math compute
+ */
 public class ReceiptCapsule {
   private ResourceReceipt receipt;
   @Getter
@@ -97,6 +100,7 @@ public class ReceiptCapsule {
 
   /**
    * Pay energy bill block version 2: directly charge from account's balance
+   * @todo safely doing math compute
    */
   public void payEnergyBillV2(Manager manager, AccountCapsule origin, AccountCapsule caller, long sharedPercent) throws BalanceInsufficientException {
     if (receipt.getEnergyUsageTotal() <= 0) {
@@ -119,6 +123,13 @@ public class ReceiptCapsule {
     }
   }
 
+  /**
+   * @todo safely doing math compute
+   * @param manager
+   * @param account
+   * @param usage
+   * @throws BalanceInsufficientException
+   */
   private void payEnergyBillV2(Manager manager, AccountCapsule account, long usage) throws BalanceInsufficientException {
     long blockEnergyUsage = manager.getDynamicPropertiesStore().getBlockEnergyUsage() + usage;
     manager.getDynamicPropertiesStore().saveBlockEnergyUsage(blockEnergyUsage);

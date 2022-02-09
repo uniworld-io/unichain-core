@@ -19,6 +19,9 @@ import java.util.Map;
 
 import static org.unichain.protos.Protocol.Transaction.Contract.ContractType.TransferAssetContract;
 
+/**
+ * @todo safely doing math compute
+ */
 @Slf4j(topic = "DB")
 public class BandwidthProcessor extends ResourceProcessor {
 

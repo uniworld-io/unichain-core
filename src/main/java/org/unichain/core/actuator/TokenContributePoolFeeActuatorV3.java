@@ -47,10 +47,11 @@ public class TokenContributePoolFeeActuatorV3 extends AbstractActuator {
         var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
         var contributeAmount =  ctx.getAmount();
         var tokenCapsule = dbManager.getTokenPoolStore().get(tokenKey);
+        //@todo safely doing math compute
         tokenCapsule.setFeePool(tokenCapsule.getFeePool() + contributeAmount);
         dbManager.getTokenPoolStore().put(tokenKey, tokenCapsule);
         var ownerAddress = ctx.getOwnerAddress().toByteArray();
-        dbManager.adjustBalance(ownerAddress, -(ctx.getAmount() + fee));
+        dbManager.adjustBalance(ownerAddress, -(ctx.getAmount() + fee));//@todo safely doing math compute
         dbManager.burnFee(fee);
         ret.setStatus(fee, code.SUCESS);
     }
@@ -81,6 +82,7 @@ public class TokenContributePoolFeeActuatorV3 extends AbstractActuator {
 
           Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
           Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+          //@todo safely doing math compute
           Assert.isTrue(ownerAccount.getBalance() >= contributeAmount + calcFee(), "Not enough balance");
           return true;
       }

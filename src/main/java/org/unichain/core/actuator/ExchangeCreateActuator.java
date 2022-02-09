@@ -40,22 +40,22 @@ public class ExchangeCreateActuator extends AbstractActuator {
       var firstTokenBalance = ctx.getFirstTokenBalance();
       var secondTokenBalance = ctx.getSecondTokenBalance();
 
-      var newBalance = accountCapsule.getBalance() - fee;
+      var newBalance = accountCapsule.getBalance() - fee;//@todo safely doing math compute
       accountCapsule.setBalance(newBalance);
 
       if (Arrays.equals(firstTokenID, "_".getBytes())) {
-        accountCapsule.setBalance(newBalance - firstTokenBalance);
+        accountCapsule.setBalance(newBalance - firstTokenBalance);//@todo safely doing math compute
       } else {
         accountCapsule.reduceAssetAmountV2(firstTokenID, firstTokenBalance, dbManager);
       }
 
       if (Arrays.equals(secondTokenID, "_".getBytes())) {
-        accountCapsule.setBalance(newBalance - secondTokenBalance);
+        accountCapsule.setBalance(newBalance - secondTokenBalance);//@todo safely doing math compute
       } else {
         accountCapsule.reduceAssetAmountV2(secondTokenID, secondTokenBalance, dbManager);
       }
 
-      var id = dbManager.getDynamicPropertiesStore().getLatestExchangeNum() + 1;
+      var id = dbManager.getDynamicPropertiesStore().getLatestExchangeNum() + 1;//@todo safely doing math compute
       var now = dbManager.getHeadBlockTimeStamp();
       if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
         //save to old asset store
@@ -145,12 +145,14 @@ public class ExchangeCreateActuator extends AbstractActuator {
       Assert.isTrue(!(firstTokenBalance > balanceLimit || secondTokenBalance > balanceLimit), "Token balance must less than " + balanceLimit);
 
       if (Arrays.equals(firstTokenID, "_".getBytes())) {
+        //@todo safely doing math compute
         Assert.isTrue(accountCapsule.getBalance() >= (firstTokenBalance + calcFee()), "Balance is not enough");
       } else {
         Assert.isTrue(accountCapsule.assetBalanceEnoughV2(firstTokenID, firstTokenBalance, dbManager), "First token balance is not enough");
       }
 
       if (Arrays.equals(secondTokenID, "_".getBytes())) {
+        //@todo safely doing math compute
         Assert.isTrue(accountCapsule.getBalance() >= (secondTokenBalance + calcFee()), "Balance is not enough");
       } else {
         Assert.isTrue(accountCapsule.assetBalanceEnoughV2(secondTokenID, secondTokenBalance, dbManager), "Second token balance is not enough");

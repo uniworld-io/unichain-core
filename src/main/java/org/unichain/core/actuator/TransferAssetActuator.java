@@ -60,6 +60,7 @@ public class TransferAssetActuator extends AbstractActuator {
         var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         capsule = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         dbManager.getAccountStore().put(toAddress, capsule);
+        //@todo safely doing math compute
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
       var assetName = ctx.getAssetName();
@@ -133,6 +134,7 @@ public class TransferAssetActuator extends AbstractActuator {
             Math.addExact(assetBalance, amount); //check if overflow
         }
       } else {
+        //@todo safely doing math compute
         fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
         Assert.isTrue(ownerAccount.getBalance() >= fee, "Validate TransferAssetActuator error, insufficient fee.");
       }

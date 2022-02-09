@@ -44,6 +44,7 @@ public class TokenTransferOwnerActuator extends AbstractActuator {
       if (Objects.isNull(toAccount)) {
         var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
         toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+        //@todo safely doing math compute
         fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
 
@@ -96,6 +97,7 @@ public class TokenTransferOwnerActuator extends AbstractActuator {
 
       var toAccount = dbManager.getAccountStore().get(toAddress);
       if (Objects.isNull(toAccount)) {
+        //@todo safely doing math compute
         fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
       }
 

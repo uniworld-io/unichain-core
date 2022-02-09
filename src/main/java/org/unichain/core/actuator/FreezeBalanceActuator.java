@@ -42,6 +42,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
       var now = dbManager.getHeadBlockTimeStamp();
       var duration = ctx.getFrozenDuration() * 86_400_000;
 
+      //@todo safely doing math compute
       var newBalance = ownerAccountCapsule.getBalance() - ctx.getFrozenBalance();
 
       var frozenBalance = ctx.getFrozenBalance();
@@ -55,6 +56,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
             delegateResource(ownerAddress, receiverAddress, true, frozenBalance, expireTime);
             ownerAccountCapsule.addDelegatedFrozenBalanceForBandwidth(frozenBalance);
           } else {
+            //@todo safely doing math compute
             var newFrozenBalanceForBandwidth = frozenBalance + ownerAccountCapsule.getFrozenBalance();
             ownerAccountCapsule.setFrozenForBandwidth(newFrozenBalanceForBandwidth, expireTime);
           }
@@ -65,6 +67,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
             delegateResource(ownerAddress, receiverAddress, false, frozenBalance, expireTime);
             ownerAccountCapsule.addDelegatedFrozenBalanceForEnergy(frozenBalance);
           } else {
+            //@todo safely doing math compute
             var newFrozenBalanceForEnergy = frozenBalance + ownerAccountCapsule.getAccountResource()
                     .getFrozenBalanceForEnergy()
                     .getFrozenBalance();

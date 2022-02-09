@@ -127,6 +127,7 @@ public class ParticipateAssetIssueActuator extends AbstractActuator {
         var unxNum = assetIssueCapsule.getUnxNum();
         var num = assetIssueCapsule.getNum();
         var exchangeAmount = Math.multiplyExact(amount, num);
+        //@todo safely doing math compute
         exchangeAmount = Math.floorDiv(exchangeAmount, unxNum);
         Assert.isTrue(exchangeAmount > 0, "Can not process the exchange!");
 

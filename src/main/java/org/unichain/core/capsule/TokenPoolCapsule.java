@@ -188,6 +188,8 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
             .setName(name).build();
   }
 
+  //@todo review number overflow
+  //
   public void burnToken(long amount) throws ContractExeException {
     if(amount <= 0)
       throw  new ContractExeException("mined token amount must greater than ZERO");

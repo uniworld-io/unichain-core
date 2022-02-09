@@ -86,7 +86,7 @@ public class AssetIssueActuator extends AbstractActuator {
 
       while (iterator.hasNext()) {
         var next = iterator.next();
-        var expireTime = startTime + next.getFrozenDays() * 86_400_000;
+        var expireTime = startTime + next.getFrozenDays() * 86_400_000;//@todo safely doing math compute
         var newFrozen = Frozen.newBuilder()
             .setFrozenBalance(next.getFrozenAmount())
             .setExpireTime(expireTime)
@@ -172,7 +172,7 @@ public class AssetIssueActuator extends AbstractActuator {
         Assert.isTrue(next.getFrozenAmount() <= remainSupply,"Frozen supply cannot exceed total supply");
         Assert.isTrue ((next.getFrozenDays() >= minFrozenSupplyTime && next.getFrozenDays() <= maxFrozenSupplyTime),
                 "frozenDuration must be less than " + maxFrozenSupplyTime + " days " + "and more than " + minFrozenSupplyTime + " days");
-        remainSupply -= next.getFrozenAmount();
+        remainSupply -= next.getFrozenAmount();//@todo safely doing math compute
       }
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);

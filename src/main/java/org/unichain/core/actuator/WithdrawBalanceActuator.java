@@ -43,7 +43,7 @@ public class WithdrawBalanceActuator extends AbstractActuator {
       var allowance = accountCapsule.getAllowance();
       var now = dbManager.getHeadBlockTimeStamp();
       accountCapsule.setInstance(accountCapsule.getInstance().toBuilder()
-          .setBalance(oldBalance + allowance)
+          .setBalance(oldBalance + allowance)        //@todo safely doing math compute
           .setAllowance(0L)
           .setLatestWithdrawTime(now)
           .build());
@@ -90,10 +90,12 @@ public class WithdrawBalanceActuator extends AbstractActuator {
 
       var latestWithdrawTime = accountCapsule.getLatestWithdrawTime();
       var now = dbManager.getHeadBlockTimeStamp();
+      //@todo safely doing math compute
       var witnessAllowanceFrozenTime = Objects.isNull(getDeposit()) ?
           dbManager.getDynamicPropertiesStore().getWitnessAllowanceFrozenTime() * 86_400_000L :
           getDeposit().getWitnessAllowanceFrozenTime() * 86_400_000L;
 
+      //@todo safely doing math compute
       Assert.isTrue(now - latestWithdrawTime >= witnessAllowanceFrozenTime, "The last withdraw time is " + latestWithdrawTime + ",less than 24 hours");
       var witnessAccount = accountCapsule.getAllowance() <= 0 && dbManager.getDelegationService().queryReward(ownerAddress) <= 0;
       Assert.isTrue(!witnessAccount, "witnessAccount does not have any reward");

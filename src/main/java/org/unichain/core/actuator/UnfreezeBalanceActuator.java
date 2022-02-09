@@ -97,7 +97,7 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
           }
           dbManager.getAccountStore().put(receiverCapsule.createDbKey(), receiverCapsule);
         }
-
+            //@todo safely doing math compute
         accountCapsule.setBalance(oldBalance + unfreezeBalance);
 
         if (delegatedCapsule.getFrozenBalanceForBandwidth() == 0
@@ -142,13 +142,14 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
             while (iterator.hasNext()) {
               var next = iterator.next();
               if (next.getExpireTime() <= now) {
+                  //@todo safely doing math compute
                 unfreezeBalance += next.getFrozenBalance();
                 iterator.remove();
               }
             }
 
             accountCapsule.setInstance(accountCapsule.getInstance().toBuilder()
-                .setBalance(oldBalance + unfreezeBalance)
+                .setBalance(oldBalance + unfreezeBalance)        //@todo safely doing math compute
                 .clearFrozen().addAllFrozen(frozenList).build());
 
             break;
@@ -158,7 +159,7 @@ public class UnfreezeBalanceActuator extends AbstractActuator {
             AccountResource newAccountResource = accountCapsule.getAccountResource().toBuilder()
                 .clearFrozenBalanceForEnergy().build();
             accountCapsule.setInstance(accountCapsule.getInstance().toBuilder()
-                .setBalance(oldBalance + unfreezeBalance)
+                .setBalance(oldBalance + unfreezeBalance)        //@todo safely doing math compute
                 .setAccountResource(newAccountResource).build());
 
             break;

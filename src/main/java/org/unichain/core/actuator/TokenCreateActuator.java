@@ -61,7 +61,7 @@ public class TokenCreateActuator extends AbstractActuator {
       var startTime = capsule.getStartTime();
       if(!ctx.hasField(TOKEN_CREATE_FIELD_END_TIME))
       {
-        capsule.setEndTime(startTime + Parameter.ChainConstant.URC30_DEFAULT_AGE);
+        capsule.setEndTime(startTime + Parameter.ChainConstant.URC30_DEFAULT_AGE);//@todo safely doing math compute
       }
 
       //with block ver <= 2, pre-set factors to zero
@@ -76,7 +76,7 @@ public class TokenCreateActuator extends AbstractActuator {
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
       accountCapsule.addToken(capsule.createDbKey(), capsule.getTotalSupply());
-      accountCapsule.setBalance(accountCapsule.getBalance() - ctx.getFeePool() - fee);
+      accountCapsule.setBalance(accountCapsule.getBalance() - ctx.getFeePool() - fee);//@todo safely doing math compute
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
@@ -112,9 +112,10 @@ public class TokenCreateActuator extends AbstractActuator {
       Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
 
       var startTime = ctx.hasField(TOKEN_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
-      var maxTokenActive = dbManager.getHeadBlockTimeStamp() + URC30_MAX_ACTIVE;
+      var maxTokenActive = dbManager.getHeadBlockTimeStamp() + URC30_MAX_ACTIVE;//@todo safely doing math compute
       Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= maxTokenActive), "Invalid start time: must be greater than current block time and lower than limit timestamp:" +maxTokenActive);
 
+      //@todo safely doing math compute
       var endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : (startTime + Parameter.ChainConstant.URC30_DEFAULT_AGE);
       var maxTokenAge = dbManager.getHeadBlockTimeStamp() + URC30_MAX_AGE;
       Assert.isTrue((endTime > 0)
@@ -127,6 +128,7 @@ public class TokenCreateActuator extends AbstractActuator {
       Assert.isTrue(ctx.getMaxSupply() >= ctx.getTotalSupply() , "MaxSupply must greater or equal than TotalSupply");
       Assert.isTrue(ctx.getFee() >= 0 && ctx.getFee() <= TOKEN_MAX_TRANSFER_FEE, "Invalid token transfer fee: must be positive and not exceed max fee : " + TOKEN_MAX_TRANSFER_FEE + " tokens");
       Assert.isTrue(ctx.getExtraFeeRate() >= 0 && ctx.getExtraFeeRate() <= 100 && ctx.getExtraFeeRate() <= TOKEN_MAX_TRANSFER_FEE_RATE, "Invalid extra fee rate , should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
+      //@todo safely doing math compute
       Assert.isTrue(ctx.getFeePool() >= 0 && (accountCap.getBalance() >= calcFee() + ctx.getFeePool()), "Invalid fee pool or not enough balance for fee & pre-deposit pool fee");
       Assert.isTrue(ctx.getLot() >= 0, "Invalid lot: must not negative");
       return true;

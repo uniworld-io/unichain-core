@@ -10,7 +10,7 @@ public class ExchangeProcessor {
   public ExchangeProcessor(long supply) {
     this.supply = supply;
   }
-
+  //@todo safely doing math compute
   private long exchangeToSupply(long balance, long quant) {
     logger.debug("balance: " + balance);
     long newBalance = balance + quant;
@@ -23,7 +23,7 @@ public class ExchangeProcessor {
 
     return out;
   }
-
+  //@todo safely doing math compute
   private long exchangeFromSupply(long balance, long supplyQuant) {
     supply -= supplyQuant;
 

@@ -13,7 +13,8 @@ public class Parameter {
   public static final Set<Integer> BLOCK_VERSION_SUPPORTED = new HashSet<>(Arrays.asList(
           ChainConstant.BLOCK_VERSION_1,
           ChainConstant.BLOCK_VERSION_2,
-          ChainConstant.BLOCK_VERSION_3));
+          ChainConstant.BLOCK_VERSION_3,
+          ChainConstant.BLOCK_VERSION_4));
 
   public class ChainConstant {
     /**
@@ -48,6 +49,7 @@ public class Parameter {
     public static final int BLOCK_VERSION_1 = 1;
     public static final int BLOCK_VERSION_2 = 2;
     public static final int BLOCK_VERSION_3 = 3;
+    public static final int BLOCK_VERSION_4 = 4;
 
     /**
      * max unw/token transfer time range

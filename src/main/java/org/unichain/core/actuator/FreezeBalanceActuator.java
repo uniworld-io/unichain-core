@@ -40,10 +40,9 @@ public class FreezeBalanceActuator extends AbstractActuator {
       var ownerAccountCapsule = dbManager.getAccountStore().get(txOwnerAddress);
 
       var now = dbManager.getHeadBlockTimeStamp();
-      var duration = ctx.getFrozenDuration() * 86_400_000;
+      var duration = Math.multiplyExact(ctx.getFrozenDuration(), 86_400_000L);
 
-      //@todo safely doing math compute
-      var newBalance = ownerAccountCapsule.getBalance() - ctx.getFrozenBalance();
+      var newBalance = Math.subtractExact(ownerAccountCapsule.getBalance(), ctx.getFrozenBalance());
 
       var frozenBalance = ctx.getFrozenBalance();
       var expireTime = now + duration;
@@ -56,8 +55,7 @@ public class FreezeBalanceActuator extends AbstractActuator {
             delegateResource(ownerAddress, receiverAddress, true, frozenBalance, expireTime);
             ownerAccountCapsule.addDelegatedFrozenBalanceForBandwidth(frozenBalance);
           } else {
-            //@todo safely doing math compute
-            var newFrozenBalanceForBandwidth = frozenBalance + ownerAccountCapsule.getFrozenBalance();
+            var newFrozenBalanceForBandwidth = Math.addExact(frozenBalance, ownerAccountCapsule.getFrozenBalance());
             ownerAccountCapsule.setFrozenForBandwidth(newFrozenBalanceForBandwidth, expireTime);
           }
           dbManager.getDynamicPropertiesStore().addTotalNetWeight(frozenBalance / 1000_000L);
@@ -67,10 +65,9 @@ public class FreezeBalanceActuator extends AbstractActuator {
             delegateResource(ownerAddress, receiverAddress, false, frozenBalance, expireTime);
             ownerAccountCapsule.addDelegatedFrozenBalanceForEnergy(frozenBalance);
           } else {
-            //@todo safely doing math compute
-            var newFrozenBalanceForEnergy = frozenBalance + ownerAccountCapsule.getAccountResource()
+            var newFrozenBalanceForEnergy = Math.addExact(frozenBalance, ownerAccountCapsule.getAccountResource()
                     .getFrozenBalanceForEnergy()
-                    .getFrozenBalance();
+                    .getFrozenBalance());
             ownerAccountCapsule.setFrozenForEnergy(newFrozenBalanceForEnergy, expireTime);
           }
           dbManager.getDynamicPropertiesStore().addTotalEnergyWeight(frozenBalance / 1000_000L);

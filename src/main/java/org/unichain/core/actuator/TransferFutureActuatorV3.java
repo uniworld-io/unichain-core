@@ -43,7 +43,7 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
         var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
         toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         dbManager.getAccountStore().put(toAddress, toAccount);
-        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
       chargeFee(ownerAddress, fee);
@@ -73,7 +73,7 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       var amount = ctx.getAmount();
       Assert.isTrue(amount > 0, "Amount must greater than 0.");
 
-      var maxExpireTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationUnwV3();
+      var maxExpireTime = Math.addExact(dbManager.getHeadBlockTimeStamp(), dbManager.getMaxFutureTransferTimeDurationUnwV3());
       Assert.isTrue((ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp()) && (ctx.getExpireTime() <= maxExpireTime),
                       "expire time must greater current block time, lower than maximum timestamp:" + maxExpireTime);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
@@ -160,7 +160,7 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       //save summary
       summary = Protocol.FutureSummary.newBuilder()
               .setTotalBalance(amount)
-              .setTotalDeal(1)
+              .setTotalDeal(1L)
               .setUpperTime(tickDay)
               .setLowerTime(tickDay)
               .setLowerTick(ByteString.copyFrom(tickKey))

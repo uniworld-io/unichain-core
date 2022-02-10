@@ -1569,13 +1569,11 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
     saveBlockFilledSlots(blockFilledSlots);
   }
 
-  //@todo safely doing math compute
   public int calculateFilledSlotsCount() {
     int[] blockFilledSlots = getBlockFilledSlots();
-    return 100 * IntStream.of(blockFilledSlots).sum() / getBlockFilledSlotsNumber();
+    return Math.multiplyExact(100, IntStream.of(blockFilledSlots).sum()) / getBlockFilledSlotsNumber();
   }
 
-  //@todo safely doing math compute
   public void saveLatestSolidifiedBlockNum(long number) {
     this.put(LATEST_SOLIDIFIED_BLOCK_NUM, new BytesCapsule(ByteArray.fromLong(number)));
   }
@@ -1737,9 +1735,8 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
     long maintenanceTimeInterval = getMaintenanceTimeInterval();
 
     long currentMaintenanceTime = getNextMaintenanceTime();
-    long round = (blockTime - currentMaintenanceTime) / maintenanceTimeInterval;
-    //@todo safely doing math compute
-    long nextMaintenanceTime = currentMaintenanceTime + (round + 1) * maintenanceTimeInterval;
+    long round = Math.subtractExact(blockTime, currentMaintenanceTime) / maintenanceTimeInterval;
+    long nextMaintenanceTime = Math.addExact(currentMaintenanceTime, Math.multiplyExact(round + 1,  maintenanceTimeInterval));
     saveNextMaintenanceTime(nextMaintenanceTime);
 
     logger.info(
@@ -1750,33 +1747,29 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
   }
 
   //The unit is unx
-  //@todo safely doing math compute
   public void addTotalNetWeight(long amount) {
-    long totalNetWeight = getTotalNetWeight();
-    totalNetWeight += amount;
+    long totalNetWeight = Math.addExact(getTotalNetWeight(), amount);
     saveTotalNetWeight(totalNetWeight);
   }
 
   //The unit is unx
-  //@todo safely doing math compute
   public void addTotalEnergyWeight(long amount) {
-    long totalEnergyWeight = getTotalEnergyWeight();
-    totalEnergyWeight += amount;
+    long totalEnergyWeight = Math.addExact(getTotalEnergyWeight(), amount);
     saveTotalEnergyWeight(totalEnergyWeight);
   }
-  //@todo safely doing math compute
+
   public void addTotalCreateAccountCost(long fee) {
-    long newValue = getTotalCreateAccountCost() + fee;
+    long newValue = Math.addExact(getTotalCreateAccountCost(), fee);
     saveTotalCreateAccountFee(newValue);
   }
-  //@todo safely doing math compute
+
   public void addTotalCreateWitnessCost(long fee) {
-    long newValue = getTotalCreateWitnessCost() + fee;
+    long newValue = Math.addExact(getTotalCreateWitnessCost(), fee);
     saveTotalCreateWitnessFee(newValue);
   }
-  //@todo safely doing math compute
+
   public void addTotalTransactionCost(long fee) {
-    long newValue = getTotalTransactionCost() + fee;
+    long newValue = Math.addExact(getTotalTransactionCost(), fee);
     saveTotalTransactionCost(newValue);
   }
 

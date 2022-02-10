@@ -51,7 +51,7 @@ public class TokenWithdrawFutureActuatorV3 extends AbstractActuator {
 
       withdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp());
 
-      tokenPool.setFeePool(tokenPool.getFeePool() - fee);//@todo safely doing math compute
+      tokenPool.setFeePool(Math.subtractExact(tokenPool.getFeePool(), fee));
       tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
       dbManager.burnFee(fee);

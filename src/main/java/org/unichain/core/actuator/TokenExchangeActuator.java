@@ -65,15 +65,12 @@ public class TokenExchangeActuator extends AbstractActuator {
       Assert.isTrue(exchTokenFactor > 0, "Exchange token factor must be positive");
       var exchangedToken = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
 
-      //@todo safely doing math compute
       ownerAccount.addToken(tokenKey, exchangedToken);
-      //@todo safely doing math compute
-      ownerAccount.setBalance(ownerAccount.getBalance() - ctx.getAmount() - fee);
+      ownerAccount.setBalance(Math.subtractExact(ownerAccount.getBalance(), Math.addExact(ctx.getAmount(), fee)));
 
       tokenOwnerAcc.burnToken(tokenKey, exchangedToken);
 
-      //@todo safely doing math compute
-      tokenOwnerAcc.setBalance(tokenOwnerAcc.getBalance() + ctx.getAmount());
+      tokenOwnerAcc.setBalance(Math.addExact(tokenOwnerAcc.getBalance() , ctx.getAmount()));
 
       accountStore.put(ownerAddress, ownerAccount);
       accountStore.put(tokenOwnerAddress, tokenOwnerAcc);
@@ -104,8 +101,7 @@ public class TokenExchangeActuator extends AbstractActuator {
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       var ownerCap = accountStore.get(ownerAddress);
       Assert.notNull(ownerCap, "Owner account not exists");
-      //@todo safely doing math compute
-      Assert.isTrue(ownerCap.getBalance() >= (ctx.getAmount() + calcFee()), "Not enough balance to exchange");
+      Assert.isTrue(ownerCap.getBalance() >= Math.addExact(ctx.getAmount(), calcFee()), "Not enough balance to exchange");
 
       byte[] tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = tokenPoolStore.get(tokenKey);
@@ -114,8 +110,7 @@ public class TokenExchangeActuator extends AbstractActuator {
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
 
       //prevent critical token update cause this tx to be wrong affected!
-      //@todo safely doing math compute
-      var guardTime = dbManager.getHeadBlockTimeStamp() - tokenPool.getCriticalUpdateTime();
+      var guardTime = Math.subtractExact(dbManager.getHeadBlockTimeStamp(), tokenPool.getCriticalUpdateTime());
       Assert.isTrue(guardTime >= URC30_CRITICAL_UPDATE_TIME_GUARD, "Critical token update found! Please wait up to 3 minutes before retry.");
 
       var tokenOwnerCap = accountStore.get(tokenPool.getOwnerAddress().toByteArray());

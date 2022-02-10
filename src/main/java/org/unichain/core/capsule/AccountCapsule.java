@@ -629,8 +629,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     Map<String, Long> tokenMap = this.account.getTokenMap();
     String nameKey = ByteArray.toStr(key);
 
-    //@todo safely doing math compute
-    long totalValue = tokenMap.containsKey(nameKey) ? tokenMap.get(nameKey) + value : value;
+    long totalValue = tokenMap.containsKey(nameKey) ? Math.addExact(tokenMap.get(nameKey), value) : value;
     this.account = this.account.toBuilder().putToken(nameKey, totalValue).build();
     return true;
   }

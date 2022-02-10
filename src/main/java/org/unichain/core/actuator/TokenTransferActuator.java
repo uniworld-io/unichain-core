@@ -63,8 +63,7 @@ public class TokenTransferActuator extends AbstractActuator {
       if (toAccountCap == null) {
         var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-        //@todo safely doing math compute
-        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
       if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){
@@ -81,14 +80,12 @@ public class TokenTransferActuator extends AbstractActuator {
           addFutureToken(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime());
       }
       else {
-        //@todo safely doing math compute
-        var tokenFee = tokenPool.getFee() + LongMath.divide(ctx.getAmount() * tokenPool.getExtraFeeRate(), 100, RoundingMode.CEILING);
+        var tokenFee = Math.addExact(tokenPool.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), tokenPool.getExtraFeeRate()), 100, RoundingMode.CEILING));
         var tokenPoolOwnerCap = dbManager.getAccountStore().get(tokenPoolOwnerAddr);
         tokenPoolOwnerCap.addToken(tokenKey, tokenFee);
         dbManager.getAccountStore().put(tokenPoolOwnerAddr, tokenPoolOwnerCap);
 
-        //@todo safely doing math compute
-        ownerAccountCap.burnToken(tokenKey, (tokenFee + ctx.getAmount()));
+        ownerAccountCap.burnToken(tokenKey, Math.addExact(tokenFee , ctx.getAmount()));
         dbManager.getAccountStore().put(ownerAddr, ownerAccountCap);
 
         if(ctx.getAvailableTime() <= 0)
@@ -101,8 +98,7 @@ public class TokenTransferActuator extends AbstractActuator {
       }
 
       //charge pool fee
-      //@todo safely doing math compute
-      tokenPool.setFeePool(tokenPool.getFeePool() - fee);
+      tokenPool.setFeePool(Math.subtractExact(tokenPool.getFeePool(), fee));
       tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
       dbManager.burnFee(fee);
@@ -138,8 +134,7 @@ public class TokenTransferActuator extends AbstractActuator {
 
       if (ctx.getAvailableTime() > 0) {
         Assert.isTrue (ctx.getAvailableTime() > dbManager.getHeadBlockTimeStamp(), "Block time passed available time");
-        //@todo safely doing math compute
-        long maxAvailTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationToken();
+        long maxAvailTime = Math.addExact(dbManager.getHeadBlockTimeStamp(), dbManager.getMaxFutureTransferTimeDurationToken());
         Assert.isTrue (ctx.getAvailableTime() <= maxAvailTime, "Available time limited. Max available timestamp: " + maxAvailTime);
         Assert.isTrue(ctx.getAvailableTime() < tokenPool.getEndTime(), "Available time exceeded token expired time");
         Assert.isTrue(ctx.getAmount() >= tokenPool.getLot(),"Future transfer require minimum amount of : " + tokenPool.getLot());
@@ -151,8 +146,7 @@ public class TokenTransferActuator extends AbstractActuator {
 
       var toAccountCap = dbManager.getAccountStore().get(toAddress);
       if (toAccountCap == null) {
-        //@todo safely doing math compute
-        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
       Assert.isTrue(tokenPool.getFeePool() >= fee, "Not enough token pool fee balance");
@@ -164,12 +158,10 @@ public class TokenTransferActuator extends AbstractActuator {
       if (Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray())) {
         tokenFee = 0;
       } else {
-        //@todo safely doing math compute
-        tokenFee = tokenPool.getFee() + LongMath.divide(ctx.getAmount() * tokenPool.getExtraFeeRate(), 100, RoundingMode.CEILING);
+        tokenFee = Math.addExact(tokenPool.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), tokenPool.getExtraFeeRate()), 100, RoundingMode.CEILING));
       }
 
-      //@todo safely doing math compute
-      Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount() + tokenFee, "Not enough token balance");
+      Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= Math.addExact(ctx.getAmount(), tokenFee), "Not enough token balance");
 
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
@@ -216,8 +208,7 @@ public class TokenTransferActuator extends AbstractActuator {
         tokenStore.put(tickKey, tick);
 
         //update account summary
-        //@todo safely doing math compute
-        summary = summary.toBuilder().setTotalValue(summary.getTotalValue() + amount).build();
+        summary = summary.toBuilder().setTotalValue(Math.addExact(summary.getTotalValue(), amount)).build();
         toAcc.setFutureTokenSummary(summary);
         accountStore.put(toAddress, toAcc);
         return;
@@ -277,8 +268,8 @@ public class TokenTransferActuator extends AbstractActuator {
       //save summary
       summary = summary.toBuilder()
               .setLowerBoundTime(tickDay)
-              .setTotalDeal(summary.getTotalDeal() +1)//@todo safely doing math compute
-              .setTotalValue(summary.getTotalValue() + amount)//@todo safely doing math compute
+              .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
+              .setTotalValue(Math.addExact(summary.getTotalValue(), amount))
               .setLowerTick(ByteString.copyFrom(tickKey))
               .build();
       toAcc.setFutureTokenSummary(summary);
@@ -308,8 +299,8 @@ public class TokenTransferActuator extends AbstractActuator {
 
       //save summary
       summary = summary.toBuilder()
-              .setTotalDeal(summary.getTotalDeal() + 1)//@todo safely doing math compute
-              .setTotalValue(summary.getTotalValue() + amount)//@todo safely doing math compute
+              .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
+              .setTotalValue(Math.addExact(summary.getTotalValue(), amount))
               .setUpperTick(ByteString.copyFrom(tickKey))
               .setUpperBoundTime(tickDay)
               .build();
@@ -347,8 +338,8 @@ public class TokenTransferActuator extends AbstractActuator {
 
         //save tick summary
         summary = summary.toBuilder()
-                .setTotalValue(summary.getTotalValue() + amount)//@todo safely doing math compute
-                .setTotalDeal(summary.getTotalDeal() +1)//@todo safely doing math compute
+                .setTotalValue(Math.addExact(summary.getTotalValue(), amount))
+                .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
                 .build();
 
         toAcc.setFutureTokenSummary(summary);

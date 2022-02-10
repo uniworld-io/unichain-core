@@ -362,24 +362,24 @@ message UpdateBrokerageContract {
 /*
   Create NFT message
  */
-message NFTTemplate {
-  bytes symbol = 1;
+message CreateNftContract {
+  string symbol = 1;
   string name = 2;
   int64 total_supply = 3;
-  bytes token_index = 4;
-  int64 minter = 5;
-  google.protobuf.Timestamp last_operation = 6;
+  string token_index = 4;
+  bytes minter = 5;
+  int64 last_operation = 6;
   bytes owner = 7;
 }
 
-message CreateNftContract {
+message mintNft {
   bytes nft_template_id = 1;
   bytes id = 2;
   bytes owner_address = 3;
-  int64 approval = 4;
+  bytes approval = 4;
   string uri = 5;
-  string metadata = 6;
-  google.protobuf.Timestamp last_operation = 7;
+  bytes metadata = 6;
+  int64 last_operation = 7;
   int64 expire_time = 8;
 }
 
@@ -394,6 +394,6 @@ message NFTAccountItem {
 message NFTTemplateAccount {
   string prev = 1;
   string next = 2;
-  NFTTemplate nft_template = 3;
+  CreateNftContract nft_template = 3;
   int32 total = 4;
 }

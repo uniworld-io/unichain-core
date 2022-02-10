@@ -43,7 +43,7 @@ public class TransferActuator extends AbstractActuator {
         var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
         toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         dbManager.getAccountStore().put(toAddress, toAccount);
-        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
@@ -81,8 +81,7 @@ public class TransferActuator extends AbstractActuator {
       var balance = ownerAccount.getBalance();
       var toAccount = dbManager.getAccountStore().get(toAddress);
       if (toAccount == null) {
-        //@todo safely doing math compute
-        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       var transferToSmartContract  = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1

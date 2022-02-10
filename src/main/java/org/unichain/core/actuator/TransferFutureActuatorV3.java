@@ -86,8 +86,7 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       var balance = ownerAccount.getBalance();
       var toAccount = dbManager.getAccountStore().get(toAddress);
       if (toAccount == null) {
-        //@todo safely doing math compute
-        fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       var transferToSmartContract = (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1)
@@ -138,7 +137,7 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
 
       //save summary
       summary = summary.toBuilder()
-              .setTotalBalance(summary.getTotalBalance() + amount)//@todo safely doing math compute
+              .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
               .build();
       toAcc.setFutureSummary(summary);
       accountStore.put(toAddress, toAcc);
@@ -199,8 +198,8 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       //save summary
       summary = summary.toBuilder()
               .setLowerTime(tickDay)
-              .setTotalDeal(summary.getTotalDeal() +1)//@todo safely doing math compute
-              .setTotalBalance(summary.getTotalBalance() + amount)//@todo safely doing math compute
+              .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
+              .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
               .setLowerTick(ByteString.copyFrom(tickKey))
               .build();
       toAcc.setFutureSummary(summary);
@@ -229,8 +228,8 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
 
       //save summary
       summary = summary.toBuilder()
-              .setTotalDeal(summary.getTotalDeal() + 1)//@todo safely doing math compute
-              .setTotalBalance(summary.getTotalBalance() + amount)//@todo safely doing math compute
+              .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
+              .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
               .setUpperTick(ByteString.copyFrom(tickKey))
               .setUpperTime(tickDay)
               .build();
@@ -269,8 +268,8 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
 
         //save summary
         summary = summary.toBuilder()
-                .setTotalBalance(summary.getTotalBalance() + amount)//@todo safely doing math compute
-                .setTotalDeal(summary.getTotalDeal() +1)//@todo safely doing math compute
+                .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
+                .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
                 .build();
 
         toAcc.setFutureSummary(summary);

@@ -325,10 +325,9 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
             .setFutureSupply(summary)
             .build();
   }
-  //@todo safely doing math compute
   public void addDelegatedFrozenBalanceForBandwidth(long balance) {
     this.account = this.account.toBuilder().setDelegatedFrozenBalanceForBandwidth(
-        this.account.getDelegatedFrozenBalanceForBandwidth() + balance).build();
+        Math.addExact(this.account.getDelegatedFrozenBalanceForBandwidth(), balance)).build();
   }
 
 
@@ -341,10 +340,9 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     this.account = this.account.toBuilder().setAcquiredDelegatedFrozenBalanceForBandwidth(balance)
         .build();
   }
-  //@todo safely doing math compute
   public void addAcquiredDelegatedFrozenBalanceForBandwidth(long balance) {
     this.account = this.account.toBuilder().setAcquiredDelegatedFrozenBalanceForBandwidth(
-        this.account.getAcquiredDelegatedFrozenBalanceForBandwidth() + balance)
+        Math.addExact(this.account.getAcquiredDelegatedFrozenBalanceForBandwidth(), balance))
         .build();
   }
 
@@ -374,11 +372,11 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
         .setDelegatedFrozenBalanceForBandwidth(balance)
         .build();
   }
-  //@todo safely doing math compute
+
   public void addAcquiredDelegatedFrozenBalanceForEnergy(long balance) {
     AccountResource newAccountResource = getAccountResource().toBuilder()
         .setAcquiredDelegatedFrozenBalanceForEnergy(
-            getAccountResource().getAcquiredDelegatedFrozenBalanceForEnergy() + balance).build();
+            Math.addExact(getAccountResource().getAcquiredDelegatedFrozenBalanceForEnergy(), balance)).build();
 
     this.account = this.account.toBuilder()
         .setAccountResource(newAccountResource)
@@ -635,8 +633,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   }
 
   public void addBalance(long value){
-    //@todo safely doing math compute
-    this.account = this.account.toBuilder().setBalance(account.getBalance() + value).build();
+    this.account = this.account.toBuilder().setBalance(Math.addExact(account.getBalance(), value)).build();
   }
 
   public void removeFutureTokenSummary(byte[] tokenKey){
@@ -665,7 +662,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
 
   /**
    * burn more token issued by this account
-   * @todo safely doing math compute
    */
   public boolean burnToken(byte[] key, long amount) {
     Map<String, Long> tokenMap = this.account.getTokenMap();
@@ -674,8 +670,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
       return false;
     }
 
-    //@todo safely doing math compute
-    long remain = tokenMap.get(nameKey) - amount;
+    long remain = Math.subtractExact(tokenMap.get(nameKey), amount);
     if(remain > 0)
     {
       this.account = this.account.toBuilder().putToken(nameKey, remain).build();
@@ -790,8 +785,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public long getFrozenBalance() {
     List<Frozen> frozenList = getFrozenList();
     final long[] frozenBalance = {0};
-    //@todo safely doing math compute
-    frozenList.forEach(frozen -> frozenBalance[0] = Long.sum(frozenBalance[0], frozen.getFrozenBalance()));
+    frozenList.forEach(frozen -> frozenBalance[0] = Math.addExact(frozenBalance[0], frozen.getFrozenBalance()));
     return frozenBalance[0];
   }
 
@@ -810,8 +804,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public long getFrozenSupplyBalance() {
     List<Frozen> frozenSupplyList = getFrozenSupplyList();
     final long[] frozenSupplyBalance = {0};
-    //@todo safely doing math compute
-    frozenSupplyList.forEach(frozen -> frozenSupplyBalance[0] = Long.sum(frozenSupplyBalance[0], frozen.getFrozenBalance()));
+    frozenSupplyList.forEach(frozen -> frozenSupplyBalance[0] = Math.addExact(frozenSupplyBalance[0], frozen.getFrozenBalance()));
     return frozenSupplyBalance[0];
   }
 
@@ -934,8 +927,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   }
 
   public long getAllFrozenBalanceForEnergy() {
-    //@todo safely doing math compute
-    return getEnergyFrozenBalance() + getAcquiredDelegatedFrozenBalanceForEnergy();
+    return Math.addExact(getEnergyFrozenBalance(), getAcquiredDelegatedFrozenBalanceForEnergy());
   }
 
 
@@ -1015,9 +1007,8 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return this.account.getAccountResource().getStorageUsage();
   }
 
-  //@todo safely doing math compute
   public long getStorageLeft() {
-    return getStorageLimit() - getStorageUsage();
+    return Math.subtractExact(getStorageLimit(), getStorageUsage());
   }
 
   public void setStorageUsage(long usage) {
@@ -1047,9 +1038,8 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
       return;
     }
     AccountResource accountResource = this.account.getAccountResource();
-    //@todo safely doing math compute
     accountResource = accountResource.toBuilder()
-        .setStorageUsage(accountResource.getStorageUsage() + storageUsage).build();
+        .setStorageUsage(Math.addExact(accountResource.getStorageUsage(), storageUsage)).build();
 
     this.account = this.account.toBuilder()
         .setAccountResource(accountResource)

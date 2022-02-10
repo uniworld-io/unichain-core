@@ -139,7 +139,7 @@ public class TransactionTrace {
     if (UNW_PRECOMPILED_TYPE != runtime.getUnxType()) {
       if (contractResult.OUT_OF_TIME.equals(receipt.getResult())) {
         setTimeResultType(TimeResultType.OUT_OF_TIME);
-      } else if (System.currentTimeMillis() - txStartTimeInMs > Args.getInstance().getLongRunningTime()) {
+      } else if (Math.subtractExact(System.currentTimeMillis(), txStartTimeInMs) > Args.getInstance().getLongRunningTime()) {
         setTimeResultType(TimeResultType.LONG_RUNNING);
       }
     }
@@ -174,7 +174,6 @@ public class TransactionTrace {
         ContractCapsule contractCapsule = dbManager.getContractStore().get(callContract.getContractAddress().toByteArray());
         callerAccount = callContract.getOwnerAddress().toByteArray();
         originAccount = contractCapsule.getOriginAddress();
-        // @todo safely doing math compute
         percent = Math.max(Constant.ONE_HUNDRED - contractCapsule.getConsumeUserResourcePercent(), 0);
         percent = Math.min(percent, Constant.ONE_HUNDRED);
         break;
@@ -229,7 +228,6 @@ public class TransactionTrace {
   /**
    * - if not(create, call contract) then pass
    * - if (create, call contract), check return code
-   * @throws ReceiptCheckErrException
    */
   public void check() throws ReceiptCheckErrException {
     if (!needVM()) {

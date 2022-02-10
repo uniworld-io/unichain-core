@@ -23,7 +23,6 @@ import org.unichain.protos.Contract.WithdrawFutureTokenContract;
  * - don't use global net
  * - don't use account net
  * - don't use account free net
- * @todo safely doing math compute
  */
 @Slf4j(topic = "DB")
 public class BandwidthProcessorV2 extends ResourceProcessor {
@@ -63,7 +62,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
   public void consume(TransactionCapsule tx, TransactionTrace trace) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
     List<Contract> contracts = tx.getInstance().getRawData().getContractList();
 
-    if (tx.getResultSerializedSize() > Constant.MAX_RESULT_SIZE_IN_TX * contracts.size()) {
+    if (tx.getResultSerializedSize() > Math.multiplyExact(Constant.MAX_RESULT_SIZE_IN_TX, contracts.size())) {
       throw new TooBigTransactionResultException();
     }
 
@@ -77,7 +76,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
 
     for (Contract contract : contracts) {
       if (dbManager.getDynamicPropertiesStore().supportVM()) {
-        bytesSize += Constant.MAX_RESULT_SIZE_IN_TX;
+        bytesSize = Math.addExact(bytesSize, Constant.MAX_RESULT_SIZE_IN_TX);
       }
 
       logger.debug("unxId {}, bandwidth cost :{}", tx.getTransactionId(), bytesSize);
@@ -88,8 +87,8 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         throw new ContractValidateException("account not exists");
       }
 
-      /**
-       * @todo double fee: this phase & actuator phase ?
+      /*
+        @todo double fee: this phase & actuator phase ?
        */
       try {
         if (isContractCreateNewAccount(contract)) {
@@ -104,8 +103,8 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         throw new AccountResourceInsufficientException("Account Insufficient balance to create new account");
       }
 
-      /**
-       * or else charge bw fee
+      /*
+        or else charge bw fee
        */
         try{
           switch (contract.getType()) {
@@ -135,7 +134,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
   }
 
   protected boolean useTransactionFee(AccountCapsule accountCapsule, long bytes, TransactionTrace trace) {
-    long bwFee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytes;
+    long bwFee = Math.multiplyExact(dbManager.getDynamicPropertiesStore().getTransactionFee(), bytes);
     if (consumeFee(accountCapsule, bwFee)) {
       trace.setNetBill(0, bwFee);
       dbManager.getDynamicPropertiesStore().addTotalTransactionCost(bwFee);
@@ -146,7 +145,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
   }
 
   protected boolean useTransactionFee4TokenPool(byte[] tokenKey, long bytes, TransactionTrace trace) {
-      long bwFee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytes;
+      long bwFee = Math.multiplyExact(dbManager.getDynamicPropertiesStore().getTransactionFee(), bytes);
       if (consumeFeeTokenPool(tokenKey, bwFee)) {
         trace.setNetBill(0, bwFee);
         dbManager.getDynamicPropertiesStore().addTotalTransactionCost(bwFee);
@@ -161,8 +160,9 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
     if (consumeFee(ownerAccountCapsule, fee)) {
       trace.setNetBill(0, fee);
       dbManager.getDynamicPropertiesStore().addTotalCreateAccountCost(fee);
-      return;
-    } else {
+    }
+    else
+    {
       throw new AccountResourceInsufficientException();
     }
   }

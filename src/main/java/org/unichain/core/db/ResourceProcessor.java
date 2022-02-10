@@ -27,28 +27,27 @@ abstract class ResourceProcessor {
 
   abstract void updateUsage(AccountCapsule accountCapsule);
 
-  abstract void consume(TransactionCapsule unx, TransactionTrace trace)
-      throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException;
+  abstract void consume(TransactionCapsule unx, TransactionTrace trace) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException;
 
   protected long increase(long lastUsage, long usage, long lastTime, long now) {
     return increase(lastUsage, usage, lastTime, now, windowSize);
   }
 
   protected long increase(long lastUsage, long usage, long lastTime, long now, long windowSize) {
-    long averageLastUsage = divideCeil(lastUsage * precision, windowSize);
-    long averageUsage = divideCeil(usage * precision, windowSize);
+    long averageLastUsage = divideCeil(Math.multiplyExact(lastUsage, precision), windowSize);
+    long averageUsage = divideCeil(Math.multiplyExact(usage, precision), windowSize);
 
     if (lastTime != now) {
       assert now > lastTime;
-      if (lastTime + windowSize > now) {
-        long delta = now - lastTime;
-        double decay = (windowSize - delta) / (double) windowSize;
+      if (Math.addExact(lastTime, windowSize) > now) {
+        long delta = Math.subtractExact(now, lastTime);
+        double decay = Math.subtractExact(windowSize, delta) / (double) windowSize;
         averageLastUsage = Math.round(averageLastUsage * decay);
       } else {
         averageLastUsage = 0;
       }
     }
-    averageLastUsage += averageUsage;
+    averageLastUsage = Math.addExact(averageLastUsage, averageUsage);
     return getUsage(averageLastUsage, windowSize);
   }
 
@@ -57,7 +56,7 @@ abstract class ResourceProcessor {
   }
 
   private long getUsage(long usage, long windowSize) {
-    return usage * windowSize / precision;
+    return Math.multiplyExact(usage, windowSize) / precision;
   }
 
   protected boolean consumeFee(AccountCapsule accountCapsule, long fee) {
@@ -78,13 +77,13 @@ abstract class ResourceProcessor {
 
       if(tokenPool.getFeePool() < fee)
       {
-        logger.error("not enough token pool fee for token {} available {} require", tokenPool.getName(), tokenPool.getFeePool(), fee);
+        logger.error("not enough token pool fee for token {} available {} require {}", tokenPool.getName(), tokenPool.getFeePool(), fee);
         return false;
       }
 
       try {
-        dbManager.adjustBalance(dbManager.getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
-        tokenPool.setFeePool(tokenPool.getFeePool() - fee);
+        dbManager.burnFee(fee);
+        tokenPool.setFeePool(Math.subtractExact(tokenPool.getFeePool(), fee));
         dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
       }
       catch (Exception e){

@@ -51,16 +51,6 @@ public class AssetIssueActuator extends AbstractActuator {
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var assetIssueCapsule = new AssetIssueCapsule(ctx);
       var assetIssueCapsuleV2 = new AssetIssueCapsule(ctx);
-//      String name = new String(assetIssueCapsule.getName().toByteArray(),
-//          Charset.forName("UTF-8")); // getName().toStringUtf8()
-//      long order = 0;
-//      byte[] key = name.getBytes();
-//      while (this.dbManager.getAssetIssueStore().get(key) != null) {
-//        order++;
-//        String nameKey = AssetIssueCapsule.createDbKeyString(name, order);
-//        key = nameKey.getBytes();
-//      }
-//      assetIssueCapsule.setOrder(order);
       var tokenIdNum = dbManager.getDynamicPropertiesStore().getTokenIdNum();
       tokenIdNum++;
       assetIssueCapsule.setId(Long.toString(tokenIdNum));
@@ -86,7 +76,7 @@ public class AssetIssueActuator extends AbstractActuator {
 
       while (iterator.hasNext()) {
         var next = iterator.next();
-        var expireTime = startTime + next.getFrozenDays() * 86_400_000;//@todo safely doing math compute
+        var expireTime = Math.addExact(startTime, Math.multiplyExact(next.getFrozenDays(), 86_400_000L));
         var newFrozen = Frozen.newBuilder()
             .setFrozenBalance(next.getFrozenAmount())
             .setExpireTime(expireTime)
@@ -172,7 +162,7 @@ public class AssetIssueActuator extends AbstractActuator {
         Assert.isTrue(next.getFrozenAmount() <= remainSupply,"Frozen supply cannot exceed total supply");
         Assert.isTrue ((next.getFrozenDays() >= minFrozenSupplyTime && next.getFrozenDays() <= maxFrozenSupplyTime),
                 "frozenDuration must be less than " + maxFrozenSupplyTime + " days " + "and more than " + minFrozenSupplyTime + " days");
-        remainSupply -= next.getFrozenAmount();//@todo safely doing math compute
+        remainSupply = Math.subtractExact(remainSupply, next.getFrozenAmount());
       }
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);

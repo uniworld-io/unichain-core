@@ -45,7 +45,7 @@ public class UnfreezeAssetActuator extends AbstractActuator {
       while (iterator.hasNext()) {
         var next = iterator.next();
         if (next.getExpireTime() <= now) {
-          unfreezeAsset += next.getFrozenBalance();        //@todo safely doing math compute
+          unfreezeAsset = Math.addExact(unfreezeAsset, next.getFrozenBalance());
           iterator.remove();
         }
       }

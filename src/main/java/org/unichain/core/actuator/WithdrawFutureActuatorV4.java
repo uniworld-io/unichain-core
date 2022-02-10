@@ -124,8 +124,8 @@ public class WithdrawFutureActuatorV4 extends AbstractActuator {
             /**
              * withdraw deals
              */
-            withdrawAmount += tmpTick.getBalance();        //@todo safely doing math compute
-            withdrawDeal ++;        //@todo safely doing math compute
+            withdrawAmount = Math.addExact(withdrawAmount, tmpTick.getBalance());
+            withdrawDeal = Math.incrementExact(withdrawDeal);
             futureStore.delete(tmpTickKeyBs.toByteArray());
             tmpTickKeyBs = tmpTick.getNextTick();
             continue;
@@ -148,8 +148,8 @@ public class WithdrawFutureActuatorV4 extends AbstractActuator {
         newHead.clearPrevTick();
         futureStore.put(tmpTickKeyBs.toByteArray(), newHead);
         summary = summary.toBuilder()
-                .setTotalDeal(summary.getTotalDeal() - withdrawDeal)        //@todo safely doing math compute
-                .setTotalBalance(summary.getTotalBalance() - withdrawAmount)        //@todo safely doing math compute
+                .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), withdrawDeal))
+                .setTotalBalance(Math.subtractExact(summary.getTotalBalance(), withdrawAmount))
                 .setLowerTick(tmpTickKeyBs)
                 .setLowerTime(newHead.getExpireTime())
                 .build();

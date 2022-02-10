@@ -41,8 +41,8 @@ public class TransferFutureActuator extends AbstractActuator {
       if (toAccount == null) {
         boolean withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-        dbManager.getAccountStore().put(toAddress, toAccount);//@todo safely doing math compute
-        fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();//@todo safely doing math compute
+        dbManager.getAccountStore().put(toAddress, toAccount);
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
       chargeFee(ownerAddress, fee);
@@ -71,8 +71,7 @@ public class TransferFutureActuator extends AbstractActuator {
       var amount = ctx.getAmount();
       Assert.isTrue(amount > 0, "Amount must greater than 0.");
 
-      //@todo safely doing math compute
-      long maxExpireTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationUnw();
+      long maxExpireTime = Math.addExact(dbManager.getHeadBlockTimeStamp(), dbManager.getMaxFutureTransferTimeDurationUnw());
       Assert.isTrue((ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp()) && (ctx.getExpireTime() <= maxExpireTime),
               "Expire time must greater current block time, lower than maximum timestamp: " + maxExpireTime);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
@@ -134,8 +133,7 @@ public class TransferFutureActuator extends AbstractActuator {
       futureStore.put(tickKey, tick);
 
       //update account summary
-      //@todo safely doing math compute
-      summary = summary.toBuilder().setTotalBalance(summary.getTotalBalance() + amount).build();
+      summary = summary.toBuilder().setTotalBalance(Math.addExact(summary.getTotalBalance(), amount)).build();
       toAcc.setFutureSummary(summary);
       accountStore.put(toAddress, toAcc);
       return;
@@ -160,7 +158,7 @@ public class TransferFutureActuator extends AbstractActuator {
       //save summary
       summary = Protocol.FutureSummary.newBuilder()
               .setTotalBalance(amount)
-              .setTotalDeal(1)//@todo safely doing math compute
+              .setTotalDeal(1L)
               .setUpperTime(tickDay)
               .setLowerTime(tickDay)
               .setLowerTick(ByteString.copyFrom(tickKey))
@@ -174,8 +172,6 @@ public class TransferFutureActuator extends AbstractActuator {
     /**
      * other tick exist
      */
-    //@todo remove
-    logger.info("exec transfer future: got summary {} is null ? {} ", summary, (summary == null) ? "true" : "false");
     var headKey = summary.getLowerTick().toByteArray();
     var head = futureStore.get(headKey);
     var headTime = head.getExpireTime();
@@ -199,8 +195,8 @@ public class TransferFutureActuator extends AbstractActuator {
       //update summary
       summary = summary.toBuilder()
               .setLowerTime(tickDay)
-              .setTotalDeal(summary.getTotalDeal() +1)//@todo safely doing math compute
-              .setTotalBalance(summary.getTotalBalance() + amount)//@todo safely doing math compute
+              .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
+              .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
               .setLowerTick(ByteString.copyFrom(tickKey))
               .build();
       toAcc.setFutureSummary(summary);
@@ -229,8 +225,8 @@ public class TransferFutureActuator extends AbstractActuator {
 
       //update summary
       summary = summary.toBuilder()
-              .setTotalDeal(summary.getTotalDeal() + 1)//@todo safely doing math compute
-              .setTotalBalance(summary.getTotalBalance() + amount)//@todo safely doing math compute
+              .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
+              .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
               .setUpperTick(ByteString.copyFrom(tickKey))
               .setUpperTime(tickDay)
               .build();
@@ -271,8 +267,8 @@ public class TransferFutureActuator extends AbstractActuator {
 
         //update summary
         summary = summary.toBuilder()
-                .setTotalBalance(summary.getTotalBalance() + amount)//@todo safely doing math compute
-                .setTotalDeal(summary.getTotalDeal() +1)//@todo safely doing math compute
+                .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
+                .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
                 .build();
 
         toAcc.setFutureSummary(summary);

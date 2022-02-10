@@ -82,8 +82,7 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
 
         if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
             var newTotalSupply = ctx.getTotalSupply();
-            //@todo safely doing math compute
-            var totalSupplyDiff = newTotalSupply - tokenCap.getTotalSupply();
+            var totalSupplyDiff = Math.subtractExact(newTotalSupply, tokenCap.getTotalSupply());
             tokenCap.setTotalSupply(newTotalSupply);
             var ownerAccount = dbManager.getAccountStore().get(ownerAddress);
             ownerAccount.addToken(tokenKey, totalSupplyDiff);
@@ -94,12 +93,10 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
         if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_POOL)) {
             var newFeePool = ctx.getFeePool();
             var oldFeePool = tokenCap.getOriginFeePool();
-            //@todo safely doing math compute
-            var diffFeePool = newFeePool - oldFeePool;
+            var diffFeePool = Math.subtractExact(newFeePool, oldFeePool);
             tokenCap.setOriginFeePool(newFeePool);
             dbManager.adjustBalance(ownerAddress, -diffFeePool);
-            //@todo safely doing math compute
-            tokenCap.setFeePool(tokenCap.getFeePool() + diffFeePool);
+            tokenCap.setFeePool(Math.addExact(tokenCap.getFeePool(), diffFeePool));
         }
 
         if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
@@ -182,8 +179,7 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
               var maxSupply = tokenPool.getMaxSupply();
               var newTotalSupply = ctx.getTotalSupply();
               var oldTotalSupply = tokenPool.getTotalSupply();
-              //@todo safely doing math compute
-              var diff = newTotalSupply - oldTotalSupply;
+              var diff = Math.subtractExact(newTotalSupply, oldTotalSupply);
 
               Assert.isTrue(diff != 0, "Total supply not changed!");
 
@@ -192,8 +188,7 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
               }
               else if(diff < 0){
                   var availableSupply = accountCap.getTokenAvailable(tokenKey);
-                  //@todo safely doing math compute
-                  Assert.isTrue(availableSupply + diff >= 0, "Max available token supply not enough to lower down total supply, minimum total supply is: " + (oldTotalSupply - availableSupply));
+                  Assert.isTrue(Math.addExact(availableSupply, diff) >= 0, "Max available token supply not enough to lower down total supply, minimum total supply is: " + (oldTotalSupply - availableSupply));
               }
           }
 
@@ -201,16 +196,13 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
               var newFeePool = ctx.getFeePool();
               var oldFeePool = tokenPool.getOriginFeePool();
               var availableFeePool = tokenPool.getFeePool();
-              //@todo safely doing math compute
-              var diffFeePool = newFeePool - oldFeePool;
+              var diffFeePool = Math.subtractExact(newFeePool, oldFeePool);
               Assert.isTrue(diffFeePool != 0, "Fee pool not changed");
               if(diffFeePool > 0){
-                  //@todo safely doing math compute
-                    Assert.isTrue(accountCap.getBalance() >= diffFeePool + calcFee(), "Not enough balance to update new fee pool, at least: " + diffFeePool + calcFee());
+                    Assert.isTrue(accountCap.getBalance() >= Math.addExact(diffFeePool, calcFee()), "Not enough balance to update new fee pool, at least: " + diffFeePool + calcFee());
               }
               else if(diffFeePool < 0){
-                  //@todo safely doing math compute
-                  Assert.isTrue(availableFeePool + diffFeePool >= 0 && (accountCap.getBalance() - diffFeePool - calcFee() ) >= 0, "available fee pool not enough to lower down fee pool or balance not enough fee, require at least: " + diffFeePool + " fee :"+ calcFee());
+                  Assert.isTrue(Math.addExact(availableFeePool, diffFeePool) >= 0 && ( Math.subtractExact(accountCap.getBalance(), Math.addExact(diffFeePool, calcFee())) >= 0), "available fee pool not enough to lower down fee pool or balance not enough fee, require at least: " + diffFeePool + " fee :"+ calcFee());
               }
           }
 

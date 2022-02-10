@@ -40,22 +40,22 @@ public class ExchangeCreateActuator extends AbstractActuator {
       var firstTokenBalance = ctx.getFirstTokenBalance();
       var secondTokenBalance = ctx.getSecondTokenBalance();
 
-      var newBalance = accountCapsule.getBalance() - fee;//@todo safely doing math compute
+      var newBalance = Math.subtractExact(accountCapsule.getBalance(), fee);
       accountCapsule.setBalance(newBalance);
 
       if (Arrays.equals(firstTokenID, "_".getBytes())) {
-        accountCapsule.setBalance(newBalance - firstTokenBalance);//@todo safely doing math compute
+        accountCapsule.setBalance(Math.subtractExact(newBalance, firstTokenBalance));
       } else {
         accountCapsule.reduceAssetAmountV2(firstTokenID, firstTokenBalance, dbManager);
       }
 
       if (Arrays.equals(secondTokenID, "_".getBytes())) {
-        accountCapsule.setBalance(newBalance - secondTokenBalance);//@todo safely doing math compute
+        accountCapsule.setBalance(Math.subtractExact(newBalance, secondTokenBalance));
       } else {
         accountCapsule.reduceAssetAmountV2(secondTokenID, secondTokenBalance, dbManager);
       }
 
-      var id = dbManager.getDynamicPropertiesStore().getLatestExchangeNum() + 1;//@todo safely doing math compute
+      var id = Math.incrementExact(dbManager.getDynamicPropertiesStore().getLatestExchangeNum());
       var now = dbManager.getHeadBlockTimeStamp();
       if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
         //save to old asset store
@@ -102,8 +102,8 @@ public class ExchangeCreateActuator extends AbstractActuator {
       ret.setExchangeId(id);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (BalanceInsufficientException | InvalidProtocolBufferException e) {
-      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
+    } catch (Exception e) {
+      logger.error("Actuator exec error: {} --> ", e.getMessage(), e);;
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -145,22 +145,20 @@ public class ExchangeCreateActuator extends AbstractActuator {
       Assert.isTrue(!(firstTokenBalance > balanceLimit || secondTokenBalance > balanceLimit), "Token balance must less than " + balanceLimit);
 
       if (Arrays.equals(firstTokenID, "_".getBytes())) {
-        //@todo safely doing math compute
-        Assert.isTrue(accountCapsule.getBalance() >= (firstTokenBalance + calcFee()), "Balance is not enough");
+        Assert.isTrue(accountCapsule.getBalance() >= Math.addExact(firstTokenBalance , calcFee()), "Balance is not enough");
       } else {
         Assert.isTrue(accountCapsule.assetBalanceEnoughV2(firstTokenID, firstTokenBalance, dbManager), "First token balance is not enough");
       }
 
       if (Arrays.equals(secondTokenID, "_".getBytes())) {
-        //@todo safely doing math compute
-        Assert.isTrue(accountCapsule.getBalance() >= (secondTokenBalance + calcFee()), "Balance is not enough");
+        Assert.isTrue(accountCapsule.getBalance() >= Math.addExact(secondTokenBalance, calcFee()), "Balance is not enough");
       } else {
         Assert.isTrue(accountCapsule.assetBalanceEnoughV2(secondTokenID, secondTokenBalance, dbManager), "Second token balance is not enough");
       }
 
       return true;
     } catch (Exception e) {
-      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
+      logger.error("Actuator validate error: {} --> ", e.getMessage(), e);;
       throw new ContractValidateException(e.getMessage());
     }
   }

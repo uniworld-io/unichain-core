@@ -50,8 +50,7 @@ public class TokenWithdrawFutureActuatorV4 extends AbstractActuator {
       var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
 
       withdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp());
-        //@todo safely doing math compute
-      tokenPool.setFeePool(tokenPool.getFeePool() - fee);
+      tokenPool.setFeePool(Math.subtractExact(tokenPool.getFeePool(), fee));
       tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
       dbManager.burnFee(fee);
@@ -145,8 +144,8 @@ public class TokenWithdrawFutureActuatorV4 extends AbstractActuator {
         if(tmpTick.getExpireTime() <= headBlockTickDay)
         {
           //withdraw
-          withdrawAmount += tmpTick.getBalance();//@todo safely doing math compute
-          withdrawDeal ++;//@todo safely doing math compute
+          withdrawAmount = Math.addExact(withdrawAmount, tmpTick.getBalance());
+          withdrawDeal = Math.incrementExact(withdrawDeal);
           tokenStore.delete(tmpTickKeyBs.toByteArray());
           tmpTickKeyBs = tmpTick.getNextTick();
           continue;
@@ -174,8 +173,8 @@ public class TokenWithdrawFutureActuatorV4 extends AbstractActuator {
       newHead.clearPrevTick();
       tokenStore.put(tmpTickKeyBs.toByteArray(), newHead);
       summary = summary.toBuilder()
-              .setTotalDeal(summary.getTotalDeal() - withdrawDeal)        //@todo safely doing math compute
-              .setTotalValue(summary.getTotalValue() - withdrawAmount)        //@todo safely doing math compute
+              .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), withdrawDeal))
+              .setTotalValue(Math.subtractExact(summary.getTotalValue(), withdrawAmount))
               .setLowerTick(tmpTickKeyBs)
               .setLowerBoundTime(newHead.getExpireTime())
               .build();

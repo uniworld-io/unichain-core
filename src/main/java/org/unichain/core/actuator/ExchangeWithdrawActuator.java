@@ -61,28 +61,23 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
         anotherTokenQty = bigSecondTokenBalance.multiply(bigTokenQty)
                 .divide(bigFirstTokenBalance)
                 .longValueExact();
-        //@todo safely doing math compute
-        exchangeCapsule.setBalance(firstTokenBalance - tokenQty, secondTokenBalance - anotherTokenQty);
+        exchangeCapsule.setBalance(Math.subtractExact(firstTokenBalance, tokenQty), Math.subtractExact(secondTokenBalance, anotherTokenQty));
       } else {
         anotherTokenID = firstTokenID;
         anotherTokenQty = bigFirstTokenBalance.multiply(bigTokenQty).divide(bigSecondTokenBalance).longValueExact();
-        //@todo safely doing math compute
-        exchangeCapsule.setBalance(firstTokenBalance - anotherTokenQty, secondTokenBalance - tokenQty);
+        exchangeCapsule.setBalance(Math.subtractExact(firstTokenBalance, anotherTokenQty), Math.subtractExact(secondTokenBalance, tokenQty));
       }
 
-      //@todo safely doing math compute
-      var newBalance = accountCapsule.getBalance() - calcFee();
+      var newBalance = Math.subtractExact(accountCapsule.getBalance(), calcFee());
 
       if (Arrays.equals(tokenID, "_".getBytes())) {
-        //@todo safely doing math compute
-        accountCapsule.setBalance(newBalance + tokenQty);
+        accountCapsule.setBalance(Math.addExact(newBalance, tokenQty));
       } else {
         accountCapsule.addAssetAmountV2(tokenID, tokenQty, dbManager);
       }
 
       if (Arrays.equals(anotherTokenID, "_".getBytes())) {
-        //@todo safely doing math compute
-        accountCapsule.setBalance(newBalance + anotherTokenQty);
+        accountCapsule.setBalance(Math.addExact(newBalance, anotherTokenQty));
       } else {
         accountCapsule.addAssetAmountV2(anotherTokenID, anotherTokenQty, dbManager);
       }
@@ -160,7 +155,7 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
         Assert.isTrue(!exchangeBalance, "Exchange balance is not enough");
         Assert.isTrue(anotherTokenQty > 0, "Withdraw another token quant must greater than zero");
 
-        //@todo safely doing math compute
+        //@todo review doing math compute
         var remainder = bigSecondTokenBalance.multiply(bigTokenQty)
                                                 .divide(bigFirstTokenBalance, 4, BigDecimal.ROUND_HALF_UP)
                                                 .doubleValue()
@@ -168,15 +163,13 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
         Assert.isTrue(remainder / anotherTokenQty <= 0.0001, "Not precise enough");
 
       } else {
-//      anotherTokenQuant = Math
-//          .floorDiv(Math.multiplyExact(firstTokenBalance, tokenQuant), secondTokenBalance);
         anotherTokenQty = bigFirstTokenBalance.multiply(bigTokenQty)
                                                   .divideToIntegralValue(bigSecondTokenBalance)
                                                   .longValueExact();
         Assert.isTrue(!(secondTokenBalance < tokenQty || firstTokenBalance < anotherTokenQty), "Exchange balance is not enough");
         Assert.isTrue(anotherTokenQty > 0, "Withdraw another token qty must greater than zero");
 
-        //@todo safely doing math compute
+        //@todo review doing math compute
         var remainder = bigFirstTokenBalance.multiply(bigTokenQty)
                                                 .divide(bigSecondTokenBalance, 4, BigDecimal.ROUND_HALF_UP)
                                                 .doubleValue()

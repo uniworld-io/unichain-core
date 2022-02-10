@@ -38,10 +38,9 @@ public class ProposalCreateActuator extends AbstractActuator {
     try {
       val ctx = this.contract.unpack(ProposalCreateContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      //@todo safely doing math compute
       var id = (Objects.isNull(getDeposit())) ?
-          dbManager.getDynamicPropertiesStore().getLatestProposalNum() + 1 :
-          getDeposit().getLatestProposalNum() + 1;
+          Math.incrementExact(dbManager.getDynamicPropertiesStore().getLatestProposalNum()) :
+          Math.incrementExact(getDeposit().getLatestProposalNum());
 
       var proposalCapsule = new ProposalCapsule(ctx.getOwnerAddress(), id);
 
@@ -55,10 +54,9 @@ public class ProposalCreateActuator extends AbstractActuator {
 
       var currentMaintenanceTime = (Objects.isNull(getDeposit())) ? dbManager.getDynamicPropertiesStore().getNextMaintenanceTime()
               : getDeposit().getNextMaintenanceTime();
-      var now3 = now + Args.getInstance().getProposalExpireTime();
-      //@todo safely doing math compute
-      var round = (now3 - currentMaintenanceTime) / maintenanceTimeInterval;
-      var expirationTime = currentMaintenanceTime + (round + 1) * maintenanceTimeInterval;
+      var now3 = Math.addExact(now, Args.getInstance().getProposalExpireTime());
+      var round = Math.subtractExact(now3, currentMaintenanceTime) / maintenanceTimeInterval;
+      var expirationTime = Math.addExact(currentMaintenanceTime, Math.multiplyExact(round + 1, maintenanceTimeInterval));
       proposalCapsule.setExpirationTime(expirationTime);
 
       if (Objects.isNull(deposit)) {

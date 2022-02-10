@@ -111,16 +111,16 @@ public class WithdrawFutureActuator extends AbstractActuator {
          * withdraw deals
          */
         var tmpTickKeyBs = summary.getLowerTick();
-        var withdrawAmount = 0;//@fixme safely doing math compute
-        var withdrawDeal = 0;//@fixme safely doing math compute
+        var withdrawAmount = 0L;
+        var withdrawDeal = 0L;
         while (true){
             if(tmpTickKeyBs == null)
                 break;
             var tmpTick = futureStore.get(tmpTickKeyBs.toByteArray());
             if(tmpTick.getExpireTime() <= headBlockTickDay)
             {
-                withdrawAmount += tmpTick.getBalance();//@todo safely doing math compute
-                withdrawDeal ++;//@todo safely doing math compute
+                withdrawAmount = Math.addExact(withdrawAmount, tmpTick.getBalance());
+                withdrawDeal = Math.incrementExact(withdrawDeal);
                 futureStore.delete(tmpTickKeyBs.toByteArray());
                 tmpTickKeyBs = tmpTick.getNextTick();
             }
@@ -149,8 +149,8 @@ public class WithdrawFutureActuator extends AbstractActuator {
          * save summary
          */
         summary = summary.toBuilder()
-                .setTotalDeal(summary.getTotalDeal() - withdrawDeal)//@todo safely doing math compute
-                .setTotalBalance(summary.getTotalBalance() - withdrawAmount)//@todo safely doing math compute
+                .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), withdrawDeal))
+                .setTotalBalance(Math.subtractExact(summary.getTotalBalance(), withdrawAmount))
                 .setLowerTick(tmpTickKeyBs)
                 .setLowerTime(newHead.getExpireTime())
                 .build();

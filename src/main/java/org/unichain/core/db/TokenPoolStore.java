@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TokenPoolCapsule;
+import org.unichain.core.config.Parameter;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
@@ -32,7 +33,7 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
     return super.getUnchecked(key);
   }
 
-  public Contract.TokenPage query(Protocol.TokenPoolQuery query, long defaultCreateAccFee){
+  public Contract.TokenPage query(Protocol.TokenPoolQuery query){
     int pageSize = query.hasField(TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
     int pageIndex = query.hasField(TOKEN_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
     Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
@@ -44,7 +45,7 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
               .filter(Objects::nonNull)
               .map(TokenPoolCapsule::getInstance)
               .filter(item -> StringUtils.containsIgnoreCase(item.getName(), query.getTokenName()))
-              .map(item -> item.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(defaultCreateAccFee).build())
+              .map(item -> item.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
               .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))
               .collect(Collectors.toList());
     }
@@ -52,7 +53,7 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
       sorted = getAll().stream()
               .filter(Objects::nonNull)
               .map(TokenPoolCapsule::getInstance)
-              .map(item -> item.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(defaultCreateAccFee).build())
+              .map(item -> item.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
               .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))
               .collect(Collectors.toList());
     }

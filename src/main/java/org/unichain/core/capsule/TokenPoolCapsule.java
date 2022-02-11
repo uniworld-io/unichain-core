@@ -18,6 +18,7 @@ package org.unichain.core.capsule;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import org.unichain.core.config.Parameter;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.CreateTokenContract;
@@ -118,8 +119,9 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     return this.createTokenContract.getFee();
   }
 
-  public long getCreateAccountFee(long defaultVal) {
-    return this.createTokenContract.hasField(TOKEN_CREATE_FIELD_CREATE_ACC_FEE) ? this.createTokenContract.getCreateAccFee() : defaultVal;
+  public long getCreateAccountFee() {
+    //when old model don't have this field yet, return to default value. should be update later
+    return this.createTokenContract.hasField(TOKEN_CREATE_FIELD_CREATE_ACC_FEE) ? this.createTokenContract.getCreateAccFee() : Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE;
   }
 
   public long getExtraFeeRate() {

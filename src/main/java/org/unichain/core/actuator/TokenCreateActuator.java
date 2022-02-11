@@ -55,7 +55,7 @@ public class TokenCreateActuator extends AbstractActuator {
       var capsule = new TokenPoolCapsule(ctx);
 
       //preset default value to create account fee for new model
-      capsule.setCreateAccountFee(dbManager.getDynamicPropertiesStore().getCreateAccountFee());
+      capsule.setCreateAccountFee(TOKEN_DEFAULT_CREATE_ACC_FEE);
 
       if(!ctx.hasField(TOKEN_CREATE_FIELD_START_TIME))
       {

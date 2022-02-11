@@ -62,12 +62,13 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       var toAddress = ctx.getToAddress().toByteArray();
 
       var toAccountCap = dbManager.getAccountStore().get(toAddress);
-      var createAccFee = 0L;
-      if (toAccountCap == null) {
+
+      var createNewAccount = (toAccountCap == null);
+
+      //create new account
+      if (createNewAccount) {
         var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-        createAccFee =  dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
-        dbManager.adjustBalance(ownerAccountCap, -createAccFee);
       }
 
       if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){
@@ -85,6 +86,10 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       }
       else {
         var tokenFee = Math.addExact(tokenPool.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), tokenPool.getExtraFeeRate()), 100, RoundingMode.CEILING));
+        if(createNewAccount)
+        {
+          tokenFee = Math.addExact(tokenFee, tokenPool.getCreateAccountFee());
+        }
         var tokenPoolOwnerCap = dbManager.getAccountStore().get(tokenPoolOwnerAddr);
         tokenPoolOwnerCap.addToken(tokenKey, tokenFee);
         dbManager.getAccountStore().put(tokenPoolOwnerAddr, tokenPoolOwnerCap);
@@ -106,8 +111,6 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       tokenPool.setFeePool(Math.subtractExact(tokenPool.getFeePool(), fee));
       tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
-
-      fee = Math.addExact(fee, createAccFee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -156,10 +159,7 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
 
       var toAccountCap = dbManager.getAccountStore().get(toAddress);
-      if (toAccountCap == null) {
-        var createAccountFee = dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
-        Assert.isTrue(ownerAccountCap.getBalance() >= createAccountFee, "Not enough balance in owner account to create new account");
-      }
+      var createNewAccount = (toAccountCap == null);
 
       Assert.isTrue(tokenPool.getFeePool() >= fee, "Not enough token pool fee balance");
       Assert.isTrue (ctx.getAmount() > 0, "Invalid transfer amount, expect positive number");
@@ -168,6 +168,10 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       //validate transfer amount vs fee
       if(!Arrays.equals(ownerAddress, tokenPoolOwnerAddr)){
         var tokenFee = Math.addExact(tokenPool.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), tokenPool.getExtraFeeRate()), 100, RoundingMode.CEILING));
+        if(createNewAccount)
+        {
+          tokenFee = Math.addExact(tokenFee, tokenPool.getCreateAccountFee());
+        }
         Assert.isTrue(ctx.getAmount() > tokenFee, "Not enough token balance to cover transfer fee");
       }
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
@@ -205,8 +209,8 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
     var toAcc = accountStore.get(toAddress);
     var summary = toAcc.getFutureTokenSummary(tokenName);
 
-    /**
-     * tick exist: the fasted way!
+    /*
+      tick exist: the fasted way!
      */
     if(tokenStore.has(tickKey)){
         //update tick
@@ -221,8 +225,8 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
         return;
     }
 
-    /**
-     * the first tick ever.
+    /*
+      the first tick ever.
      */
     if(Objects.isNull(summary)){
       //save tick
@@ -249,14 +253,14 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       return;
     }
 
-    /**
-     * other tick exist
+    /*
+      other tick exist
      */
     var headKey = summary.getLowerTick().toByteArray();
     var head = tokenStore.get(headKey);
     var headTime = head.getExpireTime();
-    /**
-     * if new tick is head
+    /*
+      if new tick is head
      */
     if(tickDay < headTime){
       //save old head pointer
@@ -284,8 +288,8 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       return ;
     }
 
-    /**
-     * if new tick is tail
+    /*
+      if new tick is tail
      */
     if(tickDay > headTime){
       var oldTailKeyBs = summary.getUpperTick();
@@ -316,8 +320,8 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       return;
     }
 
-    /**
-     * lookup slot and insert tick
+    /*
+      lookup slot and insert tick
      */
     var searchKeyBs = summary.getUpperTick();
     while (true){
@@ -356,7 +360,6 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       }
       else {
         searchKeyBs = searchTick.getPrevTick();
-        continue;
       }
     }
   }

@@ -159,6 +159,8 @@ public class TransactionTrace {
 
   /**
    * Pay energy bill using v2 which directly charge fee from balance
+   * - with pre-compiled, don't charge
+   * - charge contract creation & contract call
    */
   public void payEnergyV2() throws BalanceInsufficientException {
     byte[] originAccount;

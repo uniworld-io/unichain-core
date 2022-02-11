@@ -23,7 +23,8 @@ public class Parameter {
     public static final long TOKEN_TRANSFER_FEE = 0; // free
     public static final long TOKEN_MAX_TRANSFER_FEE = 10000;
     public static final long TOKEN_MAX_TRANSFER_FEE_RATE = 30; // percent
-    public static final long TOKEN_MAX_CREATE_ACC_FEE = 10000000000L;
+    public static final long TOKEN_MAX_CREATE_ACC_FEE = 10000000L;
+    public static final long TOKEN_DEFAULT_CREATE_ACC_FEE = 1000L; //default number of token will be charged if create new account
 
     public static final long TRANSFER_FEE = 0; // free
     public static final int WITNESS_STANDBY_LENGTH = 55;

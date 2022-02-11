@@ -113,7 +113,6 @@ public class TokenUpdateParamsActuatorV4 extends AbstractActuator {
             updateCriticalParams = true;
         }
 
-        //noti
         if(updateCriticalParams)
         {
             tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());

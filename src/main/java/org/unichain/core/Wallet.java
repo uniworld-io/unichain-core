@@ -277,7 +277,7 @@ public class Wallet {
   }
 
   public TokenPage getTokenPool(TokenPoolQuery query) {
-    return dbManager.getTokenPoolStore().query(query, dbManager.getDynamicPropertiesStore().getCreateAccountFee());
+    return dbManager.getTokenPoolStore().query(query);
   }
 
   public Account getAccountById(Account account) {

@@ -85,10 +85,11 @@ abstract class ResourceProcessor {
         dbManager.burnFee(fee);
         tokenPool.setFeePool(Math.subtractExact(tokenPool.getFeePool(), fee));
         dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
+        return true;
       }
       catch (Exception e){
+        logger.warn("Exception while charge token pool fee: ", e);
         return false;
       }
-      return true;
   }
 }

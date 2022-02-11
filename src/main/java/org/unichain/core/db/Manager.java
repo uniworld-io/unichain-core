@@ -654,19 +654,6 @@ public class Manager {
     this.getAccountStore().put(account.getAddress().toByteArray(), account);
   }
 
-  public void adjustBalanceNoPut(AccountCapsule account, long amount) throws BalanceInsufficientException {
-    long balance = account.getBalance();
-    if (amount == 0) {
-      return;
-    }
-
-    if (amount < 0 && balance < -amount) {
-      throw new BalanceInsufficientException(StringUtil.createReadableString(account.createDbKey()) + " insufficient balance");
-    }
-    account.setBalance(Math.addExact(balance, amount));
-  }
-
-
   public void adjustAllowance(byte[] accountAddress, long amount) throws BalanceInsufficientException {
     AccountCapsule account = getAccountStore().getUnchecked(accountAddress);
     long allowance = account.getAllowance();

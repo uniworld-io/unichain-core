@@ -13,11 +13,12 @@ import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.TransferAssetContract;
 import org.unichain.protos.Contract.TransferContract;
 import org.unichain.protos.Contract.TransferTokenContract;
+import org.unichain.protos.Contract.WithdrawFutureTokenContract;
 import org.unichain.protos.Protocol.Transaction.Contract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
+
 import java.util.List;
 import java.util.Map;
-import org.unichain.protos.Contract.WithdrawFutureTokenContract;
 /**
  * Charge bandwidth directly from account balance:
  * - don't use global net
@@ -88,7 +89,10 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
       }
 
       /*
-        @todo double fee: this phase & actuator phase ?
+        @note:
+        - create new account fee split to 2 part: getCreateAccountFe(default 1000Ginza), getCreateNewAccountFeeInSystemContract default 0Ginza
+        this part is getCreateAccountFe only.
+        - if create new account, ignore bandwidth fee
        */
       try {
         if (isContractCreateNewAccount(contract)) {
@@ -100,7 +104,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         }
       }
       catch (AccountResourceInsufficientException ex){
-        throw new AccountResourceInsufficientException("Account Insufficient balance to create new account");
+        throw new AccountResourceInsufficientException("Insufficient balance to create new account");
       }
 
       /*
@@ -181,6 +185,23 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
     catch (InvalidProtocolBufferException e){
         logger.error("bad contract format {}", e.getMessage(), e);
         throw new ContractValidateException("bad contract format:" + e.getMessage());
+    }
+  }
+
+  protected void consumeForCreateNewAccountIfTokenTransferV4(AccountCapsule ownerAccountCapsule, Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
+    try {
+      var ctx = contract.getParameter().unpack(TransferTokenContract.class);
+      long fee = dbManager.getDynamicPropertiesStore().getCreateAccountFee();
+      if (consumeFeeTokenPool(Util.stringAsBytesUppercase(ctx.getTokenName()), fee)) {
+        trace.setNetBill(0, fee);
+        dbManager.getDynamicPropertiesStore().addTotalCreateAccountCost(fee);
+        return;
+      }
+      throw new AccountResourceInsufficientException();
+    }
+    catch (InvalidProtocolBufferException e){
+      logger.error("bad contract format {}", e.getMessage(), e);
+      throw new ContractValidateException("bad contract format:" + e.getMessage());
     }
   }
 

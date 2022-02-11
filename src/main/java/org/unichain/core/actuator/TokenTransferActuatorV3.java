@@ -67,7 +67,7 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
         var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         createAccFee =  dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
-        dbManager.adjustBalanceNoPut(ownerAccountCap, -createAccFee);
+        dbManager.adjustBalance(ownerAccountCap, -createAccFee);
       }
 
       if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){
@@ -205,8 +205,8 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
     var toAcc = accountStore.get(toAddress);
     var summary = toAcc.getFutureTokenSummary(tokenName);
 
-    /**
-     * tick exist: the fasted way!
+    /*
+      tick exist: the fasted way!
      */
     if(tokenStore.has(tickKey)){
         //update tick
@@ -221,8 +221,8 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
         return;
     }
 
-    /**
-     * the first tick ever.
+    /*
+      the first tick ever.
      */
     if(Objects.isNull(summary)){
       //save tick
@@ -249,14 +249,14 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
       return;
     }
 
-    /**
-     * other tick exist
+    /*
+      other tick exist
      */
     var headKey = summary.getLowerTick().toByteArray();
     var head = tokenStore.get(headKey);
     var headTime = head.getExpireTime();
-    /**
-     * if new tick is head
+    /*
+      if new tick is head
      */
     if(tickDay < headTime){
       //save old head pointer
@@ -284,8 +284,8 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
       return ;
     }
 
-    /**
-     * if new tick is tail
+    /*
+      if new tick is tail
      */
     if(tickDay > headTime){
       var oldTailKeyBs = summary.getUpperTick();
@@ -316,8 +316,8 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
       return;
     }
 
-    /**
-     * lookup slot and insert tick
+    /*
+      lookup slot and insert tick
      */
     var searchKeyBs = summary.getUpperTick();
     while (true){
@@ -356,7 +356,6 @@ public class TokenTransferActuatorV3 extends AbstractActuator {
       }
       else {
         searchKeyBs = searchTick.getPrevTick();
-        continue;
       }
     }
   }

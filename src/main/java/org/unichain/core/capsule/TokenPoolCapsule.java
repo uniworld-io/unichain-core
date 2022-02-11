@@ -16,13 +16,13 @@
 package org.unichain.core.capsule;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.CreateTokenContract;
 
+import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_CREATE_ACC_FEE;
 import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_CRITICAL_TIME;
 
 @Slf4j(topic = "capsule")
@@ -92,7 +92,6 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
 
   /**
    * In the case with old token model (block version < 3) set to zero!
-   * @return
    */
   public Long getCriticalUpdateTime() {
     return this.createTokenContract.hasField(TOKEN_CREATE_FIELD_CRITICAL_TIME) ?
@@ -117,6 +116,10 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
 
   public long getFee() {
     return this.createTokenContract.getFee();
+  }
+
+  public long getCreateAccountFee(long defaultVal) {
+    return this.createTokenContract.hasField(TOKEN_CREATE_FIELD_CREATE_ACC_FEE) ? this.createTokenContract.getCreateAccFee() : defaultVal;
   }
 
   public long getExtraFeeRate() {
@@ -146,6 +149,11 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
   public void setOwnerAddress(ByteString ownerAddress) {
     this.createTokenContract= this.createTokenContract.toBuilder()
             .setOwnerAddress(ownerAddress).build();
+  }
+
+  public void setCreateAccountFee(long createAccountFee) {
+    this.createTokenContract = this.createTokenContract.toBuilder()
+            .setCreateAccFee(createAccountFee).build();
   }
 
   public void setStartTime(long startTime) {
@@ -188,13 +196,16 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
             .setName(name).build();
   }
 
-  //@todo review number overflow
-  //
+  public void setCreateAccFee(long createAccFee) {
+    this.createTokenContract = this.createTokenContract.toBuilder()
+            .setCreateAccFee(createAccFee).build();
+  }
+
   public void burnToken(long amount) throws ContractExeException {
     if(amount <= 0)
       throw  new ContractExeException("mined token amount must greater than ZERO");
-    setBurnedToken(createTokenContract.getBurned() + amount);
-    setTotalSupply(createTokenContract.getTotalSupply() - amount);
+    setBurnedToken(Math.addExact(createTokenContract.getBurned(), amount));
+    setTotalSupply(Math.subtractExact(createTokenContract.getTotalSupply(), amount));
   }
 
   public void setOriginFeePool(long originFeePool) {

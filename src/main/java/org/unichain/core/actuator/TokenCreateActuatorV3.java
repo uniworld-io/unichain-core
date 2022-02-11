@@ -52,6 +52,10 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
       var ctx = contract.unpack(CreateTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var capsule = new TokenPoolCapsule(ctx);
+
+      //preset default value to create account fee for new model
+      capsule.setCreateAccountFee(dbManager.getDynamicPropertiesStore().getCreateAccountFee());
+
       if(!ctx.hasField(TOKEN_CREATE_FIELD_START_TIME))
       {
         capsule.setStartTime(dbManager.getHeadBlockTimeStamp());

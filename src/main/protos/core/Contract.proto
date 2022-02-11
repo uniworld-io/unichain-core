@@ -133,6 +133,7 @@ message CreateTokenContract {
   int64 exch_unx_num = 17; //#unw
   int64 exch_num = 18; //exchange to #token
   int64 critical_update_time = 19;//critical update time, ex: fee, ownership...
+  int64 create_acc_fee = 20; //create new account fee
 }
 
 message TransferTokenOwnerContract {
@@ -165,6 +166,7 @@ message UpdateTokenParamsContract {
   int64 fee_pool = 9;
   int64 exch_unx_num = 10; //#unw
   int64 exch_num = 11; //exchange to #token
+  int64 create_acc_fee= 12;
 }
 
 message MineTokenContract {

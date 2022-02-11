@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class Parameter {
   /**
-   * @critical: all supported version add here
+   * @note: all supported version add here
    */
   public static final Set<Integer> BLOCK_VERSION_SUPPORTED = new HashSet<>(Arrays.asList(
           ChainConstant.BLOCK_VERSION_1,
@@ -23,6 +23,7 @@ public class Parameter {
     public static final long TOKEN_TRANSFER_FEE = 0; // free
     public static final long TOKEN_MAX_TRANSFER_FEE = 10000;
     public static final long TOKEN_MAX_TRANSFER_FEE_RATE = 30; // percent
+    public static final long TOKEN_MAX_CREATE_ACC_FEE = 10000000000L;
 
     public static final long TRANSFER_FEE = 0; // free
     public static final int WITNESS_STANDBY_LENGTH = 55;

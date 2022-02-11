@@ -81,8 +81,16 @@ public class ActuatorFactory {
       case AssetIssueContract:
         return new AssetIssueActuator(contract.getParameter(), manager);
       case CreateTokenContract:
-        return (blockVersion <= BLOCK_VERSION_2) ?
-                new TokenCreateActuator(contract.getParameter(), manager) : new TokenCreateActuatorV3(contract.getParameter(), manager);
+        switch (blockVersion){
+          case BLOCK_VERSION_0:
+          case BLOCK_VERSION_1:
+          case BLOCK_VERSION_2:
+            return new TokenCreateActuator(contract.getParameter(), manager);
+          case BLOCK_VERSION_3:
+            return new TokenCreateActuatorV3(contract.getParameter(), manager);
+          default:
+            return new TokenCreateActuatorV4(contract.getParameter(), manager);
+        }
       case ExchangeTokenContract:
         return new TokenExchangeActuator(contract.getParameter(), manager);
       case TransferTokenOwnerContract:
@@ -91,8 +99,16 @@ public class ActuatorFactory {
         return (blockVersion <= BLOCK_VERSION_2) ?
                 new TokenContributePoolFeeActuator(contract.getParameter(), manager) : new TokenContributePoolFeeActuatorV3(contract.getParameter(), manager);
       case UpdateTokenParamsContract:
-        return (blockVersion <= BLOCK_VERSION_2) ?
-                new TokenUpdateParamsActuator(contract.getParameter(), manager) : new TokenUpdateParamsActuatorV3(contract.getParameter(), manager);
+        switch (blockVersion) {
+          case BLOCK_VERSION_0:
+          case BLOCK_VERSION_1:
+          case BLOCK_VERSION_2:
+            return new TokenUpdateParamsActuator(contract.getParameter(), manager);
+          case BLOCK_VERSION_3:
+            return new TokenUpdateParamsActuatorV3(contract.getParameter(), manager);
+          default:
+            return new TokenUpdateParamsActuatorV4(contract.getParameter(), manager);
+        }
       case MineTokenContract:
         return (blockVersion <= BLOCK_VERSION_2) ?
                 new TokenMineActuator(contract.getParameter(), manager) : new TokenMineActuatorV3(contract.getParameter(), manager);
@@ -100,8 +116,16 @@ public class ActuatorFactory {
         return (blockVersion <= BLOCK_VERSION_2) ?
                 new TokenBurnActuator(contract.getParameter(), manager) : new TokenBurnActuatorV3(contract.getParameter(), manager);
       case TransferTokenContract:
-        return (blockVersion <= BLOCK_VERSION_2) ?
-                new TokenTransferActuator(contract.getParameter(), manager) : new TokenTransferActuatorV3(contract.getParameter(), manager);
+        switch (blockVersion){
+          case BLOCK_VERSION_0:
+          case BLOCK_VERSION_1:
+          case BLOCK_VERSION_2:
+            return  new TokenTransferActuator(contract.getParameter(), manager);
+          case BLOCK_VERSION_3:
+            return new TokenTransferActuatorV3(contract.getParameter(), manager);
+          default:
+            return new TokenTransferActuatorV4(contract.getParameter(), manager);
+        }
       case WithdrawFutureTokenContract:
         switch (blockVersion){
           case BLOCK_VERSION_0:

@@ -32,7 +32,7 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
     return super.getUnchecked(key);
   }
 
-  public Contract.TokenPage query(Protocol.TokenPoolQuery query){
+  public Contract.TokenPage query(Protocol.TokenPoolQuery query, long defaultCreateAccFee){
     int pageSize = query.hasField(TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
     int pageIndex = query.hasField(TOKEN_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
     Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
@@ -42,15 +42,17 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
     {
       sorted  = getAll().stream()
               .filter(Objects::nonNull)
-              .map(item -> item.getInstance())
+              .map(TokenPoolCapsule::getInstance)
               .filter(item -> StringUtils.containsIgnoreCase(item.getName(), query.getTokenName()))
+              .map(item -> item.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(defaultCreateAccFee).build())
               .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))
               .collect(Collectors.toList());
     }
     else{
       sorted = getAll().stream()
               .filter(Objects::nonNull)
-              .map(item -> item.getInstance())
+              .map(TokenPoolCapsule::getInstance)
+              .map(item -> item.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(defaultCreateAccFee).build())
               .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))
               .collect(Collectors.toList());
     }

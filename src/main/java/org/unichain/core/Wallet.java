@@ -78,7 +78,6 @@ import java.util.*;
 import static org.unichain.core.config.Parameter.DatabaseConstants.EXCHANGE_COUNT_LIMIT_MAX;
 import static org.unichain.core.config.Parameter.DatabaseConstants.PROPOSAL_COUNT_LIMIT_MAX;
 import static org.unichain.core.services.http.utils.Util.*;
-import static org.unichain.core.services.http.utils.Util.FUTURE_QR_FIELD_PAGE_INDEX;
 
 @Slf4j
 @Component
@@ -278,7 +277,7 @@ public class Wallet {
   }
 
   public TokenPage getTokenPool(TokenPoolQuery query) {
-    return dbManager.getTokenPoolStore().query(query);
+    return dbManager.getTokenPoolStore().query(query, dbManager.getDynamicPropertiesStore().getCreateAccountFee());
   }
 
   public Account getAccountById(Account account) {
@@ -481,8 +480,7 @@ public class Wallet {
       throw new PermissionException("operations size must 32");
     }
     int contractType = contract.getTypeValue();
-    boolean b = (operations.byteAt(contractType / 8) & (1 << (contractType % 8))) != 0;
-    return b;
+    return (operations.byteAt(contractType / 8) & (1 << (contractType % 8))) != 0;
   }
 
   public TransactionSignWeight getTransactionSignWeight(Transaction unx) {
@@ -1100,12 +1098,12 @@ public class Wallet {
     if (Objects.isNull(blockId)) {
       return null;
     }
-    Block block = null;
     try {
-      block = dbManager.getBlockStore().get(blockId.toByteArray()).getInstance();
+      return dbManager.getBlockStore().get(blockId.toByteArray()).getInstance();
     } catch (StoreException e) {
+      logger.warn("error while get block by Id: ", e);
+      return null;
     }
-    return block;
   }
 
   public BlockList getBlocksByLimitNext(long number, long limit) {
@@ -1127,7 +1125,7 @@ public class Wallet {
     if (Objects.isNull(transactionId)) {
       return null;
     }
-    TransactionCapsule transactionCapsule = null;
+    TransactionCapsule transactionCapsule;
     try {
       transactionCapsule = dbManager.getTransactionStore().get(transactionId.toByteArray());
     } catch (StoreException e) {
@@ -1204,7 +1202,7 @@ public class Wallet {
 
     NodeList.Builder nodeListBuilder = NodeList.newBuilder();
 
-    nodeHandlerMap.entrySet().stream()
+    nodeHandlerMap.entrySet()
         .forEach(v -> {
           org.unichain.common.overlay.discover.node.Node node = v.getValue().getNode();
           nodeListBuilder.addNodes(Node.newBuilder().setAddress(Address.newBuilder()
@@ -1395,7 +1393,7 @@ public class Wallet {
     limit =
         limit > PROPOSAL_COUNT_LIMIT_MAX ? PROPOSAL_COUNT_LIMIT_MAX : limit;
     long end = offset + limit;
-    end = end > latestProposalNum ? latestProposalNum : end;
+    end = Math.min(end, latestProposalNum);
     ProposalList.Builder builder = ProposalList.newBuilder();
 
     ImmutableList<Long> rangeList = ContiguousSet
@@ -1423,7 +1421,7 @@ public class Wallet {
     }
     limit = limit > EXCHANGE_COUNT_LIMIT_MAX ? EXCHANGE_COUNT_LIMIT_MAX : limit;
     long end = offset + limit;
-    end = end > latestExchangeNum ? latestExchangeNum : end;
+    end = Math.min(end, latestExchangeNum);
 
     ExchangeList.Builder builder = ExchangeList.newBuilder();
     ImmutableList<Long> rangeList = ContiguousSet
@@ -1486,7 +1484,7 @@ public class Wallet {
 
     int pageSize = query.getPageSize();
     int pageIndex = query.getPageIndex();
-    long start = pageIndex * pageSize;
+    long start = (long) pageIndex * pageSize;
     long end = start + pageSize;
     if(start >= summary.getTotalDeal()){
       //empty deals
@@ -1559,8 +1557,8 @@ public class Wallet {
               .build();
     }
 
-    /**
-     * paging deals
+    /*
+      paging deals
      */
     var deals = new ArrayList<Future>();
     var start = pageIndex * pageSize;

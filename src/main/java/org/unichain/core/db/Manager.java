@@ -851,8 +851,11 @@ public class Manager {
       case BLOCK_VERSION_2:
         (new BandwidthProcessorV2(this)).consume(unx, trace);
         break;
-      default:
+      case BLOCK_VERSION_3:
         (new BandwidthProcessorV3(this)).consume(unx, trace);
+        break;
+      default:
+        (new BandwidthProcessorV4(this)).consume(unx, trace);
         break;
     }
   }

@@ -1253,12 +1253,13 @@ message TransactionApprovedList {
 }
 
 service Nft {
-  rpc createNftTemplate (NFTTemplate) returns (CreateNftContract) {
+  // request to transmit SYMBOL of type BYTES
+  rpc createNftTemplate (BytesMessage) returns (CreateNftContract) {
     option (google.api.http) = {
-      post: "/createnfttemplate/posttransaction"
+      post: "/nft/template"
       body: "*"
-      additional_bindings {
-        get: "/shownfttemplate/gettransaction"
+      additional_bindings: {
+        get: "/nft/template"
       }
     };
   }

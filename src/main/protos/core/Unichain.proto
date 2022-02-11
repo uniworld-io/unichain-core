@@ -366,6 +366,7 @@ message Transaction {
       WithdrawFutureTokenContract = 60;
       TransferTokenOwnerContract = 61;
       ExchangeTokenContract = 62;
+      CreateNftContract = 63;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;

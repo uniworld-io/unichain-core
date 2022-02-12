@@ -60,19 +60,24 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
       var tokenPoolOwnerAddr = tokenPool.getOwnerAddress().toByteArray();
       var toAddress = ctx.getToAddress().toByteArray();
-
       var toAccountCap = dbManager.getAccountStore().get(toAddress);
 
-      var createNewAccount = (toAccountCap == null);
+      var isCreateNewAcc = (toAccountCap == null);
 
-      //create new account
-      if (createNewAccount) {
+      if (isCreateNewAcc) {
         var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
       }
 
       if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){
-        //owner of token transfer, don't charge fee token
+         /*
+          owner of token, so:
+          - if create new account, charge more fee on owner
+          - don't charge token fee
+        */
+        if(isCreateNewAcc)
+          dbManager.adjustBalanceNoPut(ownerAccountCap, -dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+
         ownerAccountCap.burnToken(tokenKey, ctx.getAmount());
         dbManager.getAccountStore().put(ownerAddr, ownerAccountCap);
 
@@ -85,10 +90,16 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
           addFutureToken(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime());
       }
       else {
+         /*
+          not owner of token, so:
+          - if create new account, charge more fee on pool and more token fee on this account
+          - charge more token fee on this account
+        */
         var tokenFee = Math.addExact(tokenPool.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), tokenPool.getExtraFeeRate()), 100, RoundingMode.CEILING));
-        if(createNewAccount)
+        if(isCreateNewAcc)
         {
           tokenFee = Math.addExact(tokenFee, tokenPool.getCreateAccountFee());
+          fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
         }
         var tokenPoolOwnerCap = dbManager.getAccountStore().get(tokenPoolOwnerAddr);
         tokenPoolOwnerCap.addToken(tokenKey, tokenFee);
@@ -159,16 +170,30 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
 
       var toAccountCap = dbManager.getAccountStore().get(toAddress);
-      var createNewAccount = (toAccountCap == null);
+      var isCreateNewAccount = (toAccountCap == null);
+      var ownerIsTokenOwner = Arrays.equals(ownerAddress, tokenPoolOwnerAddr);
+      if(ownerIsTokenOwner)
+      {
+        if(isCreateNewAccount)
+        {
+          var moreFee = dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+          Assert.isTrue(ownerAccountCap.getBalance() >= moreFee, "Owner not enough balance to create new account fee, require at least "+ moreFee + "ginza");
+        }
+      }
+      else {
+        if(isCreateNewAccount){
+          fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+        }
+      }
+      Assert.isTrue(tokenPool.getFeePool() >= fee, "Not enough token pool fee balance, require at least " + fee);
 
-      Assert.isTrue(tokenPool.getFeePool() >= fee, "Not enough token pool fee balance");
       Assert.isTrue (ctx.getAmount() > 0, "Invalid transfer amount, expect positive number");
       Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount(), "Not enough token balance");
 
       //validate transfer amount vs fee
       if(!Arrays.equals(ownerAddress, tokenPoolOwnerAddr)){
         var tokenFee = Math.addExact(tokenPool.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), tokenPool.getExtraFeeRate()), 100, RoundingMode.CEILING));
-        if(createNewAccount)
+        if(isCreateNewAccount)
         {
           tokenFee = Math.addExact(tokenFee, tokenPool.getCreateAccountFee());
         }

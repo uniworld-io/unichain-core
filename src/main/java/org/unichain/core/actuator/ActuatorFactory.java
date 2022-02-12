@@ -12,6 +12,7 @@ import org.unichain.protos.Protocol.Transaction.Contract;
 import java.util.List;
 
 import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION_2;
+import static org.unichain.core.config.Parameter.ChainConstant.BLOCK_VERSION_4;
 
 @Slf4j(topic = "actuator")
 public class ActuatorFactory {
@@ -134,7 +135,7 @@ public class ActuatorFactory {
       case UpdateBrokerageContract:
         return new UpdateBrokerageActuator(contract.getParameter(), manager);
       case CreateNftContract:
-        return new CreateNftActuator(contract.getParameter(), manager);
+        return (blockVersion < BLOCK_VERSION_4) ? null : new CreateNftActuator(contract.getParameter(), manager);
       default:
         break;
     }

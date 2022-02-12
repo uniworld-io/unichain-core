@@ -1330,7 +1330,7 @@ public class Manager {
 
     postContractTrigger(trace, false);
     Contract contract = txCap.getInstance().getRawData().getContract(0);
-    if (isMultSignTransaction(txCap.getInstance())) {
+    if (isMultiSignTransaction(txCap.getInstance())) {
       ownerAddressSet.add(ByteArray.toHexString(TransactionCapsule.getOwner(contract)));
     }
 
@@ -1423,7 +1423,7 @@ public class Manager {
       if (accountSet.contains(ownerAddress)) {
         continue;
       } else {
-        if (isMultSignTransaction(tx.getInstance())) {
+        if (isMultiSignTransaction(tx.getInstance())) {
           accountSet.add(ownerAddress);
         }
       }
@@ -1547,15 +1547,14 @@ public class Manager {
     }
   }
 
-  private boolean isMultSignTransaction(Transaction transaction) {
-    Contract contract = transaction.getRawData().getContract(0);
-    switch (contract.getType()) {
-      case AccountPermissionUpdateContract: {
+  private boolean isMultiSignTransaction(Transaction transaction) {
+    var ctxType = transaction.getRawData().getContract(0).getType();
+    switch (ctxType) {
+      case AccountPermissionUpdateContract:
         return true;
-      }
       default:
+        return false;
     }
-    return false;
   }
 
   public TransactionStore getTransactionStore() {

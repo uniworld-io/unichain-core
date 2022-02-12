@@ -84,7 +84,7 @@ public class TransferFutureActuator extends AbstractActuator {
       var balance = ownerAccount.getBalance();
       var toAccount = dbManager.getAccountStore().get(toAddress);
       if (toAccount == null) {
-        fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
       //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       var transferToSmartContract = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
@@ -123,8 +123,8 @@ public class TransferFutureActuator extends AbstractActuator {
     var accountStore = dbManager.getAccountStore();
     var toAcc = accountStore.get(toAddress);
     var summary = toAcc.getFutureSummary();
-    /**
-     * tick exist: the fasted way!
+    /*
+      tick exist: the fasted way!
      */
     if(futureStore.has(tickKey)){
       //update tick
@@ -139,8 +139,8 @@ public class TransferFutureActuator extends AbstractActuator {
       return;
     }
 
-    /**
-     * tick not exist: but no other ticks exist
+    /*
+      tick not exist: but no other ticks exist
      */
     if(summary == null){
       /*
@@ -169,14 +169,14 @@ public class TransferFutureActuator extends AbstractActuator {
       return;
     }
 
-    /**
-     * other tick exist
+    /*
+      other tick exist
      */
     var headKey = summary.getLowerTick().toByteArray();
     var head = futureStore.get(headKey);
     var headTime = head.getExpireTime();
-    /**
-     * if new tick is head
+    /*
+      if new tick is head
      */
     if(tickDay < headTime){
       //new tick is just a new head
@@ -204,8 +204,8 @@ public class TransferFutureActuator extends AbstractActuator {
       return ;
     }
 
-    /**
-     * if new tick is tail
+    /*
+      if new tick is tail
      */
     if(tickDay > headTime){
       //new tail
@@ -235,8 +235,8 @@ public class TransferFutureActuator extends AbstractActuator {
       return;
     }
 
-    /**
-     * lookup slot between head and tail
+    /*
+      lookup slot between head and tail
      */
     var searchKeyBs = summary.getUpperTick();
     while (true){
@@ -277,7 +277,6 @@ public class TransferFutureActuator extends AbstractActuator {
       }
       else {
         searchKeyBs = searchTick.getPrevTick();
-        continue;
       }
     }
   }

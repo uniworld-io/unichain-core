@@ -786,7 +786,7 @@ public class Manager {
     }
   }
 
-  public void consumeMultiSignFeeV2(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException, ContractExeException {
+  private void consumeMultiSignFeeV2(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException, ContractExeException {
     if (unx.getInstance().getSignatureCount() > 1) {
       long fee = getDynamicPropertiesStore().getMultiSignFee();
 
@@ -834,7 +834,7 @@ public class Manager {
     }
   }
 
-  public void consumeMultiSignFeeV1(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException{
+  private void consumeMultiSignFeeV1(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException{
     if (unx.getInstance().getSignatureCount() > 1) {
       var fee = getDynamicPropertiesStore().getMultiSignFee();
       for (Contract contract : unx.getInstance().getRawData().getContractList()) {
@@ -850,22 +850,7 @@ public class Manager {
   }
 
   public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    int blockVer = findBlockVersion(block);
-    switch (blockVer){
-      case BLOCK_VERSION_0:
-      case BLOCK_VERSION_1:
-        (new BandwidthProcessor(this)).consume(unx, trace);
-        break;
-      case BLOCK_VERSION_2:
-        (new BandwidthProcessorV2(this)).consume(unx, trace);
-        break;
-      case BLOCK_VERSION_3:
-        (new BandwidthProcessorV3(this)).consume(unx, trace);
-        break;
-      default:
-        (new BandwidthProcessorV4(this)).consume(unx, trace);
-        break;
-    }
+    getBandwidthProcessor(findBlockVersion(block)).consume(unx, trace);
   }
 
   /**
@@ -2001,7 +1986,7 @@ public class Manager {
       }
 
     } catch (Exception e) {
-      logger.error("start event subscribe got error: {}", e);
+      logger.error("start event subscribe got error: ", e);
     }
   }
 
@@ -2046,6 +2031,7 @@ public class Manager {
     }
   }
 
+  //@todo review
   private void postContractTrigger(final TransactionTrace trace, boolean remove) {
     if (eventPluginLoaded &&
         (EventPluginLoader.getInstance().isContractEventTriggerEnable()
@@ -2056,9 +2042,9 @@ public class Manager {
         contractEventTriggerCapsule.getContractTrigger().setRemoved(remove);
         contractEventTriggerCapsule.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
         if (!triggerCapsuleQueue.offer(contractEventTriggerCapsule)) {
-          logger.info("too many trigger, lost contract log trigger: {}", trigger.getTransactionId());
+          logger.warn("too many trigger, lost contract log trigger: {}", trigger.getTransactionId());
         }
-        //[TEST]=================================
+
         if (!remove) {
           contractEventTriggerCapsule.processTrigger();
         }
@@ -2095,5 +2081,19 @@ public class Manager {
 
   public int findBlockVersion(BlockCapsule block){
     return  (block == null) ? this.dynamicPropertiesStore.getBlockVersion() : block.getInstance().getBlockHeader().getRawData().getVersion();
+  }
+
+  private ResourceProcessor getBandwidthProcessor(int blockVer){
+    switch (blockVer){
+      case BLOCK_VERSION_0:
+      case BLOCK_VERSION_1:
+        return new BandwidthProcessor(this);
+      case BLOCK_VERSION_2:
+        return new BandwidthProcessorV2(this);
+      case BLOCK_VERSION_3:
+        return new BandwidthProcessorV3(this);
+      default:
+        return new BandwidthProcessorV4(this);
+    }
   }
 }

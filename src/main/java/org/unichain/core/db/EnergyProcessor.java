@@ -48,18 +48,16 @@ public class EnergyProcessor extends ResourceProcessor {
 
     long result;
     if (totalEnergyAverageUsage > targetTotalEnergyLimit) {
-      result = totalEnergyCurrentLimit * AdaptiveResourceLimitConstants.CONTRACT_RATE_NUMERATOR
+      result = Math.multiplyExact(totalEnergyCurrentLimit, AdaptiveResourceLimitConstants.CONTRACT_RATE_NUMERATOR)
           / AdaptiveResourceLimitConstants.CONTRACT_RATE_DENOMINATOR;
-      // logger.info(totalEnergyAverageUsage + ">" + targetTotalEnergyLimit + "\n" + result);
     } else {
-      result = totalEnergyCurrentLimit * AdaptiveResourceLimitConstants.EXPAND_RATE_NUMERATOR
+      result = Math.multiplyExact(totalEnergyCurrentLimit, AdaptiveResourceLimitConstants.EXPAND_RATE_NUMERATOR)
           / AdaptiveResourceLimitConstants.EXPAND_RATE_DENOMINATOR;
-      // logger.info(totalEnergyAverageUsage + "<" + targetTotalEnergyLimit + "\n" + result);
     }
 
     result = Math.min(
-        Math.max(result, totalEnergyLimit),
-        totalEnergyLimit * dbManager.getDynamicPropertiesStore().getAdaptiveResourceLimitMultiplier()
+            Math.max(result, totalEnergyLimit),
+            Math.multiplyExact(totalEnergyLimit, dbManager.getDynamicPropertiesStore().getAdaptiveResourceLimitMultiplier())
     );
 
     dbManager.getDynamicPropertiesStore().saveTotalEnergyCurrentLimit(result);
@@ -67,9 +65,7 @@ public class EnergyProcessor extends ResourceProcessor {
   }
 
   @Override
-  public void consume(TransactionCapsule unx,
-      TransactionTrace trace)
-      throws ContractValidateException, AccountResourceInsufficientException {
+  public void consume(TransactionCapsule unx, TransactionTrace trace) throws ContractValidateException, AccountResourceInsufficientException {
     throw new RuntimeException("Not support");
   }
 
@@ -115,6 +111,7 @@ public class EnergyProcessor extends ResourceProcessor {
 
     assert totalEnergyWeight > 0;
 
+    //@todo review
     return (long) (energyWeight * ((double) totalEnergyLimit / totalEnergyWeight));
   }
 

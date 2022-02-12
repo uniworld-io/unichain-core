@@ -89,9 +89,11 @@ public class TransferFutureActuatorV4 extends AbstractActuator {
 
       var balance = ownerAccount.getBalance();
       var toAccount = dbManager.getAccountStore().get(toAddress);
+      
       if (toAccount == null) {
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
+
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       var transferToSmartContract = (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1)
               && toAccount != null

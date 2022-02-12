@@ -82,7 +82,7 @@ public class AssetIssueActuator extends AbstractActuator {
             .setExpireTime(expireTime)
             .build();
         frozenList.add(newFrozen);
-        remainSupply -= next.getFrozenAmount();
+        remainSupply = Math.subtractExact(remainSupply, next.getFrozenAmount());
       }
 
       if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
@@ -98,7 +98,7 @@ public class AssetIssueActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
-      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -154,13 +154,11 @@ public class AssetIssueActuator extends AbstractActuator {
       var minFrozenSupplyTime = dbManager.getDynamicPropertiesStore().getMinFrozenSupplyTime();
       var maxFrozenSupplyTime = dbManager.getDynamicPropertiesStore().getMaxFrozenSupplyTime();
       var frozenList = assetIssueContract.getFrozenSupplyList();
-      var iterator = frozenList.iterator();
 
-      while (iterator.hasNext()) {
-        FrozenSupply next = iterator.next();
-        Assert.isTrue(next.getFrozenAmount() > 0,"Frozen supply must be greater than 0!");
-        Assert.isTrue(next.getFrozenAmount() <= remainSupply,"Frozen supply cannot exceed total supply");
-        Assert.isTrue ((next.getFrozenDays() >= minFrozenSupplyTime && next.getFrozenDays() <= maxFrozenSupplyTime),
+      for (FrozenSupply next : frozenList) {
+        Assert.isTrue(next.getFrozenAmount() > 0, "Frozen supply must be greater than 0!");
+        Assert.isTrue(next.getFrozenAmount() <= remainSupply, "Frozen supply cannot exceed total supply");
+        Assert.isTrue((next.getFrozenDays() >= minFrozenSupplyTime && next.getFrozenDays() <= maxFrozenSupplyTime),
                 "frozenDuration must be less than " + maxFrozenSupplyTime + " days " + "and more than " + minFrozenSupplyTime + " days");
         remainSupply = Math.subtractExact(remainSupply, next.getFrozenAmount());
       }
@@ -189,7 +187,7 @@ public class AssetIssueActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

@@ -688,8 +688,7 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
 
   public void saveMaxFrozenTime(int maxFrozenTime) {
     logger.debug("MAX_FROZEN_NUMBER:" + maxFrozenTime);
-    this.put(MAX_FROZEN_TIME,
-        new BytesCapsule(ByteArray.fromInt(maxFrozenTime)));
+    this.put(MAX_FROZEN_TIME, new BytesCapsule(ByteArray.fromInt(maxFrozenTime)));
   }
 
   public int getMaxFrozenTime() {
@@ -702,8 +701,7 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
 
   public void saveMinFrozenTime(int minFrozenTime) {
     logger.debug("MIN_FROZEN_NUMBER:" + minFrozenTime);
-    this.put(MIN_FROZEN_TIME,
-        new BytesCapsule(ByteArray.fromInt(minFrozenTime)));
+    this.put(MIN_FROZEN_TIME, new BytesCapsule(ByteArray.fromInt(minFrozenTime)));
   }
 
   public int getMinFrozenTime() {

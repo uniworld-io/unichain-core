@@ -63,7 +63,9 @@ public class ProposalService {
     HARD_FORK(34), // block version 34
     MAX_FUTURE_TRANSFER_TIME_RANGE_UNW(35), // max future transfer unw 35
     MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN(36), // max future transfer token 36
-    TOKEN_UPDATE_FEE(37); // token update(burn, mine, update params..) fee 37
+    TOKEN_UPDATE_FEE(37), // token update(burn, mine, update params..) fee 37
+    MAX_FROZEN_TIME_BY_DAY(38), //max time to freeze balance 38
+    MIN_FROZEN_TIME_BY_DAY(39); //min time to freeze balance 39
 
     ProposalType(long code) {
       this.code = code;
@@ -103,7 +105,7 @@ public class ProposalService {
     }
   }
 
-  //@todo refactor validation
+  /* @todo refactor validation */
   public static void validator(Manager manager, long code, long value) throws ContractValidateException {
     ProposalType proposalType = ProposalType.getEnum(code);
     switch (proposalType) {
@@ -314,6 +316,31 @@ public class ProposalService {
         break;
       }
 
+      case MAX_FROZEN_TIME_BY_DAY: {
+        try {
+          int valueInt = Math.toIntExact(value);
+          Assert.isTrue(valueInt > 0 && valueInt <= Parameter.ChainConstant.MAX_FROZEN_TIME_BY_DAY, "max frozen time by day must be positive and lower than upper bound value: " + Parameter.ChainConstant.MAX_FROZEN_TIME_BY_DAY);
+          Assert.isTrue(manager.getDynamicPropertiesStore().getBlockVersion() >= BLOCK_VERSION_4, "require at least block version: " + BLOCK_VERSION_4);
+        }
+        catch (Exception e){
+          throw new ContractValidateException(e.getMessage());
+        }
+        break;
+      }
+
+      case MIN_FROZEN_TIME_BY_DAY: {
+        try {
+          int valueInt = Math.toIntExact(value);
+          int realMax = Math.min(manager.getDynamicPropertiesStore().getMaxFrozenTime(), Parameter.ChainConstant.MAX_FROZEN_TIME_BY_DAY);
+          Assert.isTrue(valueInt > 0 && valueInt <= realMax, "min frozen time by day must be positive and lower than upper bound value: " + realMax);
+          Assert.isTrue(manager.getDynamicPropertiesStore().getBlockVersion() >= BLOCK_VERSION_4, "require at least block version: " + BLOCK_VERSION_4);
+        }
+        catch (Exception e){
+          throw new ContractValidateException(e.getMessage());
+        }
+        break;
+      }
+
       default:
         break;
     }
@@ -497,6 +524,18 @@ public class ProposalService {
         case TOKEN_UPDATE_FEE: {
           logger.info("Saving token update fee --> {}", entry.getValue());
           manager.getDynamicPropertiesStore().saveAssetUpdateFee(entry.getValue());
+          break;
+        }
+        case MAX_FROZEN_TIME_BY_DAY: {
+          int intValue = Math.toIntExact(entry.getValue());
+          logger.info("Saving max frozen time proposal --> {}", intValue);
+          manager.getDynamicPropertiesStore().saveMaxFrozenTime(intValue);
+          break;
+        }
+        case MIN_FROZEN_TIME_BY_DAY: {
+          int intValue = Math.toIntExact(entry.getValue());
+          logger.info("Saving min frozen time proposal --> {}", intValue);
+          manager.getDynamicPropertiesStore().saveMinFrozenTime(intValue);
           break;
         }
         default:

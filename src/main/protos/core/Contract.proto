@@ -164,9 +164,9 @@ message UpdateTokenParamsContract {
   string description = 7;
   int64 total_supply = 8;
   int64 fee_pool = 9;
-  int64 exch_unx_num = 10; //#unw
-  int64 exch_num = 11; //exchange to #token
-  int64 create_acc_fee= 12;
+  int64 exch_unx_num = 10; //exchange by unw
+  int64 exch_num = 11; //exchange to by token
+  int64 create_acc_fee= 12; //create account fee by token
 }
 
 message MineTokenContract {

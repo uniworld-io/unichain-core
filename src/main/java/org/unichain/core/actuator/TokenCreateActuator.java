@@ -54,7 +54,9 @@ public class TokenCreateActuator extends AbstractActuator {
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var capsule = new TokenPoolCapsule(ctx);
 
-      //preset default value to create account fee for new model
+      /*
+        to prevent hacking un-used params, must preset default value for old block version
+       */
       capsule.setCreateAccountFee(TOKEN_DEFAULT_CREATE_ACC_FEE);
 
       if(!ctx.hasField(TOKEN_CREATE_FIELD_START_TIME))

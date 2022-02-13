@@ -226,7 +226,7 @@ message ParticipateAssetIssueContract {
   bytes owner_address = 1;
   bytes to_address = 2;
   bytes asset_name = 3; // this field is token name before the proposal ALLOW_SAME_TOKEN_NAME is active, otherwise it is token id and token is should be in string format.
-  int64 amount = 4; // the amount of drops
+  int64 amount = 4; // the amount of ginzas
 }
 
 

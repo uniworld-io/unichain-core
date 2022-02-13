@@ -45,7 +45,7 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
               .filter(Objects::nonNull)
               .map(TokenPoolCapsule::getInstance)
               .filter(item -> StringUtils.containsIgnoreCase(item.getName(), query.getTokenName()))
-              .map(item -> item.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
+              .map(item -> item.hasField(TOKEN_CREATE_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
               .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))
               .collect(Collectors.toList());
     }
@@ -53,7 +53,7 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
       sorted = getAll().stream()
               .filter(Objects::nonNull)
               .map(TokenPoolCapsule::getInstance)
-              .map(item -> item.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
+              .map(item -> item.hasField(TOKEN_CREATE_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
               .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))
               .collect(Collectors.toList());
     }

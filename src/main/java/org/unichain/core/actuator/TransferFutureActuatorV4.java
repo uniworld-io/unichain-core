@@ -24,9 +24,11 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static org.unichain.core.services.http.utils.Util.FUTURE_TRANSFER_FIELD_TO_ADDR;
+
 @Slf4j(topic = "actuator")
-public class TransferFutureActuatorV3 extends AbstractActuator {
-  TransferFutureActuatorV3(Any contract, Manager dbManager) {
+public class TransferFutureActuatorV4 extends AbstractActuator {
+  TransferFutureActuatorV4(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -36,8 +38,10 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
     try {
       var ctx = contract.unpack(FutureTransferContract.class);
       var amount = ctx.getAmount();
-      var toAddress = ctx.getToAddress().toByteArray();
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      val selfLock = !ctx.hasField(FUTURE_TRANSFER_FIELD_TO_ADDR) || (Arrays.equals(ctx.getToAddress().toByteArray(), ownerAddress));
+      var toAddress = selfLock ? ownerAddress : ctx.getToAddress().toByteArray();
+
       var toAccount = dbManager.getAccountStore().get(toAddress);
       if (Objects.isNull(toAccount)) {
         var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
@@ -47,12 +51,12 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       }
 
       chargeFee(ownerAddress, fee);
-      ret.setStatus(fee, code.SUCESS);
       dbManager.adjustBalance(ownerAddress, -amount);
       addFutureBalance(toAddress, amount, ctx.getExpireTime());
+      ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (Exception e) {
-      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -67,9 +71,10 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
 
       var fee = calcFee();
       val ctx = contract.unpack(FutureTransferContract.class);
-
-      var toAddress = ctx.getToAddress().toByteArray();
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      val selfLock = !ctx.hasField(FUTURE_TRANSFER_FIELD_TO_ADDR) || (Arrays.equals(ctx.getToAddress().toByteArray(), ownerAddress));
+      var toAddress = selfLock ? ownerAddress : ctx.getToAddress().toByteArray();
+
       var amount = ctx.getAmount();
       Assert.isTrue(amount > 0, "Amount must greater than 0.");
 
@@ -78,32 +83,33 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
                       "expire time must greater current block time, lower than maximum timestamp:" + maxExpireTime);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
-      Assert.isTrue(!Arrays.equals(toAddress, ownerAddress), "Cannot transfer unw to yourself");
 
       AccountCapsule ownerAccount = dbManager.getAccountStore().get(ownerAddress);
       Assert.notNull(ownerAccount, "no OwnerAccount found");
 
       var balance = ownerAccount.getBalance();
       var toAccount = dbManager.getAccountStore().get(toAddress);
+      
       if (toAccount == null) {
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
+
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       var transferToSmartContract = (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1)
               && toAccount != null
               && toAccount.getType() == AccountType.Contract;
-      Assert.isTrue(!transferToSmartContract, "Cannot transfer unw to smartContract.");
+      Assert.isTrue(!transferToSmartContract, "Cannot transfer/self-lock unw to/by smartContract.");
 
       Assert.isTrue(balance >= Math.addExact(amount, fee), "Validate TransferContract error, balance is not sufficient");
 
-      if (toAccount != null) {
+      if ((toAccount != null) && !selfLock) {
         Math.addExact(toAccount.getBalance(), amount);//check if overflow
       }
 
       return true;
     }
     catch (Exception e){
-      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }
@@ -126,8 +132,8 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
     var accountStore = dbManager.getAccountStore();
     var toAcc = accountStore.get(toAddress);
     var summary = toAcc.getFutureSummary();
-    /**
-     * tick exist: the fasted way!
+    /*
+      tick exist: the fasted way!
      */
     if(futureStore.has(tickKey)){
       //save tick
@@ -144,8 +150,8 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       return;
     }
 
-    /**
-     * first tick ever: add new tick, add summary
+    /*
+      first tick ever: add new tick, add summary
      */
     if(Objects.isNull(summary)){
       //save new tick
@@ -171,15 +177,15 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       return;
     }
 
-    /**
-     * other ticks exist
+    /*
+      other ticks exist
      */
     var headKey = summary.getLowerTick().toByteArray();
     var head = futureStore.get(headKey);
     var headTime = head.getExpireTime();
 
-    /**
-     * if new tick is head
+    /*
+      if new tick is head
      */
     if(tickDay < headTime){
       //save old head
@@ -207,8 +213,8 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       return ;
     }
 
-    /**
-     * if new tick is tail
+    /*
+      if new tick is tail
      */
     if(tickDay > headTime){
       //save new tail
@@ -238,8 +244,8 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       return;
     }
 
-    /**
-     * otherwise: lookup slot to insert
+    /*
+      otherwise: lookup slot to insert
      */
     var searchKeyBs = summary.getUpperTick();
     while (true){
@@ -278,7 +284,6 @@ public class TransferFutureActuatorV3 extends AbstractActuator {
       }
       else {
         searchKeyBs = searchTick.getPrevTick();
-        continue;
       }
     }
   }

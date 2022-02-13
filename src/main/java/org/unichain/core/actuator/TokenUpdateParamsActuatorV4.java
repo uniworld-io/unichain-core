@@ -35,14 +35,13 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
-import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE;
-import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE_RATE;
+import static org.unichain.core.config.Parameter.ChainConstant.*;
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "actuator")
-public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
+public class TokenUpdateParamsActuatorV4 extends AbstractActuator {
 
-  TokenUpdateParamsActuatorV3(Any contract, Manager dbManager) {
+  TokenUpdateParamsActuatorV4(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -106,6 +105,11 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
 
         if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
             tokenCap.setExchTokenNum(ctx.getExchNum());
+            updateCriticalParams = true;
+        }
+
+        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)) {
+            tokenCap.setCreateAccFee(ctx.getCreateAccFee());
             updateCriticalParams = true;
         }
 
@@ -214,6 +218,9 @@ public class TokenUpdateParamsActuatorV3 extends AbstractActuator {
               Assert.isTrue(ctx.getExchNum() > 0, "Exchange token number must be positive");
           }
 
+          if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)){
+              Assert.isTrue(ctx.getCreateAccFee() > 0 && ctx.getCreateAccFee() <= TOKEN_MAX_CREATE_ACC_FEE, "Invalid create account fee");
+          }
           return true;
       }
       catch (Exception e){

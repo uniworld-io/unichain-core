@@ -47,7 +47,7 @@ public class TokenMineActuator extends AbstractActuator {
       var ctx = contract.unpack(MineTokenContract.class);
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenCapsule = dbManager.getTokenPoolStore().get(tokenKey);
-      tokenCapsule.setTotalSupply(tokenCapsule.getTotalSupply() + ctx.getAmount());
+      tokenCapsule.setTotalSupply(Math.addExact(tokenCapsule.getTotalSupply(), ctx.getAmount()));
       dbManager.getTokenPoolStore().put(tokenKey, tokenCapsule);
 
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
@@ -91,7 +91,7 @@ public class TokenMineActuator extends AbstractActuator {
       Assert.isTrue(ctx.getAmount() >= tokenPool.getLot(), "Mined amount at least equal lot: " + tokenPool.getLot());
 
       // avail to mine = max - total - burned
-      var availableToMine = tokenPool.getMaxSupply() - tokenPool.getTotalSupply() - tokenPool.getBurnedToken();
+      var availableToMine = Math.subtractExact(tokenPool.getMaxSupply(), Math.addExact(tokenPool.getTotalSupply(), tokenPool.getBurnedToken()));
       Assert.isTrue(ctx.getAmount() <= availableToMine, "Not enough frozen token to mine, maximum allowed: " + availableToMine);
 
       return true;

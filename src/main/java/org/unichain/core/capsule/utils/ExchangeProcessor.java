@@ -4,33 +4,25 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j(topic = "capsule")
 public class ExchangeProcessor {
-
   private long supply;
 
   public ExchangeProcessor(long supply) {
     this.supply = supply;
   }
 
+  //@todo review math calculation
   private long exchangeToSupply(long balance, long quant) {
-    logger.debug("balance: " + balance);
-    long newBalance = balance + quant;
-    logger.debug("balance + quant: " + newBalance);
-
+    long newBalance = Math.addExact(balance , quant);
     double issuedSupply = -supply * (1.0 - Math.pow(1.0 + (double) quant / newBalance, 0.0005));
-    logger.debug("issuedSupply: " + issuedSupply);
     long out = (long) issuedSupply;
-    supply += out;
-
+    supply = Math.addExact(supply, out);
     return out;
   }
 
+  //@todo review math calculation
   private long exchangeFromSupply(long balance, long supplyQuant) {
-    supply -= supplyQuant;
-
-    double exchangeBalance =
-        balance * (Math.pow(1.0 + (double) supplyQuant / supply, 2000.0) - 1.0);
-    logger.debug("exchangeBalance: " + exchangeBalance);
-
+    supply = Math.subtractExact(supplyQuant, supplyQuant);
+    double exchangeBalance = balance * (Math.pow(1.0 + (double) supplyQuant / supply, 2000.0) - 1.0);
     return (long) exchangeBalance;
   }
 

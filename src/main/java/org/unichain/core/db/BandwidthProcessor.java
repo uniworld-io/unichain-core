@@ -59,7 +59,7 @@ public class BandwidthProcessor extends ResourceProcessor {
   @Override
   public void consume(TransactionCapsule unx, TransactionTrace trace) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
     List<Contract> contracts = unx.getInstance().getRawData().getContractList();
-    if (unx.getResultSerializedSize() > Constant.MAX_RESULT_SIZE_IN_TX * contracts.size()) {
+    if (unx.getResultSerializedSize() > Math.multiplyExact(Constant.MAX_RESULT_SIZE_IN_TX , contracts.size())) {
       throw new TooBigTransactionResultException();
     }
 
@@ -73,7 +73,7 @@ public class BandwidthProcessor extends ResourceProcessor {
 
     for (Contract contract : contracts) {
       if (dbManager.getDynamicPropertiesStore().supportVM()) {
-        bytesSize += Constant.MAX_RESULT_SIZE_IN_TX;
+        bytesSize = Math.addExact(bytesSize, Constant.MAX_RESULT_SIZE_IN_TX);
       }
 
       logger.debug("unxId {},bandwidth cost :{}", unx.getTransactionId(), bytesSize);
@@ -107,13 +107,13 @@ public class BandwidthProcessor extends ResourceProcessor {
         continue;
       }
 
-      long fee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytesSize;
+      long fee = Math.multiplyExact(dbManager.getDynamicPropertiesStore().getTransactionFee(), bytesSize);
       throw new AccountResourceInsufficientException("Account Insufficient bandwidth[" + bytesSize + "] and balance[" + fee + "] to create new account");
     }
   }
 
   private boolean useTransactionFee(AccountCapsule accountCapsule, long bytes, TransactionTrace trace) {
-    long fee = dbManager.getDynamicPropertiesStore().getTransactionFee() * bytes;
+    long fee = Math.multiplyExact(dbManager.getDynamicPropertiesStore().getTransactionFee(), bytes);
     if (consumeFee(accountCapsule, fee)) {
       trace.setNetBill(0, fee);
       dbManager.getDynamicPropertiesStore().addTotalTransactionCost(fee);
@@ -141,10 +141,10 @@ public class BandwidthProcessor extends ResourceProcessor {
 
     long newNetUsage = increase(netUsage, 0, latestConsumeTime, now);
 
-    if (bytes * createNewAccountBandwidthRatio <= (netLimit - newNetUsage)) {
+    if (Math.multiplyExact(bytes, createNewAccountBandwidthRatio) <= Math.subtractExact(netLimit, newNetUsage)) {
       latestConsumeTime = now;
       long latestOperationTime = dbManager.getHeadBlockTimeStamp();
-      newNetUsage = increase(newNetUsage, bytes * createNewAccountBandwidthRatio, latestConsumeTime, now);
+      newNetUsage = increase(newNetUsage, Math.multiplyExact(bytes, createNewAccountBandwidthRatio), latestConsumeTime, now);
       accountCapsule.setLatestConsumeTime(latestConsumeTime);
       accountCapsule.setLatestOperationTime(latestOperationTime);
       accountCapsule.setNetUsage(newNetUsage);
@@ -186,8 +186,7 @@ public class BandwidthProcessor extends ResourceProcessor {
         } catch (Exception ex) {
           throw new RuntimeException(ex.getMessage());
         }
-        toAccount = dbManager.getAccountStore()
-            .get(transferAssetContract.getToAddress().toByteArray());
+        toAccount = dbManager.getAccountStore().get(transferAssetContract.getToAddress().toByteArray());
         return toAccount == null;
       default:
         return false;
@@ -220,7 +219,7 @@ public class BandwidthProcessor extends ResourceProcessor {
 
     long newPublicFreeAssetNetUsage = increase(publicFreeAssetNetUsage, 0, publicLatestFreeNetTime, now);
 
-    if (bytes > (publicFreeAssetNetLimit - newPublicFreeAssetNetUsage)) {
+    if (bytes > Math.subtractExact(publicFreeAssetNetLimit, newPublicFreeAssetNetUsage)) {
       logger.debug("The " + tokenID + " public free bandwidth is not enough");
       return false;
     }
@@ -238,8 +237,8 @@ public class BandwidthProcessor extends ResourceProcessor {
 
     long newFreeAssetNetUsage = increase(freeAssetNetUsage, 0, latestAssetOperationTime, now);
 
-    if (bytes > (freeAssetNetLimit - newFreeAssetNetUsage)) {
-      logger.debug("The " + tokenID + " free bandwidth is not enough");
+    if (bytes > Math.subtractExact(freeAssetNetLimit, newFreeAssetNetUsage)) {
+      logger.warn("The " + tokenID + " free bandwidth is not enough");
       return false;
     }
 
@@ -251,8 +250,8 @@ public class BandwidthProcessor extends ResourceProcessor {
 
     long newIssuerNetUsage = increase(issuerNetUsage, 0, latestConsumeTime, now);
 
-    if (bytes > (issuerNetLimit - newIssuerNetUsage)) {
-      logger.debug("The " + tokenID + " issuer'bandwidth is not enough");
+    if (bytes > Math.subtractExact(issuerNetLimit, newIssuerNetUsage)) {
+      logger.debug("The " + tokenID + " issuer's bandwidth is not enough");
       return false;
     }
 
@@ -315,7 +314,7 @@ public class BandwidthProcessor extends ResourceProcessor {
     long netLimit = calculateGlobalNetLimit(accountCapsule);
     long newNetUsage = increase(netUsage, 0, latestConsumeTime, now);
 
-    if (bytes > (netLimit - newNetUsage)) {
+    if (bytes > Math.subtractExact(netLimit, newNetUsage)) {
       logger.debug("net usage is running out. now use free net usage");
       return false;
     }
@@ -348,7 +347,7 @@ public class BandwidthProcessor extends ResourceProcessor {
 
     long newPublicNetUsage = increase(publicNetUsage, 0, publicNetTime, now);
 
-    if (bytes > (publicNetLimit - newPublicNetUsage)) {
+    if (bytes > Math.subtractExact(publicNetLimit, newPublicNetUsage)) {
       logger.debug("free public net usage is running out");
       return false;
     }

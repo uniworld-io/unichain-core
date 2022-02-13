@@ -688,8 +688,7 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
 
   public void saveMaxFrozenTime(int maxFrozenTime) {
     logger.debug("MAX_FROZEN_NUMBER:" + maxFrozenTime);
-    this.put(MAX_FROZEN_TIME,
-        new BytesCapsule(ByteArray.fromInt(maxFrozenTime)));
+    this.put(MAX_FROZEN_TIME, new BytesCapsule(ByteArray.fromInt(maxFrozenTime)));
   }
 
   public int getMaxFrozenTime() {
@@ -702,8 +701,7 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
 
   public void saveMinFrozenTime(int minFrozenTime) {
     logger.debug("MIN_FROZEN_NUMBER:" + minFrozenTime);
-    this.put(MIN_FROZEN_TIME,
-        new BytesCapsule(ByteArray.fromInt(minFrozenTime)));
+    this.put(MIN_FROZEN_TIME, new BytesCapsule(ByteArray.fromInt(minFrozenTime)));
   }
 
   public int getMinFrozenTime() {
@@ -1571,7 +1569,7 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
 
   public int calculateFilledSlotsCount() {
     int[] blockFilledSlots = getBlockFilledSlots();
-    return 100 * IntStream.of(blockFilledSlots).sum() / getBlockFilledSlotsNumber();
+    return Math.multiplyExact(100, IntStream.of(blockFilledSlots).sum()) / getBlockFilledSlotsNumber();
   }
 
   public void saveLatestSolidifiedBlockNum(long number) {
@@ -1735,8 +1733,8 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
     long maintenanceTimeInterval = getMaintenanceTimeInterval();
 
     long currentMaintenanceTime = getNextMaintenanceTime();
-    long round = (blockTime - currentMaintenanceTime) / maintenanceTimeInterval;
-    long nextMaintenanceTime = currentMaintenanceTime + (round + 1) * maintenanceTimeInterval;
+    long round = Math.subtractExact(blockTime, currentMaintenanceTime) / maintenanceTimeInterval;
+    long nextMaintenanceTime = Math.addExact(currentMaintenanceTime, Math.multiplyExact(round + 1,  maintenanceTimeInterval));
     saveNextMaintenanceTime(nextMaintenanceTime);
 
     logger.info(
@@ -1748,30 +1746,28 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
 
   //The unit is unx
   public void addTotalNetWeight(long amount) {
-    long totalNetWeight = getTotalNetWeight();
-    totalNetWeight += amount;
+    long totalNetWeight = Math.addExact(getTotalNetWeight(), amount);
     saveTotalNetWeight(totalNetWeight);
   }
 
   //The unit is unx
   public void addTotalEnergyWeight(long amount) {
-    long totalEnergyWeight = getTotalEnergyWeight();
-    totalEnergyWeight += amount;
+    long totalEnergyWeight = Math.addExact(getTotalEnergyWeight(), amount);
     saveTotalEnergyWeight(totalEnergyWeight);
   }
 
   public void addTotalCreateAccountCost(long fee) {
-    long newValue = getTotalCreateAccountCost() + fee;
+    long newValue = Math.addExact(getTotalCreateAccountCost(), fee);
     saveTotalCreateAccountFee(newValue);
   }
 
   public void addTotalCreateWitnessCost(long fee) {
-    long newValue = getTotalCreateWitnessCost() + fee;
+    long newValue = Math.addExact(getTotalCreateWitnessCost(), fee);
     saveTotalCreateWitnessFee(newValue);
   }
 
   public void addTotalTransactionCost(long fee) {
-    long newValue = getTotalTransactionCost() + fee;
+    long newValue = Math.addExact(getTotalTransactionCost(), fee);
     saveTotalTransactionCost(newValue);
   }
 

@@ -114,24 +114,24 @@ public class ReceiptCapsule {
       long originUsage = Math.multiplyExact(receipt.getEnergyUsageTotal(), sharedPercent) / 100;
       originUsage = chargeOriginUsage(manager, origin, originUsage);
       this.setOriginEnergyUsage(originUsage);
-      long callerUsage = receipt.getEnergyUsageTotal() - originUsage;
+      long callerUsage = Math.subtractExact(receipt.getEnergyUsageTotal(), originUsage);
       payEnergyBillV2(manager, caller, callerUsage);
     }
   }
 
   private void payEnergyBillV2(Manager manager, AccountCapsule account, long usage) throws BalanceInsufficientException {
-    long blockEnergyUsage = manager.getDynamicPropertiesStore().getBlockEnergyUsage() + usage;
+    long blockEnergyUsage = Math.addExact(manager.getDynamicPropertiesStore().getBlockEnergyUsage(), usage);
     manager.getDynamicPropertiesStore().saveBlockEnergyUsage(blockEnergyUsage);
 
     long ginzaPerEnergy = manager.loadEnergyGinzaFactor();
-    long energyFee = usage * ginzaPerEnergy;
+    long energyFee = Math.multiplyExact(usage, ginzaPerEnergy);
     this.setEnergyUsage(0);
     this.setEnergyFee(energyFee);
     long balance = account.getBalance();
     if (balance < energyFee) {
       throw new BalanceInsufficientException(StringUtil.createReadableString(account.createDbKey()) + " insufficient balance");
     }
-    account.setBalance(balance - energyFee);
+    account.setBalance(Math.subtractExact(balance, energyFee));
     account.setLatestOperationTime(manager.getHeadBlockTimeStamp());
     manager.getAccountStore().put(account.getAddress().toByteArray(), account);
     manager.adjustBalance(manager.getAccountStore().getBurnaccount().getAddress().toByteArray(), energyFee);
@@ -172,20 +172,20 @@ public class ReceiptCapsule {
       energyProcessor.useEnergy(account, accountEnergyLeft, now);
 
       if(manager.getDynamicPropertiesStore().getAllowAdaptiveEnergy() == 1) {
-          long blockEnergyUsage = manager.getDynamicPropertiesStore().getBlockEnergyUsage() + (usage - accountEnergyLeft);
+          long blockEnergyUsage = Math.addExact(manager.getDynamicPropertiesStore().getBlockEnergyUsage(), Math.subtractExact(usage, accountEnergyLeft));
           manager.getDynamicPropertiesStore().saveBlockEnergyUsage(blockEnergyUsage);
       }
 
       long ginzaPerEnergy = manager.loadEnergyGinzaFactor();
-      long energyFee = (usage - accountEnergyLeft) * ginzaPerEnergy;
+      long energyFee = Math.multiplyExact(Math.subtractExact(usage, accountEnergyLeft),  ginzaPerEnergy);
       this.setEnergyUsage(accountEnergyLeft);
       this.setEnergyFee(energyFee);
       long balance = account.getBalance();
       if (balance < energyFee) {
         throw new BalanceInsufficientException(StringUtil.createReadableString(account.createDbKey()) + " insufficient balance");
       }
-      account.setBalance(balance - energyFee);
-      manager.adjustBalance(manager.getAccountStore().getBurnaccount().getAddress().toByteArray(), energyFee);
+      account.setBalance(Math.subtractExact(balance, energyFee));
+      manager.burnFee(energyFee);
     }
 
     manager.getAccountStore().put(account.getAddress().toByteArray(), account);
@@ -214,10 +214,10 @@ public class ReceiptCapsule {
    */
   private long chargeOriginUsage(Manager manager, AccountCapsule origin, long usage) {
     long ginzaEnergyFactor = manager.loadEnergyGinzaFactor();
-    long maxFee = usage * ginzaEnergyFactor;
+    long maxFee = Math.multiplyExact(usage, ginzaEnergyFactor);
     long balance = origin.getBalance();
     if(balance >= maxFee){
-      origin.setBalance(balance - maxFee);
+      origin.setBalance(Math.subtractExact(balance, maxFee));
       manager.getAccountStore().put(origin.getAddress().toByteArray(), origin);
       return usage;
     }

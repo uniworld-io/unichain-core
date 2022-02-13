@@ -42,7 +42,7 @@ public class TransactionResultCapsule implements ProtoCapsule<Transaction.Result
   public void setStatus(long fee, Transaction.Result.code code) {
     long oldValue = transactionResult.getFee();
     this.transactionResult = this.transactionResult.toBuilder()
-        .setFee(oldValue + fee)
+        .setFee(Math.addExact(oldValue, fee))
         .setRet(code).build();
   }
 
@@ -117,11 +117,6 @@ public class TransactionResultCapsule implements ProtoCapsule<Transaction.Result
 
   public void setFee(long fee) {
     this.transactionResult = this.transactionResult.toBuilder().setFee(fee).build();
-  }
-
-  public void addFee(long fee) {
-    this.transactionResult = this.transactionResult.toBuilder()
-        .setFee(this.transactionResult.getFee() + fee).build();
   }
 
   public void setErrorCode(Transaction.Result.code code) {

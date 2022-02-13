@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.TokenPoolCapsule;
+import org.unichain.core.config.Parameter;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
@@ -42,15 +43,17 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
     {
       sorted  = getAll().stream()
               .filter(Objects::nonNull)
-              .map(item -> item.getInstance())
+              .map(TokenPoolCapsule::getInstance)
               .filter(item -> StringUtils.containsIgnoreCase(item.getName(), query.getTokenName()))
+              .map(item -> item.hasField(TOKEN_CREATE_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
               .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))
               .collect(Collectors.toList());
     }
     else{
       sorted = getAll().stream()
               .filter(Objects::nonNull)
-              .map(item -> item.getInstance())
+              .map(TokenPoolCapsule::getInstance)
+              .map(item -> item.hasField(TOKEN_CREATE_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
               .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))
               .collect(Collectors.toList());
     }

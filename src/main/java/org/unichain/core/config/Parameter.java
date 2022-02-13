@@ -8,12 +8,13 @@ import java.util.Set;
 
 public class Parameter {
   /**
-   * @critical: all supported version add here
+   * @note: all supported version add here
    */
   public static final Set<Integer> BLOCK_VERSION_SUPPORTED = new HashSet<>(Arrays.asList(
           ChainConstant.BLOCK_VERSION_1,
           ChainConstant.BLOCK_VERSION_2,
-          ChainConstant.BLOCK_VERSION_3));
+          ChainConstant.BLOCK_VERSION_3,
+          ChainConstant.BLOCK_VERSION_4));
 
   public class ChainConstant {
     /**
@@ -22,6 +23,8 @@ public class Parameter {
     public static final long TOKEN_TRANSFER_FEE = 0; // free
     public static final long TOKEN_MAX_TRANSFER_FEE = 10000;
     public static final long TOKEN_MAX_TRANSFER_FEE_RATE = 30; // percent
+    public static final long TOKEN_MAX_CREATE_ACC_FEE = 10000000L;
+    public static final long TOKEN_DEFAULT_CREATE_ACC_FEE = 1000L; //default number of token will be charged if create new account
 
     public static final long TRANSFER_FEE = 0; // free
     public static final int WITNESS_STANDBY_LENGTH = 55;
@@ -39,7 +42,7 @@ public class Parameter {
     public static final int SINGLE_REPEAT = 1;
     public static final int BLOCK_FILLED_SLOTS_NUMBER = 56; 
     public static final int MAX_VOTE_NUMBER = 30;
-    public static final int MAX_FROZEN_NUMBER = 1;
+    public static final int MAX_FROZEN_TIME_BY_DAY = 365 * 10; // 10 years
 
     /**
      * Critical: all available block version must declare here
@@ -48,6 +51,7 @@ public class Parameter {
     public static final int BLOCK_VERSION_1 = 1;
     public static final int BLOCK_VERSION_2 = 2;
     public static final int BLOCK_VERSION_3 = 3;
+    public static final int BLOCK_VERSION_4 = 4;
 
     /**
      * max unw/token transfer time range

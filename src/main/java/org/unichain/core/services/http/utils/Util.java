@@ -49,7 +49,7 @@ public class Util {
     List<Block> blocks = list.getBlockList();
     JSONObject jsonObject = JSONObject.parseObject(JsonFormat.printToString(list, selfType));
     JSONArray jsonArray = new JSONArray();
-    blocks.stream().forEach(block -> jsonArray.add(printBlockToJSON(block, selfType)));
+    blocks.forEach(block -> jsonArray.add(printBlockToJSON(block, selfType)));
     jsonObject.put("block", jsonArray);
 
     return jsonObject.toJSONString();
@@ -74,7 +74,7 @@ public class Util {
     List<Transaction> transactions = list.getTransactionList();
     JSONObject jsonObject = JSONObject.parseObject(JsonFormat.printToString(list, selfType));
     JSONArray jsonArray = new JSONArray();
-    transactions.stream().forEach(transaction -> jsonArray.add(printTransactionToJSON(transaction, selfType)));
+    transactions.forEach(transaction -> jsonArray.add(printTransactionToJSON(transaction, selfType)));
     jsonObject.put(TRANSACTION, jsonArray);
 
     return jsonObject.toJSONString();
@@ -82,7 +82,7 @@ public class Util {
 
   public static JSONArray printTransactionListToJSON(List<TransactionCapsule> list, boolean selfType) {
     JSONArray transactions = new JSONArray();
-    list.stream().forEach(transactionCapsule -> transactions.add(printTransactionToJSON(transactionCapsule.getInstance(), selfType)));
+    list.forEach(transactionCapsule -> transactions.add(printTransactionToJSON(transactionCapsule.getInstance(), selfType)));
     return transactions;
   }
 
@@ -147,7 +147,7 @@ public class Util {
   public static JSONObject printTransactionToJSON(Transaction transaction, boolean selfType) {
     JSONObject jsonTransaction = JSONObject.parseObject(JsonFormat.printToString(transaction, selfType));
     JSONArray contracts = new JSONArray();
-    transaction.getRawData().getContractList().stream().forEach(contract -> {
+    transaction.getRawData().getContractList().forEach(contract -> {
       try {
         JSONObject contractJson = null;
         Any contractParameter = contract.getParameter();
@@ -513,8 +513,8 @@ public class Util {
             any = Any.pack(updateBrokerageContract.build());
             break;
 
-          /**
-           * future transfer
+          /*
+            future transfer
            */
           case "FutureTransferContract":
             Contract.FutureTransferContract.Builder futureTransferContract = Contract.FutureTransferContract.newBuilder();
@@ -527,8 +527,8 @@ public class Util {
             any = Any.pack(futureWithdrawContract.build());
             break;
 
-          /**
-           *  token economy
+          /*
+             token economy
            */
           case "CreateTokenContract":
             CreateTokenContract.Builder createTokenContractBuilder = CreateTokenContract.newBuilder();
@@ -634,6 +634,7 @@ public class Util {
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_FEE_POOL = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.FEE_POOL_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.EXCH_UNX_NUM_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.EXCH_NUM_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
 
   public static Descriptors.FieldDescriptor TOKEN_QUERY_FIELD_PAGE_INDEX= Protocol.TokenPoolQuery.getDescriptor().findFieldByNumber(Protocol.TokenPoolQuery.PAGE_INDEX_FIELD_NUMBER);
@@ -643,6 +644,9 @@ public class Util {
   public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_START_TIME= CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.START_TIME_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_END_TIME= CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.END_TIME_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_CRITICAL_TIME = CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.CRITICAL_UPDATE_TIME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor FUTURE_TRANSFER_FIELD_TO_ADDR = FutureTransferContract.getDescriptor().findFieldByNumber(FutureTransferContract.TO_ADDRESS_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_CREATE_ACC_FEE = CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
 
   public static int DEFAULT_PAGE_SIZE = 20;

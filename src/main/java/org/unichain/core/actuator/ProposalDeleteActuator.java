@@ -13,6 +13,7 @@ import org.unichain.core.Wallet;
 import org.unichain.core.capsule.ProposalCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
+import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.exception.ItemNotFoundException;
@@ -36,6 +37,7 @@ public class ProposalDeleteActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       val ctx = this.contract.unpack(ProposalDeleteContract.class);
+      var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var proposalCapsule = (Objects.isNull(deposit)) ?
               dbManager.getProposalStore().get(ByteArray.fromLong(ctx.getProposalId()))
               : deposit.getProposalCapsule(ByteArray.fromLong(ctx.getProposalId()));
@@ -46,9 +48,10 @@ public class ProposalDeleteActuator extends AbstractActuator {
         deposit.putProposalValue(proposalCapsule.createDbKey(), proposalCapsule);
       }
 
+      chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (InvalidProtocolBufferException | ItemNotFoundException e) {
+    } catch (InvalidProtocolBufferException | ItemNotFoundException | BalanceInsufficientException e) {
       logger.error("Actuator error: {} --> ", e.getMessage(), e);;
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
@@ -95,7 +98,7 @@ public class ProposalDeleteActuator extends AbstractActuator {
 
       return true;
     } catch (Exception e) {
-      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

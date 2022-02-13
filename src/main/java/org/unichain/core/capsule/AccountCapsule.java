@@ -15,7 +15,6 @@
 
 package org.unichain.core.capsule;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -82,8 +81,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   /**
    * construct account from AccountCreateContract and createTime.
    */
-  public AccountCapsule(final AccountCreateContract contract, long createTime,
-      boolean withDefaultPermission, Manager manager) {
+  public AccountCapsule(final AccountCreateContract contract, long createTime, boolean withDefaultPermission, Manager manager) {
     if (withDefaultPermission) {
       Permission owner = createDefaultOwnerPermission(contract.getAccountAddress());
       Permission active = createDefaultActivePermission(contract.getAccountAddress(), manager);
@@ -116,8 +114,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   /**
    * get account from address and account name.
    */
-  public AccountCapsule(ByteString address, ByteString accountName,
-      AccountType accountType) {
+  public AccountCapsule(ByteString address, ByteString accountName, AccountType accountType) {
     this.account = Account.newBuilder()
         .setType(accountType)
         .setAccountName(accountName)
@@ -128,8 +125,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   /**
    * get account from address.
    */
-  public AccountCapsule(ByteString address,
-      AccountType accountType) {
+  public AccountCapsule(ByteString address, AccountType accountType) {
     this.account = Account.newBuilder()
         .setType(accountType)
         .setAddress(address)
@@ -139,9 +135,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   /**
    * get account from address.
    */
-  public AccountCapsule(ByteString address,
-      AccountType accountType, long createTime,
-      boolean withDefaultPermission, Manager manager) {
+  public AccountCapsule(ByteString address, AccountType accountType, long createTime, boolean withDefaultPermission, Manager manager) {
     if (withDefaultPermission) {
       Permission owner = createDefaultOwnerPermission(address);
       Permission active = createDefaultActivePermission(address, manager);
@@ -160,7 +154,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
           .setCreateTime(createTime)
           .build();
     }
-
   }
 
   public AccountCapsule(Account account) {
@@ -211,7 +204,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public ByteString getAccountId() {
     return this.account.getAccountId();
   }
-
 
   private static ByteString getActiveDefaultOperations(Manager manager) {
     return ByteString.copyFrom(manager.getDynamicPropertiesStore().getActiveDefaultOperations());
@@ -325,12 +317,10 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
             .setFutureSupply(summary)
             .build();
   }
-
   public void addDelegatedFrozenBalanceForBandwidth(long balance) {
-    this.account = this.account.toBuilder().setDelegatedFrozenBalanceForBandwidth(
-        this.account.getDelegatedFrozenBalanceForBandwidth() + balance).build();
+    this.account = this.account.toBuilder()
+            .setDelegatedFrozenBalanceForBandwidth(Math.addExact(this.account.getDelegatedFrozenBalanceForBandwidth(), balance)).build();
   }
-
 
   public long getAcquiredDelegatedFrozenBalanceForBandwidth() {
     return this.account.getAcquiredDelegatedFrozenBalanceForBandwidth();
@@ -338,14 +328,12 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
 
 
   public void setAcquiredDelegatedFrozenBalanceForBandwidth(long balance) {
-    this.account = this.account.toBuilder().setAcquiredDelegatedFrozenBalanceForBandwidth(balance)
-        .build();
+    this.account = this.account.toBuilder()
+            .setAcquiredDelegatedFrozenBalanceForBandwidth(balance).build();
   }
-
   public void addAcquiredDelegatedFrozenBalanceForBandwidth(long balance) {
-    this.account = this.account.toBuilder().setAcquiredDelegatedFrozenBalanceForBandwidth(
-        this.account.getAcquiredDelegatedFrozenBalanceForBandwidth() + balance)
-        .build();
+    this.account = this.account.toBuilder()
+            .setAcquiredDelegatedFrozenBalanceForBandwidth(Math.addExact(this.account.getAcquiredDelegatedFrozenBalanceForBandwidth(), balance)).build();
   }
 
   public long getAcquiredDelegatedFrozenBalanceForEnergy() {
@@ -378,7 +366,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public void addAcquiredDelegatedFrozenBalanceForEnergy(long balance) {
     AccountResource newAccountResource = getAccountResource().toBuilder()
         .setAcquiredDelegatedFrozenBalanceForEnergy(
-            getAccountResource().getAcquiredDelegatedFrozenBalanceForEnergy() + balance).build();
+            Math.addExact(getAccountResource().getAcquiredDelegatedFrozenBalanceForEnergy(), balance)).build();
 
     this.account = this.account.toBuilder()
         .setAccountResource(newAccountResource)
@@ -388,7 +376,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public void addDelegatedFrozenBalanceForEnergy(long balance) {
     AccountResource newAccountResource = getAccountResource().toBuilder()
         .setDelegatedFrozenBalanceForEnergy(
-            getAccountResource().getDelegatedFrozenBalanceForEnergy() + balance).build();
+            Math.addExact(getAccountResource().getDelegatedFrozenBalanceForEnergy(), balance)).build();
 
     this.account = this.account.toBuilder()
         .setAccountResource(newAccountResource)
@@ -444,23 +432,18 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
    * get votes.
    */
   public List<Vote> getVotesList() {
-    if (this.account.getVotesList() != null) {
       return this.account.getVotesList();
-    } else {
-      return Lists.newArrayList();
-    }
   }
 
-  //tp:Unichain_Power
   public long getUnichainPower() {
-    long tp = 0;
+    long tp = 0L;
     for (int i = 0; i < account.getFrozenCount(); ++i) {
-      tp += account.getFrozen(i).getFrozenBalance();
+      tp = Math.addExact(account.getFrozen(i).getFrozenBalance(), tp);
     }
 
-    tp += account.getAccountResource().getFrozenBalanceForEnergy().getFrozenBalance();
-    tp += account.getDelegatedFrozenBalanceForBandwidth();
-    tp += account.getAccountResource().getDelegatedFrozenBalanceForEnergy();
+    tp = Math.addExact(account.getAccountResource().getFrozenBalanceForEnergy().getFrozenBalance(), tp);
+    tp = Math.addExact(account.getDelegatedFrozenBalanceForBandwidth(), tp);
+    tp = Math.addExact(account.getAccountResource().getDelegatedFrozenBalanceForEnergy(), tp);
     return tp;
   }
 
@@ -628,13 +611,14 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public boolean addToken(byte[] key, long value) {
     Map<String, Long> tokenMap = this.account.getTokenMap();
     String nameKey = ByteArray.toStr(key);
-    long totalValue = tokenMap.containsKey(nameKey) ? tokenMap.get(nameKey) + value : value;
+
+    long totalValue = tokenMap.containsKey(nameKey) ? Math.addExact(tokenMap.get(nameKey), value) : value;
     this.account = this.account.toBuilder().putToken(nameKey, totalValue).build();
     return true;
   }
 
   public void addBalance(long value){
-    this.account = this.account.toBuilder().setBalance(account.getBalance() + value).build();
+    this.account = this.account.toBuilder().setBalance(Math.addExact(account.getBalance(), value)).build();
   }
 
   public void removeFutureTokenSummary(byte[] tokenKey){
@@ -671,7 +655,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
       return false;
     }
 
-    long remain = tokenMap.get(nameKey) - amount;
+    long remain = Math.subtractExact(tokenMap.get(nameKey), amount);
     if(remain > 0)
     {
       this.account = this.account.toBuilder().putToken(nameKey, remain).build();
@@ -786,12 +770,12 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public long getFrozenBalance() {
     List<Frozen> frozenList = getFrozenList();
     final long[] frozenBalance = {0};
-    frozenList.forEach(frozen -> frozenBalance[0] = Long.sum(frozenBalance[0], frozen.getFrozenBalance()));
+    frozenList.forEach(frozen -> frozenBalance[0] = Math.addExact(frozenBalance[0], frozen.getFrozenBalance()));
     return frozenBalance[0];
   }
 
   public long getAllFrozenBalanceForBandwidth() {
-    return getFrozenBalance() + getAcquiredDelegatedFrozenBalanceForBandwidth();
+    return Math.addExact(getFrozenBalance(), getAcquiredDelegatedFrozenBalanceForBandwidth());
   }
 
   public int getFrozenSupplyCount() {
@@ -805,7 +789,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public long getFrozenSupplyBalance() {
     List<Frozen> frozenSupplyList = getFrozenSupplyList();
     final long[] frozenSupplyBalance = {0};
-    frozenSupplyList.forEach(frozen -> frozenSupplyBalance[0] = Long.sum(frozenSupplyBalance[0], frozen.getFrozenBalance()));
+    frozenSupplyList.forEach(frozen -> frozenSupplyBalance[0] = Math.addExact(frozenSupplyBalance[0], frozen.getFrozenBalance()));
     return frozenSupplyBalance[0];
   }
 
@@ -928,7 +912,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   }
 
   public long getAllFrozenBalanceForEnergy() {
-    return getEnergyFrozenBalance() + getAcquiredDelegatedFrozenBalanceForEnergy();
+    return Math.addExact(getEnergyFrozenBalance(), getAcquiredDelegatedFrozenBalanceForEnergy());
   }
 
 
@@ -1009,7 +993,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   }
 
   public long getStorageLeft() {
-    return getStorageLimit() - getStorageUsage();
+    return Math.subtractExact(getStorageLimit(), getStorageUsage());
   }
 
   public void setStorageUsage(long usage) {
@@ -1040,7 +1024,7 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     }
     AccountResource accountResource = this.account.getAccountResource();
     accountResource = accountResource.toBuilder()
-        .setStorageUsage(accountResource.getStorageUsage() + storageUsage).build();
+        .setStorageUsage(Math.addExact(accountResource.getStorageUsage(), storageUsage)).build();
 
     this.account = this.account.toBuilder()
         .setAccountResource(accountResource)

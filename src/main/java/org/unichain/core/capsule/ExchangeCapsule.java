@@ -125,16 +125,16 @@ public class ExchangeCapsule implements ProtoCapsule<Exchange> {
           secondTokenBalance,
           sellTokenQuant);
       this.exchange = this.exchange.toBuilder()
-          .setFirstTokenBalance(firstTokenBalance + sellTokenQuant)
-          .setSecondTokenBalance(secondTokenBalance - buyTokenQuant)
+          .setFirstTokenBalance(Math.addExact(firstTokenBalance, sellTokenQuant))
+          .setSecondTokenBalance(Math.subtractExact(secondTokenBalance, buyTokenQuant))
           .build();
     } else {
       buyTokenQuant = processor.exchange(secondTokenBalance,
           firstTokenBalance,
           sellTokenQuant);
       this.exchange = this.exchange.toBuilder()
-          .setFirstTokenBalance(firstTokenBalance - buyTokenQuant)
-          .setSecondTokenBalance(secondTokenBalance + sellTokenQuant)
+          .setFirstTokenBalance(Math.subtractExact(firstTokenBalance, buyTokenQuant))
+          .setSecondTokenBalance(Math.addExact(secondTokenBalance , sellTokenQuant))
           .build();
     }
 

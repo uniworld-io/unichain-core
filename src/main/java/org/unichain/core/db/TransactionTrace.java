@@ -139,7 +139,7 @@ public class TransactionTrace {
     if (UNW_PRECOMPILED_TYPE != runtime.getUnxType()) {
       if (contractResult.OUT_OF_TIME.equals(receipt.getResult())) {
         setTimeResultType(TimeResultType.OUT_OF_TIME);
-      } else if (System.currentTimeMillis() - txStartTimeInMs > Args.getInstance().getLongRunningTime()) {
+      } else if (Math.subtractExact(System.currentTimeMillis(), txStartTimeInMs) > Args.getInstance().getLongRunningTime()) {
         setTimeResultType(TimeResultType.LONG_RUNNING);
       }
     }
@@ -159,6 +159,8 @@ public class TransactionTrace {
 
   /**
    * Pay energy bill using v2 which directly charge fee from balance
+   * - with pre-compiled, don't charge
+   * - charge contract creation & contract call
    */
   public void payEnergyV2() throws BalanceInsufficientException {
     byte[] originAccount;
@@ -228,7 +230,6 @@ public class TransactionTrace {
   /**
    * - if not(create, call contract) then pass
    * - if (create, call contract), check return code
-   * @throws ReceiptCheckErrException
    */
   public void check() throws ReceiptCheckErrException {
     if (!needVM()) {

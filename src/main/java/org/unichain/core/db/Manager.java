@@ -642,18 +642,13 @@ public class Manager {
    * judge balance.
    */
   public void adjustBalance(AccountCapsule account, long amount) throws BalanceInsufficientException {
-    long balance = account.getBalance();
-    if (amount == 0) {
-      return;
-    }
-
-    if (amount < 0 && balance < -amount) {
-      throw new BalanceInsufficientException(StringUtil.createReadableString(account.createDbKey()) + " insufficient balance");
-    }
-    account.setBalance(Math.addExact(balance, amount));
+    adjustBalanceNoPut(account, amount);
     this.getAccountStore().put(account.getAddress().toByteArray(), account);
   }
 
+  /**
+   * judge balance no put
+   */
   public void adjustBalanceNoPut(AccountCapsule account, long amount) throws BalanceInsufficientException {
     long balance = account.getBalance();
     if (amount == 0) {
@@ -687,7 +682,7 @@ public class Manager {
     for(var tx : txs){
         if(blockVersion < TransactionCapsule.getMinSupportedBlockVersion(tx.getType()))
           throw new ContractValidateException(String.format("transaction type %s not supported by this block version %s", tx.getType(), blockVersion));
-    };
+    }
   }
 
   void validateTapos(TransactionCapsule transactionCapsule) throws TaposException {
@@ -700,14 +695,14 @@ public class Manager {
             "Tapos failed, different block hash, %s, %s , recent block %s, solid block %s head block %s",
             ByteArray.toLong(refBlockNumBytes), Hex.toHexString(refBlockHash),
             Hex.toHexString(blockHash),
-            getSolidBlockId().getString(), getHeadBlockId().getString()).toString();
+            getSolidBlockId().getString(), getHeadBlockId().getString());
         logger.info(str);
         throw new TaposException(str);
       }
     } catch (ItemNotFoundException e) {
       String str = String.format("Tapos failed, block not found, ref block %s, %s , solid block %s head block %s",
               ByteArray.toLong(refBlockNumBytes), Hex.toHexString(refBlockHash),
-              getSolidBlockId().getString(), getHeadBlockId().getString()).toString();
+              getSolidBlockId().getString(), getHeadBlockId().getString());
       logger.info(str);
       throw new TaposException(str);
     }
@@ -791,7 +786,7 @@ public class Manager {
     }
   }
 
-  public void consumeMultiSignFeeV2(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException, ContractExeException {
+  private void consumeMultiSignFeeV2(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException, ContractExeException {
     if (unx.getInstance().getSignatureCount() > 1) {
       long fee = getDynamicPropertiesStore().getMultiSignFee();
 
@@ -839,7 +834,7 @@ public class Manager {
     }
   }
 
-  public void consumeMultiSignFeeV1(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException{
+  private void consumeMultiSignFeeV1(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException{
     if (unx.getInstance().getSignatureCount() > 1) {
       var fee = getDynamicPropertiesStore().getMultiSignFee();
       for (Contract contract : unx.getInstance().getRawData().getContractList()) {
@@ -855,19 +850,7 @@ public class Manager {
   }
 
   public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    int blockVer = findBlockVersion(block);
-    switch (blockVer){
-      case BLOCK_VERSION_0:
-      case BLOCK_VERSION_1:
-        (new BandwidthProcessor(this)).consume(unx, trace);
-        break;
-      case BLOCK_VERSION_2:
-        (new BandwidthProcessorV2(this)).consume(unx, trace);
-        break;
-      default:
-        (new BandwidthProcessorV3(this)).consume(unx, trace);
-        break;
-    }
+    getBandwidthProcessor(findBlockVersion(block)).consume(unx, trace);
   }
 
   /**
@@ -1054,10 +1037,10 @@ public class Manager {
         witnessService.checkDupWitness(block);
       }
 
-      /**
-       *  - put to KhaosDB, return higher block as head:
-       *  - if a block of forked chain come with invalid order, it will be rejected due to unlinked block
-       *  - KhaosDB make sure that it maintain valid block that build a tree having root is genesis block
+      /*
+         - put to KhaosDB, return higher block as head:
+         - if a block of forked chain come with invalid order, it will be rejected due to unlinked block
+         - KhaosDB make sure that it maintain valid block that build a tree having root is genesis block
        */
       BlockCapsule newBlock = this.khaosDb.push(block);
 
@@ -1067,30 +1050,30 @@ public class Manager {
           return;
         }
       } else {
-        /**
-         *  This means:
-         *  - if we got a forked, lower block: just put in Khaos DB, don't apply it > nice!
-         *  - if it's a forward block, just apply it
-         *  - if it's a longer, valid fork branch: switch to forked branch
+        /*
+           This means:
+           - if we got a forked, lower block: just put in Khaos DB, don't apply it > nice!
+           - if it's a forward block, just apply it
+           - if it's a longer, valid fork branch: switch to forked branch
          */
         if (newBlock.getNum() <= getDynamicPropertiesStore().getLatestBlockHeaderNumber()) {
           return;
         }
 
-        /**
-         *  Switch fork:
-         *           - newBlock always the higher block. if incoming block is valid, lower, current head returned so no fork found
-         *           - else switch fork, also means:
-         *             + prefer higher blocks, mean prefer longer chain
-         *             + set head to new block, apply all blocks
-         *             + revert old branch effect using snapshot manager
+        /*
+           Switch fork:
+                    - newBlock always the higher block. if incoming block is valid, lower, current head returned so no fork found
+                    - else switch fork, also means:
+                      + prefer higher blocks, mean prefer longer chain
+                      + set head to new block, apply all blocks
+                      + revert old branch effect using snapshot manager
          */
         if (!newBlock.getParentHash().equals(getDynamicPropertiesStore().getLatestBlockHeaderHash())) {
           logger.warn("switch fork! new head num = {}, blockId = {}", newBlock.getNum(), newBlock.getBlockId());
           logger.warn("******** before switchFork ******* push block: "
-                  + block.toString()
+                  + block
                   + ", new block:"
-                  + newBlock.toString()
+                  + newBlock
                   + ", dynamic head num: "
                   + dynamicPropertiesStore.getLatestBlockHeaderNumber()
                   + ", dynamic head hash: "
@@ -1108,9 +1091,9 @@ public class Manager {
           logger.info("saved block: " + newBlock);
 
           logger.warn("******** after switchFork ******* push block: "
-                  + block.toString()
+                  + block
                   + ", new block:"
-                  + newBlock.toString()
+                  + newBlock
                   + ", dynamic head num: "
                   + dynamicPropertiesStore.getLatestBlockHeaderNumber()
                   + ", dynamic head hash: "
@@ -1126,10 +1109,10 @@ public class Manager {
           return;
         }
 
-        /**
-         * - advance new session to apply this block
-         * - apply block to main chain
-         * - commit to next stage
+        /*
+          - advance new session to apply this block
+          - apply block to main chain
+          - commit to next stage
          */
         try (ISession tmpSession = revokingStore.buildSession()) {
           applyBlock(newBlock);
@@ -1307,9 +1290,9 @@ public class Manager {
     trace.init(block, findBlockVersion(block), eventPluginLoaded);
     trace.checkIsConstant();
 
-    /**
-     * + setup simple tx that call actuator to do bizz & charge fee
-     * + play op code & charge energy
+    /*
+      + setup simple tx that call actuator to do bizz & charge fee
+      + play op code & charge energy
      */
     trace.exec();
 
@@ -1329,9 +1312,9 @@ public class Manager {
       }
     }
 
-    /**
-     * - charge energy fee with smart contract call or deploy
-     * - with token transfer, dont use energy so don't charge fee
+    /*
+      - charge energy fee with smart contract call or deploy
+      - with token transfer, dont use energy so don't charge fee
      */
     trace.finalization(findBlockVersion(block));
 
@@ -1347,7 +1330,7 @@ public class Manager {
 
     postContractTrigger(trace, false);
     Contract contract = txCap.getInstance().getRawData().getContract(0);
-    if (isMultSignTransaction(txCap.getInstance())) {
+    if (isMultiSignTransaction(txCap.getInstance())) {
       ownerAddressSet.add(ByteArray.toHexString(TransactionCapsule.getOwner(contract)));
     }
 
@@ -1397,9 +1380,9 @@ public class Manager {
     val blockVersion = this.dynamicPropertiesStore.getBlockVersion();
     val blockCapsule = new BlockCapsule(blockVersion, number + 1, preHash, when, witnessCapsule.getAddress());
     blockCapsule.generatedByMyself = true;
-    /**
-     *  - revoke/drop current tmp snapshot, get back to stable point
-     *  - create new snapshot to apply all block's tx
+    /*
+       - revoke/drop current tmp snapshot, get back to stable point
+       - create new snapshot to apply all block's tx
      */
     session.reset();
     session.setValue(revokingStore.buildSession());
@@ -1440,17 +1423,17 @@ public class Manager {
       if (accountSet.contains(ownerAddress)) {
         continue;
       } else {
-        if (isMultSignTransaction(tx.getInstance())) {
+        if (isMultiSignTransaction(tx.getInstance())) {
           accountSet.add(ownerAddress);
         }
       }
       if (ownerAddressSet.contains(ownerAddress)) {
         tx.setVerified(false);
       }
-      /**
-       *  - create new session for only one tx
-       *  - process tx
-       *  - merge back to common session and create one consistent block's view
+      /*
+         - create new session for only one tx
+         - process tx
+         - merge back to common session and create one consistent block's view
        */
       try (ISession tmpSession = revokingStore.buildSession()) {
         accountStateCallBack.preExeTrans();
@@ -1503,11 +1486,11 @@ public class Manager {
 
     accountStateCallBack.executeGenerateFinish();
 
-    /**
-     *  - after all tx & result of tx put on block, reset back to stable point again
-     *  - why ? because this block will be:
-     *    + push to ledger & re-process again, make the same result and create new snapshot as final commit
-     *    + broadcast to #peer that will be processed like this
+    /*
+       - after all tx & result of tx put on block, reset back to stable point again
+       - why ? because this block will be:
+         + push to ledger & re-process again, make the same result and create new snapshot as final commit
+         + broadcast to #peer that will be processed like this
      */
     session.reset();
     if (postponedUnxCount > 0) {
@@ -1523,9 +1506,9 @@ public class Manager {
       unichainNetService.fastForward(new BlockMessage(blockCapsule));
     }
     try {
-      /**
-       *     - put block to ledger
-       *     - process again & make one stable system status (commit session)
+      /*
+            - put block to ledger
+            - process again & make one stable system status (commit session)
        */
       this.pushBlock(blockCapsule);
       return blockCapsule;
@@ -1564,15 +1547,14 @@ public class Manager {
     }
   }
 
-  private boolean isMultSignTransaction(Transaction transaction) {
-    Contract contract = transaction.getRawData().getContract(0);
-    switch (contract.getType()) {
-      case AccountPermissionUpdateContract: {
+  private boolean isMultiSignTransaction(Transaction transaction) {
+    var ctxType = transaction.getRawData().getContract(0).getType();
+    switch (ctxType) {
+      case AccountPermissionUpdateContract:
         return true;
-      }
       default:
+        return false;
     }
-    return false;
   }
 
   public TransactionStore getTransactionStore() {
@@ -1929,8 +1911,6 @@ public class Manager {
     public Boolean call() throws ValidateSignatureException {
       try {
         unx.validateSignature(manager);
-      } catch (ValidateSignatureException e) {
-        throw e;
       } finally {
         countDownLatch.countDown();
       }
@@ -1992,7 +1972,6 @@ public class Manager {
   }
 
   private void startEventSubscribing() {
-
     try {
       eventPluginLoaded = EventPluginLoader.getInstance().start(Args.getInstance().getEventPluginConfig());
 
@@ -2006,7 +1985,7 @@ public class Manager {
       }
 
     } catch (Exception e) {
-      logger.error("{}", e);
+      logger.error("start event subscribe got error: ", e);
     }
   }
 
@@ -2051,6 +2030,7 @@ public class Manager {
     }
   }
 
+  //@todo review
   private void postContractTrigger(final TransactionTrace trace, boolean remove) {
     if (eventPluginLoaded &&
         (EventPluginLoader.getInstance().isContractEventTriggerEnable()
@@ -2061,9 +2041,9 @@ public class Manager {
         contractEventTriggerCapsule.getContractTrigger().setRemoved(remove);
         contractEventTriggerCapsule.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
         if (!triggerCapsuleQueue.offer(contractEventTriggerCapsule)) {
-          logger.info("too many trigger, lost contract log trigger: {}", trigger.getTransactionId());
+          logger.warn("too many trigger, lost contract log trigger: {}", trigger.getTransactionId());
         }
-        //[TEST]=================================
+
         if (!remove) {
           contractEventTriggerCapsule.processTrigger();
         }
@@ -2078,7 +2058,7 @@ public class Manager {
 
   protected void chargeFee(AccountCapsule accountCapsule, long fee) throws BalanceInsufficientException {
     adjustBalance(accountCapsule, -fee);
-    adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
+    burnFee(fee);
   }
 
   protected void chargeFee4TokenPool(byte[] tokenKey, long fee) throws BalanceInsufficientException {
@@ -2088,10 +2068,9 @@ public class Manager {
 
     long latestOperationTime = getHeadBlockTimeStamp();
     tokenPool.setLatestOperationTime(latestOperationTime);
-    tokenPool.setFeePool(tokenPool.getFeePool() - fee);
+    tokenPool.setFeePool(Math.subtractExact(tokenPool.getFeePool(), fee));
     getTokenPoolStore().put(tokenKey, tokenPool);
-
-    adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
+    burnFee(fee);
   }
 
   public long loadEnergyGinzaFactor(){
@@ -2101,5 +2080,19 @@ public class Manager {
 
   public int findBlockVersion(BlockCapsule block){
     return  (block == null) ? this.dynamicPropertiesStore.getBlockVersion() : block.getInstance().getBlockHeader().getRawData().getVersion();
+  }
+
+  private ResourceProcessor getBandwidthProcessor(int blockVer){
+    switch (blockVer){
+      case BLOCK_VERSION_0:
+      case BLOCK_VERSION_1:
+        return new BandwidthProcessor(this);
+      case BLOCK_VERSION_2:
+        return new BandwidthProcessorV2(this);
+      case BLOCK_VERSION_3:
+        return new BandwidthProcessorV3(this);
+      default:
+        return new BandwidthProcessorV4(this);
+    }
   }
 }

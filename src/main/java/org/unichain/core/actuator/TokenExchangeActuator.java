@@ -66,10 +66,11 @@ public class TokenExchangeActuator extends AbstractActuator {
       var exchangedToken = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
 
       ownerAccount.addToken(tokenKey, exchangedToken);
-      ownerAccount.setBalance(ownerAccount.getBalance() - ctx.getAmount() - fee);
+      ownerAccount.setBalance(Math.subtractExact(ownerAccount.getBalance(), Math.addExact(ctx.getAmount(), fee)));
 
       tokenOwnerAcc.burnToken(tokenKey, exchangedToken);
-      tokenOwnerAcc.setBalance(tokenOwnerAcc.getBalance() + ctx.getAmount());
+
+      tokenOwnerAcc.setBalance(Math.addExact(tokenOwnerAcc.getBalance() , ctx.getAmount()));
 
       accountStore.put(ownerAddress, ownerAccount);
       accountStore.put(tokenOwnerAddress, tokenOwnerAcc);
@@ -100,7 +101,7 @@ public class TokenExchangeActuator extends AbstractActuator {
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       var ownerCap = accountStore.get(ownerAddress);
       Assert.notNull(ownerCap, "Owner account not exists");
-      Assert.isTrue(ownerCap.getBalance() >= (ctx.getAmount() + calcFee()), "Not enough balance to exchange");
+      Assert.isTrue(ownerCap.getBalance() >= Math.addExact(ctx.getAmount(), calcFee()), "Not enough balance to exchange");
 
       byte[] tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
       var tokenPool = tokenPoolStore.get(tokenKey);
@@ -109,7 +110,7 @@ public class TokenExchangeActuator extends AbstractActuator {
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
 
       //prevent critical token update cause this tx to be wrong affected!
-      var guardTime = dbManager.getHeadBlockTimeStamp() - tokenPool.getCriticalUpdateTime();
+      var guardTime = Math.subtractExact(dbManager.getHeadBlockTimeStamp(), tokenPool.getCriticalUpdateTime());
       Assert.isTrue(guardTime >= URC30_CRITICAL_UPDATE_TIME_GUARD, "Critical token update found! Please wait up to 3 minutes before retry.");
 
       var tokenOwnerCap = accountStore.get(tokenPool.getOwnerAddress().toByteArray());

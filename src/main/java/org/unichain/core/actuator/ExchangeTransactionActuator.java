@@ -54,17 +54,17 @@ public class ExchangeTransactionActuator extends AbstractActuator {
         anotherTokenID = firstTokenID;
       }
 
-      var newBalance = accountCapsule.getBalance() - calcFee();
+      var newBalance = Math.subtractExact(accountCapsule.getBalance(), calcFee());
       accountCapsule.setBalance(newBalance);
 
       if (Arrays.equals(tokenID, "_".getBytes())) {
-        accountCapsule.setBalance(newBalance - tokenQty);
+        accountCapsule.setBalance(Math.subtractExact(newBalance, tokenQty));
       } else {
         accountCapsule.reduceAssetAmountV2(tokenID, tokenQty, dbManager);
       }
 
       if (Arrays.equals(anotherTokenID, "_".getBytes())) {
-        accountCapsule.setBalance(newBalance + anotherTokenQty);
+        accountCapsule.setBalance(Math.addExact(newBalance, anotherTokenQty));
       } else {
         accountCapsule.addAssetAmountV2(anotherTokenID, anotherTokenQty, dbManager);
       }
@@ -127,11 +127,11 @@ public class ExchangeTransactionActuator extends AbstractActuator {
 
       var balanceLimit = dbManager.getDynamicPropertiesStore().getExchangeBalanceLimit();
       var tokenBalance = (Arrays.equals(tokenID, firstTokenID) ? firstTokenBalance : secondTokenBalance);
-      tokenBalance += tokenQty;
+      tokenBalance = Math.addExact(tokenBalance, tokenQty);
       Assert.isTrue(tokenBalance <= balanceLimit, "Token balance must less than " + balanceLimit);
 
       if (Arrays.equals(tokenID, "_".getBytes())) {
-        Assert.isTrue(accountCapsule.getBalance() >= (tokenQty + calcFee()), "Balance is not enough");
+        Assert.isTrue(accountCapsule.getBalance() >= Math.addExact(tokenQty, calcFee()), "Balance is not enough");
       } else {
         Assert.isTrue(accountCapsule.assetBalanceEnoughV2(tokenID, tokenQty, dbManager), "Token balance is not enough");
       }

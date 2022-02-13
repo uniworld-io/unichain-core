@@ -42,7 +42,7 @@ public class TransferFutureActuator extends AbstractActuator {
         boolean withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         dbManager.getAccountStore().put(toAddress, toAccount);
-        fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
       chargeFee(ownerAddress, fee);
@@ -71,7 +71,7 @@ public class TransferFutureActuator extends AbstractActuator {
       var amount = ctx.getAmount();
       Assert.isTrue(amount > 0, "Amount must greater than 0.");
 
-      long maxExpireTime = dbManager.getHeadBlockTimeStamp() + dbManager.getMaxFutureTransferTimeDurationUnw();
+      long maxExpireTime = Math.addExact(dbManager.getHeadBlockTimeStamp(), dbManager.getMaxFutureTransferTimeDurationUnw());
       Assert.isTrue((ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp()) && (ctx.getExpireTime() <= maxExpireTime),
               "Expire time must greater current block time, lower than maximum timestamp: " + maxExpireTime);
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
@@ -84,7 +84,7 @@ public class TransferFutureActuator extends AbstractActuator {
       var balance = ownerAccount.getBalance();
       var toAccount = dbManager.getAccountStore().get(toAddress);
       if (toAccount == null) {
-        fee = fee + dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
       //after TvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       var transferToSmartContract = dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
@@ -123,8 +123,8 @@ public class TransferFutureActuator extends AbstractActuator {
     var accountStore = dbManager.getAccountStore();
     var toAcc = accountStore.get(toAddress);
     var summary = toAcc.getFutureSummary();
-    /**
-     * tick exist: the fasted way!
+    /*
+      tick exist: the fasted way!
      */
     if(futureStore.has(tickKey)){
       //update tick
@@ -133,14 +133,14 @@ public class TransferFutureActuator extends AbstractActuator {
       futureStore.put(tickKey, tick);
 
       //update account summary
-      summary = summary.toBuilder().setTotalBalance(summary.getTotalBalance() + amount).build();
+      summary = summary.toBuilder().setTotalBalance(Math.addExact(summary.getTotalBalance(), amount)).build();
       toAcc.setFutureSummary(summary);
       accountStore.put(toAddress, toAcc);
       return;
     }
 
-    /**
-     * tick not exist: but no other ticks exist
+    /*
+      tick not exist: but no other ticks exist
      */
     if(summary == null){
       /*
@@ -158,7 +158,7 @@ public class TransferFutureActuator extends AbstractActuator {
       //save summary
       summary = Protocol.FutureSummary.newBuilder()
               .setTotalBalance(amount)
-              .setTotalDeal(1)
+              .setTotalDeal(1L)
               .setUpperTime(tickDay)
               .setLowerTime(tickDay)
               .setLowerTick(ByteString.copyFrom(tickKey))
@@ -169,15 +169,14 @@ public class TransferFutureActuator extends AbstractActuator {
       return;
     }
 
-    /**
-     * other tick exist
+    /*
+      other tick exist
      */
-    logger.info("exec transfer future: got summary {} is null ? {} ", summary, (summary == null) ? "true" : "false");
     var headKey = summary.getLowerTick().toByteArray();
     var head = futureStore.get(headKey);
     var headTime = head.getExpireTime();
-    /**
-     * if new tick is head
+    /*
+      if new tick is head
      */
     if(tickDay < headTime){
       //new tick is just a new head
@@ -196,8 +195,8 @@ public class TransferFutureActuator extends AbstractActuator {
       //update summary
       summary = summary.toBuilder()
               .setLowerTime(tickDay)
-              .setTotalDeal(summary.getTotalDeal() +1)
-              .setTotalBalance(summary.getTotalBalance() + amount)
+              .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
+              .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
               .setLowerTick(ByteString.copyFrom(tickKey))
               .build();
       toAcc.setFutureSummary(summary);
@@ -205,8 +204,8 @@ public class TransferFutureActuator extends AbstractActuator {
       return ;
     }
 
-    /**
-     * if new tick is tail
+    /*
+      if new tick is tail
      */
     if(tickDay > headTime){
       //new tail
@@ -226,8 +225,8 @@ public class TransferFutureActuator extends AbstractActuator {
 
       //update summary
       summary = summary.toBuilder()
-              .setTotalDeal(summary.getTotalDeal() + 1)
-              .setTotalBalance(summary.getTotalBalance() + amount)
+              .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
+              .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
               .setUpperTick(ByteString.copyFrom(tickKey))
               .setUpperTime(tickDay)
               .build();
@@ -236,8 +235,8 @@ public class TransferFutureActuator extends AbstractActuator {
       return;
     }
 
-    /**
-     * lookup slot between head and tail
+    /*
+      lookup slot between head and tail
      */
     var searchKeyBs = summary.getUpperTick();
     while (true){
@@ -268,8 +267,8 @@ public class TransferFutureActuator extends AbstractActuator {
 
         //update summary
         summary = summary.toBuilder()
-                .setTotalBalance(summary.getTotalBalance() + amount)
-                .setTotalDeal(summary.getTotalDeal() +1)
+                .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
+                .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
                 .build();
 
         toAcc.setFutureSummary(summary);
@@ -278,7 +277,6 @@ public class TransferFutureActuator extends AbstractActuator {
       }
       else {
         searchKeyBs = searchTick.getPrevTick();
-        continue;
       }
     }
   }

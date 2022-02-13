@@ -44,7 +44,7 @@ public class TokenTransferOwnerActuator extends AbstractActuator {
       if (Objects.isNull(toAccount)) {
         var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
         toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
       tokenPool.setOwnerAddress(ctx.getToAddress());
@@ -96,7 +96,7 @@ public class TokenTransferOwnerActuator extends AbstractActuator {
 
       var toAccount = dbManager.getAccountStore().get(toAddress);
       if (Objects.isNull(toAccount)) {
-        fee += dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
       //after UvmSolidity059 proposal, send token/reassign token owner to smartContract by actuator is not allowed.

@@ -51,16 +51,6 @@ public class AssetIssueActuator extends AbstractActuator {
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var assetIssueCapsule = new AssetIssueCapsule(ctx);
       var assetIssueCapsuleV2 = new AssetIssueCapsule(ctx);
-//      String name = new String(assetIssueCapsule.getName().toByteArray(),
-//          Charset.forName("UTF-8")); // getName().toStringUtf8()
-//      long order = 0;
-//      byte[] key = name.getBytes();
-//      while (this.dbManager.getAssetIssueStore().get(key) != null) {
-//        order++;
-//        String nameKey = AssetIssueCapsule.createDbKeyString(name, order);
-//        key = nameKey.getBytes();
-//      }
-//      assetIssueCapsule.setOrder(order);
       var tokenIdNum = dbManager.getDynamicPropertiesStore().getTokenIdNum();
       tokenIdNum++;
       assetIssueCapsule.setId(Long.toString(tokenIdNum));
@@ -86,13 +76,13 @@ public class AssetIssueActuator extends AbstractActuator {
 
       while (iterator.hasNext()) {
         var next = iterator.next();
-        var expireTime = startTime + next.getFrozenDays() * 86_400_000;
+        var expireTime = Math.addExact(startTime, Math.multiplyExact(next.getFrozenDays(), 86_400_000L));
         var newFrozen = Frozen.newBuilder()
             .setFrozenBalance(next.getFrozenAmount())
             .setExpireTime(expireTime)
             .build();
         frozenList.add(newFrozen);
-        remainSupply -= next.getFrozenAmount();
+        remainSupply = Math.subtractExact(remainSupply, next.getFrozenAmount());
       }
 
       if (dbManager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
@@ -108,7 +98,7 @@ public class AssetIssueActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (InvalidProtocolBufferException | BalanceInsufficientException | ArithmeticException e) {
-      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
@@ -164,15 +154,13 @@ public class AssetIssueActuator extends AbstractActuator {
       var minFrozenSupplyTime = dbManager.getDynamicPropertiesStore().getMinFrozenSupplyTime();
       var maxFrozenSupplyTime = dbManager.getDynamicPropertiesStore().getMaxFrozenSupplyTime();
       var frozenList = assetIssueContract.getFrozenSupplyList();
-      var iterator = frozenList.iterator();
 
-      while (iterator.hasNext()) {
-        FrozenSupply next = iterator.next();
-        Assert.isTrue(next.getFrozenAmount() > 0,"Frozen supply must be greater than 0!");
-        Assert.isTrue(next.getFrozenAmount() <= remainSupply,"Frozen supply cannot exceed total supply");
-        Assert.isTrue ((next.getFrozenDays() >= minFrozenSupplyTime && next.getFrozenDays() <= maxFrozenSupplyTime),
+      for (FrozenSupply next : frozenList) {
+        Assert.isTrue(next.getFrozenAmount() > 0, "Frozen supply must be greater than 0!");
+        Assert.isTrue(next.getFrozenAmount() <= remainSupply, "Frozen supply cannot exceed total supply");
+        Assert.isTrue((next.getFrozenDays() >= minFrozenSupplyTime && next.getFrozenDays() <= maxFrozenSupplyTime),
                 "frozenDuration must be less than " + maxFrozenSupplyTime + " days " + "and more than " + minFrozenSupplyTime + " days");
-        remainSupply -= next.getFrozenAmount();
+        remainSupply = Math.subtractExact(remainSupply, next.getFrozenAmount());
       }
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
@@ -199,7 +187,7 @@ public class AssetIssueActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error("Actuator error: {} --> ", e.getMessage(), e);;
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }

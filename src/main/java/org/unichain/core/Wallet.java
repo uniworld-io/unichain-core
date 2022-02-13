@@ -78,11 +78,14 @@ import java.util.*;
 import static org.unichain.core.config.Parameter.DatabaseConstants.EXCHANGE_COUNT_LIMIT_MAX;
 import static org.unichain.core.config.Parameter.DatabaseConstants.PROPOSAL_COUNT_LIMIT_MAX;
 import static org.unichain.core.services.http.utils.Util.*;
-import static org.unichain.core.services.http.utils.Util.FUTURE_QR_FIELD_PAGE_INDEX;
 
 @Slf4j
 @Component
 public class Wallet {
+  private static String addressPreFixString = Constant.ADD_PRE_FIX_STRING_MAINNET;
+  private static byte addressPreFixByte = Constant.ADD_PRE_FIX_BYTE_MAINNET;
+  private final int minEffectiveConnection = Args.getInstance().getMinEffectiveConnection();
+
   @Getter
   private final ECKey ecKey;
   @Autowired
@@ -93,10 +96,6 @@ public class Wallet {
   private Manager dbManager;
   @Autowired
   private NodeManager nodeManager;
-  private static String addressPreFixString = Constant.ADD_PRE_FIX_STRING_MAINNET;//default testnet
-  private static byte addressPreFixByte = Constant.ADD_PRE_FIX_BYTE_MAINNET;
-
-  private int minEffectiveConnection = Args.getInstance().getMinEffectiveConnection();
 
   /**
    * Creates a new Wallet with a random ECKey.
@@ -263,8 +262,8 @@ public class Wallet {
     if (accountCapsule == null) {
       return null;
     }
-    BandwidthProcessor processor = new BandwidthProcessor(dbManager);
-    processor.updateUsage(accountCapsule);
+
+    bandwidthProcessor().updateUsage(accountCapsule);
 
     EnergyProcessor energyProcessor = new EnergyProcessor(dbManager);
     energyProcessor.updateUsage(accountCapsule);
@@ -292,8 +291,8 @@ public class Wallet {
     if (accountCapsule == null) {
       return null;
     }
-    BandwidthProcessor processor = new BandwidthProcessor(dbManager);
-    processor.updateUsage(accountCapsule);
+
+    bandwidthProcessor().updateUsage(accountCapsule);
 
     EnergyProcessor energyProcessor = new EnergyProcessor(dbManager);
     energyProcessor.updateUsage(accountCapsule);
@@ -475,14 +474,13 @@ public class Wallet {
     return unx;
   }
 
-  public static boolean checkPermissionOprations(Permission permission, Contract contract) throws PermissionException {
+  public static boolean checkPermissionOperation(Permission permission, Contract contract) throws PermissionException {
     ByteString operations = permission.getOperations();
     if (operations.size() != 32) {
       throw new PermissionException("operations size must 32");
     }
     int contractType = contract.getTypeValue();
-    boolean b = (operations.byteAt(contractType / 8) & (1 << (contractType % 8))) != 0;
-    return b;
+    return (operations.byteAt(contractType / 8) & (1 << (contractType % 8))) != 0;
   }
 
   public TransactionSignWeight getTransactionSignWeight(Transaction unx) {
@@ -511,7 +509,7 @@ public class Wallet {
         if (permission.getType() != PermissionType.Active) {
           throw new PermissionException("Permission type is error");
         }
-        if (!checkPermissionOprations(permission, contract)) {
+        if (!checkPermissionOperation(permission, contract)) {
           throw new PermissionException("Permission denied");
         }
       }
@@ -919,10 +917,10 @@ public class Wallet {
       return null;
     }
 
-    BandwidthProcessor processor = new BandwidthProcessor(dbManager);
-    processor.updateUsage(accountCapsule);
+    var bwProcessor = bandwidthProcessor();
+    bwProcessor.updateUsage(accountCapsule);
 
-    long netLimit = processor.calculateGlobalNetLimit(accountCapsule);
+    long netLimit = bwProcessor.calculateGlobalNetLimit(accountCapsule);
     long freeNetLimit = dbManager.getDynamicPropertiesStore().getFreeNetLimit();
     long totalNetLimit = dbManager.getDynamicPropertiesStore().getTotalNetLimit();
     long totalNetWeight = dbManager.getDynamicPropertiesStore().getTotalNetWeight();
@@ -964,13 +962,13 @@ public class Wallet {
       return null;
     }
 
-    BandwidthProcessor processor = new BandwidthProcessor(dbManager);
-    processor.updateUsage(accountCapsule);
+    var bwProcessor = bandwidthProcessor();
+    bwProcessor.updateUsage(accountCapsule);
 
     EnergyProcessor energyProcessor = new EnergyProcessor(dbManager);
     energyProcessor.updateUsage(accountCapsule);
 
-    long netLimit = processor.calculateGlobalNetLimit(accountCapsule);
+    long netLimit = bwProcessor.calculateGlobalNetLimit(accountCapsule);
     long freeNetLimit = dbManager.getDynamicPropertiesStore().getFreeNetLimit();
     long totalNetLimit = dbManager.getDynamicPropertiesStore().getTotalNetLimit();
     long totalNetWeight = dbManager.getDynamicPropertiesStore().getTotalNetWeight();
@@ -1100,12 +1098,12 @@ public class Wallet {
     if (Objects.isNull(blockId)) {
       return null;
     }
-    Block block = null;
     try {
-      block = dbManager.getBlockStore().get(blockId.toByteArray()).getInstance();
+      return dbManager.getBlockStore().get(blockId.toByteArray()).getInstance();
     } catch (StoreException e) {
+      logger.warn("error while get block by Id: ", e);
+      return null;
     }
-    return block;
   }
 
   public BlockList getBlocksByLimitNext(long number, long limit) {
@@ -1127,7 +1125,7 @@ public class Wallet {
     if (Objects.isNull(transactionId)) {
       return null;
     }
-    TransactionCapsule transactionCapsule = null;
+    TransactionCapsule transactionCapsule;
     try {
       transactionCapsule = dbManager.getTransactionStore().get(transactionId.toByteArray());
     } catch (StoreException e) {
@@ -1162,25 +1160,21 @@ public class Wallet {
   }
 
   public Proposal getProposalById(ByteString proposalId) {
-    if (Objects.isNull(proposalId)) {
+    try{
+      Assert.notNull(proposalId);
+      return dbManager.getProposalStore().get(proposalId.toByteArray()).getInstance();
+    }
+    catch (Exception e){
+      logger.warn("getProposalById error: ", e);
       return null;
     }
-    ProposalCapsule proposalCapsule = null;
-    try {
-      proposalCapsule = dbManager.getProposalStore().get(proposalId.toByteArray());
-    } catch (StoreException e) {
-    }
-    if (proposalCapsule != null) {
-      return proposalCapsule.getInstance();
-    }
-    return null;
   }
 
   public Exchange getExchangeById(ByteString exchangeId) {
     if (Objects.isNull(exchangeId)) {
       return null;
     }
-    ExchangeCapsule exchangeCapsule = null;
+    ExchangeCapsule exchangeCapsule;
     try {
       exchangeCapsule = dbManager.getExchangeStoreFinal().get(exchangeId.toByteArray());
     } catch (StoreException e) {
@@ -1204,13 +1198,12 @@ public class Wallet {
 
     NodeList.Builder nodeListBuilder = NodeList.newBuilder();
 
-    nodeHandlerMap.entrySet().stream()
-        .forEach(v -> {
-          org.unichain.common.overlay.discover.node.Node node = v.getValue().getNode();
-          nodeListBuilder.addNodes(Node.newBuilder().setAddress(Address.newBuilder()
-                      .setHost(ByteString.copyFrom(ByteArray.fromString(node.getHost())))
-                      .setPort(node.getPort())));
-        });
+    nodeHandlerMap.forEach((key, value) -> {
+      org.unichain.common.overlay.discover.node.Node node = value.getNode();
+      nodeListBuilder.addNodes(Node.newBuilder().setAddress(Address.newBuilder()
+              .setHost(ByteString.copyFrom(ByteArray.fromString(node.getHost())))
+              .setPort(node.getPort())));
+    });
     return nodeListBuilder.build();
   }
 
@@ -1359,16 +1352,9 @@ public class Wallet {
       sb.append(")");
 
       byte[] funcSelector = new byte[4];
-      System
-          .arraycopy(Hash.sha3(sb.toString().getBytes()), 0, funcSelector, 0,
-              4);
+      System.arraycopy(Hash.sha3(sb.toString().getBytes()), 0, funcSelector, 0, 4);
       if (Arrays.equals(funcSelector, selector)) {
-        if (entry.getConstant() == true || entry.getStateMutability()
-            .equals(StateMutabilityType.View)) {
-          return true;
-        } else {
-          return false;
-        }
+        return  (entry.getConstant() || entry.getStateMutability().equals(StateMutabilityType.View));
       }
     }
 
@@ -1395,7 +1381,7 @@ public class Wallet {
     limit =
         limit > PROPOSAL_COUNT_LIMIT_MAX ? PROPOSAL_COUNT_LIMIT_MAX : limit;
     long end = offset + limit;
-    end = end > latestProposalNum ? latestProposalNum : end;
+    end = Math.min(end, latestProposalNum);
     ProposalList.Builder builder = ProposalList.newBuilder();
 
     ImmutableList<Long> rangeList = ContiguousSet
@@ -1423,7 +1409,7 @@ public class Wallet {
     }
     limit = limit > EXCHANGE_COUNT_LIMIT_MAX ? EXCHANGE_COUNT_LIMIT_MAX : limit;
     long end = offset + limit;
-    end = end > latestExchangeNum ? latestExchangeNum : end;
+    end = Math.min(end, latestExchangeNum);
 
     ExchangeList.Builder builder = ExchangeList.newBuilder();
     ImmutableList<Long> rangeList = ContiguousSet
@@ -1486,7 +1472,7 @@ public class Wallet {
 
     int pageSize = query.getPageSize();
     int pageIndex = query.getPageIndex();
-    long start = pageIndex * pageSize;
+    long start = (long) pageIndex * pageSize;
     long end = start + pageSize;
     if(start >= summary.getTotalDeal()){
       //empty deals
@@ -1559,8 +1545,8 @@ public class Wallet {
               .build();
     }
 
-    /**
-     * paging deals
+    /*
+      paging deals
      */
     var deals = new ArrayList<Future>();
     var start = pageIndex * pageSize;
@@ -1597,6 +1583,11 @@ public class Wallet {
             .setUpperTime(summary.getUpperTime())
             .addAllDeals(deals)
             .build();
+  }
+
+  //@todo use right bandwidth processor with block version
+  private BandwidthProcessor bandwidthProcessor(){
+    return new BandwidthProcessor(dbManager);
   }
 }
 

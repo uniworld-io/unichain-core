@@ -67,6 +67,7 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
       if (isCreateNewAcc) {
         var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+        dbManager.getAccountStore().put(toAddress, toAccountCap);
       }
 
       if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){

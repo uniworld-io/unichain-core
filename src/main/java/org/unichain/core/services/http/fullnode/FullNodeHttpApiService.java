@@ -211,7 +211,8 @@ public class FullNodeHttpApiService implements Service {
   private GetRewardServlet getRewardServlet;
   @Autowired
   private UpdateBrokerageServlet updateBrokerageServlet;
-
+  @Autowired
+  private GetCreateNftServlet getCreateNftServlet;
 
   @Override
   public void init() {
@@ -338,6 +339,11 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getBrokerageServlet), "/getBrokerage");
       context.addServlet(new ServletHolder(getRewardServlet), "/getReward");
       context.addServlet(new ServletHolder(updateBrokerageServlet), "/updateBrokerage");
+
+      /**
+      * NFT API
+       */
+      context.addServlet(new ServletHolder(getCreateNftServlet), "/template");
 
       int maxHttpConnectNumber = Args.getInstance().getMaxHttpConnectNumber();
       if (maxHttpConnectNumber > 0) {

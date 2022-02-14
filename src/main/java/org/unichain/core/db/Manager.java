@@ -138,6 +138,8 @@ public class Manager {
   @Autowired
   @Getter
   private StorageRowStore storageRowStore;
+  @Autowired
+  private NftStore nftStore;
 
   @Setter
   private UnichainNetService unichainNetService;
@@ -1842,6 +1844,14 @@ public class Manager {
     this.accountIndexStore = indexStore;
   }
 
+  public NftStore getNftStore() {
+    return this.nftStore;
+  }
+
+  public void setNftStore(NftStore nftStore) {
+    this.nftStore = nftStore;
+  }
+
   public void closeAllStore() {
     logger.warn("******** begin to close db ********");
     closeOneStore(accountStore);
@@ -1871,6 +1881,7 @@ public class Manager {
     closeOneStore(tokenPoolStore);
     closeOneStore(futureTokenStore);
     closeOneStore(futureTransferStore);
+    closeOneStore(nftStore);
     logger.info("******** end to close db ********");
   }
 

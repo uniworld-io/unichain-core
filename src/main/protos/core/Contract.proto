@@ -22,6 +22,7 @@ option java_outer_classname = "Contract"; //Specify the class name of the genera
 option go_package = "github.com/unichainprotocol/grpc-gateway/core";
 
 import "core/Unichain.proto";
+import "google/protobuf/timestamp.proto";
 
 message TokenPage {
   int64  page_size = 1;
@@ -358,4 +359,43 @@ message AccountPermissionUpdateContract {
 message UpdateBrokerageContract {
   bytes owner_address = 1;
   int32 brokerage = 2; // 1 mean 1%
+}
+
+/*
+  Create NFT message
+ */
+message CreateNftContract {
+  string symbol = 1;
+  string name = 2;
+  int64 total_supply = 3;
+  string token_index = 4;
+  bytes minter = 5;
+  int64 last_operation = 6;
+  bytes owner = 7;
+}
+
+message mintNft {
+  bytes nft_template_id = 1;
+  bytes id = 2;
+  bytes owner_address = 3;
+  bytes approval = 4;
+  string uri = 5;
+  bytes metadata = 6;
+  int64 last_operation = 7;
+  int64 expire_time = 8;
+}
+
+message NFTAccountItem {
+  bytes prev = 1;
+  bytes next = 2;
+  bytes nft_id = 3;
+  bytes approval_all = 4;
+  int32 total = 5;
+}
+
+message NFTTemplateAccount {
+  string prev = 1;
+  string next = 2;
+  CreateNftContract nft_template = 3;
+  int32 total = 4;
 }

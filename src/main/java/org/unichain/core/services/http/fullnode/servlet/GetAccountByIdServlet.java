@@ -26,7 +26,6 @@ public class GetAccountByIdServlet extends HttpServlet {
   private Wallet wallet;
 
   private String convertOutput(Account account) {
-    // convert asset id
     if (account.getAssetIssuedID().isEmpty()) {
       return JsonFormat.printToString(account, false);
     } else {

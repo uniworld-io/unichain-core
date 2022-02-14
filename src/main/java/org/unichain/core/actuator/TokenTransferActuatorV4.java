@@ -77,7 +77,9 @@ public class TokenTransferActuatorV4 extends AbstractActuator {
           - don't charge token fee
         */
         if(isCreateNewAcc)
+        {
           dbManager.adjustBalanceNoPut(ownerAccountCap, -dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+        }
 
         ownerAccountCap.burnToken(tokenKey, ctx.getAmount());
         dbManager.getAccountStore().put(ownerAddr, ownerAccountCap);

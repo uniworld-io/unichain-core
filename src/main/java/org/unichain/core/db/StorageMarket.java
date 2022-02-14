@@ -15,64 +15,35 @@ public class StorageMarket {
   }
 
   private long exchange_to_supply(boolean isUNW, long quant) {
-    logger.info("isUNW: " + isUNW);
     long balance = isUNW ? dbManager.getDynamicPropertiesStore().getTotalStoragePool() :
         dbManager.getDynamicPropertiesStore().getTotalStorageReserved();
-    logger.info("balance: " + balance);
-    long newBalance = balance + quant;
-    logger.info("balance + quant: " + (balance + quant));
-
-//    if (isUNW) {
-//      dbManager.getDynamicPropertiesStore().saveTotalStoragePool(newBalance);
-//    } else {
-//      dbManager.getDynamicPropertiesStore().saveTotalStorageReserved(newBalance);
-//    }
-
+    long newBalance = Math.addExact(balance, quant);
     double issuedSupply = -supply * (1.0 - Math.pow(1.0 + (double) quant / newBalance, 0.0005));
-    logger.info("issuedSupply: " + issuedSupply);
     long out = (long) issuedSupply;
-    supply += out;
-
+    supply = Math.addExact(supply, out);
     return out;
   }
 
   private long exchange_to_supply2(boolean isUNW, long quant) {
-    logger.info("isUNW: " + isUNW);
     long balance = isUNW ? dbManager.getDynamicPropertiesStore().getTotalStoragePool() :
         dbManager.getDynamicPropertiesStore().getTotalStorageReserved();
-    logger.info("balance: " + balance);
-    long newBalance = balance - quant;
-    logger.info("balance - quant: " + (balance - quant));
-
-//    if (isUNW) {
-//      dbManager.getDynamicPropertiesStore().saveTotalStoragePool(newBalance);
-//    } else {
-//      dbManager.getDynamicPropertiesStore().saveTotalStorageReserved(newBalance);
-//    }
-
+    long newBalance = Math.subtractExact(balance, quant);
     double issuedSupply = -supply * (1.0 - Math.pow(1.0 + (double) quant / newBalance, 0.0005));
-    logger.info("issuedSupply: " + issuedSupply);
     long out = (long) issuedSupply;
-    supply += out;
-
+    supply = Math.addExact(supply, out);
     return out;
   }
 
   private long exchange_from_supply(boolean isUNW, long supplyQuant) {
     long balance = isUNW ? dbManager.getDynamicPropertiesStore().getTotalStoragePool() :
         dbManager.getDynamicPropertiesStore().getTotalStorageReserved();
-    supply -= supplyQuant;
+    supply =Math.subtractExact(supply, supplyQuant);
 
-    double exchangeBalance =
-        balance * (Math.pow(1.0 + (double) supplyQuant / supply, 2000.0) - 1.0);
-    logger.info("exchangeBalance: " + exchangeBalance);
+    double exchangeBalance = balance * (Math.pow(1.0 + (double) supplyQuant / supply, 2000.0) - 1.0);
     long out = (long) exchangeBalance;
-
     if (isUNW) {
       out = Math.round(exchangeBalance / 100000) * 100000;
-      logger.info("---out: " + out);
     }
-
     return out;
   }
 
@@ -97,17 +68,13 @@ public class StorageMarket {
     long tax = exchange(storageTax, false);
     logger.info("tax: " + tax);
 
-    long newTotalTax = dbManager.getDynamicPropertiesStore().getTotalStorageTax() + tax;
-    long newTotalPool = dbManager.getDynamicPropertiesStore().getTotalStoragePool() - tax;
-    long newTotalReserved = dbManager.getDynamicPropertiesStore().getTotalStorageReserved()
-        + storageTax;
+    long newTotalTax = Math.addExact(dbManager.getDynamicPropertiesStore().getTotalStorageTax(), tax);
+    long newTotalPool = Math.subtractExact(dbManager.getDynamicPropertiesStore().getTotalStoragePool(), tax);
+    long newTotalReserved = Math.addExact(dbManager.getDynamicPropertiesStore().getTotalStorageReserved(), storageTax);
     logger.info("reserved: " + dbManager.getDynamicPropertiesStore().getTotalStorageReserved());
-    boolean eq = dbManager.getDynamicPropertiesStore().getTotalStorageReserved()
-        == 128L * 1024 * 1024 * 1024;
+    boolean eq = dbManager.getDynamicPropertiesStore().getTotalStorageReserved() == 128L * 1024 * 1024 * 1024;
     logger.info("reserved == 128GB: " + eq);
-    logger.info("newTotalTax: " + newTotalTax + "  newTotalPool: " + newTotalPool
-        + "  newTotalReserved: " + newTotalReserved);
-
+    logger.info("newTotalTax: " + newTotalTax + "  newTotalPool: " + newTotalPool + "  newTotalReserved: " + newTotalReserved);
     return storageTax;
   }
 
@@ -116,16 +83,13 @@ public class StorageMarket {
     long tax = exchange(storageTax, false);
     logger.info("tax: " + tax);
 
-    long newTotalTax = dbManager.getDynamicPropertiesStore().getTotalStorageTax() + tax;
-    long newTotalPool = dbManager.getDynamicPropertiesStore().getTotalStoragePool() - tax;
-    long newTotalReserved = dbManager.getDynamicPropertiesStore().getTotalStorageReserved()
-        + storageTax;
+    long newTotalTax = Math.addExact(dbManager.getDynamicPropertiesStore().getTotalStorageTax(), tax);
+    long newTotalPool = Math.subtractExact(dbManager.getDynamicPropertiesStore().getTotalStoragePool(), tax);
+    long newTotalReserved = Math.addExact(dbManager.getDynamicPropertiesStore().getTotalStorageReserved(), storageTax);
     logger.info("reserved: " + dbManager.getDynamicPropertiesStore().getTotalStorageReserved());
-    boolean eq = dbManager.getDynamicPropertiesStore().getTotalStorageReserved()
-        == 128L * 1024 * 1024 * 1024;
+    boolean eq = dbManager.getDynamicPropertiesStore().getTotalStorageReserved() == 128L * 1024 * 1024 * 1024;
     logger.info("reserved == 128GB: " + eq);
-    logger.info("newTotalTax: " + newTotalTax + "  newTotalPool: " + newTotalPool
-        + "  newTotalReserved: " + newTotalReserved);
+    logger.info("newTotalTax: " + newTotalTax + "  newTotalPool: " + newTotalPool + "  newTotalReserved: " + newTotalReserved);
     dbManager.getDynamicPropertiesStore().saveTotalStorageTax(newTotalTax);
     dbManager.getDynamicPropertiesStore().saveTotalStoragePool(newTotalPool);
     dbManager.getDynamicPropertiesStore().saveTotalStorageReserved(newTotalReserved);

@@ -47,6 +47,9 @@ public class FullNodeHttpApiService implements Service {
   private CreateAssetIssueServlet createAssetIssueServlet;
 
   @Autowired
+  private CreateNftTemplateServlet createNftTemplateServlet;
+
+  @Autowired
   private CreateTokenServlet createTokenServlet;
   @Autowired
   private TransferTokenOwnerServlet transferTokenOwnerServlet;
@@ -256,6 +259,8 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(voteWitnessAccountServlet), "/votewitnessaccount");
       context.addServlet(new ServletHolder(createAssetIssueServlet), "/createassetissue");
 
+
+      context.addServlet(new ServletHolder(createNftTemplateServlet), "/createnfttemplate");
 
       context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
       context.addServlet(new ServletHolder(transferTokenOwnerServlet), "/transfertokenowner");

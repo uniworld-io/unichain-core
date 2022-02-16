@@ -366,6 +366,7 @@ message Transaction {
       WithdrawFutureTokenContract = 60;
       TransferTokenOwnerContract = 61;
       ExchangeTokenContract = 62;
+      CreateNftTemplateContract = 63;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;
@@ -767,4 +768,68 @@ message NodeInfo {
       string stackTrace = 7;
     }
   }
+}
+
+message NftTemplate{
+  string symbol = 1;
+  string name = 2;
+  int64  total_supply = 3;
+  int64  token_index = 4;
+  bytes minter = 5;
+  bytes owner = 6;
+  int64 last_operation = 7;
+}
+
+message NftToken{
+  string nft_template_id = 1;
+  int64 id = 2;
+  bytes  owner_address = 3;
+  bytes  approval = 4;
+  string uri = 5;
+  string metadata = 6;
+  int64 last_operation = 7;
+  int64 expire_time = 8;
+}
+
+message NftAccountTokenRelation{
+  bytes prev = 1;
+  bytes next = 2;
+  bytes token_id = 3;
+  bytes approval_all = 4;
+  int64 total = 5;
+}
+
+message NftAccountTemplateRelation{
+  bytes prev = 1;
+  bytes next = 2;
+  bytes  template_id = 3;
+  int64 total = 5;
+}
+
+message NftTemplateQuery{
+  bytes owner_address = 1;
+  int64 page_size = 2;
+  int64 page_index = 3;
+}
+
+message NftTemplateQueryResult{
+  bytes owner_address = 1;
+  int64 page_size = 2;
+  int64 page_index = 3;
+  int64 total = 4;
+  repeated NftTemplate templates = 5;
+}
+
+message NftTokenQuery{
+  bytes owner_address = 1;
+  string symbol = 2;
+  int64 page_size = 3;
+  int64 page_index = 4;
+}
+
+message NftTokenQueryResult{
+  int64 page_size = 1;
+  int64 page_index = 2;
+  int64 total = 3;
+  repeated NftToken tokens = 4;
 }

@@ -166,6 +166,16 @@ service Wallet {
   rpc CreateAssetIssue2 (AssetIssueContract) returns (TransactionExtention) {
   };
 
+  rpc CreateNftTemplate (CreateNftTemplateContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/createnfttemplate"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/createnfttemplate"
+      }
+    };
+  };
+
   rpc CreateToken (CreateTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/createtoken"

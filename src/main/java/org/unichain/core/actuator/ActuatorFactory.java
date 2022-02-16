@@ -183,6 +183,8 @@ public class ActuatorFactory {
         return new AccountPermissionUpdateActuator(contract.getParameter(), manager);
       case UpdateBrokerageContract:
         return new UpdateBrokerageActuator(contract.getParameter(), manager);
+      case CreateNftTemplateContract:
+        return new NftCreateTemplateActuator(contract.getParameter(), manager);
       default:
         break;
     }

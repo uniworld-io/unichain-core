@@ -76,6 +76,10 @@ import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PE
 @Slf4j(topic = "DB")
 @Component
 public class Manager {
+  @Autowired
+  @Getter
+  private NftTemplateStore nftTemplateStore;
+
   @Getter
   @Autowired
   private DelegationStore delegationStore;
@@ -1844,6 +1848,7 @@ public class Manager {
 
   public void closeAllStore() {
     logger.warn("******** begin to close db ********");
+    closeOneStore(nftTemplateStore);
     closeOneStore(accountStore);
     closeOneStore(blockStore);
     closeOneStore(blockIndexStore);

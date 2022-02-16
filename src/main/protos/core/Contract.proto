@@ -359,3 +359,20 @@ message UpdateBrokerageContract {
   bytes owner_address = 1;
   int32 brokerage = 2; // 1 mean 1%
 }
+
+message CreateNftTemplateContract{
+  string symbol = 1;
+  string name = 2;
+  int64  total_supply = 3;
+  bytes minter = 4;
+  bytes owner = 5;
+}
+
+message MintNftTokenContract{
+  bytes owner_address = 1;
+  bytes to_address = 2;
+  int64  token_id = 3;
+  string uri = 4;
+  string metadata = 5;
+  int64 available_time = 6;
+}

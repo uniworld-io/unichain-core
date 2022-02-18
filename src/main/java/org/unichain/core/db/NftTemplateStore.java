@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsule> {
 
   @Autowired
-  protected NftTemplateStore(@Value("token-future") String dbName) {
+  protected NftTemplateStore(@Value("nft-template") String dbName) {
     super(dbName);
   }
 
@@ -27,9 +27,14 @@ public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsu
     return super.getUnchecked(key);
   }
 
-  public List<NftTemplateCapsule> getAllTokens() {
+  public List<NftTemplateCapsule> getAll() {
     return Streams.stream(iterator())
         .map(Entry::getValue)
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public void delete(byte[] key) {
+    super.delete(key);
   }
 }

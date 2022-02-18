@@ -376,3 +376,9 @@ message MintNftTokenContract{
   string metadata = 5;
   int64 available_time = 6;
 }
+
+message RemoveNftMinterContract{
+  bytes minter = 1;
+  bytes owner = 2;
+  repeated NftTemplate templates = 3;
+}

@@ -325,6 +325,10 @@ public class Util {
             CreateNftTemplateContract createNftTemplateContract = contractParameter.unpack(CreateNftTemplateContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(createNftTemplateContract, selfType));
             break;
+          case RemoveNftMinterContract:
+            RemoveNftMinterContract removeNftMinterContract = contractParameter.unpack(RemoveNftMinterContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(removeNftMinterContract, selfType));
+            break;
           default:
         }
         JSONObject parameter = new JSONObject();
@@ -583,6 +587,11 @@ public class Util {
             CreateNftTemplateContract.Builder createNftTemplateContractBuilder = CreateNftTemplateContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), createNftTemplateContractBuilder, selfType);
             any = Any.pack(createNftTemplateContractBuilder.build());
+            break;
+          case "RemoveNftMinterContract":
+            RemoveNftMinterContract.Builder removeNftMinterContractBuilder = RemoveNftMinterContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), removeNftMinterContractBuilder, selfType);
+            any = Any.pack(removeNftMinterContractBuilder.build());
             break;
           default:
         }

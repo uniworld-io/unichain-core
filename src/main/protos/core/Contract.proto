@@ -378,7 +378,17 @@ message MintNftTokenContract{
 }
 
 message RemoveNftMinterContract{
+  bytes owner = 1;
+  string nft_template = 2;
+}
+
+message AddNftMinterContract{
   bytes minter = 1;
   bytes owner = 2;
-  repeated NftTemplate templates = 3;
+  string nft_template = 3;
+}
+
+message RenounceNftMinterContract{
+  bytes owner = 1;
+  string nft_template = 2;
 }

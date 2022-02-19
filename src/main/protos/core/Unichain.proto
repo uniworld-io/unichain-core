@@ -369,6 +369,8 @@ message Transaction {
       CreateNftTemplateContract = 63;
       MintNftTokenContract = 64;
       RemoveNftMinterContract = 65;
+      AddNftMinterContract = 66;
+      RenounceNftMinterContract = 67;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;
@@ -804,7 +806,8 @@ message NftAccountTokenRelation{
 message NftAccountTemplateRelation{
   bytes prev = 1;
   bytes next = 2;
-  bytes  template_id = 3;
+  bytes template_id = 3;
+  bool is_minter = 4;
   int64 total = 5;
 }
 

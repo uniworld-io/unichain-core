@@ -186,6 +186,16 @@ service Wallet {
     };
   };
 
+  rpc removeNftMinter (RemoveNftMinterContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/removenftminter"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/removenftminter"
+      }
+    };
+  };
+
   rpc CreateToken (CreateTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/createtoken"

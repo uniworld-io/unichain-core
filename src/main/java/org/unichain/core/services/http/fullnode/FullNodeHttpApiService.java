@@ -50,6 +50,9 @@ public class FullNodeHttpApiService implements Service {
   private CreateNftTemplateServlet createNftTemplateServlet;
 
   @Autowired
+  private RemoveNftMinterServlet removeNftMinterServlet;
+
+  @Autowired
   private CreateTokenServlet createTokenServlet;
   @Autowired
   private TransferTokenOwnerServlet transferTokenOwnerServlet;
@@ -261,6 +264,7 @@ public class FullNodeHttpApiService implements Service {
 
 
       context.addServlet(new ServletHolder(createNftTemplateServlet), "/createnfttemplate");
+      context.addServlet(new ServletHolder(removeNftMinterServlet), "/removeNftMinterServlet");
 
       context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
       context.addServlet(new ServletHolder(transferTokenOwnerServlet), "/transfertokenowner");

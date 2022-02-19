@@ -1199,6 +1199,19 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
+    public void removeNftMinter(Contract.RemoveNftMinterContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.RemoveNftMinterContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
     public void createToken(Contract.CreateTokenContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.CreateTokenContract).getInstance());

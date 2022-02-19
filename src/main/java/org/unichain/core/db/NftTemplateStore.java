@@ -27,9 +27,14 @@ public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsu
     return super.getUnchecked(key);
   }
 
-  public List<NftTemplateCapsule> getAllTokens() {
+  public List<NftTemplateCapsule> getAll() {
     return Streams.stream(iterator())
         .map(Entry::getValue)
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public void delete(byte[] key) {
+    super.delete(key);
   }
 }

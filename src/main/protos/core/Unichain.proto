@@ -368,6 +368,7 @@ message Transaction {
       ExchangeTokenContract = 62;
       CreateNftTemplateContract = 63;
       MintNftTokenContract = 64;
+      RemoveNftMinterContract = 65;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;

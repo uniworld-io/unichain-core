@@ -176,6 +176,16 @@ service Wallet {
     };
   };
 
+  rpc MintNftToken (MintNftTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/mintnfttoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/mintnfttoken"
+      }
+    };
+  };
+
   rpc CreateToken (CreateTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/createtoken"

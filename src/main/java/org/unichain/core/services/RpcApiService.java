@@ -1186,6 +1186,19 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
+    public void mintNftToken(Contract.MintNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.MintNftTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
     public void createToken(Contract.CreateTokenContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.CreateTokenContract).getInstance());
@@ -1872,12 +1885,10 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void getBrokerageInfo(BytesMessage request,
-        StreamObserver<NumberMessage> responseObserver) {
+    public void getBrokerageInfo(BytesMessage request, StreamObserver<NumberMessage> responseObserver) {
       try {
         long cycle = dbManager.getDynamicPropertiesStore().getCurrentCycleNumber();
-        long value = dbManager.getDelegationStore()
-            .getBrokerage(cycle, request.getValue().toByteArray());
+        long value = dbManager.getDelegationStore().getBrokerage(cycle, request.getValue().toByteArray());
         NumberMessage.Builder builder = NumberMessage.newBuilder();
         builder.setNum(value);
         responseObserver.onNext(builder.build());

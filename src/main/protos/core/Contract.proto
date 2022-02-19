@@ -370,8 +370,8 @@ message CreateNftTemplateContract{
 
 message MintNftTokenContract{
   bytes owner_address = 1;
-  bytes to_address = 2;
-  int64  token_id = 3;
+  string symbol = 2;
+  bytes to_address = 3;
   string uri = 4;
   string metadata = 5;
   int64 available_time = 6;

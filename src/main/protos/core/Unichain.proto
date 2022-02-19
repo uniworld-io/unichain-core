@@ -367,6 +367,7 @@ message Transaction {
       TransferTokenOwnerContract = 61;
       ExchangeTokenContract = 62;
       CreateNftTemplateContract = 63;
+      MintNftTokenContract = 64;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;
@@ -773,15 +774,15 @@ message NodeInfo {
 message NftTemplate{
   string symbol = 1;
   string name = 2;
-  int64  total_supply = 3;
-  int64  token_index = 4;
+  int64 total_supply = 3;
+  int64 token_index = 4;
   bytes minter = 5;
   bytes owner = 6;
   int64 last_operation = 7;
 }
 
 message NftToken{
-  string nft_template_id = 1;
+  string template_id = 1;
   int64 id = 2;
   bytes  owner_address = 3;
   bytes  approval = 4;

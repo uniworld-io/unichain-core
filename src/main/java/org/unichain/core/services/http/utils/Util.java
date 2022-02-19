@@ -275,7 +275,6 @@ public class Util {
             Contract.UpdateBrokerageContract updateBrokerageContract = contractParameter.unpack(Contract.UpdateBrokerageContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(updateBrokerageContract, selfType));
             break;
-          //future transfer
           case FutureTransferContract:
             FutureTransferContract futureTransferContract = contractParameter.unpack(FutureTransferContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(futureTransferContract, selfType));
@@ -284,7 +283,6 @@ public class Util {
             FutureWithdrawContract futureWithdrawContract = contractParameter.unpack(FutureWithdrawContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(futureWithdrawContract, selfType));
             break;
-          //token economy
           case CreateTokenContract:
             CreateTokenContract createTokenContract = contractParameter.unpack(CreateTokenContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(createTokenContract, selfType));
@@ -324,6 +322,10 @@ public class Util {
           case CreateNftTemplateContract:
             CreateNftTemplateContract createNftTemplateContract = contractParameter.unpack(CreateNftTemplateContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(createNftTemplateContract, selfType));
+            break;
+          case MintNftTokenContract:
+            MintNftTokenContract mintNftTokenContract = contractParameter.unpack(MintNftTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(mintNftTokenContract, selfType));
             break;
           default:
         }
@@ -583,6 +585,11 @@ public class Util {
             CreateNftTemplateContract.Builder createNftTemplateContractBuilder = CreateNftTemplateContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), createNftTemplateContractBuilder, selfType);
             any = Any.pack(createNftTemplateContractBuilder.build());
+            break;
+          case "MintNftTokenContract":
+            MintNftTokenContract.Builder  mintNftTokenContractBuilder = MintNftTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), mintNftTokenContractBuilder, selfType);
+            any = Any.pack(mintNftTokenContractBuilder.build());
             break;
           default:
         }

@@ -3,6 +3,7 @@ package org.unichain.core.actuator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.util.Assert;
 import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
@@ -39,7 +40,7 @@ public class ActuatorFactory {
   }
 
   private static Actuator getActuatorByContract(final BlockCapsule block, final Contract contract, final Manager manager) {
-    final int blockVersion = manager.findBlockVersion(block);
+    val blockVersion = manager.findBlockVersion(block);
     Assert.isTrue(blockVersion >= 0, "invalid block version, found: " + blockVersion);
     switch (contract.getType()) {
       case AccountUpdateContract:
@@ -71,7 +72,8 @@ public class ActuatorFactory {
       case TransferAssetContract:
         return new TransferAssetActuator(contract.getParameter(), manager);
       case VoteAssetContract:
-        break;
+        logger.warn("un-supported VoteAssetContract!");
+        return null;
       case VoteWitnessContract:
         return new VoteWitnessActuator(contract.getParameter(), manager);
       case WitnessCreateContract:
@@ -185,10 +187,11 @@ public class ActuatorFactory {
         return new UpdateBrokerageActuator(contract.getParameter(), manager);
       case CreateNftTemplateContract:
         return new NftCreateTemplateActuator(contract.getParameter(), manager);
+      case MintNftTokenContract:
+        return new NftMintActuator(contract.getParameter(), manager);
       default:
-        break;
+        logger.warn("un-supported contract type {}!", contract.getType().name());
+        return null;
     }
-    return null;
   }
-
 }

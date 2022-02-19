@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.unichain.core.capsule.FutureTokenCapsule;
-import org.unichain.core.capsule.NftTemplateCapsule;
+import org.unichain.core.capsule.NftAccountTemplateRelationCapsule;
+import org.unichain.core.capsule.NftAccountTokenRelationCapsule;
 
 import java.util.List;
 import java.util.Map.Entry;
@@ -15,19 +15,19 @@ import java.util.stream.Collectors;
 //@todo nft review
 @Slf4j(topic = "DB")
 @Component
-public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsule> {
+public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTokenRelationCapsule> {
 
   @Autowired
-  protected NftTemplateStore(@Value("nft-template") String dbName) {
+  protected NftAccountTokenStore(@Value("nft-acc-token-relation") String dbName) {
     super(dbName);
   }
 
   @Override
-  public NftTemplateCapsule get(byte[] key) {
+  public NftAccountTokenRelationCapsule get(byte[] key) {
     return super.getUnchecked(key);
   }
 
-  public List<NftTemplateCapsule> getAllTokens() {
+  public List<NftAccountTokenRelationCapsule> getAllTokens() {
     return Streams.stream(iterator())
         .map(Entry::getValue)
         .collect(Collectors.toList());

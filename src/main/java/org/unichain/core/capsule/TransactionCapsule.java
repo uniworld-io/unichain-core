@@ -931,6 +931,9 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
   public static int getMinSupportedBlockVersion(ContractType txType){
     switch (txType){
+      case CreateNftTemplateContract:
+      case MintNftTokenContract:
+        return BLOCK_VERSION_5;
       case TransferTokenOwnerContract:
       case ExchangeTokenContract:
         return BLOCK_VERSION_3;

@@ -80,6 +80,18 @@ public class Manager {
   @Getter
   private NftTemplateStore nftTemplateStore;
 
+  @Autowired
+  @Getter
+  private NftTokenStore nftTokenStore;
+
+  @Autowired
+  @Getter
+  private NftAccountTemplateStore nftAccountTemplateStore;
+
+  @Autowired
+  @Getter
+  private NftAccountTokenStore nftAccountTokenStore;
+
   @Getter
   @Autowired
   private DelegationStore delegationStore;
@@ -1848,7 +1860,10 @@ public class Manager {
 
   public void closeAllStore() {
     logger.warn("******** begin to close db ********");
+    closeOneStore(nftTokenStore);
     closeOneStore(nftTemplateStore);
+    closeOneStore(nftAccountTemplateStore);
+    closeOneStore(nftAccountTokenStore);
     closeOneStore(accountStore);
     closeOneStore(blockStore);
     closeOneStore(blockIndexStore);

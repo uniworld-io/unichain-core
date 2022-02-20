@@ -41,13 +41,18 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public NftTemplateCapsule(CreateNftTemplateContract contract, long lastOperation, long tokenIndex) {
-    this.template.toBuilder()
+    this.template = NftTemplate.newBuilder()
             .setSymbol(contract.getSymbol())
             .setName(contract.getName())
             .setTotalSupply(contract.getTotalSupply())
+            .setTokenIndex(tokenIndex)
             .setMinter(contract.getMinter())
             .setLastOperation(lastOperation)
-            .setOwner(contract.getOwner());
+            .setOwner(contract.getOwner()).build();
+  }
+
+  public NftTemplateCapsule(CreateNftTemplateContract contract, long lastOperation) {
+    new NftTemplateCapsule(contract, lastOperation, 0);
   }
 
   public byte[] getData() {

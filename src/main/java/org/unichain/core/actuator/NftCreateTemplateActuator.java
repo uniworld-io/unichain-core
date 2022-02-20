@@ -29,6 +29,7 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -44,18 +45,9 @@ public class NftCreateTemplateActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(CreateNftTemplateContract.class);
-      var symbol = ctx.getSymbol().toUpperCase().getBytes();
+      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
       var lastOperation = dbManager.getHeadBlockTimeStamp();
-      long tokenIndex;
-      if (dbManager.getNftTemplateStore().has(symbol)) {
-        tokenIndex = dbManager.getNftTemplateStore()
-                                   .get(symbol)
-                                   .getTokenIndex();
-        tokenIndex++;
-      } else {
-        tokenIndex = 0;
-      }
-      var capsule = new NftTemplateCapsule(ctx, lastOperation, tokenIndex);
+      var capsule = new NftTemplateCapsule(ctx, lastOperation);
       dbManager.getNftTemplateStore().put(symbol, capsule);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
@@ -75,7 +67,7 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       Assert.isTrue(contract.is(CreateNftTemplateContract.class), "contract type error,expected type [CreateNftTemplateContract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(CreateNftTemplateContract.class);
-      var symbol = ctx.getSymbol().toUpperCase().getBytes();
+      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
       var name = ctx.getName();
       var ownerAddress = ctx.getOwner().toByteArray();
       var totalSupply = ctx.getTotalSupply();

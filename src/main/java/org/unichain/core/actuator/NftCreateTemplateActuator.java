@@ -22,23 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
+import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.NftTemplateCapsule;
-import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract;
-import org.unichain.protos.Contract.CreateTokenContract;
+import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
-
-import static org.unichain.core.config.Parameter.ChainConstant.*;
-import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_END_TIME;
-import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_START_TIME;
 
 @Slf4j(topic = "actuator")
 public class NftCreateTemplateActuator extends AbstractActuator {
@@ -47,16 +39,24 @@ public class NftCreateTemplateActuator extends AbstractActuator {
     super(contract, dbManager);
   }
 
-  //@todo later
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(Contract.CreateNftTemplateContract.class);
-      var ownerAddress = ctx.getOwner().toByteArray();
-      var contract = new NftTemplateCapsule(ctx);
-      //@todo sthing
-
+      var ctx = contract.unpack(CreateNftTemplateContract.class);
+      var symbol = ctx.getSymbol().toUpperCase().getBytes();
+      var lastOperation = dbManager.getHeadBlockTimeStamp();
+      long tokenIndex;
+      if (dbManager.getNftTemplateStore().has(symbol)) {
+        tokenIndex = dbManager.getNftTemplateStore()
+                                   .get(symbol)
+                                   .getTokenIndex();
+        tokenIndex++;
+      } else {
+        tokenIndex = 0;
+      }
+      var capsule = new NftTemplateCapsule(ctx, lastOperation, tokenIndex);
+      dbManager.getNftTemplateStore().put(symbol, capsule);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -67,53 +67,30 @@ public class NftCreateTemplateActuator extends AbstractActuator {
     }
   }
 
-  //@todo later
   @Override
   public boolean validate() throws ContractValidateException {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(CreateTokenContract.class), "contract type error,expected type [CreateTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(CreateNftTemplateContract.class), "contract type error,expected type [CreateNftTemplateContract],real type[" + contract.getClass() + "]");
 
-      val ctx = this.contract.unpack(CreateTokenContract.class);
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      val ctx = this.contract.unpack(CreateNftTemplateContract.class);
+      var symbol = ctx.getSymbol().toUpperCase().getBytes();
+      var name = ctx.getName();
+      var ownerAddress = ctx.getOwner().toByteArray();
+      var totalSupply = ctx.getTotalSupply();
+
+      Assert.notNull(symbol, "Symbol is null");
+      Assert.isTrue(!dbManager.getNftTemplateStore().has(symbol), "NftTemplate has existed");
+
+      Assert.notNull(name, "Name is null");
+
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-      var accountCap = dbManager.getAccountStore().get(ownerAddress);
-      Assert.notNull(accountCap, "Account not exists");
+      var accountCap = dbManager.getNftTemplateStore().get(ownerAddress);
+      Assert.notNull(accountCap, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-      Assert.isTrue(!ctx.getName().isEmpty() && TransactionUtil.validTokenName(ctx.getName().getBytes()), "Invalid token name");
-      Assert.isTrue(!ctx.getName().equalsIgnoreCase("UNX"), "Token name can't be UNX");
+      Assert.isTrue(totalSupply >= 0, "TotalSupply must greater than 0");
 
-      var tokenKey = Util.stringAsBytesUppercase(ctx.getName());
-      Assert.isTrue(!this.dbManager.getTokenPoolStore().has(tokenKey), "Token exists");
-
-      Assert.isTrue(!StringUtils.isEmpty(ctx.getAbbr().isEmpty()) && TransactionUtil.validTokenName(ctx.getAbbr().getBytes()), "Invalid token abbreviation");
-      Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
-      Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
-
-      var startTime = ctx.hasField(TOKEN_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
-      var maxTokenActive = Math.addExact(dbManager.getHeadBlockTimeStamp(), URC30_MAX_ACTIVE);
-      Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= maxTokenActive), "Invalid start time: must be greater than current block time and lower than limit timestamp:" +maxTokenActive);
-
-      var endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : Math.addExact(startTime, URC30_DEFAULT_AGE_V3);
-      var maxTokenAge = dbManager.getHeadBlockTimeStamp() + URC30_MAX_AGE_V3;
-      Assert.isTrue((endTime > 0)
-              && (endTime > startTime )
-              && (endTime > dbManager.getHeadBlockTimeStamp())
-              && (endTime <= maxTokenAge) , "Invalid end time: must greater start time and lower than token age's limit timestamp:" + maxTokenAge);
-
-      Assert.isTrue(ctx.getTotalSupply() > 0 , "TotalSupply must greater than 0");
-      Assert.isTrue(ctx.getMaxSupply() > 0 , "MaxSupply must greater than 0!");
-      Assert.isTrue(ctx.getMaxSupply() >= ctx.getTotalSupply() , "MaxSupply must greater or equal than TotalSupply");
-      Assert.isTrue(ctx.getFee() >= 0 && ctx.getFee() <= TOKEN_MAX_TRANSFER_FEE, "Invalid token transfer fee: must be positive and not exceed max fee : " + TOKEN_MAX_TRANSFER_FEE + " tokens");
-      Assert.isTrue(ctx.getExtraFeeRate() >= 0 && ctx.getExtraFeeRate() <= 100 && ctx.getExtraFeeRate() <= TOKEN_MAX_TRANSFER_FEE_RATE, "Invalid extra fee rate , should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
-
-      Assert.isTrue(ctx.getFeePool() >= URC30_MIN_POOL_FEE && (accountCap.getBalance() >= Math.addExact(calcFee(), ctx.getFeePool())), "Invalid fee pool or not enough balance for fee & pre-deposit pool fee");
-      Assert.isTrue(ctx.getLot() >= 0, "Invalid lot: must not negative");
-      Assert.isTrue(ctx.getExchUnxNum() > 0, "Invalid exchange unw number: must be positive");
-      Assert.isTrue(ctx.getExchNum() > 0, "Invalid exchange token number: must be positive");
-
-      Assert.isTrue(ctx.getCreateAccFee() > 0 && ctx.getCreateAccFee() <= TOKEN_MAX_CREATE_ACC_FEE, "Invalid create account fee");
       return true;
     }
     catch (Exception e){
@@ -124,7 +101,7 @@ public class NftCreateTemplateActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(CreateTokenContract.class).getOwnerAddress();
+    return contract.unpack(CreateNftTemplateContract.class).getOwner();
   }
 
   @Override

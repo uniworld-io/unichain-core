@@ -5,14 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.unichain.core.capsule.FutureTokenCapsule;
 import org.unichain.core.capsule.NftTemplateCapsule;
 
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-//@todo nft review
 @Slf4j(topic = "DB")
 @Component
 public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsule> {

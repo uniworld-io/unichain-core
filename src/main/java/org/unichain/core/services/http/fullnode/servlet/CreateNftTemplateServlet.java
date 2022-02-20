@@ -9,7 +9,6 @@ import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
-import org.unichain.protos.Contract.CreateTokenContract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 
 import javax.servlet.http.HttpServlet;
@@ -18,8 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-
-//@todo later
 @Component
 @Slf4j(topic = "API")
 public class CreateNftTemplateServlet extends HttpServlet {

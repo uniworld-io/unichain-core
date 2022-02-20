@@ -186,7 +186,7 @@ service Wallet {
     };
   };
 
-  rpc removeNftMinter (RemoveNftMinterContract) returns (Transaction) {
+  rpc RemoveNftMinter (RemoveNftMinterContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/removenftminter"
       body: "*"

@@ -54,7 +54,7 @@ public class NftMintActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(Contract.CreateNftTemplateContract.class);
       var ownerAddress = ctx.getOwner().toByteArray();
-      var contract = new NftTemplateCapsule(ctx);
+//      var contract = new NftTemplateCapsule(ctx);
       //@todo implement bizz
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);

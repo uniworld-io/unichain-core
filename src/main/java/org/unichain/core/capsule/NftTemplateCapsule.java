@@ -15,33 +15,39 @@
 
 package org.unichain.core.capsule;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import org.unichain.protos.Contract;
-import org.unichain.protos.Protocol;
+import org.unichain.protos.Contract.CreateNftTemplateContract;
+import org.unichain.protos.Protocol.NftTemplate;
 
-//@todo later
 @Slf4j(topic = "capsule")
-public class NftTemplateCapsule implements ProtoCapsule<Protocol.NftTemplate> {
-  private Protocol.NftTemplate template;
+public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
+  private NftTemplate template;
 
   /**
    * get asset issue contract from bytes data.
    */
   public NftTemplateCapsule(byte[] data) {
     try {
-      this.template = Protocol.NftTemplate.parseFrom(data);
+      this.template = NftTemplate.parseFrom(data);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
   }
 
-  public NftTemplateCapsule(Protocol.NftTemplate template) {
+  public NftTemplateCapsule(NftTemplate template) {
     this.template = template;
   }
 
-  public NftTemplateCapsule(Contract.CreateNftTemplateContract contract) {
-    //@todo later
+  public NftTemplateCapsule(CreateNftTemplateContract contract, long lastOperation, long tokenIndex) {
+    this.template.toBuilder()
+            .setSymbol(contract.getSymbol())
+            .setName(contract.getName())
+            .setTotalSupply(contract.getTotalSupply())
+            .setMinter(contract.getMinter())
+            .setLastOperation(lastOperation)
+            .setOwner(contract.getOwner());
   }
 
   public byte[] getData() {
@@ -49,7 +55,7 @@ public class NftTemplateCapsule implements ProtoCapsule<Protocol.NftTemplate> {
   }
 
   @Override
-  public Protocol.NftTemplate getInstance() {
+  public NftTemplate getInstance() {
     return this.template;
   }
 
@@ -58,12 +64,63 @@ public class NftTemplateCapsule implements ProtoCapsule<Protocol.NftTemplate> {
     return this.template.toString();
   }
 
+  public String getSymbol() {
+    return this.template.getSymbol();
+  }
+
+  public void setSymbol(String symbol) {
+    this.template.toBuilder().setSymbol(symbol);
+  }
+
   public String getName() {
     return this.template.getName();
   }
 
+  public void setName(String name) {
+    this.template.toBuilder().setName(name);
+  }
+
+  public long getTotalSupply() {
+    return this.template.getTotalSupply();
+  }
+
+  public void setTotalSupply(long totalSupply) {
+    this.template.toBuilder().setTotalSupply(totalSupply);
+  }
+
+  public long getTokenIndex() {
+    return this.template.getTokenIndex();
+  }
+
+  public void setTokenIndex(long tokenIndex) {
+    this.template.toBuilder().setTokenIndex(tokenIndex);
+  }
+
+  public byte[] getMinter() {
+    return this.template.getMinter().toByteArray();
+  }
+
+  public void setMinter(ByteString minter) {
+    this.template.toBuilder().setMinter(minter);
+  }
+
+  public long getLastOperation() {
+    return this.template.getLastOperation();
+  }
+
+  public void setLastOperation(long lastOperation) {
+    this.template.toBuilder().setLastOperation(lastOperation);
+  }
+
+  public byte[] getOwner() {
+    return this.template.getOwner().toByteArray();
+  }
+
+  public void setOwner(ByteString owner) {
+    this.template.toBuilder().setOwner(owner);
+  }
+
   public byte[] getKey(){
-    //@todo later
-    return null;
+    return this.template.getSymbol().getBytes();
   }
 }

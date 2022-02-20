@@ -63,12 +63,11 @@ public class NftRemoveMinterActuator extends AbstractActuator {
 
       val ctx = this.contract.unpack(RemoveNftMinterContract.class);
       var ownerAddress = ctx.getOwner().toByteArray();
-      var minter = ctx.getMinter();
-//      var template = ctx.getTemplates();
+      var template = ctx.getNftTemplate();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       var accountCap = dbManager.getNftTemplateStore().get(ownerAddress);
       Assert.notNull(accountCap, "Account not exists");
-      Assert.notNull(minter, "Invalid minter");
+      Assert.notNull(template, "Invalid template");
       return true;
     }
     catch (Exception e){

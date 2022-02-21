@@ -20,6 +20,7 @@ public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsu
   @Autowired
   protected NftTemplateStore(@Value("nft-template") String dbName) {
     super(dbName);
+    loadAccountNftTemplateRelation();
   }
 
   @Override
@@ -42,5 +43,19 @@ public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsu
   public void setAccountNftTemplateRelation(byte[] owner, byte[] symbol, NftTemplateCapsule capsule) {
     put(symbol, capsule);
     accountNftTemplateRelation.get(owner).add(capsule);
+  }
+
+  private void loadAccountNftTemplateRelation() {
+    List<NftTemplateCapsule> nftTemplateCapsules = getAll();
+    nftTemplateCapsules.forEach(capsule -> {
+      byte[] owner = capsule.getOwner();
+      if (accountNftTemplateRelation.containsKey(capsule.getOwner())) {
+        accountNftTemplateRelation.get(owner).add(capsule);
+      } else {
+        List<NftTemplateCapsule> list = new ArrayList<>();
+        list.add(capsule);
+        accountNftTemplateRelation.put(owner, list);
+      }
+    });
   }
 }

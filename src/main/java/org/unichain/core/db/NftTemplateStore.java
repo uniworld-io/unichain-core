@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Component
 public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsule> {
 
-  private static Map<byte[], List<NftTemplateCapsule>> nftTemplatesByOwner = new HashMap<>();
+  private static Map<byte[], List<NftTemplateCapsule>> accountNftTemplateRelation = new HashMap<>();
 
   @Autowired
   protected NftTemplateStore(@Value("nft-template") String dbName) {
@@ -39,8 +39,8 @@ public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsu
     put(key, capsule);
   }
 
-  public void setNftTemplatesByOwner(byte[] owner, byte[] symbol, NftTemplateCapsule capsule) {
+  public void setAccountNftTemplateRelation(byte[] owner, byte[] symbol, NftTemplateCapsule capsule) {
     put(symbol, capsule);
-    nftTemplatesByOwner.get(owner).add(capsule);
+    accountNftTemplateRelation.get(owner).add(capsule);
   }
 }

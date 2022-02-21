@@ -50,7 +50,7 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       var owner = ctx.getOwner().toByteArray();
       var lastOperation = dbManager.getHeadBlockTimeStamp();
       var capsule = new NftTemplateCapsule(ctx, lastOperation);
-      dbManager.getNftTemplateStore().setNftTemplatesByOwner(owner, symbol, capsule);
+      dbManager.getNftTemplateStore().setAccountNftTemplateRelation(owner, symbol, capsule);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;

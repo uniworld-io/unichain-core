@@ -39,7 +39,8 @@ public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsu
     put(key, capsule);
   }
 
-  public void setNftTemplatesByOwner(byte[] owner, NftTemplateCapsule capsule) {
+  public void setNftTemplatesByOwner(byte[] owner, byte[] symbol, NftTemplateCapsule capsule) {
+    put(symbol, capsule);
     nftTemplatesByOwner.get(owner).add(capsule);
   }
 }

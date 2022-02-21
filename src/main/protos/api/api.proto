@@ -196,6 +196,66 @@ service Wallet {
     };
   };
 
+  rpc AddNftMinter (AddNftMinterContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/addnftminter"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/addnftminter"
+      }
+    };
+  };
+
+  rpc RenounceNftMinter (RenounceNftMinterContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/renouncenftminter"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/renouncenftminter"
+      }
+    };
+  };
+
+  rpc BurnNftToken (BurnNftTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/burnnfttoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/burnnfttoken"
+      }
+    };
+  };
+
+  rpc ApproveNftToken (ApproveNftTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/approvenfttoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/approvenfttoken"
+      }
+    };
+  };
+
+  rpc ApproveForAllNftToken (ApproveForAllNftTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/approveforallnfttoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/approveforallnfttoken"
+      }
+    };
+  };
+
+  rpc TransferNftToken (TransferNftTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/transfernfttoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/transfernfttoken"
+      }
+    };
+  };
+
   rpc CreateToken (CreateTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/createtoken"

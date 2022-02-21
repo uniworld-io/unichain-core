@@ -366,11 +366,17 @@ message Transaction {
       WithdrawFutureTokenContract = 60;
       TransferTokenOwnerContract = 61;
       ExchangeTokenContract = 62;
+
       CreateNftTemplateContract = 63;
       MintNftTokenContract = 64;
       RemoveNftMinterContract = 65;
       AddNftMinterContract = 66;
+
       RenounceNftMinterContract = 67;
+      BurnNftTokenContract = 68;
+      ApproveNftTokenContract = 69;
+      ApproveForAllNftTokenContract = 70;
+      TransferNftTokenContract = 71;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;

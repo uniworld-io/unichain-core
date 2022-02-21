@@ -392,3 +392,30 @@ message RenounceNftMinterContract{
   bytes owner = 1;
   string nft_template = 2;
 }
+
+message BurnNftTokenContract{
+  bytes owner = 1;
+  string nft_template = 2;
+  int64 token_id =3;
+}
+
+message ApproveNftTokenContract{
+  bytes owner = 1;
+  bytes to_address = 2;
+  bool approve = 3;
+  string nft_template = 4;
+  int64 token_id =5;
+}
+
+message ApproveForAllNftTokenContract{
+  bytes owner = 1;
+  bytes to_address = 2;
+  bool approve = 3;
+}
+
+message TransferNftTokenContract{
+  bytes owner = 1;
+  bytes to_address = 2;
+  string nft_template = 3;
+  int64 token_id = 4;
+}

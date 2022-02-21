@@ -331,6 +331,32 @@ public class Util {
             RemoveNftMinterContract removeNftMinterContract = contractParameter.unpack(RemoveNftMinterContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(removeNftMinterContract, selfType));
             break;
+          case AddNftMinterContract:
+            AddNftMinterContract addNftMinterContract = contractParameter.unpack(AddNftMinterContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(addNftMinterContract, selfType));
+            break;
+          case RenounceNftMinterContract:
+            RenounceNftMinterContract renounceNftMinterContract = contractParameter.unpack(RenounceNftMinterContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(renounceNftMinterContract, selfType));
+            break;
+          case BurnNftTokenContract:
+            BurnNftTokenContract burnNftTokenContract = contractParameter.unpack(BurnNftTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(burnNftTokenContract, selfType));
+            break;
+          case ApproveNftTokenContract:
+            ApproveNftTokenContract approveNftTokenContract = contractParameter.unpack(ApproveNftTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(approveNftTokenContract, selfType));
+            break;
+
+          case ApproveForAllNftTokenContract:
+            ApproveForAllNftTokenContract approveForAllNftTokenContract = contractParameter.unpack(ApproveForAllNftTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(approveForAllNftTokenContract, selfType));
+            break;
+
+          case TransferNftTokenContract:
+            TransferNftTokenContract transferNftTokenContract = contractParameter.unpack(TransferNftTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(transferNftTokenContract, selfType));
+            break;
           default:
         }
         JSONObject parameter = new JSONObject();
@@ -599,6 +625,42 @@ public class Util {
             RemoveNftMinterContract.Builder removeNftMinterContractBuilder = RemoveNftMinterContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), removeNftMinterContractBuilder, selfType);
             any = Any.pack(removeNftMinterContractBuilder.build());
+            break;
+
+          case "AddNftMinterContract":
+            AddNftMinterContract.Builder addNftMinterContractBuilder = AddNftMinterContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), addNftMinterContractBuilder, selfType);
+            any = Any.pack(addNftMinterContractBuilder.build());
+            break;
+
+          case "RenounceNftMinterContract":
+            RenounceNftMinterContract.Builder renounceNftMinterContractBuilder = RenounceNftMinterContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), renounceNftMinterContractBuilder, selfType);
+            any = Any.pack(renounceNftMinterContractBuilder.build());
+            break;
+
+          case "BurnNftTokenContract":
+            BurnNftTokenContract.Builder burnNftTokenContractBuilder = BurnNftTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), burnNftTokenContractBuilder, selfType);
+            any = Any.pack(burnNftTokenContractBuilder.build());
+            break;
+
+          case "ApproveNftTokenContract":
+            ApproveNftTokenContract.Builder approveNftTokenContractBuilder = ApproveNftTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), approveNftTokenContractBuilder, selfType);
+            any = Any.pack(approveNftTokenContractBuilder.build());
+            break;
+
+          case "ApproveForAllNftTokenContract":
+            ApproveForAllNftTokenContract.Builder approveForAllNftTokenContractBuilder = ApproveForAllNftTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), approveForAllNftTokenContractBuilder, selfType);
+            any = Any.pack(approveForAllNftTokenContractBuilder.build());
+            break;
+
+          case "TransferNftTokenContract":
+            TransferNftTokenContract.Builder transferNftTokenContractBuilder = TransferNftTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferNftTokenContractBuilder, selfType);
+            any = Any.pack(transferNftTokenContractBuilder.build());
             break;
           default:
         }

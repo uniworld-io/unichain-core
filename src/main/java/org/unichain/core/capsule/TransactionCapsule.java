@@ -933,6 +933,13 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     switch (txType){
       case CreateNftTemplateContract:
       case MintNftTokenContract:
+      case AddNftMinterContract:
+      case RemoveNftMinterContract:
+      case  RenounceNftMinterContract:
+      case  BurnNftTokenContract:
+      case  ApproveNftTokenContract:
+      case  ApproveForAllNftTokenContract:
+      case  TransferNftTokenContract:
         return BLOCK_VERSION_5;
       case TransferTokenOwnerContract:
       case ExchangeTokenContract:

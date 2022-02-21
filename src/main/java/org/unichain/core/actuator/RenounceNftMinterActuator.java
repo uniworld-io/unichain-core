@@ -19,30 +19,34 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
+import org.springframework.util.Assert;
+import org.unichain.common.utils.StringUtil;
+import org.unichain.core.Wallet;
+import org.unichain.core.capsule.NftTemplateCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
+import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 //@todo later
 @Slf4j(topic = "actuator")
-public class NftMintActuator extends AbstractActuator {
+public class RenounceNftMinterActuator extends AbstractActuator {
 
-  NftMintActuator(Any contract, Manager dbManager) {
+  RenounceNftMinterActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
-  //@todo later
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(Contract.MintNftTokenContract.class);
-//      var ownerAddress = ctx.getOwner().toByteArray();
-//      var contract = new NftTemplateCapsule(ctx);
+      var ctx = contract.unpack(Contract.RenounceNftMinterContract.class);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -53,11 +57,11 @@ public class NftMintActuator extends AbstractActuator {
     }
   }
 
-  //@todo later
   @Override
   public boolean validate() throws ContractValidateException {
     try {
-       return true;
+     //@todo later
+      return true;
     }
     catch (Exception e){
       logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -67,7 +71,7 @@ public class NftMintActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(Contract.MintNftTokenContract.class).getOwnerAddress();
+    return contract.unpack(Contract.RenounceNftMinterContract.class).getOwner();
   }
 
   @Override

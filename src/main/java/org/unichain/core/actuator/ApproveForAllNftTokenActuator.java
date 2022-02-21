@@ -29,20 +29,17 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 //@todo later
 @Slf4j(topic = "actuator")
-public class NftMintActuator extends AbstractActuator {
+public class ApproveForAllNftTokenActuator extends AbstractActuator {
 
-  NftMintActuator(Any contract, Manager dbManager) {
+  ApproveForAllNftTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
-  //@todo later
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(Contract.MintNftTokenContract.class);
-//      var ownerAddress = ctx.getOwner().toByteArray();
-//      var contract = new NftTemplateCapsule(ctx);
+      var ctx = contract.unpack(Contract.ApproveForAllNftTokenContract.class);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -53,11 +50,11 @@ public class NftMintActuator extends AbstractActuator {
     }
   }
 
-  //@todo later
   @Override
   public boolean validate() throws ContractValidateException {
     try {
-       return true;
+     //@todo later
+      return true;
     }
     catch (Exception e){
       logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -67,7 +64,7 @@ public class NftMintActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(Contract.MintNftTokenContract.class).getOwnerAddress();
+    return contract.unpack(Contract.ApproveForAllNftTokenContract.class).getOwner();
   }
 
   @Override

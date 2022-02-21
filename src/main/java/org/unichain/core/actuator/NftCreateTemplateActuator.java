@@ -48,6 +48,7 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
       var lastOperation = dbManager.getHeadBlockTimeStamp();
       var capsule = new NftTemplateCapsule(ctx, lastOperation);
+      //@todo inxexing account-nft info
       dbManager.getNftTemplateStore().put(symbol, capsule);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
@@ -75,13 +76,14 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       Assert.notNull(symbol, "Symbol is null");
       Assert.isTrue(!dbManager.getNftTemplateStore().has(symbol), "NftTemplate has existed");
 
+      //@todo validate name: length, special char
       Assert.notNull(name, "Name is null");
 
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       var accountCap = dbManager.getNftTemplateStore().get(ownerAddress);
       Assert.notNull(accountCap, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-      Assert.isTrue(totalSupply >= 0, "TotalSupply must greater than 0");
+      Assert.isTrue(totalSupply >= 0, "TotalSupply must greater than 0");//@todo totalSupply must be > 0
 
       return true;
     }

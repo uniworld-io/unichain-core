@@ -46,7 +46,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
             .setName(contract.getName())
             .setTotalSupply(contract.getTotalSupply())
             .setTokenIndex(tokenIndex)
-            .setMinter(contract.getMinter())
+            .setMinter(contract.getMinter()) //@todo check minter exist before set or else clear that field for safe
             .setLastOperation(lastOperation)
             .setOwner(contract.getOwner()).build();
   }

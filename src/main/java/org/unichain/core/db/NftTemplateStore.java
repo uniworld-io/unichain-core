@@ -7,13 +7,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.unichain.core.capsule.NftTemplateCapsule;
 
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 @Slf4j(topic = "DB")
 @Component
 public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsule> {
+
+  private static Map<byte[], List<NftTemplateCapsule>> nftTemplatesByOwner = new HashMap<>();
 
   @Autowired
   protected NftTemplateStore(@Value("nft-template") String dbName) {
@@ -31,8 +33,13 @@ public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsu
         .collect(Collectors.toList());
   }
 
-  @Override
-  public void delete(byte[] key) {
-    super.delete(key);
+  public void deleteMinter(byte[] key) {
+    NftTemplateCapsule capsule = get(key);
+    capsule.setMinter(null);
+    put(key, capsule);
+  }
+
+  public void setNftTemplatesByOwner(byte[] owner, NftTemplateCapsule capsule) {
+    nftTemplatesByOwner.get(owner).add(capsule);
   }
 }

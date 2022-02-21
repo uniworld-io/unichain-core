@@ -46,9 +46,11 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
             .setName(contract.getName())
             .setTotalSupply(contract.getTotalSupply())
             .setTokenIndex(tokenIndex)
-            .setMinter(contract.getMinter()) //@todo check minter exist before set or else clear that field for safe
             .setLastOperation(lastOperation)
             .setOwner(contract.getOwner()).build();
+    if (!contract.getMinter().isEmpty()) {
+      this.template.toBuilder().setMinter(contract.getMinter()).build();
+    }
   }
 
   public NftTemplateCapsule(CreateNftTemplateContract contract, long lastOperation) {
@@ -74,7 +76,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public void setSymbol(String symbol) {
-    this.template.toBuilder().setSymbol(symbol);
+    this.template = this.template.toBuilder().setSymbol(symbol).build();
   }
 
   public String getName() {
@@ -82,7 +84,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public void setName(String name) {
-    this.template.toBuilder().setName(name);
+    this.template = this.template.toBuilder().setName(name).build();
   }
 
   public long getTotalSupply() {
@@ -90,7 +92,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public void setTotalSupply(long totalSupply) {
-    this.template.toBuilder().setTotalSupply(totalSupply);
+    this.template = this.template.toBuilder().setTotalSupply(totalSupply).build();
   }
 
   public long getTokenIndex() {
@@ -98,7 +100,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public void setTokenIndex(long tokenIndex) {
-    this.template.toBuilder().setTokenIndex(tokenIndex);
+    this.template = this.template.toBuilder().setTokenIndex(tokenIndex).build();
   }
 
   public byte[] getMinter() {
@@ -106,7 +108,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public void setMinter(ByteString minter) {
-    this.template.toBuilder().setMinter(minter);
+    this.template = this.template.toBuilder().setMinter(minter).build();
   }
 
   public long getLastOperation() {
@@ -114,7 +116,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public void setLastOperation(long lastOperation) {
-    this.template.toBuilder().setLastOperation(lastOperation);
+    this.template = this.template.toBuilder().setLastOperation(lastOperation).build();
   }
 
   public byte[] getOwner() {
@@ -122,7 +124,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public void setOwner(ByteString owner) {
-    this.template.toBuilder().setOwner(owner);
+    this.template = this.template.toBuilder().setOwner(owner).build();
   }
 
   public byte[] getKey(){

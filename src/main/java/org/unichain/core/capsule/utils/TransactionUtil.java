@@ -169,4 +169,7 @@ public class TransactionUtil {
     return ECKey.computeAddress(pubKey);
   } */
 
+  public static boolean validNftTemplateName(byte[] name) {
+    return validAccountName(name);
+  }
 }

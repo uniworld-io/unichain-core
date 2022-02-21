@@ -26,6 +26,7 @@ import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.NftTemplateCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -46,10 +47,10 @@ public class NftCreateTemplateActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(CreateNftTemplateContract.class);
       var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
+      var owner = ctx.getOwner().toByteArray();
       var lastOperation = dbManager.getHeadBlockTimeStamp();
       var capsule = new NftTemplateCapsule(ctx, lastOperation);
-      //@todo inxexing account-nft info
-      dbManager.getNftTemplateStore().put(symbol, capsule);
+      dbManager.getNftTemplateStore().setNftTemplatesByOwner(symbol, capsule);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -69,21 +70,20 @@ public class NftCreateTemplateActuator extends AbstractActuator {
 
       val ctx = this.contract.unpack(CreateNftTemplateContract.class);
       var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
-      var name = ctx.getName();
+      var name = ctx.getName().getBytes();
       var ownerAddress = ctx.getOwner().toByteArray();
       var totalSupply = ctx.getTotalSupply();
 
       Assert.notNull(symbol, "Symbol is null");
       Assert.isTrue(!dbManager.getNftTemplateStore().has(symbol), "NftTemplate has existed");
 
-      //@todo validate name: length, special char
-      Assert.notNull(name, "Name is null");
+      Assert.notNull(TransactionUtil.validNftTemplateName(name), "Invalid name");
 
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       var accountCap = dbManager.getNftTemplateStore().get(ownerAddress);
       Assert.notNull(accountCap, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
 
-      Assert.isTrue(totalSupply >= 0, "TotalSupply must greater than 0");//@todo totalSupply must be > 0
+      Assert.isTrue(totalSupply > 0, "TotalSupply must greater than 0");
 
       return true;
     }

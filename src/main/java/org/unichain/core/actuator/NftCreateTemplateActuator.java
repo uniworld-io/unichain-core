@@ -48,9 +48,11 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       var ctx = contract.unpack(CreateNftTemplateContract.class);
       var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
       var owner = ctx.getOwner().toByteArray();
+      var total = ctx.getTotalSupply();
       var lastOperation = dbManager.getHeadBlockTimeStamp();
       var capsule = new NftTemplateCapsule(ctx, lastOperation);
-      dbManager.getNftTemplateStore().setAccountNftTemplateRelation(owner, symbol, capsule);
+      dbManager.getNftTemplateStore().put(symbol, capsule);
+      dbManager.getNftAccountTemplateStore().save(owner, ByteString.copyFrom(symbol), total);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;

@@ -15,14 +15,16 @@
 
 package org.unichain.core.capsule;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.NftAccountTemplateRelation;
 
-//@todo nft review
 @Slf4j(topic = "capsule")
 public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccountTemplateRelation> {
   private NftAccountTemplateRelation token;
+  private byte[] accountAddress;
 
   public NftAccountTemplateRelationCapsule(byte[] data) {
     try {
@@ -32,8 +34,30 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
     }
   }
 
-  public NftAccountTemplateRelationCapsule(NftAccountTemplateRelation token) {
-    this.token = token;
+  public NftAccountTemplateRelationCapsule(byte[] accountAddress, NftAccountTemplateRelation token) {
+    this.token = Protocol.NftAccountTemplateRelation.newBuilder()
+            .setPrev(token.getPrev())
+            .setNext(token.getNext())
+            .setTemplateId(token.getTemplateId())
+            .setIsMinter(token.getIsMinter())
+            .setTotal(token.getTotal())
+            .build();
+  }
+
+  public NftAccountTemplateRelationCapsule(byte[] accountAddress, ByteString templateId, long total) {
+    this.accountAddress = accountAddress;
+    this.token = Protocol.NftAccountTemplateRelation.newBuilder()
+            .setTemplateId(templateId)
+            .setTotal(total)
+            .build();
+  }
+
+  public NftAccountTemplateRelationCapsule(byte[] accountAddress, ByteString prev, ByteString templateId) {
+    this.accountAddress = accountAddress;
+    this.token = Protocol.NftAccountTemplateRelation.newBuilder()
+            .setPrev(prev)
+            .setTemplateId(templateId)
+            .build();
   }
 
   public byte[] getData() {
@@ -50,8 +74,51 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
     return this.token.toString();
   }
 
-  public byte[] getKey(){
-    //@todo later
-    return null;
+  public void setPrev(ByteString prev) {
+    this.token = this.token.toBuilder().setPrev(prev).build();
+  }
+
+  public void setNext(ByteString next) {
+    this.token = this.token.toBuilder().setNext(next).build();
+  }
+
+  public void setTemplateId(ByteString templateId) {
+    this.token = this.token.toBuilder().setTemplateId(templateId).build();
+  }
+
+  public void setIsMinter(boolean isMinter) {
+    this.token = this.token.toBuilder().setIsMinter(isMinter).build();
+  }
+
+  public void setTotal(long total) {
+    this.token = this.token.toBuilder().setTotal(total).build();
+  }
+
+  public ByteString getPrev() {
+    return this.token.getPrev();
+  }
+
+  public ByteString getNext() {
+    return this.token.getNext();
+  }
+
+  public ByteString getTemplateId() {
+    return this.token.getTemplateId();
+  }
+
+  public boolean getIsMinter() {
+    return this.token.getIsMinter();
+  }
+
+  public long getTotal() {
+    return this.token.getTotal();
+  }
+
+  public void setAccountAddress(byte[] accountAddress) {
+    this.accountAddress = accountAddress;
+  }
+
+  public byte[] getAccountAddress() {
+    return this.accountAddress;
   }
 }

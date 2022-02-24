@@ -113,6 +113,10 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
     return this.template.getMinter().toByteArray();
   }
 
+  public boolean hasMinter(){
+    return this.template.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER);
+  }
+
   public void setMinter(ByteString minter) {
     this.template = this.template.toBuilder().setMinter(minter).build();
   }

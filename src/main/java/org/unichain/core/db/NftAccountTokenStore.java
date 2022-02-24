@@ -7,12 +7,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.unichain.core.capsule.NftAccountTemplateRelationCapsule;
 import org.unichain.core.capsule.NftAccountTokenRelationCapsule;
+import org.unichain.core.capsule.NftTokenCapsule;
 
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-//@todo nft review
 @Slf4j(topic = "DB")
 @Component
 public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTokenRelationCapsule> {
@@ -31,5 +31,9 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
     return Streams.stream(iterator())
         .map(Entry::getValue)
         .collect(Collectors.toList());
+  }
+
+  public void save(byte[] ownerAddr, NftTokenCapsule nftTokenCapsule){
+    //@todo later
   }
 }

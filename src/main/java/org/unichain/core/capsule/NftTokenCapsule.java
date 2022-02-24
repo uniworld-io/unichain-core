@@ -17,8 +17,12 @@ package org.unichain.core.capsule;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+import org.unichain.common.utils.ByteArray;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
+
+import java.util.Arrays;
 
 //@todo later
 @Slf4j(topic = "capsule")
@@ -37,10 +41,6 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
     this.token = token;
   }
 
-  public NftTokenCapsule(Contract.MintNftTokenContract contract) {
-    //@todo later
-  }
-
   public byte[] getData() {
     return this.token.toByteArray();
   }
@@ -56,7 +56,6 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   }
 
   public byte[] getKey(){
-    //@todo later
-    return null;
+    return ArrayUtils.addAll(token.getTemplateId().toByteArray(), ByteArray.fromLong(token.getId()));
   }
 }

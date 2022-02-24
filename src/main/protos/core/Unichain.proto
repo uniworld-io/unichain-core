@@ -791,7 +791,7 @@ message NftTemplate{
 }
 
 message NftToken{
-  string template_id = 1;
+  bytes template_id = 1;
   int64 id = 2;
   bytes  owner_address = 3;
   bytes  approval = 4;

@@ -141,6 +141,15 @@ public class TransactionUtil {
     return description.length <= 200;
   }
 
+  //@todo later
+  public static boolean validJsonString(byte[] jsonString) {
+    if (ArrayUtils.isEmpty(jsonString)) {
+      return true;   //jsonString can empty
+    }
+
+    return jsonString.length <= 10*1024L;
+  }
+
   public static boolean validUrl(byte[] url) {
     if (ArrayUtils.isEmpty(url)) {
       return false;

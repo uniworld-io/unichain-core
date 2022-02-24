@@ -18,8 +18,11 @@ package org.unichain.core.capsule;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.NftTemplate;
+
+import static org.unichain.core.services.http.utils.Util.NFT_CREATE_TEMPLATE_FIELD_MINTER;
 
 @Slf4j(topic = "capsule")
 public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
@@ -41,16 +44,19 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public NftTemplateCapsule(CreateNftTemplateContract contract, long lastOperation, long tokenIndex) {
-    this.template = NftTemplate.newBuilder()
+    var builder = NftTemplate.newBuilder()
             .setSymbol(contract.getSymbol())
             .setName(contract.getName())
             .setTotalSupply(contract.getTotalSupply())
             .setTokenIndex(tokenIndex)
             .setLastOperation(lastOperation)
-            .setOwner(contract.getOwner()).build();
-    if (!contract.getMinter().isEmpty()) {
-      this.template.toBuilder().setMinter(contract.getMinter()).build();
-    }
+            .setOwner(contract.getOwner());
+    if (contract.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER))
+      builder.setMinter(contract.getMinter());
+    else
+      builder.clearMinter();
+
+    this.template = builder.build();
   }
 
   public NftTemplateCapsule(CreateNftTemplateContract contract, long lastOperation) {

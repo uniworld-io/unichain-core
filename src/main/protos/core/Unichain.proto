@@ -815,6 +815,7 @@ message NftAccountTemplateRelation{
   bytes template_id = 3;
   bool is_minter = 4;
   int64 total = 5;
+  bytes tail = 6;
 }
 
 message NftTemplateQuery{

@@ -735,6 +735,9 @@ public class Util {
 
   public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_CREATE_ACC_FEE = CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
+  public static Descriptors.FieldDescriptor NFT_CREATE_TEMPLATE_FIELD_MINTER = CreateNftTemplateContract.getDescriptor().findFieldByNumber(CreateNftTemplateContract.MINTER_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_ACCOUNT_FIELD_TAIL = Protocol.NftAccountTemplateRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTemplateRelation.TAIL_FIELD_NUMBER);
+
 
   public static int DEFAULT_PAGE_SIZE = 20;
   public static int DEFAULT_PAGE_INDEX = 0;

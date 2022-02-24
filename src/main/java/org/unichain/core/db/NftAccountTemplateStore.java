@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.unichain.core.capsule.NftAccountTemplateRelationCapsule;
+import org.unichain.core.capsule.NftTemplateCapsule;
+import org.unichain.protos.Protocol;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,41 +38,73 @@ public class NftAccountTemplateStore extends UnichainStoreWithRevoking<NftAccoun
         .collect(Collectors.toList());
   }
 
-  public void save(final byte[] accountAddress, final ByteString templateId, final long total) {
-    NftAccountTemplateRelationCapsule capsule;
-    var key = generateKey(accountAddress, templateId);
-    if (has(key)) {
-      var relationCapsules = getAll();
-      ByteString prev = null;
-      var relationCapsuleResult = relationCapsules.stream()
-              .filter(relationCapsule -> {
-                var keyExist = generateKey(relationCapsule.getAccountAddress(), relationCapsule.getTemplateId());
-                return Objects.isNull(relationCapsule.getNext()) && Arrays.equals(key, keyExist);
-              })
-              .collect(Collectors.toList());
+  public void save(byte[] ownerAddr, NftTemplateCapsule templateCapsule, boolean isMinter) {
+    if(!has(ownerAddr)){
+      //no template yet, create fist one
+      var relation = Protocol.NftAccountTemplateRelation.newBuilder()
+              .setTotal(1L)
+              .setTemplateId(ByteString.copyFrom(templateCapsule.getKey()))
+              .setIsMinter(isMinter)
+              .clearPrev()
+              .clearNext()
+              .clearTail()
+              .build();
 
-      if (relationCapsuleResult.size() == 1) { // contains only the first element
-        relationCapsuleResult.get(0).setNext(templateId);
-        prev = relationCapsules.get(0).getTemplateId();
-      } else { // contains first and last element
-        for (NftAccountTemplateRelationCapsule templateRelationCapsule: relationCapsuleResult) {
-          if (Objects.nonNull(templateRelationCapsule.getPrev())) { // get last element
-            templateRelationCapsule.setNext(templateId);
-            prev = templateRelationCapsule.getPrev();
-          }
-        }
-      }
-      capsule = new NftAccountTemplateRelationCapsule(accountAddress, prev, templateId);
-    } else {
-      capsule = new NftAccountTemplateRelationCapsule(accountAddress, templateId, total);
+      var relationCapsule = new NftAccountTemplateRelationCapsule(ownerAddr, relation);
+      put(relationCapsule.getKey(), relationCapsule);
+      return;
     }
-    put(key, capsule);
+    else{
+      var headRelation = get(ownerAddr);
+      if(!headRelation.hasTail()){
+        //only head node exist
+        var newRelation = Protocol.NftAccountTemplateRelation.newBuilder()
+                .setTemplateId(ByteString.copyFrom(templateCapsule.getKey()))
+                .setTotal(0L)
+                .clearNext()
+                .setPrev(ByteString.copyFrom(ownerAddr))
+                .setIsMinter(isMinter)
+                .clearTail()
+                .build();
+        var newRelationCap = new NftAccountTemplateRelationCapsule(generateKey(ownerAddr, templateCapsule.getKey()), newRelation);
+        put(newRelationCap.getKey(), newRelationCap);
+
+        headRelation.setTotal(Math.incrementExact(headRelation.getTotal()));
+        headRelation.setTail(ByteString.copyFrom(newRelationCap.getKey()));
+        headRelation.setNext(ByteString.copyFrom(newRelationCap.getKey()));
+        put(ownerAddr, headRelation);
+      }
+      else {
+        //head node & at-least another nodes
+        var tailNode = get(headRelation.getTail().toByteArray());
+
+        var newRelation = Protocol.NftAccountTemplateRelation.newBuilder()
+                .setTemplateId(ByteString.copyFrom(templateCapsule.getKey()))
+                .setTotal(0L)
+                .clearNext()
+                .setPrev(headRelation.getTail())
+                .setIsMinter(isMinter)
+                .clearTail()
+                .build();
+        var newRelationCap = new NftAccountTemplateRelationCapsule(generateKey(ownerAddr, templateCapsule.getKey()), newRelation);
+        put(newRelationCap.getKey(), newRelationCap);
+
+        //update last tail
+        tailNode.setNext(ByteString.copyFrom(newRelationCap.getKey()));
+        put(tailNode.getKey(), tailNode);
+
+        //update header node
+        headRelation.setTotal(Math.incrementExact(headRelation.getTotal()));
+        headRelation.setTail(ByteString.copyFrom(newRelationCap.getKey()));
+        put(headRelation.getKey(), headRelation);
+      }
+    }
   }
 
   /**
    * generate key from account address and templateId
    */
-  private byte[] generateKey(byte[] accountAddress, ByteString templateId) {
-    return ArrayUtils.addAll(accountAddress, templateId.toByteArray());
+  private byte[] generateKey(byte[] accountAddress, byte[] templateId) {
+    return ArrayUtils.addAll(accountAddress, templateId);
   }
 }

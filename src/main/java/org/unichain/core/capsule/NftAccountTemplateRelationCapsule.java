@@ -21,104 +21,67 @@ import lombok.extern.slf4j.Slf4j;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.NftAccountTemplateRelation;
 
+import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FIELD_TAIL;
+
 @Slf4j(topic = "capsule")
 public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccountTemplateRelation> {
-  private NftAccountTemplateRelation token;
-  private byte[] accountAddress;
+  private NftAccountTemplateRelation relation;
+  private byte[] key;
 
-  public NftAccountTemplateRelationCapsule(byte[] data) {
+  public NftAccountTemplateRelationCapsule(byte[] key, byte[] data) {
     try {
-      this.token = NftAccountTemplateRelation.parseFrom(data);
+      this.key = key;
+      this.relation = NftAccountTemplateRelation.parseFrom(data);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
   }
 
-  public NftAccountTemplateRelationCapsule(byte[] accountAddress, NftAccountTemplateRelation token) {
-    this.token = Protocol.NftAccountTemplateRelation.newBuilder()
-            .setPrev(token.getPrev())
-            .setNext(token.getNext())
-            .setTemplateId(token.getTemplateId())
-            .setIsMinter(token.getIsMinter())
-            .setTotal(token.getTotal())
-            .build();
+  public NftAccountTemplateRelationCapsule(byte[] key, NftAccountTemplateRelation relation) {
+    this.key = key;
+    this.relation = relation;
   }
 
-  public NftAccountTemplateRelationCapsule(byte[] accountAddress, ByteString templateId, long total) {
-    this.accountAddress = accountAddress;
-    this.token = Protocol.NftAccountTemplateRelation.newBuilder()
-            .setTemplateId(templateId)
-            .setTotal(total)
-            .build();
-  }
 
-  public NftAccountTemplateRelationCapsule(byte[] accountAddress, ByteString prev, ByteString templateId) {
-    this.accountAddress = accountAddress;
-    this.token = Protocol.NftAccountTemplateRelation.newBuilder()
-            .setPrev(prev)
-            .setTemplateId(templateId)
-            .build();
-  }
-
+  @Override
   public byte[] getData() {
-    return this.token.toByteArray();
+    return this.relation.toByteArray();
   }
 
   @Override
   public NftAccountTemplateRelation getInstance() {
-    return this.token;
+    return this.relation;
   }
 
-  @Override
-  public String toString() {
-    return this.token.toString();
+  public byte[] getKey(){
+    return key;
   }
 
-  public void setPrev(ByteString prev) {
-    this.token = this.token.toBuilder().setPrev(prev).build();
+  public boolean hasTail(){
+    return relation.hasField(NFT_TEMPLATE_ACCOUNT_FIELD_TAIL);
   }
 
-  public void setNext(ByteString next) {
-    this.token = this.token.toBuilder().setNext(next).build();
+  public void setTotal(long total){
+    this.relation = relation.toBuilder().setTotal(total).build();
   }
 
-  public void setTemplateId(ByteString templateId) {
-    this.token = this.token.toBuilder().setTemplateId(templateId).build();
+  public long getTotal(){
+    return relation.getTotal();
   }
 
-  public void setIsMinter(boolean isMinter) {
-    this.token = this.token.toBuilder().setIsMinter(isMinter).build();
+  public void setTail(ByteString tail){
+    this.relation = relation.toBuilder().setTail(tail).build();
   }
 
-  public void setTotal(long total) {
-    this.token = this.token.toBuilder().setTotal(total).build();
+  public ByteString getTail(){
+    return relation.getTail();
   }
 
-  public ByteString getPrev() {
-    return this.token.getPrev();
+  public void setNext(ByteString next){
+    this.relation = relation.toBuilder().setNext(next).build();
   }
 
-  public ByteString getNext() {
-    return this.token.getNext();
-  }
-
-  public ByteString getTemplateId() {
-    return this.token.getTemplateId();
-  }
-
-  public boolean getIsMinter() {
-    return this.token.getIsMinter();
-  }
-
-  public long getTotal() {
-    return this.token.getTotal();
-  }
-
-  public void setAccountAddress(byte[] accountAddress) {
-    this.accountAddress = accountAddress;
-  }
-
-  public byte[] getAccountAddress() {
-    return this.accountAddress;
+  public void setPrev(ByteString prev){
+    this.relation = relation.toBuilder().setPrev(prev).build();
   }
 }

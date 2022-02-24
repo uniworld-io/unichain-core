@@ -34,6 +34,8 @@ import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import static org.unichain.core.services.http.utils.Util.NFT_CREATE_TEMPLATE_FIELD_MINTER;
+
 @Slf4j(topic = "actuator")
 public class NftCreateTemplateActuator extends AbstractActuator {
 
@@ -50,9 +52,9 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       var owner = ctx.getOwner().toByteArray();
       var total = ctx.getTotalSupply();
       var lastOperation = dbManager.getHeadBlockTimeStamp();
-      var capsule = new NftTemplateCapsule(ctx, lastOperation);
-      dbManager.getNftTemplateStore().put(symbol, capsule);
-      dbManager.getNftAccountTemplateStore().save(owner, ByteString.copyFrom(symbol), total);
+      var templateCap = new NftTemplateCapsule(ctx, lastOperation);
+      dbManager.getNftTemplateStore().put(symbol, templateCap);
+      dbManager.getNftAccountTemplateStore().save(owner, templateCap, false);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -71,21 +73,25 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       Assert.isTrue(contract.is(CreateNftTemplateContract.class), "contract type error,expected type [CreateNftTemplateContract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(CreateNftTemplateContract.class);
+      var accountStore = dbManager.getAccountStore();
+
       var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
       var name = ctx.getName().getBytes();
-      var ownerAddress = ctx.getOwner().toByteArray();
-      var totalSupply = ctx.getTotalSupply();
+      var ownerAddr = ctx.getOwner().toByteArray();
 
-      Assert.notNull(symbol, "Symbol is null");
+      Assert.isTrue(!ctx.getSymbol().isEmpty() && TransactionUtil.validTokenName(symbol), "Invalid template symbol");
+      Assert.isTrue(!ctx.getName().isEmpty() && TransactionUtil.validTokenName(name), "Invalid template symbol");
       Assert.isTrue(!dbManager.getNftTemplateStore().has(symbol), "NftTemplate has existed");
 
-      Assert.notNull(TransactionUtil.validNftTemplateName(name), "Invalid name");
+      Assert.isTrue(Wallet.addressValid(ownerAddr), "Invalid ownerAddress");
+      var accountCap = accountStore.get(ownerAddr);
+      Assert.notNull(accountCap, "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
 
-      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-      var accountCap = dbManager.getNftTemplateStore().get(ownerAddress);
-      Assert.notNull(accountCap, "Account[" + StringUtil.createReadableString(ownerAddress) + "] not exists");
-
-      Assert.isTrue(totalSupply > 0, "TotalSupply must greater than 0");
+      if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER)){
+        var minterAddr = ctx.getMinter().toByteArray();
+        Assert.notNull(accountStore.get(minterAddr), "Minter account[" + StringUtil.createReadableString(minterAddr) + "] not exists");
+      }
+      Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");
 
       return true;
     }

@@ -42,17 +42,16 @@ public class NftAccountTemplateStore extends UnichainStoreWithRevoking<NftAccoun
     if(!has(ownerAddr)){
       //no template yet, create fist one
       var relation = Protocol.NftAccountTemplateRelation.newBuilder()
-              .setTotal(1L)
               .setTemplateId(ByteString.copyFrom(templateCapsule.getKey()))
+              .setTotal(1L)
               .setIsMinter(isMinter)
               .clearPrev()
               .clearNext()
               .clearTail()
               .build();
 
-      var relationCapsule = new NftAccountTemplateRelationCapsule(ownerAddr, relation);
-      put(relationCapsule.getKey(), relationCapsule);
-      return;
+      var relationCap = new NftAccountTemplateRelationCapsule(ownerAddr, relation);
+      put(relationCap.getKey(), relationCap);
     }
     else{
       var headRelation = get(ownerAddr);
@@ -70,8 +69,8 @@ public class NftAccountTemplateStore extends UnichainStoreWithRevoking<NftAccoun
         put(newRelationCap.getKey(), newRelationCap);
 
         headRelation.setTotal(Math.incrementExact(headRelation.getTotal()));
-        headRelation.setTail(ByteString.copyFrom(newRelationCap.getKey()));
         headRelation.setNext(ByteString.copyFrom(newRelationCap.getKey()));
+        headRelation.setTail(ByteString.copyFrom(newRelationCap.getKey()));
         put(ownerAddr, headRelation);
       }
       else {

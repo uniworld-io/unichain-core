@@ -793,8 +793,8 @@ message NftTemplate{
 message NftToken{
   bytes template_id = 1;
   int64 id = 2;
-  bytes  owner_address = 3;
-  bytes  approval = 4;
+  bytes owner_address = 3;
+  bytes approval = 4;
   string uri = 5;
   string metadata = 6;
   int64 last_operation = 7;
@@ -807,6 +807,7 @@ message NftAccountTokenRelation{
   bytes token_id = 3;
   bytes approval_all = 4;
   int64 total = 5;
+  bytes tail = 6;
 }
 
 message NftAccountTemplateRelation{

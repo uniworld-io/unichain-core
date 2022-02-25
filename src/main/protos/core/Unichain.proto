@@ -808,6 +808,7 @@ message NftAccountTokenRelation{
   bytes approval_all = 4;
   int64 total = 5;
   bytes tail = 6;
+  bool is_approval = 7;
 }
 
 message NftAccountTemplateRelation{

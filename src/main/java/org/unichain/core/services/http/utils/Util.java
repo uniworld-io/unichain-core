@@ -741,7 +741,9 @@ public class Util {
 
   public static Descriptors.FieldDescriptor NFT_MINT_FIELD_METADATA = MintNftTokenContract.getDescriptor().findFieldByNumber(MintNftTokenContract.METADATA_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.TAIL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_NEXT = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.NEXT_FIELD_NUMBER);
 
+  public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_APPROVAL = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.APPROVAL_FIELD_NUMBER);
 
 
   public static int DEFAULT_PAGE_SIZE = 20;

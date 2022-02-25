@@ -95,7 +95,7 @@ public class NftMintActuator extends AbstractActuator {
       }
 
       //indexing account-token
-      nftAccRelationStore.save(toAddr, nftTokenCap);
+      nftAccRelationStore.save(toAddr, nftTokenCap.getKey(), false);
 
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);

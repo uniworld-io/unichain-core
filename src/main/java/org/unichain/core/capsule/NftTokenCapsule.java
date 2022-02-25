@@ -15,6 +15,7 @@
 
 package org.unichain.core.capsule;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -23,6 +24,8 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
 import java.util.Arrays;
+
+import static org.unichain.core.services.http.utils.Util.NFT_TOKEN_FIELD_APPROVAL;
 
 //@todo later
 @Slf4j(topic = "capsule")
@@ -60,5 +63,21 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
 
   public byte[] getKey(){
     return key;
+  }
+
+  public byte[] getApproval(){
+    return token.getApproval().toByteArray();
+  }
+
+  public void setApproval(ByteString approval){
+    token = token.toBuilder().setApproval(approval).build();
+  }
+
+  public void clearApproval(){
+    token = token.toBuilder().clearApproval().build();
+  }
+
+  public boolean hasApproval(){
+    return token.hasField(NFT_TOKEN_FIELD_APPROVAL);
   }
 }

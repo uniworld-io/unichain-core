@@ -34,6 +34,8 @@ import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import java.util.Arrays;
+
 import static org.unichain.core.services.http.utils.Util.NFT_CREATE_TEMPLATE_FIELD_MINTER;
 
 @Slf4j(topic = "actuator")
@@ -90,6 +92,8 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER)){
         var minterAddr = ctx.getMinter().toByteArray();
         Assert.notNull(accountStore.get(minterAddr), "Minter account[" + StringUtil.createReadableString(minterAddr) + "] not exists");
+        Assert.notNull(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
+
       }
       Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");
 

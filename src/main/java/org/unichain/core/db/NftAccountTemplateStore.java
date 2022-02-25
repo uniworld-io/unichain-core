@@ -101,10 +101,10 @@ public class NftAccountTemplateStore extends UnichainStoreWithRevoking<NftAccoun
     }
   }
 
-  public void remove(byte[] ownerAddr, byte[] templateId, boolean isMinter) {
-    Assert.isTrue(has(ownerAddr), "not found any relation");
+  public void remove(byte[] addr, byte[] templateId, boolean isMinter) {
+    Assert.isTrue(has(addr), "not found any relation");
 
-    var nodeKey =  ArrayUtils.addAll(ownerAddr, templateId);
+    var nodeKey =  ArrayUtils.addAll(addr, templateId);
     if(has(nodeKey)){
       var foundNode = get(nodeKey);
       Assert.isTrue((foundNode.isMinter() && isMinter) || (!foundNode.isMinter() && !isMinter), "unmatched role: isMinter " + isMinter + "real: " + foundNode.isMinter());
@@ -127,22 +127,22 @@ public class NftAccountTemplateStore extends UnichainStoreWithRevoking<NftAccoun
       delete(nodeKey);
 
       //update head
-      var head = get(ownerAddr);
+      var head = get(addr);
       head.setTotal(Math.decrementExact(head.getTotal()));
       if(Arrays.equals(head.getTail().toByteArray(), nodeKey)){
         //tail deleted, must update tail
         head.setTail(prev);
       }
-      put(ownerAddr, head);
+      put(addr, head);
     }
     else {
       //update head node
-      var head = get(ownerAddr);
+      var head = get(addr);
       Assert.isTrue((head.isMinter() && isMinter) || (!head.isMinter() && !isMinter), "unmatched role: isMinter " + isMinter + "real: " + head.isMinter());
       Assert.isTrue(Arrays.equals(head.getTemplateId().toByteArray(), templateId), "unmatched template id");
       if(head.getTotal() == 1){
         //just delete
-        delete(ownerAddr);
+        delete(addr);
       }
       else {
         //update the header [header --> node 1 --> node N]
@@ -153,10 +153,10 @@ public class NftAccountTemplateStore extends UnichainStoreWithRevoking<NftAccoun
         head.setTemplateId(nextNode.getTemplateId());
         head.setIsMinter(nextNode.isMinter());
         if(head.getTotal() <= 1){
-          head.setTail(ByteString.copyFrom(ownerAddr));
+          head.setTail(ByteString.copyFrom(addr));
         }
         //put head
-        put(ownerAddr, head);
+        put(addr, head);
         //delete next
         delete(next.toByteArray());
       }

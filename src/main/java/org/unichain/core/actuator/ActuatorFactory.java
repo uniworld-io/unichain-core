@@ -191,6 +191,8 @@ public class ActuatorFactory {
         return new NftMintActuator(contract.getParameter(), manager);
       case RemoveNftMinterContract:
         return new NftRemoveMinterActuator(contract.getParameter(), manager);
+      case RenounceNftMinterContract:
+        return new RenounceNftMinterActuator(contract.getParameter(), manager);
       default:
         logger.warn("un-supported contract type {}!", contract.getType().name());
         return null;

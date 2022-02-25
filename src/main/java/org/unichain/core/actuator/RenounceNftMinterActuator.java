@@ -22,19 +22,16 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
-import org.unichain.common.utils.StringUtil;
-import org.unichain.core.Wallet;
-import org.unichain.core.capsule.NftTemplateCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract;
-import org.unichain.protos.Contract.CreateNftTemplateContract;
+import org.unichain.protos.Contract.RenounceNftMinterContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-//@todo later
+import java.util.Arrays;
+
 @Slf4j(topic = "actuator")
 public class RenounceNftMinterActuator extends AbstractActuator {
 
@@ -46,7 +43,22 @@ public class RenounceNftMinterActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(Contract.RenounceNftMinterContract.class);
+      var ctx = contract.unpack(RenounceNftMinterContract.class);
+      var ownerAddr = ctx.getOwner().toByteArray();
+      var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
+
+      var templateStore = dbManager.getNftTemplateStore();
+      var relationStore = dbManager.getNftAccountTemplateStore();
+
+      //update template
+      var template = templateStore.get(templateId);
+      template.clearMinter();
+      templateStore.put(templateId, template);
+
+      //remove relation
+      relationStore.remove(ownerAddr, templateId, true);
+
+      chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -60,7 +72,22 @@ public class RenounceNftMinterActuator extends AbstractActuator {
   @Override
   public boolean validate() throws ContractValidateException {
     try {
-     //@todo later
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(contract.is(RenounceNftMinterContract.class), "contract type error,expected type [RenounceNftMinterContract],real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(RenounceNftMinterContract.class);
+      var ownerAddr = ctx.getOwner().toByteArray();
+      var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
+      var accountStore = dbManager.getAccountStore();
+      var templateStore = dbManager.getNftTemplateStore();
+
+      Assert.isTrue(accountStore.has(ownerAddr), "not found owner account");
+      Assert.isTrue(templateStore.has(templateId), "not found template");
+      var template = templateStore.get(templateId);
+      Assert.isTrue(template.hasMinter() && Arrays.equals(ownerAddr, template.getMinter()), "minter not exist or not matched");
+
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "not enough balance to cover fee");
       return true;
     }
     catch (Exception e){
@@ -71,11 +98,11 @@ public class RenounceNftMinterActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(Contract.RenounceNftMinterContract.class).getOwner();
+    return contract.unpack(RenounceNftMinterContract.class).getOwner();
   }
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
+    return dbManager.getDynamicPropertiesStore().getAssetUpdateFee();//2 UNW default
   }
 }

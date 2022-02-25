@@ -27,8 +27,11 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.RemoveNftMinterContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+
+import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
 public class NftRemoveMinterActuator extends AbstractActuator {
@@ -43,7 +46,20 @@ public class NftRemoveMinterActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(RemoveNftMinterContract.class);
       var ownerAddress = ctx.getOwner().toByteArray();
-      dbManager.getNftTemplateStore().delete(ownerAddress);
+      var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
+      var templateStore = dbManager.getNftTemplateStore();
+      var relationStore = dbManager.getNftAccountTemplateStore();
+
+      //update template
+      var templateCap = templateStore.get(templateId);
+      val minterAddr = templateCap.getMinter();
+      templateCap.clearMinter();
+      templateStore.put(templateId, templateCap);
+
+      //remove relation
+      relationStore.remove(minterAddr, templateId, true);
+
+      chargeFee(ownerAddress, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -62,12 +78,17 @@ public class NftRemoveMinterActuator extends AbstractActuator {
       Assert.isTrue(contract.is(RemoveNftMinterContract.class), "contract type error,expected type [RemoveNftMinterContract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(RemoveNftMinterContract.class);
-      var ownerAddress = ctx.getOwner().toByteArray();
-      var template = ctx.getNftTemplate();
-      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-      var accountCap = dbManager.getNftTemplateStore().get(ownerAddress);
-      Assert.notNull(accountCap, "Account not exists");
-      Assert.notNull(template, "Invalid template");
+      var ownerAddr = ctx.getOwner().toByteArray();
+      var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
+      var accountStore = dbManager.getAccountStore();
+
+      Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
+
+      var templateCap = dbManager.getNftTemplateStore().get(templateId);
+      Assert.notNull(templateCap, "Template not exists");
+      Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()), "not owner of nft template");
+      Assert.isTrue(templateCap.hasMinter(), "minter not set");
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "not enough fee");
       return true;
     }
     catch (Exception e){
@@ -83,6 +104,6 @@ public class NftRemoveMinterActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
+    return dbManager.getDynamicPropertiesStore().getAssetUpdateFee();//2 UNW default
   }
 }

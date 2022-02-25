@@ -140,4 +140,8 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   public byte[] getKey(){
     return this.template.getSymbol().getBytes();
   }
+
+  public void clearMinter(){
+    this.template = template.toBuilder().clearMinter().build();
+  }
 }

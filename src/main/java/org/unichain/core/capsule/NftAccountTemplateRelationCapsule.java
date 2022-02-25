@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.NftAccountTemplateRelation;
 
+import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FIELD_NEXT;
 import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FIELD_TAIL;
 
 @Slf4j(topic = "capsule")
@@ -61,6 +62,10 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
     return relation.hasField(NFT_TEMPLATE_ACCOUNT_FIELD_TAIL);
   }
 
+  public boolean hasNext(){
+    return relation.hasField(NFT_TEMPLATE_ACCOUNT_FIELD_NEXT);
+  }
+
   public void setTotal(long total){
     this.relation = relation.toBuilder().setTotal(total).build();
   }
@@ -77,6 +82,14 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
     return relation.getTail();
   }
 
+  public void setTemplateId(ByteString templateId){
+    this.relation = relation.toBuilder().setTemplateId(templateId).build();
+  }
+
+  public void setIsMinter(boolean isMinter){
+    this.relation = relation.toBuilder().setIsMinter(isMinter).build();
+  }
+
   public void setNext(ByteString next){
     this.relation = relation.toBuilder().setNext(next).build();
   }
@@ -87,5 +100,17 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
 
   public ByteString getTemplateId(){
       return relation.getTemplateId();
+  }
+
+  public boolean isMinter(){
+    return relation.getIsMinter();
+  }
+
+  public ByteString getNext(){
+    return relation.getNext();
+  }
+
+  public ByteString getPrev(){
+    return relation.getPrev();
   }
 }

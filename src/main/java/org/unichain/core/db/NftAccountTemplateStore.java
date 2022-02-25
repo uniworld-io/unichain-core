@@ -8,6 +8,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.unichain.core.capsule.NftAccountTemplateRelationCapsule;
 import org.unichain.core.capsule.NftTemplateCapsule;
 import org.unichain.protos.Protocol;
@@ -47,7 +48,7 @@ public class NftAccountTemplateStore extends UnichainStoreWithRevoking<NftAccoun
               .setIsMinter(isMinter)
               .clearPrev()
               .clearNext()
-              .clearTail()
+              .setTail(ByteString.copyFrom(ownerAddr))
               .build();
 
       var relationCap = new NftAccountTemplateRelationCapsule(ownerAddr, relation);
@@ -96,6 +97,68 @@ public class NftAccountTemplateStore extends UnichainStoreWithRevoking<NftAccoun
         headRelation.setTotal(Math.incrementExact(headRelation.getTotal()));
         headRelation.setTail(ByteString.copyFrom(newRelationCap.getKey()));
         put(headRelation.getKey(), headRelation);
+      }
+    }
+  }
+
+  public void remove(byte[] ownerAddr, byte[] templateId, boolean isMinter) {
+    Assert.isTrue(has(ownerAddr), "not found any relation");
+
+    var nodeKey =  ArrayUtils.addAll(ownerAddr, templateId);
+    if(has(nodeKey)){
+      var foundNode = get(nodeKey);
+      Assert.isTrue((foundNode.isMinter() && isMinter) || (!foundNode.isMinter() && !isMinter), "unmatched role: isMinter " + isMinter + "real: " + foundNode.isMinter());
+
+      //update prev node
+      var prev = foundNode.getPrev();
+      var prevNode = get(prev.toByteArray());
+      prevNode.setNext(foundNode.getNext());
+      put(prev.toByteArray(), prevNode);
+
+      //update next node
+      if(foundNode.hasNext()){
+        var next = foundNode.getNext().toByteArray();
+        var nextNode = get(next);
+        nextNode.setPrev(prev);
+        put(next, nextNode);
+      }
+
+      //remove node
+      delete(nodeKey);
+
+      //update head
+      var head = get(ownerAddr);
+      head.setTotal(Math.decrementExact(head.getTotal()));
+      if(Arrays.equals(head.getTail().toByteArray(), nodeKey)){
+        //tail deleted, must update tail
+        head.setTail(prev);
+      }
+      put(ownerAddr, head);
+    }
+    else {
+      //update head node
+      var head = get(ownerAddr);
+      Assert.isTrue((head.isMinter() && isMinter) || (!head.isMinter() && !isMinter), "unmatched role: isMinter " + isMinter + "real: " + head.isMinter());
+      Assert.isTrue(Arrays.equals(head.getTemplateId().toByteArray(), templateId), "unmatched template id");
+      if(head.getTotal() == 1){
+        //just delete
+        delete(ownerAddr);
+      }
+      else {
+        //update the header [header --> node 1 --> node N]
+        var next = head.getNext();
+        var nextNode = get(next.toByteArray());
+        head.setTotal(Math.decrementExact(head.getTotal()));
+        head.setNext(nextNode.getNext());
+        head.setTemplateId(nextNode.getTemplateId());
+        head.setIsMinter(nextNode.isMinter());
+        if(head.getTotal() <= 1){
+          head.setTail(ByteString.copyFrom(ownerAddr));
+        }
+        //put head
+        put(ownerAddr, head);
+        //delete next
+        delete(next.toByteArray());
       }
     }
   }

@@ -737,6 +737,8 @@ public class Util {
 
   public static Descriptors.FieldDescriptor NFT_CREATE_TEMPLATE_FIELD_MINTER = CreateNftTemplateContract.getDescriptor().findFieldByNumber(CreateNftTemplateContract.MINTER_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TEMPLATE_ACCOUNT_FIELD_TAIL = Protocol.NftAccountTemplateRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTemplateRelation.TAIL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_ACCOUNT_FIELD_NEXT = Protocol.NftAccountTemplateRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTemplateRelation.NEXT_FIELD_NUMBER);
+
   public static Descriptors.FieldDescriptor NFT_MINT_FIELD_METADATA = MintNftTokenContract.getDescriptor().findFieldByNumber(MintNftTokenContract.METADATA_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.TAIL_FIELD_NUMBER);
 

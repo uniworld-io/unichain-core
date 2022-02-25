@@ -84,4 +84,8 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
   public void setPrev(ByteString prev){
     this.relation = relation.toBuilder().setPrev(prev).build();
   }
+
+  public ByteString getTemplateId(){
+      return relation.getTemplateId();
+  }
 }

@@ -38,11 +38,11 @@ public class NftAccountTemplateStore extends UnichainStoreWithRevoking<NftAccoun
         .collect(Collectors.toList());
   }
 
-  public void save(byte[] ownerAddr, NftTemplateCapsule templateCapsule, boolean isMinter) {
+  public void save(byte[] ownerAddr, byte[] templateId, boolean isMinter) {
     if(!has(ownerAddr)){
       //no template yet, create fist one
       var relation = Protocol.NftAccountTemplateRelation.newBuilder()
-              .setTemplateId(ByteString.copyFrom(templateCapsule.getKey()))
+              .setTemplateId(ByteString.copyFrom(templateId))
               .setTotal(1L)
               .setIsMinter(isMinter)
               .clearPrev()
@@ -58,14 +58,14 @@ public class NftAccountTemplateStore extends UnichainStoreWithRevoking<NftAccoun
       if(!headRelation.hasTail()){
         //only head node exist
         var newRelation = Protocol.NftAccountTemplateRelation.newBuilder()
-                .setTemplateId(ByteString.copyFrom(templateCapsule.getKey()))
+                .setTemplateId(ByteString.copyFrom(templateId))
                 .setTotal(0L)
                 .clearNext()
                 .setPrev(ByteString.copyFrom(ownerAddr))
                 .setIsMinter(isMinter)
                 .clearTail()
                 .build();
-        var newRelationCap = new NftAccountTemplateRelationCapsule(generateKey(ownerAddr, templateCapsule.getKey()), newRelation);
+        var newRelationCap = new NftAccountTemplateRelationCapsule(generateKey(ownerAddr, templateId), newRelation);
         put(newRelationCap.getKey(), newRelationCap);
 
         headRelation.setTotal(Math.incrementExact(headRelation.getTotal()));
@@ -78,14 +78,14 @@ public class NftAccountTemplateStore extends UnichainStoreWithRevoking<NftAccoun
         var tailNode = get(headRelation.getTail().toByteArray());
 
         var newRelation = Protocol.NftAccountTemplateRelation.newBuilder()
-                .setTemplateId(ByteString.copyFrom(templateCapsule.getKey()))
+                .setTemplateId(ByteString.copyFrom(templateId))
                 .setTotal(0L)
                 .clearNext()
                 .setPrev(headRelation.getTail())
                 .setIsMinter(isMinter)
                 .clearTail()
                 .build();
-        var newRelationCap = new NftAccountTemplateRelationCapsule(generateKey(ownerAddr, templateCapsule.getKey()), newRelation);
+        var newRelationCap = new NftAccountTemplateRelationCapsule(generateKey(ownerAddr, templateId), newRelation);
         put(newRelationCap.getKey(), newRelationCap);
 
         //update last tail

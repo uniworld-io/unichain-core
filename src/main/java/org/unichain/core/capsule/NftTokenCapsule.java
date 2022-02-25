@@ -28,10 +28,12 @@ import java.util.Arrays;
 @Slf4j(topic = "capsule")
 public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   private Protocol.NftToken token;
+  private byte[] key;
 
   public NftTokenCapsule(byte[] data) {
     try {
       this.token = Protocol.NftToken.parseFrom(data);
+      this.key = ArrayUtils.addAll(token.getTemplateId().toByteArray(), ByteArray.fromLong(token.getId()));
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
@@ -39,6 +41,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
 
   public NftTokenCapsule(Protocol.NftToken token) {
     this.token = token;
+    this.key = ArrayUtils.addAll(token.getTemplateId().toByteArray(), ByteArray.fromLong(token.getId()));
   }
 
   public byte[] getData() {
@@ -56,6 +59,6 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   }
 
   public byte[] getKey(){
-    return ArrayUtils.addAll(token.getTemplateId().toByteArray(), ByteArray.fromLong(token.getId()));
+    return key;
   }
 }

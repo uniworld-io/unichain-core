@@ -57,6 +57,8 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       var templateCap = new NftTemplateCapsule(ctx, lastOperation);
       dbManager.getNftTemplateStore().put(symbol, templateCap);
       dbManager.getNftAccountTemplateStore().save(owner, templateCap, false);
+
+      chargeFee(owner, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;

@@ -15,25 +15,30 @@
 
 package org.unichain.core.capsule;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.protos.Protocol.*;
 
-//@todo nft review
+import static org.unichain.core.services.http.utils.Util.NFT_ACC_TOKEN_RELATION_FIELD_TAIL;
+
 @Slf4j(topic = "capsule")
 public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTokenRelation> {
   private NftAccountTokenRelation token;
+  private byte[] key;
 
-  public NftAccountTokenRelationCapsule(byte[] data) {
+  public NftAccountTokenRelationCapsule(byte[] key, byte[] data) {
     try {
       this.token = NftAccountTokenRelation.parseFrom(data);
+      this.key = key;
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
   }
 
-  public NftAccountTokenRelationCapsule(NftAccountTokenRelation token) {
+  public NftAccountTokenRelationCapsule(byte[] key, NftAccountTokenRelation token) {
     this.token = token;
+    this.key = key;
   }
 
   public byte[] getData() {
@@ -51,7 +56,31 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
   }
 
   public byte[] getKey(){
-    //@todo later
-    return null;
+    return key;
+  }
+
+  public boolean hasTail(){
+    return token.hasField(NFT_ACC_TOKEN_RELATION_FIELD_TAIL);
+  }
+
+  public void setTotal(long total){
+    token = token.toBuilder().setTotal(total).build();
+  }
+
+  public long getTotal(){
+    return token.getTotal();
+  }
+
+
+  public void setTail(ByteString tail){
+    token = token.toBuilder().setTail(tail).build();
+  }
+
+  public ByteString getTail(){
+    return token.getTail();
+  }
+
+  public void setNext(ByteString next){
+    token = token.toBuilder().setNext(next).build();
   }
 }

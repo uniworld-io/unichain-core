@@ -39,6 +39,9 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static org.unichain.core.services.http.utils.Util.NFT_MINT_FIELD_METADATA;
+import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FIELD_TAIL;
+
 //@todo later
 @Slf4j(topic = "actuator")
 public class NftMintActuator extends AbstractActuator {
@@ -47,7 +50,6 @@ public class NftMintActuator extends AbstractActuator {
     super(contract, dbManager);
   }
 
-  //@todo later
   @Override
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
@@ -60,21 +62,24 @@ public class NftMintActuator extends AbstractActuator {
       var templateKey =  Util.stringAsBytesUppercase(ctx.getSymbol());
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
-      var ownerAccountCap = accountStore.get(ownerAddr);
       var template = templateStore.get(templateKey);
 
       var tokenId = Math.incrementExact(template.getTokenIndex());
-      Protocol.NftToken nftToken = Protocol.NftToken.newBuilder()
+      var nftTokenBuilder = Protocol.NftToken.newBuilder()
               .setId(tokenId)
-              .setLastOperation(dbManager.getHeadBlockTimeStamp())
+              .setTemplateId(ByteString.copyFrom(templateKey))
+              .setUri(ctx.getUri())
               .clearApproval()
               .setOwnerAddress(ctx.getToAddress())
-              .setMetadata(ctx.getMetadata())
-              .setTemplateId(ByteString.copyFrom(templateKey))
               .setExpireTime(ctx.getAvailableTime())
-              .setUri(ctx.getUri())
-              .build();
-      var nftTokenCap = new NftTokenCapsule(nftToken);
+              .setLastOperation(dbManager.getHeadBlockTimeStamp());
+
+      if(ctx.hasField(NFT_MINT_FIELD_METADATA))
+        nftTokenBuilder.setMetadata(ctx.getMetadata());
+      else
+        nftTokenBuilder.clearMetadata();
+
+      var nftTokenCap = new NftTokenCapsule(nftTokenBuilder.build());
       nftStore.put(nftTokenCap.getKey(), nftTokenCap);
 
       //update template index
@@ -92,6 +97,7 @@ public class NftMintActuator extends AbstractActuator {
       //indexing account-token
       nftAccRelationStore.save(toAddr, nftTokenCap);
 
+      chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -102,14 +108,13 @@ public class NftMintActuator extends AbstractActuator {
     }
   }
 
-  //@todo later
   @Override
   public boolean validate() throws ContractValidateException {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(contract.is(Contract.MintNftTokenContract.class), "contract type error,expected type [CreateNftTemplateContract],real type[" + contract.getClass() + "]");
-
+      var fee = calcFee();
       val ctx = this.contract.unpack(Contract.MintNftTokenContract.class);
       var accountStore = dbManager.getAccountStore();
 
@@ -118,24 +123,25 @@ public class NftMintActuator extends AbstractActuator {
       var ownerAccountCap = accountStore.get(ownerAddr);
       Assert.notNull(ownerAccountCap, "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
 
-      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
-      Assert.isTrue(!ctx.getSymbol().isEmpty() && TransactionUtil.validTokenName(symbol), "Invalid template symbol");
-      Assert.isTrue(dbManager.getNftTemplateStore().has(symbol), "NftTemplate not existed");
-      var template = dbManager.getNftTemplateStore().get(symbol);
-      Assert.isTrue(Arrays.equals(ownerAddr, template.getOwner()) || (template.hasMinter() && Arrays.equals(ownerAddr, template.getMinter())), "Only owner or minter allowed to mint NFT token");
-      Assert.isTrue(template.getTokenIndex() < template.getTotalSupply(), "All NFT token mint!");
-
-      var toAccountCap = dbManager.getAccountStore().get(ctx.getToAddress().toByteArray());
-      var fee = calcFee();
+      var toAddr = ctx.getToAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(toAddr), "Invalid toAddress");
+      var toAccountCap = dbManager.getAccountStore().get(toAddr);
       if(Objects.isNull(toAccountCap)){
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
+      else {
+         Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner address and to address must be not the same!");
+      }
+
+      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
+      Assert.isTrue(dbManager.getNftTemplateStore().has(symbol), "NftTemplate not existed");
+      var templateCap = dbManager.getNftTemplateStore().get(symbol);
+      Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()) || (templateCap.hasMinter() && Arrays.equals(ownerAddr, templateCap.getMinter())), "Only owner or minter allowed to mint NFT token");
+      Assert.isTrue(templateCap.getTokenIndex() < templateCap.getTotalSupply(), "All NFT token mint!");
 
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Owner not enough balance to create new account fee, require at least "+ fee + "ginza");
-
       Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUri().getBytes()).toByteArray()), "invalid uri");
       Assert.isTrue(TransactionUtil.validJsonString(ByteString.copyFrom(ctx.getMetadata().getBytes()).toByteArray()), "invalid metadata, should be json format");
-
       Assert.isTrue(ctx.getAvailableTime() >= dbManager.getHeadBlockTimeStamp(), "available time should pass current block timestamp");
       return true;
     }

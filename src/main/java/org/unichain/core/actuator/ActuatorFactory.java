@@ -189,6 +189,8 @@ public class ActuatorFactory {
         return new NftCreateTemplateActuator(contract.getParameter(), manager);
       case MintNftTokenContract:
         return new NftMintActuator(contract.getParameter(), manager);
+      case AddNftMinterContract:
+        return new NftAddMinterActuator(contract.getParameter(), manager);
       case RemoveNftMinterContract:
         return new NftRemoveMinterActuator(contract.getParameter(), manager);
       case RenounceNftMinterContract:

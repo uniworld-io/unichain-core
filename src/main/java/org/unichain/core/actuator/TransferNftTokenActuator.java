@@ -38,7 +38,6 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
-//@todo later
 @Slf4j(topic = "actuator")
 public class TransferNftTokenActuator extends AbstractActuator {
 

@@ -36,7 +36,6 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
-//@todo implement
 @Slf4j(topic = "actuator")
 public class NftAddMinterActuator extends AbstractActuator {
 

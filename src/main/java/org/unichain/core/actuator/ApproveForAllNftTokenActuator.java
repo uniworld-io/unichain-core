@@ -95,11 +95,11 @@ public class ApproveForAllNftTokenActuator extends AbstractActuator {
       if(ctx.getApprove()){
         //not set or override ?
         if(relation.hasApprovalForAll()) {
-          Assert.isTrue(!Arrays.equals(toAddr, relation.getApprovalForAll().toByteArray()), "Already approved");
+          Assert.isTrue(!Arrays.equals(toAddr, relation.getApprovalForAll()), "Already approved");
         }
       }
       else {
-        Assert.isTrue(relation.hasApprovalForAll() && Arrays.equals(toAddr, relation.getApprovalForAll().toByteArray()), "Not approved yet");
+        Assert.isTrue(relation.hasApprovalForAll() && Arrays.equals(toAddr, relation.getApprovalForAll()), "Not approved yet");
       }
 
       if(!accountStore.has(toAddr)){

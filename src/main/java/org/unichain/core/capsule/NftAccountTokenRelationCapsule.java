@@ -119,8 +119,8 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
     relation = relation.toBuilder().setTokenId(tokenId).build();
   }
 
-  public ByteString getApprovalForAll(){
-    return relation.getApprovalAll();
+  public byte[] getApprovalForAll(){
+    return relation.getApprovalAll().toByteArray();
   }
 
   public boolean hasApprovalForAll(){

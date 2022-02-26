@@ -103,13 +103,12 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
     }
   }
 
-  public void remove(byte[] addr, byte[] tokenId, boolean isApproval){
+  public void remove(byte[] addr, byte[] tokenId, boolean isApproval, boolean isApproveForAll){
     Assert.isTrue(has(addr), "not found any relation");
-
     var nodeKey =  ArrayUtils.addAll(addr, tokenId);
     if(has(nodeKey)){
       var foundNode = get(nodeKey);
-      Assert.isTrue((foundNode.isApproval() && isApproval) || (!foundNode.isApproval() && !isApproval), "unmatched role: isApproval " + isApproval + "real: " + foundNode.isApproval());
+      Assert.isTrue(isApproveForAll || (foundNode.isApproval() && isApproval) || (!foundNode.isApproval() && !isApproval), "unmatched role: isApproval " + isApproval + "real: " + foundNode.isApproval());
 
       //update prev node
       var prev = foundNode.getPrev();
@@ -140,7 +139,7 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
     else {
       //update head node
       var head = get(addr);
-      Assert.isTrue((head.isApproval() && isApproval) || (!head.isApproval() && !isApproval), "unmatched role: isApproval " + isApproval + "real: " + head.isApproval());
+      Assert.isTrue(isApproveForAll || (head.isApproval() && isApproval) || (!head.isApproval() && !isApproval), "unmatched role: isApproval " + isApproval + "real: " + head.isApproval());
       Assert.isTrue(Arrays.equals(head.getTokenId().toByteArray(), tokenId), "unmatched token id");
       if(head.getTotal() == 1){
         //just delete

@@ -27,7 +27,6 @@ import java.util.Arrays;
 
 import static org.unichain.core.services.http.utils.Util.NFT_TOKEN_FIELD_APPROVAL;
 
-//@todo later
 @Slf4j(topic = "capsule")
 public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   private Protocol.NftToken token;
@@ -69,15 +68,27 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
     return token.getApproval().toByteArray();
   }
 
+  public boolean hasApproval(){
+    return token.hasField(NFT_TOKEN_FIELD_APPROVAL);
+  }
+
   public void setApproval(ByteString approval){
     token = token.toBuilder().setApproval(approval).build();
+  }
+
+  public void setOwner(ByteString owner){
+    token = token.toBuilder().setOwnerAddress(owner).build();
+  }
+
+  public void setLastOperation(long lastOperation){
+    token = token.toBuilder().setLastOperation(lastOperation).build();
   }
 
   public void clearApproval(){
     token = token.toBuilder().clearApproval().build();
   }
 
-  public boolean hasApproval(){
-    return token.hasField(NFT_TOKEN_FIELD_APPROVAL);
+  public byte[] getOwner(){
+    return token.getOwnerAddress().toByteArray();
   }
 }

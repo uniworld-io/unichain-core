@@ -62,7 +62,7 @@ service Wallet {
     };
   };
 
-  rpc getNftTemplate (NftTemplate) returns (NftTemplate) {
+  rpc GetNftTemplate (NftTemplate) returns (NftTemplate) {
     option (google.api.http) = {
       post: "/wallet/getnfttemplate"
       body: "*"

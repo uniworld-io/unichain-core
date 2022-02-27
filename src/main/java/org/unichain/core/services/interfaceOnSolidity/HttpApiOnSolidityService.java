@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.unichain.common.application.Service;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.services.http.fullnode.servlet.GetFutureTransferServlet;
+import org.unichain.core.services.http.fullnode.servlet.GetNftTemplateServlet;
 import org.unichain.core.services.http.fullnode.servlet.GetTokenFutureServlet;
 import org.unichain.core.services.interfaceOnSolidity.http.*;
 
@@ -28,6 +29,20 @@ public class HttpApiOnSolidityService implements Service {
   private GetAccountOnSolidityServlet accountOnSolidityServlet;
   @Autowired
   private GetTokenPoolOnSolidityServlet tokenPoolOnSolidityServlet;
+
+  @Autowired
+  private ListNftTemplateOnSolidityServlet listNftTemplateOnSolidityServlet;
+  @Autowired
+  private ListNftTokenOnSolidityServlet listNftTokenOnSolidityServlet;
+  @Autowired
+  private GetNftTemplateOnSolidityServlet getNftTemplateOnSolidityServlet;
+  @Autowired
+  private GetNftTokenOnSolidityServlet getNftTokenOnSolidityServlet;
+  @Autowired
+  private GetNftBalanceOfOnSolidityServlet getNftBalanceOfOnSolidityServlet;
+  @Autowired
+  private GetNftApprovedForAllOnSolidityServlet getNftApprovedForAllOnSolidityServlet;
+
   @Autowired
   private GetTokenFutureServlet getTokenFutureServlet;
   @Autowired
@@ -113,6 +128,14 @@ public class HttpApiOnSolidityService implements Service {
       // same as FullNode
       context.addServlet(new ServletHolder(accountOnSolidityServlet), "/walletsolidity/getaccount");
       context.addServlet(new ServletHolder(tokenPoolOnSolidityServlet), "/walletsolidity/gettokenpool");
+
+      context.addServlet(new ServletHolder(listNftTemplateOnSolidityServlet), "/walletsolidity/listnfttemplate");
+      context.addServlet(new ServletHolder(listNftTokenOnSolidityServlet), "/walletsolidity/listnfttoken");
+      context.addServlet(new ServletHolder(getNftTemplateOnSolidityServlet), "/walletsolidity/getnfttemplate");
+      context.addServlet(new ServletHolder(getNftTokenOnSolidityServlet), "/walletsolidity/getnfttoken");
+      context.addServlet(new ServletHolder(getNftBalanceOfOnSolidityServlet), "/walletsolidity/getnftbalanceOf");
+      context.addServlet(new ServletHolder(getNftApprovedForAllOnSolidityServlet), "/walletsolidity/getnftapprovedforall");
+
       context.addServlet(new ServletHolder(getTokenFutureServlet), "/walletsolidity/getfuturetoken");
       context.addServlet(new ServletHolder(getFutureTransferServlet), "/walletsolidity/getfuturetransfer");
       context.addServlet(new ServletHolder(listWitnessesOnSolidityServlet), "/walletsolidity/listwitnesses");

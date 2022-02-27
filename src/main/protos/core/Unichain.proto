@@ -847,3 +847,14 @@ message NftTokenQueryResult{
   int64 total = 3;
   repeated NftToken tokens = 4;
 }
+
+message NftBalanceOf{
+  bytes owner_address = 1;
+  int64 count = 2;
+}
+
+message IsApprovedForAll{
+  bytes owner_address = 1;
+  bytes operator = 2;
+  bool isApproved = 3;
+}

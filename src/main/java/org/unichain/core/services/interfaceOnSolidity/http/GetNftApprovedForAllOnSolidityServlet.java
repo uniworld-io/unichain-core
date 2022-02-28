@@ -3,7 +3,8 @@ package org.unichain.core.services.interfaceOnSolidity.http;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.unichain.core.services.http.fullnode.servlet.GetTokenPoolServlet;
+import org.unichain.core.services.http.fullnode.servlet.GetNftApprovedForAllServlet;
+import org.unichain.core.services.http.fullnode.servlet.GetNftBalanceOfServlet;
 import org.unichain.core.services.interfaceOnSolidity.WalletOnSolidity;
 
 import javax.servlet.http.HttpServletRequest;
@@ -12,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 @Component
 @Slf4j(topic = "API")
-public class GetTokenPoolOnSolidityServlet extends GetTokenPoolServlet {
+public class GetNftApprovedForAllOnSolidityServlet extends GetNftApprovedForAllServlet {
 
   @Autowired
   private WalletOnSolidity walletOnSolidity;

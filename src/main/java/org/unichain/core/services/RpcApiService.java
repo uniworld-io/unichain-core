@@ -54,6 +54,8 @@ import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
+
 @Component
 @Slf4j(topic = "API")
 public class RpcApiService implements Service {
@@ -286,6 +288,48 @@ public class RpcApiService implements Service {
     @Override
     public void getTokenPool(TokenPoolQuery request, io.grpc.stub.StreamObserver<TokenPage> responseObserver) {
       TokenPage reply = wallet.getTokenPool(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftTemplate(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
+      NftTemplateQueryResult reply = wallet.listNftTemplate(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
+      NftTokenQueryResult reply = wallet.listNftToken(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftTemplate(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
+      NftTemplate reply = wallet.getNftTemplate(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftToken(NftToken request, io.grpc.stub.StreamObserver<NftToken> responseObserver) {
+      NftToken reply = wallet.getNftToken(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftBalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
+      NftBalanceOf reply = wallet.getNftBalanceOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
+      IsApprovedForAll reply = wallet.getNftApprovedForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -671,8 +715,49 @@ public class RpcApiService implements Service {
 
     @Override
     public void getTokenPool(TokenPoolQuery request, io.grpc.stub.StreamObserver<TokenPage> responseObserver) {
-      String tokenName = request.getTokenName();
       TokenPage reply = wallet.getTokenPool(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftTemplate(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
+      NftTemplateQueryResult reply = wallet.listNftTemplate(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
+      NftTokenQueryResult reply = wallet.listNftToken(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftTemplate(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
+      NftTemplate reply = wallet.getNftTemplate(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftToken(NftToken request, io.grpc.stub.StreamObserver<NftToken> responseObserver) {
+      NftToken reply = wallet.getNftToken(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftBalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
+      NftBalanceOf reply = wallet.getNftBalanceOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
+      IsApprovedForAll reply = wallet.getNftApprovedForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

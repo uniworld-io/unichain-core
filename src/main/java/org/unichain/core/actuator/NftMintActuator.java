@@ -40,9 +40,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import static org.unichain.core.services.http.utils.Util.NFT_MINT_FIELD_METADATA;
-import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FIELD_TAIL;
 
-//@todo later
 @Slf4j(topic = "actuator")
 public class NftMintActuator extends AbstractActuator {
 

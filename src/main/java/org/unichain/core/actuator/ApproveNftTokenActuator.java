@@ -60,7 +60,7 @@ public class ApproveNftTokenActuator extends AbstractActuator {
       if(ctx.getApprove()){
         if(nftToken.hasApproval()){
           //remove old approval indexing
-          relationStore.remove(nftToken.getApproval(), nftToken.getKey(), true);
+          relationStore.remove(nftToken.getApproval(), nftToken.getKey(), true, false);
         }
         nftToken.setApproval(ctx.getToAddress());
         nftTokenStore.put(tokenId, nftToken);
@@ -78,7 +78,7 @@ public class ApproveNftTokenActuator extends AbstractActuator {
       else {
         nftToken.clearApproval();
         nftTokenStore.put(tokenId, nftToken);
-        relationStore.remove(ctx.getToAddress().toByteArray(), tokenId, true);
+        relationStore.remove(ctx.getToAddress().toByteArray(), tokenId, true, false);
       }
 
       chargeFee(owner, fee);

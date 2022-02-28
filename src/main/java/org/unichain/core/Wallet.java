@@ -255,7 +255,6 @@ public class Wallet {
     return address;
   }
 
-
   public Account getAccount(Account account) {
     AccountStore accountStore = dbManager.getAccountStore();
     AccountCapsule accountCapsule = accountStore.get(account.getAddress().toByteArray());
@@ -278,6 +277,36 @@ public class Wallet {
 
   public TokenPage getTokenPool(TokenPoolQuery query) {
     return dbManager.getTokenPoolStore().query(query);
+  }
+
+  //@todo later
+  public NftTemplateQueryResult listNftTemplate(NftTemplateQuery query) {
+    return null;
+  }
+
+  //@todo later
+  public NftTokenQueryResult listNftToken(NftTokenQuery query) {
+    return null;
+  }
+
+  //@todo later
+  public NftTemplate getNftTemplate(NftTemplate query) {
+    return null;
+  }
+
+  //@todo later
+  public NftToken getNftToken(NftToken query) {
+    return null;
+  }
+
+  //@todo later
+  public NftBalanceOf getNftBalanceOf(NftBalanceOf query) {
+    return null;
+  }
+
+  //@todo later
+  public IsApprovedForAll getNftApprovedForAll(IsApprovedForAll query) {
+    return null;
   }
 
   public Account getAccountById(Account account) {

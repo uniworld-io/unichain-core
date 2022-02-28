@@ -19,15 +19,21 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
+import org.springframework.util.Assert;
+import org.unichain.core.Wallet;
+import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract;
+import org.unichain.protos.Contract.ApproveForAllNftTokenContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-//@todo later
+import java.util.Arrays;
+
 @Slf4j(topic = "actuator")
 public class ApproveForAllNftTokenActuator extends AbstractActuator {
 
@@ -39,7 +45,25 @@ public class ApproveForAllNftTokenActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(Contract.ApproveForAllNftTokenContract.class);
+      var ctx = contract.unpack(ApproveForAllNftTokenContract.class);
+      var ownerAddr = ctx.getOwner().toByteArray();
+      var toAddr = ctx.getToAddress().toByteArray();
+      var accountStore = dbManager.getAccountStore();
+      var relationStore = dbManager.getNftAccountTokenStore();
+
+      var relation = relationStore.get(ownerAddr);
+      relation.setApprovalForAll(ctx.getToAddress());
+      relationStore.put(ownerAddr, relation);
+
+      //create new account
+      if (!accountStore.has(toAddr)) {
+        var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
+        var toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddr), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+        dbManager.getAccountStore().put(toAddr, toAccountCap);
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+      }
+
+      chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -53,7 +77,36 @@ public class ApproveForAllNftTokenActuator extends AbstractActuator {
   @Override
   public boolean validate() throws ContractValidateException {
     try {
-     //@todo later
+      Assert.notNull(contract, "No contract!");
+      Assert.notNull(dbManager, "No dbManager!");
+      Assert.isTrue(contract.is(ApproveForAllNftTokenContract.class), "contract type error,expected type [ApproveForAllNftTokenContract],real type[" + contract.getClass() + "]");
+      var fee = calcFee();
+      val ctx = this.contract.unpack(ApproveForAllNftTokenContract.class);
+      var accountStore = dbManager.getAccountStore();
+      var relationStore = dbManager.getNftAccountTokenStore();
+      var ownerAddr = ctx.getOwner().toByteArray();
+      var toAddr = ctx.getToAddress().toByteArray();
+
+      Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
+      Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");
+      Assert.isTrue(relationStore.has(ownerAddr), "Not found any token");
+      var relation = relationStore.get(ownerAddr);
+
+      if(ctx.getApprove()){
+        //not set or override ?
+        if(relation.hasApprovalForAll()) {
+          Assert.isTrue(!Arrays.equals(toAddr, relation.getApprovalForAll()), "Already approved");
+        }
+      }
+      else {
+        Assert.isTrue(relation.hasApprovalForAll() && Arrays.equals(toAddr, relation.getApprovalForAll()), "Not approved yet");
+      }
+
+      if(!accountStore.has(toAddr)){
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+      }
+
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee");
       return true;
     }
     catch (Exception e){
@@ -64,11 +117,11 @@ public class ApproveForAllNftTokenActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(Contract.ApproveForAllNftTokenContract.class).getOwner();
+    return contract.unpack(ApproveForAllNftTokenContract.class).getOwner();
   }
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
+    return dbManager.getDynamicPropertiesStore().getAssetUpdateFee();//2 UNW default
   }
 }

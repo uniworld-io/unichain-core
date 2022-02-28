@@ -20,40 +20,39 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.protos.Protocol.*;
 
-import static org.unichain.core.services.http.utils.Util.NFT_ACC_TOKEN_RELATION_FIELD_NEXT;
-import static org.unichain.core.services.http.utils.Util.NFT_ACC_TOKEN_RELATION_FIELD_TAIL;
+import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
 public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTokenRelation> {
-  private NftAccountTokenRelation token;
+  private NftAccountTokenRelation relation;
   private byte[] key;
 
   public NftAccountTokenRelationCapsule(byte[] key, byte[] data) {
     try {
-      this.token = NftAccountTokenRelation.parseFrom(data);
+      this.relation = NftAccountTokenRelation.parseFrom(data);
       this.key = key;
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
   }
 
-  public NftAccountTokenRelationCapsule(byte[] key, NftAccountTokenRelation token) {
-    this.token = token;
+  public NftAccountTokenRelationCapsule(byte[] key, NftAccountTokenRelation relation) {
+    this.relation = relation;
     this.key = key;
   }
 
   public byte[] getData() {
-    return this.token.toByteArray();
+    return this.relation.toByteArray();
   }
 
   @Override
   public NftAccountTokenRelation getInstance() {
-    return this.token;
+    return this.relation;
   }
 
   @Override
   public String toString() {
-    return this.token.toString();
+    return this.relation.toString();
   }
 
   public byte[] getKey(){
@@ -61,59 +60,70 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
   }
 
   public void setTotal(long total){
-    token = token.toBuilder().setTotal(total).build();
+    relation = relation.toBuilder().setTotal(total).build();
   }
 
   public long getTotal(){
-    return token.getTotal();
+    return relation.getTotal();
   }
 
   public boolean hasTail(){
-    return token.hasField(NFT_ACC_TOKEN_RELATION_FIELD_TAIL);
+    return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_TAIL);
   }
 
   public void setTail(ByteString tail){
-    token = token.toBuilder().setTail(tail).build();
+    relation = relation.toBuilder().setTail(tail).build();
   }
 
   public ByteString getTail(){
-    return token.getTail();
+    return relation.getTail();
   }
 
   public void setNext(ByteString next){
-    token = token.toBuilder().setNext(next).build();
+    relation = relation.toBuilder().setNext(next).build();
   }
 
   public ByteString getNext(){
-    return token.getNext();
+    return relation.getNext();
   }
 
   public boolean hasNext(){
-    return token.hasField(NFT_ACC_TOKEN_RELATION_FIELD_NEXT);
+    return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_NEXT);
   }
 
   public void setPrev(ByteString prev){
-    token = token.toBuilder().setPrev(prev).build();
+    relation = relation.toBuilder().setPrev(prev).build();
   }
 
   public ByteString getPrev(){
-    return token.getPrev();
+    return relation.getPrev();
   }
 
   public boolean isApproval(){
-    return token.getIsApproval();
+    return relation.getIsApproval();
   }
 
   public void setApproval(boolean approval){
-    token = token.toBuilder().setIsApproval(approval).build();
+    relation = relation.toBuilder().setIsApproval(approval).build();
+  }
+
+  public void setApprovalForAll(ByteString approvalForAll){
+    relation = relation.toBuilder().setApprovalAll(approvalForAll).build();
   }
 
   public ByteString getTokenId(){
-    return token.getTokenId();
+    return relation.getTokenId();
   }
 
   public void setTokenId(ByteString tokenId){
-    token = token.toBuilder().setTokenId(tokenId).build();
+    relation = relation.toBuilder().setTokenId(tokenId).build();
   }
 
+  public byte[] getApprovalForAll(){
+    return relation.getApprovalAll().toByteArray();
+  }
+
+  public boolean hasApprovalForAll(){
+    return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL);
+  }
 }

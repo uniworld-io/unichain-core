@@ -86,6 +86,20 @@ public class FullNodeHttpApiService implements Service {
   private WithdrawFutureTokenServlet withdrawFutureTokenServlet;
   @Autowired
   private GetTokenPoolServlet getTokenPoolServlet;
+
+  @Autowired
+  private ListNftTemplateServlet listNftTemplateServlet;
+  @Autowired
+  private ListNftTokenServlet listNftTokenServlet;
+  @Autowired
+  private GetNftTemplateServlet getNftTemplateServlet;
+  @Autowired
+  private GetNftTokenServlet getNftTokenServlet;
+  @Autowired
+  private GetNftBalanceOfServlet getNftBalanceOfServlet;
+  @Autowired
+  private GetNftApprovedForAllServlet getNftApprovedForAllServlet;
+
   @Autowired
   private GetTokenFutureServlet getTokenFutureServlet;
   @Autowired
@@ -265,6 +279,15 @@ public class FullNodeHttpApiService implements Service {
 //      context.addServlet(new ServletHolder(showFutureDealServlet), "/showfuturedeal");
       context.addServlet(new ServletHolder(getAccountServlet), "/getaccount");
       context.addServlet(new ServletHolder(getTokenPoolServlet), "/gettokenpool");
+
+      context.addServlet(new ServletHolder(listNftTemplateServlet), "/listnfttemplate");
+      context.addServlet(new ServletHolder(listNftTokenServlet), "/listnfttoken");
+
+      context.addServlet(new ServletHolder(getNftTemplateServlet), "/getnfttemplate");
+      context.addServlet(new ServletHolder(getNftTokenServlet), "/getnfttoken");
+      context.addServlet(new ServletHolder(getNftBalanceOfServlet), "/getnftbalanceOf");
+      context.addServlet(new ServletHolder(getNftApprovedForAllServlet), "/getnftapprovedforall");
+
       context.addServlet(new ServletHolder(getTokenFutureServlet), "/getfuturetoken");
       context.addServlet(new ServletHolder(getFutureTransferServlet), "/getfuturetransfer");
       context.addServlet(new ServletHolder(transferServlet), "/createtransaction");

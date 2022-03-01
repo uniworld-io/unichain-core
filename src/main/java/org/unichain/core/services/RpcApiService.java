@@ -8,6 +8,7 @@ import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -314,8 +315,8 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void getNftToken(NftToken request, io.grpc.stub.StreamObserver<NftToken> responseObserver) {
-      NftToken reply = wallet.getNftToken(request);
+    public void getNftToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
+      var reply = wallet.getNftToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -742,8 +743,8 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void getNftToken(NftToken request, io.grpc.stub.StreamObserver<NftToken> responseObserver) {
-      NftToken reply = wallet.getNftToken(request);
+    public void getNftToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
+      NftTokenGetResult reply = wallet.getNftToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

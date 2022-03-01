@@ -73,7 +73,7 @@ service Wallet {
   };
 
 
-  rpc GetNftToken (NftToken) returns (NftToken) {
+  rpc GetNftToken (NftTokenGet) returns (NftTokenGetResult) {
     option (google.api.http) = {
       post: "/wallet/getnfttoken"
       body: "*"
@@ -1006,7 +1006,7 @@ service WalletSolidity {
     };
   };
 
-  rpc GetNftToken (NftToken) returns (NftToken) {
+  rpc GetNftToken (NftTokenGet) returns (NftTokenGetResult) {
     option (google.api.http) = {
       post: "/walletsolidity/getnfttoken"
       body: "*"

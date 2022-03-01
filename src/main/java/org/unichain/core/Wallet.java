@@ -299,7 +299,7 @@ public class Wallet {
       unsorted = new ArrayList<>();
       var start = templateStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
       while (true){
-          unsorted.add(start.getInstance());
+        unsorted.add(start.getInstance());
 
         if(start.hasNext())
         {
@@ -368,12 +368,19 @@ public class Wallet {
     return dbManager.getNftTemplateStore().get(Util.stringAsBytesUppercase(query.getSymbol())).getInstance();
   }
 
-  //@todo later: should query using string symbol for easy
-  public NftToken getNftToken(NftToken query) {
-    Assert.notNull(query.getTemplateId(), "Token symbol empty");
+  public NftTokenGetResult getNftToken(NftTokenGet query) {
+    Assert.notNull(query.getSymbol(), "Token symbol empty");
     Assert.notNull(query.getId(), "Token id empty");
-    var id = ArrayUtils.addAll(query.getTemplateId().toByteArray(), ByteArray.fromLong(query.getId()));
-    return dbManager.getNftTokenStore().get(id).getInstance();
+    var id = ArrayUtils.addAll(Util.stringAsBytesUppercase(query.getSymbol()), ByteArray.fromLong(query.getId()));
+    var token = dbManager.getNftTokenStore().get(id).getInstance();
+    return   NftTokenGetResult.newBuilder()
+            .setId(token.getId())
+            .setTemplateId(query.getSymbol())
+            .setApproval(token.getApproval())
+            .setLastOperation(token.getLastOperation())
+            .setOwnerAddress(token.getOwnerAddress())
+            .setExpireTime(token.getExpireTime())
+            .build();
   }
 
   public NftBalanceOf getNftBalanceOf(NftBalanceOf query) {

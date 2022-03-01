@@ -842,6 +842,22 @@ message NftTokenQuery{
   int32 page_index = 4;
 }
 
+message NftTokenGet{
+  string symbol = 1;
+  int64 id = 2;
+}
+
+message NftTokenGetResult{
+  string template_id = 1;
+  int64 id = 2;
+  bytes owner_address = 3;
+  bytes approval = 4;
+  string uri = 5;
+  string metadata = 6;
+  int64 last_operation = 7;
+  int64 expire_time = 8;
+}
+
 message NftTokenQueryResult{
   int32 page_size = 1;
   int32 page_index = 2;

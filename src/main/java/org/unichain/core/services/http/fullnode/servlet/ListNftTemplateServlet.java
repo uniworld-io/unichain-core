@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-//@fixme
 @Component
 @Slf4j(topic = "API")
 public class ListNftTemplateServlet extends HttpServlet {
@@ -47,7 +46,34 @@ public class ListNftTemplateServlet extends HttpServlet {
   }
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-      doPost(request, response);
+    try {
+      boolean visible = Util.getVisible(request);
+      String address = request.getParameter("owner_address");
+      String symbol = request.getParameter("symbol");
+      long pageSize = Long.parseLong(request.getParameter("page_size"));
+      long pageIndex = Long.parseLong(request.getParameter("page_index"));
+      Protocol.NftTokenQuery.Builder build = Protocol.NftTokenQuery.newBuilder();
+      JSONObject jsonObject = new JSONObject();
+      jsonObject.put("owner_address", address);
+      jsonObject.put("symbol", symbol);
+      jsonObject.put("page_size", pageSize);
+      jsonObject.put("page_index", pageIndex);
+      JsonFormat.merge(jsonObject.toJSONString(), build, visible);
+
+      Protocol.NftTokenQueryResult reply = wallet.listNftToken(build.build());
+      if (reply != null) {
+        response.getWriter().println(JsonFormat.printToString(reply, true));
+      } else {
+        response.getWriter().println("[]");
+      }
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      try {
+        response.getWriter().println(Util.printErrorMsg(e));
+      } catch (IOException ioe) {
+        logger.debug("IOException: {}", ioe.getMessage());
+      }
+    }
   }
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {

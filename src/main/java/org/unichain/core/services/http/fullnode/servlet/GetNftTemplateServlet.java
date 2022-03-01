@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-//@fixme
 @Component
 @Slf4j(topic = "API")
 public class GetNftTemplateServlet extends HttpServlet {

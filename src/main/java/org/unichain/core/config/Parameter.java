@@ -14,7 +14,8 @@ public class Parameter {
           ChainConstant.BLOCK_VERSION_1,
           ChainConstant.BLOCK_VERSION_2,
           ChainConstant.BLOCK_VERSION_3,
-          ChainConstant.BLOCK_VERSION_4));
+          ChainConstant.BLOCK_VERSION_4,
+          ChainConstant.BLOCK_VERSION_5));
 
   public class ChainConstant {
     /**

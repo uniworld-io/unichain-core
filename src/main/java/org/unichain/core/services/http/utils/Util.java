@@ -750,6 +750,11 @@ public class Util {
   public static Descriptors.FieldDescriptor NFT_APPROVAL_ALL_FIELD_APPROVE = ApproveForAllNftTokenContract.getDescriptor().findFieldByNumber(ApproveForAllNftTokenContract.APPROVE_FIELD_NUMBER);
 
   public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_SYMBOL = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.SYMBOL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_SIZE= Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_INDEX= Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.PAGE_INDEX_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_SIZE = Protocol.NftTemplateQuery.getDescriptor().findFieldByNumber(Protocol.NftTemplateQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_INDEX= Protocol.NftTemplateQuery.getDescriptor().findFieldByNumber(Protocol.NftTemplateQuery.PAGE_INDEX_FIELD_NUMBER);
 
 
 

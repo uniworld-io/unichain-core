@@ -280,6 +280,11 @@ public class Wallet {
   }
 
   public NftTemplateQueryResult listNftTemplate(NftTemplateQuery query) {
+    Assert.notNull(query.getOwnerAddress(), "Owner address null");
+
+    int pageSize = query.hasField(NFT_TEMPLATE_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
+    int pageIndex = query.hasField(NFT_TEMPLATE_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
+
     var ownerAddress = query.getOwnerAddress().toByteArray();
     var firstAccTemplateCapsule = dbManager.getNftAccountTemplateStore().get(ownerAddress);
 
@@ -297,8 +302,8 @@ public class Wallet {
     if (firstAccTemplateCapsule != null) {
       result.toBuilder().setTotal(firstAccTemplateCapsule.getTotal());
 
-      long offset = query.getPageIndex() * query.getPageSize();
-      long limit = query.getPageSize();
+      long offset = pageIndex * pageSize;
+      long limit = pageSize;
 
       var accTemplateCapsule = firstAccTemplateCapsule;
       long countTemplate = 0;
@@ -316,12 +321,17 @@ public class Wallet {
   }
 
   public NftTokenQueryResult listNftToken(NftTokenQuery query) {
+    Assert.notNull(query.getOwnerAddress(), "Owner address null");
+
+    int pageSize = query.hasField(NFT_TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
+    int pageIndex = query.hasField(NFT_TOKEN_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
+
     var ownerAddress = query.getOwnerAddress().toByteArray();
     var firstAccToken = dbManager.getNftAccountTokenStore().get(ownerAddress);
 
     var result = NftTokenQueryResult.newBuilder()
-            .setPageIndex(query.getPageIndex())
-            .setPageSize(query.getPageSize())
+            .setPageIndex(pageIndex)
+            .setPageSize(pageSize)
             .setTotal(0)
             .clearTokens()
             .build();
@@ -332,9 +342,6 @@ public class Wallet {
 
     if (firstAccToken != null) {
       result.toBuilder().setTotal(firstAccToken.getTotal());
-
-      long offset = query.getPageIndex() * query.getPageSize();
-      long limit = query.getPageSize();
 
       List<NftToken> tokens = new ArrayList<>();
       var accToken = firstAccToken;
@@ -351,9 +358,10 @@ public class Wallet {
         }
         accToken = nftAccTokenStore.get(accToken.getNext().toByteArray());
       } while (accToken.hasNext());
+
       tokens.stream()
-              .skip(offset)
-              .limit(limit)
+              .skip(pageIndex * pageSize)
+              .limit(pageSize)
               .forEach(token -> result.toBuilder().addTokens(token));
 
 //      long countTemplate = 0;
@@ -388,15 +396,36 @@ public class Wallet {
     return null;
   }
 
-  //@todo later
   public NftBalanceOf getNftBalanceOf(NftBalanceOf query) {
+    Assert.notNull(query.getOwnerAddress(), "Owner address null");
 
-    return null;
+    var nftAccountTokenStore = dbManager.getNftAccountTokenStore();
+    var firstAccTokenRelation = nftAccountTokenStore.get(query.getOwnerAddress().toByteArray());
+
+    return NftBalanceOf.newBuilder()
+            .setCount(firstAccTokenRelation.getTotal())
+            .setOwnerAddress(query.getOwnerAddress())
+            .build();
+
   }
 
-  //@todo later
   public IsApprovedForAll getNftApprovedForAll(IsApprovedForAll query) {
-    return null;
+    Assert.notNull(query.getOwnerAddress(), "Owner address null");
+    Assert.notNull(query.getOperator(), "Operator null");
+
+    var nftAccTokenStore = dbManager.getNftAccountTokenStore();
+    var nftAccTokenRelation = nftAccTokenStore.get(query.getOwnerAddress().toByteArray());
+
+    var result = IsApprovedForAll.newBuilder()
+            .setOwnerAddress(query.getOwnerAddress())
+            .setOperator(query.getOperator())
+            .setIsApproved(false)
+            .build();
+    if(Arrays.equals(query.getOperator().toByteArray(), nftAccTokenRelation.getApprovalForAll())){
+      result.toBuilder().setIsApproved(true);
+    }
+
+    return result;
   }
 
   public Account getAccountById(Account account) {

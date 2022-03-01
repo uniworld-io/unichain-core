@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-//@fixme
 @Component
 @Slf4j(topic = "API")
 public class GetNftApprovedForAllServlet extends HttpServlet {
@@ -47,7 +46,32 @@ public class GetNftApprovedForAllServlet extends HttpServlet {
   }
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-      doPost(request, response);
+    try {
+      boolean visible = Util.getVisible(request);
+      String address = request.getParameter("owner_address");
+      String operator = request.getParameter("operator");
+      boolean isApproved = Boolean.valueOf(request.getParameter("isApproved"));
+      Protocol.IsApprovedForAll.Builder build = Protocol.IsApprovedForAll.newBuilder();
+      JSONObject jsonObject = new JSONObject();
+      jsonObject.put("owner_address", address);
+      jsonObject.put("operator", operator);
+      jsonObject.put("isApproved", isApproved);
+      JsonFormat.merge(jsonObject.toJSONString(), build, visible);
+
+      Protocol.IsApprovedForAll reply = wallet.getNftApprovedForAll(build.build());
+      if (reply != null) {
+        response.getWriter().println(JsonFormat.printToString(reply, visible));
+      } else {
+        response.getWriter().println("{}");
+      }
+    } catch (Exception e) {
+      logger.debug("Exception: {}", e.getMessage());
+      try {
+        response.getWriter().println(Util.printErrorMsg(e));
+      } catch (IOException ioe) {
+        logger.debug("IOException: {}", ioe.getMessage());
+      }
+    }
   }
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {

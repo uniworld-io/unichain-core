@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-//@fixme
 @Component
 @Slf4j(topic = "API")
 public class GetNftBalanceOfServlet extends HttpServlet {
@@ -47,7 +46,28 @@ public class GetNftBalanceOfServlet extends HttpServlet {
   }
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-      doPost(request, response);
+    try {
+      boolean visible = Util.getVisible(request);
+      String address = request.getParameter("owner_address");
+      Protocol.NftBalanceOf.Builder build = Protocol.NftBalanceOf.newBuilder();
+      JSONObject jsonObject = new JSONObject();
+      jsonObject.put("owner_address", address);
+      JsonFormat.merge(jsonObject.toJSONString(), build, visible);
+
+      Protocol.NftBalanceOf reply = wallet.getNftBalanceOf(build.build());
+      if (reply != null) {
+        response.getWriter().println(JsonFormat.printToString(reply, visible));
+      } else {
+        response.getWriter().println("{}");
+      }
+    } catch (Exception e) {
+      logger.debug("Exception: {}", e.getMessage());
+      try {
+        response.getWriter().println(Util.printErrorMsg(e));
+      } catch (IOException ioe) {
+        logger.debug("IOException: {}", ioe.getMessage());
+      }
+    }
   }
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {

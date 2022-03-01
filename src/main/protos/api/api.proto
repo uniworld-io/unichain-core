@@ -996,7 +996,7 @@ service WalletSolidity {
     };
   };
 
-  rpc getNftTemplate (NftTemplate) returns (NftTemplate) {
+  rpc GetNftTemplate (NftTemplate) returns (NftTemplate) {
     option (google.api.http) = {
       post: "/walletsolidity/getnfttemplate"
       body: "*"

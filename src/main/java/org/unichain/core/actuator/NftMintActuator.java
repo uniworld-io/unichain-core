@@ -24,7 +24,6 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.NftTokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
@@ -55,16 +54,25 @@ public class NftMintActuator extends AbstractActuator {
       var ctx = contract.unpack(Contract.MintNftTokenContract.class);
       var accountStore = dbManager.getAccountStore();
       var templateStore = dbManager.getNftTemplateStore();
-      var nftStore = dbManager.getNftTokenStore();
-      var nftAccRelationStore = dbManager.getNftAccountTokenStore();
       var templateKey =  Util.stringAsBytesUppercase(ctx.getSymbol());
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
       var template = templateStore.get(templateKey);
 
-      var tokenId = Math.incrementExact(template.getTokenIndex());
+      var tokenIndex = Math.incrementExact(template.getTokenIndex());
+
+      //update template index
+      template.setTokenIndex(tokenIndex);
+      templateStore.put(templateKey, template);
+
+      //create new account
+      if (!accountStore.has(toAddr)) {
+        fee = Math.addExact(fee, dbManager.createNewAccount(ByteString.copyFrom(toAddr)));
+      }
+
+      //save token
       var nftTokenBuilder = Protocol.NftToken.newBuilder()
-              .setId(tokenId)
+              .setId(tokenIndex)
               .setTemplateId(ByteString.copyFrom(templateKey))
               .setUri(ctx.getUri())
               .clearApproval()
@@ -77,23 +85,7 @@ public class NftMintActuator extends AbstractActuator {
       else
         nftTokenBuilder.clearMetadata();
 
-      var nftTokenCap = new NftTokenCapsule(nftTokenBuilder.build());
-      nftStore.put(nftTokenCap.getKey(), nftTokenCap);
-
-      //update template index
-      template.setTokenIndex(tokenId);
-      templateStore.put(templateKey, template);
-
-      //create new account
-      if (!accountStore.has(toAddr)) {
-        var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
-        var toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddr), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-        dbManager.getAccountStore().put(toAddr, toAccountCap);
-        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
-      }
-
-      //indexing account-token
-      nftAccRelationStore.save(toAddr, nftTokenCap.getKey(), false);
+      dbManager.saveNftToken(new NftTokenCapsule(nftTokenBuilder.build()));
 
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
@@ -117,7 +109,6 @@ public class NftMintActuator extends AbstractActuator {
       var accountStore = dbManager.getAccountStore();
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(ownerAddr), "Invalid ownerAddress");
       var ownerAccountCap = accountStore.get(ownerAddr);
       Assert.notNull(ownerAccountCap, "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
 
@@ -128,11 +119,11 @@ public class NftMintActuator extends AbstractActuator {
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
       else {
-         Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner address and to address must be not the same!");
+         Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Mint to itself not allowed!");
       }
 
       var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
-      Assert.isTrue(dbManager.getNftTemplateStore().has(symbol), "NftTemplate not existed");
+      Assert.isTrue(dbManager.getNftTemplateStore().has(symbol), "NFT template not existed");
       var templateCap = dbManager.getNftTemplateStore().get(symbol);
       Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()) || (templateCap.hasMinter() && Arrays.equals(ownerAddr, templateCap.getMinter())), "Only owner or minter allowed to mint NFT token");
       Assert.isTrue(templateCap.getTokenIndex() < templateCap.getTotalSupply(), "All NFT token mint!");

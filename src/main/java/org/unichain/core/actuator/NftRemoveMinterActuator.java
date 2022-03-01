@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
-import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -48,16 +47,10 @@ public class NftRemoveMinterActuator extends AbstractActuator {
       var ownerAddress = ctx.getOwner().toByteArray();
       var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
       var templateStore = dbManager.getNftTemplateStore();
-      var relationStore = dbManager.getNftAccountTemplateStore();
 
-      //update template
       var templateCap = templateStore.get(templateId);
-      val minterAddr = templateCap.getMinter();
       templateCap.clearMinter();
       templateStore.put(templateId, templateCap);
-
-      //remove relation
-      relationStore.remove(minterAddr, templateId, true);
 
       chargeFee(ownerAddress, fee);
       dbManager.burnFee(fee);
@@ -85,10 +78,10 @@ public class NftRemoveMinterActuator extends AbstractActuator {
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
 
       var templateCap = dbManager.getNftTemplateStore().get(templateId);
-      Assert.notNull(templateCap, "Template not exists");
-      Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()), "not owner of nft template");
-      Assert.isTrue(templateCap.hasMinter(), "minter not set");
-      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "not enough fee");
+      Assert.notNull(templateCap, "NFT template not found");
+      Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()), "Not owner of NFT template");
+      Assert.isTrue(templateCap.hasMinter(), "Minter not set");
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "Not enough fee");
       return true;
     }
     catch (Exception e){

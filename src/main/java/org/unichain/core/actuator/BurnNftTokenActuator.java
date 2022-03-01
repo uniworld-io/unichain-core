@@ -46,15 +46,10 @@ public class BurnNftTokenActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(BurnNftTokenContract.class);
-      var tokenStore = dbManager.getNftTokenStore();
-      var relationStore = dbManager.getNftAccountTokenStore();
       var ownerAddr = ctx.getOwner().toByteArray();
       var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getNftTemplate()), ByteArray.fromLong(ctx.getTokenId()));
-      var token = tokenStore.get(tokenId);
-      var tokenOwner = token.getOwner();
 
-      tokenStore.delete(tokenId);
-      relationStore.remove(tokenOwner, tokenId, true, true);
+      dbManager.removeNftToken(tokenId);
 
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
@@ -88,7 +83,7 @@ public class BurnNftTokenActuator extends AbstractActuator {
       var relation = relationStore.get(nftOwner);
 
       Assert.isTrue(Arrays.equals(ownerAddr, nftOwner)
-              || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovalForAll()))
+              || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
               || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to burn NFT token");
 
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "not enough fee");

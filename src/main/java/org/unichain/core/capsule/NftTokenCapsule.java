@@ -20,12 +20,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.unichain.common.utils.ByteArray;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
-import java.util.Arrays;
-
-import static org.unichain.core.services.http.utils.Util.NFT_TOKEN_FIELD_APPROVAL;
+import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
 public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
@@ -90,5 +87,37 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
 
   public byte[] getOwner(){
     return token.getOwnerAddress().toByteArray();
+  }
+
+  public byte[] getNext(){
+    return token.getNext().toByteArray();
+  }
+
+  public byte[] getPrev(){
+    return token.getPrev().toByteArray();
+  }
+
+  public void setNext(byte[] next){
+    token = token.toBuilder().setNext(ByteString.copyFrom(next)).build();
+  }
+
+  public void setPrev(byte[] prev){
+    token = token.toBuilder().setPrev(ByteString.copyFrom(prev)).build();
+  }
+
+  public void clearNext(){
+    this.token = token.toBuilder().clearNext().build();
+  }
+
+  public void clearPrev(){
+    this.token = token.toBuilder().clearPrev().build();
+  }
+
+  public boolean hasPrev(){
+    return token.hasField(NFT_TOKEN_FIELD_PREV);
+  }
+
+  public boolean hasNext(){
+    return token.hasField(NFT_TOKEN_FIELD_NEXT);
   }
 }

@@ -23,13 +23,11 @@ import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.ApproveForAllNftTokenContract;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -50,17 +48,11 @@ public class ApproveForAllNftTokenActuator extends AbstractActuator {
       var toAddr = ctx.getToAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
       var relationStore = dbManager.getNftAccountTokenStore();
-
-      var relation = relationStore.get(ownerAddr);
-      relation.setApprovalForAll(ctx.getToAddress());
-      relationStore.put(ownerAddr, relation);
+      relationStore.approveForAll(ownerAddr, toAddr);
 
       //create new account
       if (!accountStore.has(toAddr)) {
-        var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
-        var toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddr), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-        dbManager.getAccountStore().put(toAddr, toAccountCap);
-        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+        fee = Math.addExact(fee, dbManager.createNewAccount(ctx.getToAddress()));
       }
 
       chargeFee(ownerAddr, fee);
@@ -89,17 +81,16 @@ public class ApproveForAllNftTokenActuator extends AbstractActuator {
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
       Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");
-      Assert.isTrue(relationStore.has(ownerAddr), "Not found any token");
+      Assert.isTrue(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0, "Not found any token");
       var relation = relationStore.get(ownerAddr);
 
       if(ctx.getApprove()){
-        //not set or override ?
         if(relation.hasApprovalForAll()) {
-          Assert.isTrue(!Arrays.equals(toAddr, relation.getApprovalForAll()), "Already approved");
+          Assert.isTrue(!Arrays.equals(toAddr, relation.getApprovedForAll()), "Already approved");
         }
       }
       else {
-        Assert.isTrue(relation.hasApprovalForAll() && Arrays.equals(toAddr, relation.getApprovalForAll()), "Not approved yet");
+        Assert.isTrue(relation.hasApprovalForAll() && Arrays.equals(toAddr, relation.getApprovedForAll()), "Not approved yet");
       }
 
       if(!accountStore.has(toAddr)){

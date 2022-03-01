@@ -55,9 +55,6 @@ public class RenounceNftMinterActuator extends AbstractActuator {
       template.clearMinter();
       templateStore.put(templateId, template);
 
-      //remove relation
-      relationStore.remove(ownerAddr, templateId, true);
-
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
@@ -74,7 +71,7 @@ public class RenounceNftMinterActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(RenounceNftMinterContract.class), "contract type error,expected type [RenounceNftMinterContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(RenounceNftMinterContract.class), "Contract type error,expected type [RenounceNftMinterContract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(RenounceNftMinterContract.class);
       var ownerAddr = ctx.getOwner().toByteArray();
@@ -82,12 +79,11 @@ public class RenounceNftMinterActuator extends AbstractActuator {
       var accountStore = dbManager.getAccountStore();
       var templateStore = dbManager.getNftTemplateStore();
 
-      Assert.isTrue(accountStore.has(ownerAddr), "not found owner account");
-      Assert.isTrue(templateStore.has(templateId), "not found template");
+      Assert.isTrue(accountStore.has(ownerAddr), "Not found owner account");
+      Assert.isTrue(templateStore.has(templateId), "Not found template");
       var template = templateStore.get(templateId);
-      Assert.isTrue(template.hasMinter() && Arrays.equals(ownerAddr, template.getMinter()), "minter not exist or not matched");
-
-      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "not enough balance to cover fee");
+      Assert.isTrue(template.hasMinter() && Arrays.equals(ownerAddr, template.getMinter()), "Minter not exist or un-matched");
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "Not enough balance to cover fee");
       return true;
     }
     catch (Exception e){

@@ -18,19 +18,20 @@ package org.unichain.core.capsule;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import org.unichain.protos.Protocol.*;
+import org.unichain.protos.Protocol.NftAccountTokenRelation;
 
-import static org.unichain.core.services.http.utils.Util.*;
+import static org.unichain.core.services.http.utils.Util.NFT_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL;
+import static org.unichain.core.services.http.utils.Util.NFT_ACC_TOKEN_RELATION_FIELD_TAIL;
 
 @Slf4j(topic = "capsule")
 public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTokenRelation> {
   private NftAccountTokenRelation relation;
   private byte[] key;
 
-  public NftAccountTokenRelationCapsule(byte[] key, byte[] data) {
+  public NftAccountTokenRelationCapsule(byte[] data) {
     try {
       this.relation = NftAccountTokenRelation.parseFrom(data);
-      this.key = key;
+      this.key = this.relation.getOwner().toByteArray();
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
@@ -67,6 +68,26 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
     return relation.getTotal();
   }
 
+  public void setHead(ByteString head){
+    relation = relation.toBuilder().setHead(head).build();
+  }
+
+  public ByteString getHead(){
+    return relation.getHead();
+  }
+
+  public void clearHead(){
+    relation = relation.toBuilder().clearHead().build();
+  }
+
+  public ByteString getTail(){
+    return relation.getTail();
+  }
+
+  public void clearTail(){
+    relation = relation.toBuilder().clearTail().build();
+  }
+
   public boolean hasTail(){
     return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_TAIL);
   }
@@ -75,55 +96,23 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
     relation = relation.toBuilder().setTail(tail).build();
   }
 
-  public ByteString getTail(){
-    return relation.getTail();
-  }
-
-  public void setNext(ByteString next){
-    relation = relation.toBuilder().setNext(next).build();
-  }
-
-  public ByteString getNext(){
-    return relation.getNext();
-  }
-
-  public boolean hasNext(){
-    return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_NEXT);
-  }
-
-  public void setPrev(ByteString prev){
-    relation = relation.toBuilder().setPrev(prev).build();
-  }
-
-  public ByteString getPrev(){
-    return relation.getPrev();
-  }
-
-  public boolean isApproval(){
-    return relation.getIsApproval();
-  }
-
-  public void setApproval(boolean approval){
-    relation = relation.toBuilder().setIsApproval(approval).build();
-  }
-
-  public void setApprovalForAll(ByteString approvalForAll){
-    relation = relation.toBuilder().setApprovalAll(approvalForAll).build();
-  }
-
-  public ByteString getTokenId(){
-    return relation.getTokenId();
-  }
-
-  public void setTokenId(ByteString tokenId){
-    relation = relation.toBuilder().setTokenId(tokenId).build();
-  }
-
-  public byte[] getApprovalForAll(){
-    return relation.getApprovalAll().toByteArray();
-  }
-
   public boolean hasApprovalForAll(){
     return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL);
+  }
+
+  public byte[] getApprovedForAll(){
+    return relation.getApprovedForAll().toByteArray();
+  }
+
+  public void clearApprovedForAll(){
+    relation = relation.toBuilder().clearApprovedForAll().build();
+  }
+
+  public void setApprovedForAll(ByteString approvedForAll){
+    relation = relation.toBuilder().setApprovedForAll(approvedForAll).build();
+  }
+
+  public void addApproveAll(ByteString owner){
+    relation = relation.toBuilder().putApproveAll(owner.toString(), true).build();
   }
 }

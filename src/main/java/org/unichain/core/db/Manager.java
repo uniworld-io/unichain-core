@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.unichain.common.logsfilter.EventPluginLoader;
 import org.unichain.common.logsfilter.FilterQuery;
 import org.unichain.common.logsfilter.capsule.BlockLogTriggerCapsule;
@@ -57,6 +58,7 @@ import org.unichain.core.witness.ProposalController;
 import org.unichain.core.witness.WitnessController;
 import org.unichain.protos.Contract.TransferTokenContract;
 import org.unichain.protos.Contract.WithdrawFutureTokenContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract;
@@ -643,6 +645,14 @@ public class Manager {
 
   public AccountStore getAccountStore() {
     return this.accountStore;
+  }
+
+  public long createNewAccount(ByteString accAddr){
+    Assert.isTrue(!getAccountStore().has(accAddr.toByteArray()),"Account exist");
+    var withDefaultPermission = getDynamicPropertiesStore().getAllowMultiSign() == 1;
+    var toAccountCap = new AccountCapsule(accAddr, Protocol.AccountType.Normal, getHeadBlockTimeStamp(), withDefaultPermission, this);
+    getAccountStore().put(accAddr.toByteArray(), toAccountCap);
+    return getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
   }
 
   public void adjustBalance(byte[] accountAddress, long amount) throws BalanceInsufficientException {
@@ -2114,5 +2124,165 @@ public class Manager {
       default:
         return new BandwidthProcessorV4(this);
     }
+  }
+
+  public void saveNftTemplate(NftTemplateCapsule templateCap){
+    var templateStore = getNftTemplateStore();
+    var relationStore = getNftAccountTemplateStore();
+
+    var relationKey = templateCap.getOwner();
+
+    if(!relationStore.has(relationKey)){
+      var templateKey = templateCap.getKey();
+      templateCap.clearNext();
+      templateCap.clearPrev();
+      templateStore.put(templateKey, templateCap);
+
+      var relation = new NftAccountTemplateRelationCapsule(relationKey,
+              Protocol.NftAccountTemplateRelation.newBuilder()
+                      .setOwner(ByteString.copyFrom(relationKey))
+                      .setHead(ByteString.copyFrom(templateKey))
+                      .setTail(ByteString.copyFrom(templateKey))
+                      .setTotal(1L)
+                      .build());
+      relationStore.put(relation.getKey(), relation);
+    }
+    else {
+      var relation = relationStore.get(relationKey);
+      var tailKey = relation.getTail().toByteArray();
+      var tailCap = templateStore.get(tailKey);
+
+      var templateKey = templateCap.getKey();
+      relation.setTotal(Math.incrementExact(relation.getTotal()));
+      relation.setTail(ByteString.copyFrom(templateKey));
+      relationStore.put(relationKey, relation);
+
+      templateCap.clearNext();
+      templateCap.setPrev(tailKey);
+      templateStore.put(templateKey, templateCap);
+
+      tailCap.setNext(templateKey);
+      templateStore.put(tailKey, tailCap);
+    }
+  }
+
+  public void saveNftToken(NftTokenCapsule tokenCap) {
+    var tokenStore = getNftTokenStore();
+    var relationStore = getNftAccountTokenStore();
+    var relationKey = tokenCap.getOwner();
+
+    if (!relationStore.has(relationKey)) {
+      var tokenKey = tokenCap.getKey();
+      tokenCap.clearNext();
+      tokenCap.clearPrev();
+      tokenStore.put(tokenKey, tokenCap);
+
+      var relation = new NftAccountTokenRelationCapsule(relationKey,
+              Protocol.NftAccountTokenRelation.newBuilder()
+                      .setOwner(ByteString.copyFrom(tokenCap.getOwner()))
+                      .setHead(ByteString.copyFrom(tokenKey))
+                      .setTail(ByteString.copyFrom(tokenKey))
+                      .setTotal(1L)
+                      .clearApproveAll()
+                      .clearApprovedForAll()
+                      .build());
+      relationStore.put(relation.getKey(), relation);
+    } else {
+      var relation = relationStore.get(relationKey);
+      if (!relation.hasTail()) {
+        //in the case that the relation created to store approve list only
+        var tokenKey = tokenCap.getKey();
+        tokenCap.clearNext();
+        tokenCap.clearPrev();
+        tokenStore.put(tokenKey, tokenCap);
+
+        relation.setTotal(Math.incrementExact(relation.getTotal()));
+        relation.setHead(ByteString.copyFrom(tokenKey));
+        relation.setTail(ByteString.copyFrom(tokenKey));
+        relationStore.put(relationKey, relation);
+      } else {
+        var tailKey = relation.getTail().toByteArray();
+        var tailTokenCap = tokenStore.get(tailKey);
+
+        var tokenKey = tokenCap.getKey();
+        relation.setTotal(Math.incrementExact(relation.getTotal()));
+        relation.setTail(ByteString.copyFrom(tokenKey));
+        relationStore.put(relationKey, relation);
+
+        tokenCap.clearNext();
+        tokenCap.setPrev(tailKey);
+        tokenStore.put(tokenKey, tokenCap);
+
+        tailTokenCap.setNext(tokenKey);
+        tokenStore.put(tailKey, tailTokenCap);
+      }
+    }
+  }
+
+  public void removeNftToken(byte[] tokenId){
+    var tokenStore = getNftTokenStore();
+    var relationStore = getNftAccountTokenStore();
+    Assert.isTrue(tokenStore.has(tokenId), "not found nft token with id" + tokenId);
+    var tokenCap = tokenStore.get(tokenId);
+
+    var hasPrev = tokenCap.hasPrev();
+    var hasNext = tokenCap.hasNext();
+    var owner = tokenCap.getOwner();
+    Assert.isTrue(relationStore.has(owner), "missing account-nft relation of owner: "+ owner);
+    var relation = relationStore.get(owner);
+
+    if(hasNext){
+      var nextKey = tokenCap.getNext();
+      if(hasPrev) {
+        /**
+         * just delete middle node
+         */
+        var prevKey = tokenCap.getPrev();
+        var next = tokenStore.get(nextKey);
+        var prev = tokenStore.get(prevKey);
+
+        //update next, prev
+        next.setPrev(prevKey);
+        next.setLastOperation(getHeadBlockTimeStamp());
+        prev.setNext(nextKey);
+        prev.setLastOperation(getHeadBlockTimeStamp());
+        tokenStore.put(nextKey, next);
+        tokenStore.put(prevKey, prev);
+        //update relation
+        relation.setTotal(Math.decrementExact(relation.getTotal()));
+      }
+      else {
+        var next = tokenStore.get(nextKey);
+        next.clearPrev();
+        next.setLastOperation(getHeadBlockTimeStamp());
+        tokenStore.put(nextKey, next);
+
+        //update relation
+        relation.setTotal(Math.decrementExact(relation.getTotal()));
+        relation.setHead(ByteString.copyFrom(nextKey));
+      }
+    }
+    else {
+      if(hasPrev){
+        var prevKey = tokenCap.getPrev();
+        var prev = tokenStore.get(prevKey);
+        //update next, prev
+        prev.clearNext();
+        prev.setLastOperation(getHeadBlockTimeStamp());
+        tokenStore.put(prevKey, prev);
+
+        //relation
+        relation.setTotal(Math.decrementExact(relation.getTotal()));
+        relation.setTail(ByteString.copyFrom(prevKey));
+      }
+      else {
+        //only one node
+        relation.setTotal(0L);
+        relation.clearTail();
+        relation.clearHead();
+      }
+    }
+    relationStore.put(owner, relation);
+    tokenStore.delete(tokenId);
   }
 }

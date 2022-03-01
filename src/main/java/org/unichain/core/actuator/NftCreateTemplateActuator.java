@@ -23,7 +23,6 @@ import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
-import org.unichain.core.Wallet;
 import org.unichain.core.capsule.NftTemplateCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
@@ -50,15 +49,8 @@ public class NftCreateTemplateActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(CreateNftTemplateContract.class);
-      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
       var owner = ctx.getOwner().toByteArray();
-      var total = ctx.getTotalSupply();
-      var lastOperation = dbManager.getHeadBlockTimeStamp();
-      var templateCap = new NftTemplateCapsule(ctx, lastOperation);
-      templateCap.setSymbol(templateCap.getSymbol().toUpperCase());
-      dbManager.getNftTemplateStore().put(symbol, templateCap);
-      dbManager.getNftAccountTemplateStore().save(owner, templateCap.getKey(), false);
-
+      dbManager.saveNftTemplate(new NftTemplateCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
       chargeFee(owner, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
@@ -84,19 +76,16 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       var name = ctx.getName().getBytes();
       var ownerAddr = ctx.getOwner().toByteArray();
 
-      Assert.isTrue(!ctx.getSymbol().isEmpty() && TransactionUtil.validTokenName(symbol), "Invalid template symbol");
-      Assert.isTrue(!ctx.getName().isEmpty() && TransactionUtil.validTokenName(name), "Invalid template symbol");
+      Assert.isTrue(TransactionUtil.validTokenName(symbol), "Invalid template symbol");
+      Assert.isTrue(TransactionUtil.validTokenName(name), "Invalid template name");
       Assert.isTrue(!dbManager.getNftTemplateStore().has(symbol), "NftTemplate has existed");
 
-      Assert.isTrue(Wallet.addressValid(ownerAddr), "Invalid ownerAddress");
-      var accountCap = accountStore.get(ownerAddr);
-      Assert.notNull(accountCap, "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
+      Assert.isTrue(accountStore.has(ownerAddr), "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
 
       if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER)){
         var minterAddr = ctx.getMinter().toByteArray();
         Assert.notNull(accountStore.get(minterAddr), "Minter account[" + StringUtil.createReadableString(minterAddr) + "] not exists");
         Assert.notNull(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
-
       }
       Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");
 

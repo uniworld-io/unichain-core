@@ -3,17 +3,12 @@ package org.unichain.core.db;
 import com.google.common.collect.Streams;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 import org.unichain.core.capsule.NftAccountTokenRelationCapsule;
-import org.unichain.core.capsule.NftTokenCapsule;
 import org.unichain.protos.Protocol;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -38,129 +33,39 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
         .collect(Collectors.toList());
   }
 
-  public void save(byte[] ownerAddr, byte[] tokenId, boolean isApproval){
-    if(!has(ownerAddr)){
-      //no token yet, create fist one
-      var relation = Protocol.NftAccountTokenRelation.newBuilder()
-              .setTokenId(ByteString.copyFrom(tokenId))
-              .clearApprovalAll()
-              .setTotal(1L)
-              .clearPrev()
-              .clearNext()
-              .clearTail()
-              .setIsApproval(isApproval)
-              .build();
-
-      var relationCap = new NftAccountTokenRelationCapsule(ArrayUtils.addAll(ownerAddr, tokenId), relation);
-      put(relationCap.getKey(), relationCap);
-    }
-    else{
-      var headRelation = get(ownerAddr);
-      if(!headRelation.hasTail()){
-        //only head node exist
-        var newRelation = Protocol.NftAccountTokenRelation.newBuilder()
-                .setTokenId(ByteString.copyFrom(tokenId))
-                .clearApprovalAll()
-                .setTotal(0L)
-                .clearNext()
-                .setPrev(ByteString.copyFrom(ownerAddr))
-                .clearTail()
-                .setIsApproval(isApproval)
-                .build();
-        var newRelationCap = new NftAccountTokenRelationCapsule(ArrayUtils.addAll(ownerAddr, tokenId), newRelation);
-        put(newRelationCap.getKey(), newRelationCap);
-
-        headRelation.setTotal(Math.incrementExact(headRelation.getTotal()));
-        headRelation.setNext(ByteString.copyFrom(newRelationCap.getKey()));
-        headRelation.setTail(ByteString.copyFrom(newRelationCap.getKey()));
-        put(ownerAddr, headRelation);
+  public void approveForAll(byte[] ownerAddr, byte[] toAddr){
+      NftAccountTokenRelationCapsule ownerRelation;
+      if(has(ownerAddr)){
+        ownerRelation = get(ownerAddr);
+        ownerRelation.setApprovedForAll(ByteString.copyFrom(toAddr));
       }
-      else {
-        //head node & at-least another nodes
-        var tailNode = get(headRelation.getTail().toByteArray());
-
-        var newRelation = Protocol.NftAccountTokenRelation.newBuilder()
-                .setTokenId(ByteString.copyFrom(tokenId))
-                .clearApprovalAll()
-                .setTotal(0L)
-                .clearNext()
-                .setPrev(headRelation.getTail())
-                .clearTail()
-                .setIsApproval(isApproval)
-                .build();
-        var newRelationCap = new NftAccountTokenRelationCapsule(ArrayUtils.addAll(ownerAddr, tokenId), newRelation);
-        put(newRelationCap.getKey(), newRelationCap);
-
-        //update last tail
-        tailNode.setNext(ByteString.copyFrom(newRelationCap.getKey()));
-        put(tailNode.getKey(), tailNode);
-
-        //update header node
-        headRelation.setTotal(Math.incrementExact(headRelation.getTotal()));
-        headRelation.setTail(ByteString.copyFrom(newRelationCap.getKey()));
-        put(headRelation.getKey(), headRelation);
+      else{
+        ownerRelation = new NftAccountTokenRelationCapsule(ownerAddr,
+                Protocol.NftAccountTokenRelation.newBuilder()
+                          .setOwner(ByteString.copyFrom(ownerAddr))
+                          .clearHead()
+                          .clearTail()
+                          .setTotal(0L)
+                          .setApprovedForAll(ByteString.copyFrom(toAddr))
+                          .build());
       }
-    }
-  }
+      put(ownerAddr, ownerRelation);
 
-  public void remove(byte[] addr, byte[] tokenId, boolean isApproval, boolean isApproveForAll){
-    Assert.isTrue(has(addr), "not found any relation");
-    var nodeKey =  ArrayUtils.addAll(addr, tokenId);
-    if(has(nodeKey)){
-      var foundNode = get(nodeKey);
-      Assert.isTrue(isApproveForAll || (foundNode.isApproval() && isApproval) || (!foundNode.isApproval() && !isApproval), "unmatched role: isApproval " + isApproval + "real: " + foundNode.isApproval());
-
-      //update prev node
-      var prev = foundNode.getPrev();
-      var prevNode = get(prev.toByteArray());
-      prevNode.setNext(foundNode.getNext());
-      put(prev.toByteArray(), prevNode);
-
-      //update next node
-      if(foundNode.hasNext()){
-        var next = foundNode.getNext().toByteArray();
-        var nextNode = get(next);
-        nextNode.setPrev(prev);
-        put(next, nextNode);
+      NftAccountTokenRelationCapsule toRelation;
+      if(has(toAddr)){
+        toRelation = get(toAddr);
+        toRelation.addApproveAll(ByteString.copyFrom(ownerAddr));
       }
-
-      //remove node
-      delete(nodeKey);
-
-      //update head
-      var head = get(addr);
-      head.setTotal(Math.decrementExact(head.getTotal()));
-      if(Arrays.equals(head.getTail().toByteArray(), nodeKey)){
-        //tail deleted, must update tail
-        head.setTail(prev);
+      else{
+        toRelation = new NftAccountTokenRelationCapsule(toAddr,
+                Protocol.NftAccountTokenRelation.newBuilder()
+                        .setOwner(ByteString.copyFrom(toAddr))
+                        .clearHead()
+                        .clearTail()
+                        .setTotal(0L)
+                        .putApproveAll(ByteString.copyFrom(toAddr).toString(), true)
+                        .build());
       }
-      put(addr, head);
-    }
-    else {
-      //update head node
-      var head = get(addr);
-      Assert.isTrue(isApproveForAll || (head.isApproval() && isApproval) || (!head.isApproval() && !isApproval), "unmatched role: isApproval " + isApproval + "real: " + head.isApproval());
-      Assert.isTrue(Arrays.equals(head.getTokenId().toByteArray(), tokenId), "unmatched token id");
-      if(head.getTotal() == 1){
-        //just delete
-        delete(addr);
-      }
-      else {
-        //update the header [header --> node 1 --> node N]
-        var next = head.getNext();
-        var nextNode = get(next.toByteArray());
-        head.setTotal(Math.decrementExact(head.getTotal()));
-        head.setNext(nextNode.getNext());
-        head.setTokenId(nextNode.getTokenId());
-        head.setApproval(nextNode.isApproval());
-        if(head.getTotal() <= 1){
-          head.setTail(ByteString.copyFrom(addr));
-        }
-        //put head
-        put(addr, head);
-        //delete next
-        delete(next.toByteArray());
-      }
-    }
+      put(toAddr, toRelation);
   }
 }

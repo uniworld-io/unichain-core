@@ -18,10 +18,8 @@ package org.unichain.core.capsule;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.NftAccountTemplateRelation;
 
-import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FIELD_NEXT;
 import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FIELD_TAIL;
 
 @Slf4j(topic = "capsule")
@@ -29,10 +27,10 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
   private NftAccountTemplateRelation relation;
   private byte[] key;
 
-  public NftAccountTemplateRelationCapsule(byte[] key, byte[] data) {
+  public NftAccountTemplateRelationCapsule(byte[] data) {
     try {
-      this.key = key;
       this.relation = NftAccountTemplateRelation.parseFrom(data);
+      this.key = this.relation.getOwner().toByteArray();
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
@@ -42,7 +40,6 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
     this.key = key;
     this.relation = relation;
   }
-
 
   @Override
   public byte[] getData() {
@@ -58,14 +55,6 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
     return key;
   }
 
-  public boolean hasTail(){
-    return relation.hasField(NFT_TEMPLATE_ACCOUNT_FIELD_TAIL);
-  }
-
-  public boolean hasNext(){
-    return relation.hasField(NFT_TEMPLATE_ACCOUNT_FIELD_NEXT);
-  }
-
   public void setTotal(long total){
     this.relation = relation.toBuilder().setTotal(total).build();
   }
@@ -78,39 +67,15 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
     this.relation = relation.toBuilder().setTail(tail).build();
   }
 
+  public boolean hasTail(){
+    return relation.hasField(NFT_TEMPLATE_ACCOUNT_FIELD_TAIL);
+  }
+
   public ByteString getTail(){
     return relation.getTail();
   }
 
-  public void setTemplateId(ByteString templateId){
-    this.relation = relation.toBuilder().setTemplateId(templateId).build();
-  }
-
-  public void setIsMinter(boolean isMinter){
-    this.relation = relation.toBuilder().setIsMinter(isMinter).build();
-  }
-
-  public void setNext(ByteString next){
-    this.relation = relation.toBuilder().setNext(next).build();
-  }
-
-  public void setPrev(ByteString prev){
-    this.relation = relation.toBuilder().setPrev(prev).build();
-  }
-
-  public ByteString getTemplateId(){
-      return relation.getTemplateId();
-  }
-
-  public boolean isMinter(){
-    return relation.getIsMinter();
-  }
-
-  public ByteString getNext(){
-    return relation.getNext();
-  }
-
-  public ByteString getPrev(){
-    return relation.getPrev();
+  public ByteString getHead(){
+    return relation.getHead();
   }
 }

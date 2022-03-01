@@ -21,17 +21,14 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.AddNftMinterContract;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -50,20 +47,19 @@ public class NftAddMinterActuator extends AbstractActuator {
       var ctx = contract.unpack(AddNftMinterContract.class);
       var ownerAddr = ctx.getOwner().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
-      var accTemplateRelStore = dbManager.getNftAccountTemplateStore();
       var accStore = dbManager.getAccountStore();
       var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
 
       //create new account
-      if (accStore.has(minterAddr)) {
-        var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
-        var minterAcc = new AccountCapsule(ByteString.copyFrom(minterAddr), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-        accStore.put(minterAddr, minterAcc);
-        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+      if (!accStore.has(minterAddr)) {
+        fee = Math.addExact(fee, dbManager.createNewAccount(ByteString.copyFrom(minterAddr)));
       }
 
       //save relation
-      accTemplateRelStore.save(minterAddr, templateId, true);
+      var templateStore = dbManager.getNftTemplateStore();
+      var template = templateStore.get(templateId);
+      template.setMinter(ctx.getMinter());
+      templateStore.put(templateId, template);
 
       //charge fee
       chargeFee(ownerAddr, fee);
@@ -90,13 +86,12 @@ public class NftAddMinterActuator extends AbstractActuator {
       var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
       var accStore = dbManager.getAccountStore();
       var templateStore = dbManager.getNftTemplateStore();
-      var accTemplateStore = dbManager.getNftAccountTemplateStore();
-      var template = templateStore.get(templateId);
 
       Assert.isTrue(accStore.has(ownerAddr), "Owner account not exist");
-      Assert.isTrue(templateStore.has(templateId), "Template not exist");
       Assert.isTrue(Wallet.addressValid(minterAddr), "Invalid minter address");
-      Assert.isTrue(Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not equal");
+      Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not equal");
+      Assert.isTrue(templateStore.has(templateId), "Template not exist");
+      var template = templateStore.get(templateId);
       Assert.isTrue(Arrays.equals(template.getOwner(), ownerAddr), "Not owner of NFT template");
 
       //check fee
@@ -107,16 +102,9 @@ public class NftAddMinterActuator extends AbstractActuator {
       }
       Assert.isTrue(accStore.get(ownerAddr).getBalance() >= fee, "not enough balance, require at-least: " + fee +" ginza");
 
-      //already minter or template ?
-      if(!accTemplateStore.has(minterAddr))
-        return true;
+      Assert.isTrue(!template.hasMinter() || (!Arrays.equals(template.getMinter(), ctx.getMinter().toByteArray())), "already minter");
 
-      var relationKey = ArrayUtils.addAll(minterAddr, templateId);
-      if(accTemplateStore.has(relationKey))
-        return false;
-
-      var headRelation = accTemplateStore.get(minterAddr);
-      return !Arrays.equals(headRelation.getTemplateId().toByteArray(), templateId);
+      return true;
     }
     catch (Exception e){
       logger.error("Actuator error: {} --> ", e.getMessage(), e);

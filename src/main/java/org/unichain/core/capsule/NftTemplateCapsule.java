@@ -28,9 +28,6 @@ import static org.unichain.core.services.http.utils.Util.NFT_CREATE_TEMPLATE_FIE
 public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   private NftTemplate template;
 
-  /**
-   * get asset issue contract from bytes data.
-   */
   public NftTemplateCapsule(byte[] data) {
     try {
       this.template = NftTemplate.parseFrom(data);
@@ -43,24 +40,21 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
     this.template = template;
   }
 
-  public NftTemplateCapsule(CreateNftTemplateContract contract, long lastOperation, long tokenIndex) {
+  public NftTemplateCapsule(CreateNftTemplateContract ctx, long lastOperation, long tokenIndex) {
     var builder = NftTemplate.newBuilder()
-            .setSymbol(contract.getSymbol())
-            .setName(contract.getName())
-            .setTotalSupply(contract.getTotalSupply())
+            .setSymbol(ctx.getSymbol().toUpperCase())
+            .setName(ctx.getName())
+            .setOwner(ctx.getOwner())
+            .setTotalSupply(ctx.getTotalSupply())
             .setTokenIndex(tokenIndex)
-            .setLastOperation(lastOperation)
-            .setOwner(contract.getOwner());
-    if (contract.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER))
-      builder.setMinter(contract.getMinter());
+            .setLastOperation(lastOperation);
+
+    if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER))
+      builder.setMinter(ctx.getMinter());
     else
       builder.clearMinter();
 
     this.template = builder.build();
-  }
-
-  public NftTemplateCapsule(CreateNftTemplateContract contract, long lastOperation) {
-    new NftTemplateCapsule(contract, lastOperation, 0);
   }
 
   public byte[] getData() {
@@ -143,5 +137,29 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
 
   public void clearMinter(){
     this.template = template.toBuilder().clearMinter().build();
+  }
+
+  public byte[] getNext(){
+    return template.getNext().toByteArray();
+  }
+
+  public byte[] getPrev(){
+    return template.getPrev().toByteArray();
+  }
+
+  public void setNext(byte[] next){
+     template = template.toBuilder().setNext(ByteString.copyFrom(next)).build();
+  }
+
+  public void setPrev(byte[] prev){
+    template = template.toBuilder().setPrev(ByteString.copyFrom(prev)).build();
+  }
+
+  public void clearNext(){
+    this.template = template.toBuilder().clearNext().build();
+  }
+
+  public void clearPrev(){
+    this.template = template.toBuilder().clearPrev().build();
   }
 }

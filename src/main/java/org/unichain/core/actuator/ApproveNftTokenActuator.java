@@ -25,14 +25,12 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.ApproveNftTokenContract;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -52,33 +50,23 @@ public class ApproveNftTokenActuator extends AbstractActuator {
       var owner = ctx.getOwner().toByteArray();
       var accountStore = dbManager.getAccountStore();
       var nftTokenStore = dbManager.getNftTokenStore();
-      var relationStore = dbManager.getNftAccountTokenStore();
       var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
       var tokenId = ArrayUtils.addAll(templateId, ByteArray.fromLong(ctx.getTokenId()));
       var nftToken = nftTokenStore.get(tokenId);
 
       if(ctx.getApprove()){
-        if(nftToken.hasApproval()){
-          //remove old approval indexing
-          relationStore.remove(nftToken.getApproval(), nftToken.getKey(), true, false);
-        }
         nftToken.setApproval(ctx.getToAddress());
         nftTokenStore.put(tokenId, nftToken);
-        relationStore.save(ctx.getToAddress().toByteArray(), nftToken.getKey(), true);
 
-        //create new account
         var toAddr = ctx.getToAddress();
         if(!accountStore.has(toAddr.toByteArray())){
-            var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
-            var toAccountCap = new AccountCapsule(toAddr, Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-            dbManager.getAccountStore().put(toAddr.toByteArray(), toAccountCap);
-            fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+            var moreFee = dbManager.createNewAccount(toAddr);
+            fee = Math.addExact(fee, moreFee);
         }
       }
       else {
         nftToken.clearApproval();
         nftTokenStore.put(tokenId, nftToken);
-        relationStore.remove(ctx.getToAddress().toByteArray(), tokenId, true, false);
       }
 
       chargeFee(owner, fee);
@@ -97,24 +85,23 @@ public class ApproveNftTokenActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(ApproveNftTokenContract.class), "contract type error,expected type [ApproveNftTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(ApproveNftTokenContract.class), "Contract type error,expected type [ApproveNftTokenContract], real type[" + contract.getClass() + "]");
       var fee = calcFee();
       var accountStore = dbManager.getAccountStore();
       var nftTokenStore = dbManager.getNftTokenStore();
       val ctx = this.contract.unpack(ApproveNftTokenContract.class);
       var ownerAddr = ctx.getOwner().toByteArray();
-      Assert.isTrue(accountStore.has(ownerAddr), "owner account not exist");
+      Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
 
       var toAddr = ctx.getToAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(toAddr), "Invalid toAddress");
       if(!accountStore.has(toAddr)){
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
-      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee,"not enough fee");
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee,"Not enough fee");
 
-      var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
-      var tokenId = ArrayUtils.addAll(templateId, ByteArray.fromLong(ctx.getTokenId()));
-      Assert.isTrue(nftTokenStore.has(tokenId), "not found ntf token");
+      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getNftTemplate()), ByteArray.fromLong(ctx.getTokenId()));
+      Assert.isTrue(nftTokenStore.has(tokenId), "Not found NFT token");
 
       var nftToken = nftTokenStore.get(tokenId);
       if(ctx.getApprove()){

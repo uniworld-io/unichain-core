@@ -788,6 +788,8 @@ message NftTemplate{
   bytes minter = 5;
   bytes owner = 6;
   int64 last_operation = 7;
+  bytes next = 8;
+  bytes prev = 9;
 }
 
 message NftToken{
@@ -799,25 +801,24 @@ message NftToken{
   string metadata = 6;
   int64 last_operation = 7;
   int64 expire_time = 8;
+  bytes next = 9;
+  bytes prev = 10;
 }
 
 message NftAccountTokenRelation{
-  bytes prev = 1;
-  bytes next = 2;
-  bytes token_id = 3;
-  bytes approval_all = 4;
-  int64 total = 5;
-  bytes tail = 6;
-  bool is_approval = 7;
+  bytes owner = 1;
+  bytes head = 2;
+  bytes tail = 3;
+  int64 total = 4;
+  map<string, bool> approve_all = 5;
+  bytes approved_for_all = 6;
 }
 
 message NftAccountTemplateRelation{
-  bytes prev = 1;
-  bytes next = 2;
-  bytes template_id = 3;
-  bool is_minter = 4;
-  int64 total = 5;
-  bytes tail = 6;
+  bytes owner = 1;
+  bytes head = 2;
+  bytes tail = 3;
+  int64 total = 4;
 }
 
 message NftTemplateQuery{

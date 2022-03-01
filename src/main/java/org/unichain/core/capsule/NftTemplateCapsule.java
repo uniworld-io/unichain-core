@@ -22,7 +22,7 @@ import lombok.var;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.NftTemplate;
 
-import static org.unichain.core.services.http.utils.Util.NFT_CREATE_TEMPLATE_FIELD_MINTER;
+import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
 public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
@@ -108,7 +108,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public boolean hasMinter(){
-    return this.template.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER);
+    return this.template.hasField(NFT_TEMPLATE_FIELD_MINTER);
   }
 
   public void setMinter(ByteString minter) {
@@ -157,6 +157,10 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
 
   public void clearNext(){
     this.template = template.toBuilder().clearNext().build();
+  }
+
+  public boolean hasNext(){
+    return this.template.hasField(NFT_TEMPLATE_FIELD_NEXT);
   }
 
   public void clearPrev(){

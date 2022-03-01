@@ -737,6 +737,9 @@ public class Util {
 
   public static Descriptors.FieldDescriptor NFT_CREATE_TEMPLATE_FIELD_MINTER = CreateNftTemplateContract.getDescriptor().findFieldByNumber(CreateNftTemplateContract.MINTER_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TEMPLATE_ACCOUNT_FIELD_TAIL = Protocol.NftAccountTemplateRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTemplateRelation.TAIL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_NEXT = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.NEXT_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.MINTER_FIELD_NUMBER);
+
 
   public static Descriptors.FieldDescriptor NFT_MINT_FIELD_METADATA = MintNftTokenContract.getDescriptor().findFieldByNumber(MintNftTokenContract.METADATA_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.TAIL_FIELD_NUMBER);
@@ -746,6 +749,13 @@ public class Util {
   public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_APPROVAL = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.APPROVAL_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_PREV = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.PREV_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_NEXT = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.NEXT_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_SIZE = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_INDEX = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.PAGE_INDEX_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_SYMBOL = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.SYMBOL_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_SIZE = Protocol.NftTemplateQuery.getDescriptor().findFieldByNumber(Protocol.NftTemplateQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_INDEX = Protocol.NftTemplateQuery.getDescriptor().findFieldByNumber(Protocol.NftTemplateQuery.PAGE_INDEX_FIELD_NUMBER);
 
   public static int DEFAULT_PAGE_SIZE = 20;
   public static int DEFAULT_PAGE_INDEX = 0;

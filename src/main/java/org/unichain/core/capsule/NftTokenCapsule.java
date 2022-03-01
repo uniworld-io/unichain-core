@@ -120,4 +120,8 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   public boolean hasNext(){
     return token.hasField(NFT_TOKEN_FIELD_NEXT);
   }
+
+  public ByteString getTemplateId() {
+    return token.getTemplateId();
+  }
 }

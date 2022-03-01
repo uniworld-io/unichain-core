@@ -823,14 +823,14 @@ message NftAccountTemplateRelation{
 
 message NftTemplateQuery{
   bytes owner_address = 1;
-  int64 page_size = 2;
-  int64 page_index = 3;
+  int32 page_size = 2;
+  int32 page_index = 3;
 }
 
 message NftTemplateQueryResult{
   bytes owner_address = 1;
-  int64 page_size = 2;
-  int64 page_index = 3;
+  int32 page_size = 2;
+  int32 page_index = 3;
   int64 total = 4;
   repeated NftTemplate templates = 5;
 }
@@ -838,13 +838,13 @@ message NftTemplateQueryResult{
 message NftTokenQuery{
   bytes owner_address = 1;
   string symbol = 2;
-  int64 page_size = 3;
-  int64 page_index = 4;
+  int32 page_size = 3;
+  int32 page_index = 4;
 }
 
 message NftTokenQueryResult{
-  int64 page_size = 1;
-  int64 page_index = 2;
+  int32 page_size = 1;
+  int32 page_index = 2;
   int64 total = 3;
   repeated NftToken tokens = 4;
 }

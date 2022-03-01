@@ -279,14 +279,103 @@ public class Wallet {
     return dbManager.getTokenPoolStore().query(query);
   }
 
-  //@todo later
   public NftTemplateQueryResult listNftTemplate(NftTemplateQuery query) {
-    return null;
+    var ownerAddress = query.getOwnerAddress().toByteArray();
+    var firstAccTemplateCapsule = dbManager.getNftAccountTemplateStore().get(ownerAddress);
+
+    var result = NftTemplateQueryResult.newBuilder()
+            .setOwnerAddress(query.getOwnerAddress())
+            .setPageIndex(query.getPageIndex())
+            .setPageSize(query.getPageSize())
+            .setTotal(0)
+            .clearTemplates()
+            .build();
+
+    var nftAccTemplateStore = dbManager.getNftAccountTemplateStore();
+    var nftTemplateStore = dbManager.getNftTemplateStore();
+
+    if (firstAccTemplateCapsule != null) {
+      result.toBuilder().setTotal(firstAccTemplateCapsule.getTotal());
+
+      long offset = query.getPageIndex() * query.getPageSize();
+      long limit = query.getPageSize();
+
+      var accTemplateCapsule = firstAccTemplateCapsule;
+      long countTemplate = 0;
+      do {
+        var template = nftTemplateStore.get(accTemplateCapsule.getTemplateId().toByteArray()).getInstance();
+        if (countTemplate++ >= offset)
+          result.toBuilder().addTemplates(template);
+        if (accTemplateCapsule.hasNext())
+          accTemplateCapsule = nftAccTemplateStore.get(accTemplateCapsule.getNext().toByteArray());
+      } while (accTemplateCapsule.hasNext() && countTemplate < (offset + limit));
+
+    }
+
+    return result;
   }
 
-  //@todo later
   public NftTokenQueryResult listNftToken(NftTokenQuery query) {
-    return null;
+    var ownerAddress = query.getOwnerAddress().toByteArray();
+    var firstAccToken = dbManager.getNftAccountTokenStore().get(ownerAddress);
+
+    var result = NftTokenQueryResult.newBuilder()
+            .setPageIndex(query.getPageIndex())
+            .setPageSize(query.getPageSize())
+            .setTotal(0)
+            .clearTokens()
+            .build();
+
+    var nftAccTokenStore = dbManager.getNftAccountTokenStore();
+    var nftTokenStore = dbManager.getNftTokenStore();
+    var nftTemplateStore = dbManager.getNftTemplateStore();
+
+    if (firstAccToken != null) {
+      result.toBuilder().setTotal(firstAccToken.getTotal());
+
+      long offset = query.getPageIndex() * query.getPageSize();
+      long limit = query.getPageSize();
+
+      List<NftToken> tokens = new ArrayList<>();
+      var accToken = firstAccToken;
+
+      do {
+        var token = nftTokenStore.get(accToken.getTokenId().toByteArray()).getInstance();
+        var template = nftTemplateStore.get(token.getTemplateId().toByteArray());
+        if (query.hasField(NFT_TOKEN_QUERY_FIELD_SYMBOL)) {
+          if (query.getSymbol().equals(template.getSymbol())) {
+            tokens.add(token);
+          }
+        } else {
+          tokens.add(token);
+        }
+        accToken = nftAccTokenStore.get(accToken.getNext().toByteArray());
+      } while (accToken.hasNext());
+      tokens.stream()
+              .skip(offset)
+              .limit(limit)
+              .forEach(token -> result.toBuilder().addTokens(token));
+
+//      long countTemplate = 0;
+//      do {
+//        var token = nftTokenStore.get(accToken.getTokenId().toByteArray()).getInstance();
+//        var template = nftTemplateStore.get(token.getTemplateId().toByteArray());
+//
+//        if (query.hasField(NFT_TOKEN_QUERY_FIELD_SYMBOL)) {
+//          if (query.getSymbol().equals(template.getSymbol()) && countTemplate++ >= offset) {
+//            result.toBuilder().setTokens(templateIndex++, token);
+//          }
+//        } else {
+//          if (countTemplate++ >= offset)
+//            result.toBuilder().setTokens(templateIndex++, token);
+//        }
+//        if (accToken.hasNext())
+//          accToken = nftAccTokenStore.get(accToken.getNext().toByteArray());
+//      } while (accToken.hasNext() && countTemplate < (offset + limit));
+
+    }
+
+    return result;
   }
 
   //@todo later
@@ -301,6 +390,7 @@ public class Wallet {
 
   //@todo later
   public NftBalanceOf getNftBalanceOf(NftBalanceOf query) {
+
     return null;
   }
 

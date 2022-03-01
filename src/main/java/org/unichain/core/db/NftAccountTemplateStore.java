@@ -10,13 +10,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.unichain.core.capsule.NftAccountTemplateRelationCapsule;
-import org.unichain.core.capsule.NftTemplateCapsule;
 import org.unichain.protos.Protocol;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j(topic = "DB")

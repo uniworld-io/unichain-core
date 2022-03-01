@@ -749,6 +749,9 @@ public class Util {
 
   public static Descriptors.FieldDescriptor NFT_APPROVAL_ALL_FIELD_APPROVE = ApproveForAllNftTokenContract.getDescriptor().findFieldByNumber(ApproveForAllNftTokenContract.APPROVE_FIELD_NUMBER);
 
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_SYMBOL = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.SYMBOL_FIELD_NUMBER);
+
+
 
   public static int DEFAULT_PAGE_SIZE = 20;
   public static int DEFAULT_PAGE_INDEX = 0;

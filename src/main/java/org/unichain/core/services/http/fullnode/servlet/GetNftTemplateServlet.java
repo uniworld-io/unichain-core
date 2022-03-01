@@ -47,7 +47,28 @@ public class GetNftTemplateServlet extends HttpServlet {
   }
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-      doPost(request, response);
+    try {
+      boolean visible = Util.getVisible(request);
+      String symbol = request.getParameter("symbol");
+      Protocol.NftTemplate.Builder build = Protocol.NftTemplate.newBuilder();
+      JSONObject jsonObject = new JSONObject();
+      jsonObject.put("symbol", symbol);
+      JsonFormat.merge(jsonObject.toJSONString(), build, visible);
+
+      Protocol.NftTemplate reply = wallet.getNftTemplate(build.build());
+      if (reply != null) {
+        response.getWriter().println(JsonFormat.printToString(reply, visible));
+      } else {
+        response.getWriter().println("{}");
+      }
+    } catch (Exception e) {
+      logger.debug("Exception: {}", e.getMessage());
+      try {
+        response.getWriter().println(Util.printErrorMsg(e));
+      } catch (IOException ioe) {
+        logger.debug("IOException: {}", ioe.getMessage());
+      }
+    }
   }
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {

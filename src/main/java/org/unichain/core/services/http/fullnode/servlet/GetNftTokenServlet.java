@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-//@fixme
 @Component
 @Slf4j(topic = "API")
 public class GetNftTokenServlet extends HttpServlet {
@@ -47,7 +46,30 @@ public class GetNftTokenServlet extends HttpServlet {
   }
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-      doPost(request, response);
+    try {
+      boolean visible = Util.getVisible(request);
+      String symbol = request.getParameter("symbol");
+      String tokenId = request.getParameter("tokenid");
+      Protocol.NftTokenGet.Builder build = Protocol.NftTokenGet.newBuilder();
+      JSONObject jsonObject = new JSONObject();
+      jsonObject.put("symbol", symbol);
+      jsonObject.put("tokenid", tokenId);
+      JsonFormat.merge(jsonObject.toJSONString(), build, visible);
+
+      Protocol.NftTokenGetResult reply = wallet.getNftToken(build.build());
+      if (reply != null) {
+        response.getWriter().println(JsonFormat.printToString(reply, visible));
+      } else {
+        response.getWriter().println("{}");
+      }
+    } catch (Exception e) {
+      logger.debug("Exception: {}", e.getMessage());
+      try {
+        response.getWriter().println(Util.printErrorMsg(e));
+      } catch (IOException ioe) {
+        logger.debug("IOException: {}", ioe.getMessage());
+      }
+    }
   }
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {

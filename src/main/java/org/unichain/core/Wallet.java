@@ -379,7 +379,6 @@ public class Wallet {
             .setApproval(token.getApproval())
             .setLastOperation(token.getLastOperation())
             .setOwnerAddress(token.getOwnerAddress())
-            .setExpireTime(token.getExpireTime())
             .build();
   }
 

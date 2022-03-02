@@ -800,9 +800,8 @@ message NftToken{
   string uri = 5;
   string metadata = 6;
   int64 last_operation = 7;
-  int64 expire_time = 8;
-  bytes next = 9;
-  bytes prev = 10;
+  bytes next = 8;
+  bytes prev = 9;
 }
 
 message NftAccountTokenRelation{
@@ -855,7 +854,6 @@ message NftTokenGetResult{
   string uri = 5;
   string metadata = 6;
   int64 last_operation = 7;
-  int64 expire_time = 8;
 }
 
 message NftTokenQueryResult{

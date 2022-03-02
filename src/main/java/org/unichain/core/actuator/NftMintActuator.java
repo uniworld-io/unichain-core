@@ -77,7 +77,6 @@ public class NftMintActuator extends AbstractActuator {
               .setUri(ctx.getUri())
               .clearApproval()
               .setOwnerAddress(ctx.getToAddress())
-              .setExpireTime(ctx.getAvailableTime())
               .setLastOperation(dbManager.getHeadBlockTimeStamp());
 
       if(ctx.hasField(NFT_MINT_FIELD_METADATA))
@@ -131,7 +130,6 @@ public class NftMintActuator extends AbstractActuator {
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Owner not enough balance to create new account fee, require at least "+ fee + "ginza");
       Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUri().getBytes()).toByteArray()), "invalid uri");
       Assert.isTrue(TransactionUtil.validJsonString(ByteString.copyFrom(ctx.getMetadata().getBytes()).toByteArray()), "invalid metadata, should be json format");
-      Assert.isTrue(ctx.getAvailableTime() >= dbManager.getHeadBlockTimeStamp(), "available time should pass current block timestamp");
       return true;
     }
     catch (Exception e){

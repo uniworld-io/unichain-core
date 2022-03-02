@@ -130,8 +130,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   }
 
   public TransactionCapsule(TransferContract contract, AccountStore accountStore) {
-    Transaction.Contract.Builder contractBuilder = Transaction.Contract.newBuilder();
-
     AccountCapsule owner = accountStore.get(contract.getOwnerAddress().toByteArray());
     if (owner == null || owner.getBalance() < contract.getAmount()) {
       return; //The balance is not enough
@@ -470,6 +468,36 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case WithdrawFutureTokenContract:
           owner = contractParameter.unpack(WithdrawFutureTokenContract.class).getOwnerAddress();
           break;
+
+          //NFT
+        case CreateNftTemplateContract:
+          owner = contractParameter.unpack(CreateNftTemplateContract.class).getOwner();
+          break;
+        case MintNftTokenContract:
+          owner = contractParameter.unpack(MintNftTokenContract.class).getOwnerAddress();
+          break;
+        case RemoveNftMinterContract:
+          owner = contractParameter.unpack(RemoveNftMinterContract.class).getOwner();
+          break;
+        case AddNftMinterContract:
+          owner = contractParameter.unpack(AddNftMinterContract.class).getOwner();
+          break;
+        case RenounceNftMinterContract:
+          owner = contractParameter.unpack(RenounceNftMinterContract.class).getOwner();
+          break;
+        case BurnNftTokenContract:
+          owner = contractParameter.unpack(BurnNftTokenContract.class).getOwner();
+          break;
+        case ApproveNftTokenContract:
+          owner = contractParameter.unpack(ApproveNftTokenContract.class).getOwner();
+          break;
+        case ApproveForAllNftTokenContract:
+          owner = contractParameter.unpack(ApproveForAllNftTokenContract.class).getOwner();
+          break;
+        case TransferNftTokenContract:
+          owner = contractParameter.unpack(TransferNftTokenContract.class).getOwner();
+          break;
+
         default:
           return null;
       }
@@ -495,8 +523,8 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           return true;
         } catch (Exception e) {
           logger.error("{}", e.getMessage());
+          return false;
         }
-        return false;
       });
       futureList.add(future);
     });
@@ -511,8 +539,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     }
   }
 
-  public static void validContractProto(Transaction.Contract contract)
-      throws InvalidProtocolBufferException, P2pException {
+  public static void validContractProto(Transaction.Contract contract) throws InvalidProtocolBufferException, P2pException {
     Any contractParameter = contract.getParameter();
     Class clazz = null;
     switch (contract.getType()) {
@@ -606,7 +633,71 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case UpdateBrokerageContract:
         clazz = UpdateBrokerageContract.class;
         break;
-      // todo add other contract
+
+      //Token
+      case FutureTransferContract:
+        clazz = FutureTransferContract.class;
+        break;
+      case FutureWithdrawContract:
+        clazz = FutureWithdrawContract.class;
+        break;
+      case CreateTokenContract:
+        clazz = CreateTokenContract.class;
+        break;
+      case ContributeTokenPoolFeeContract:
+        clazz = ContributeTokenPoolFeeContract.class;
+        break;
+      case UpdateTokenParamsContract:
+        clazz = UpdateTokenParamsContract.class;
+        break;
+      case MineTokenContract:
+        clazz = MineTokenContract.class;
+        break;
+      case BurnTokenContract:
+        clazz = BurnTokenContract.class;
+        break;
+      case TransferTokenContract:
+        clazz = TransferTokenContract.class;
+        break;
+      case WithdrawFutureTokenContract:
+        clazz = WithdrawFutureTokenContract.class;
+        break;
+      case TransferTokenOwnerContract:
+        clazz = TransferTokenOwnerContract.class;
+        break;
+      case ExchangeTokenContract:
+        clazz = ExchangeTokenContract.class;
+        break;
+
+      //NFT
+      case CreateNftTemplateContract:
+        clazz = CreateNftTemplateContract.class;
+        break;
+      case MintNftTokenContract:
+        clazz = MintNftTokenContract.class;
+        break;
+      case RemoveNftMinterContract:
+        clazz = RemoveNftMinterContract.class;
+        break;
+      case AddNftMinterContract:
+        clazz = AddNftMinterContract.class;
+        break;
+      case RenounceNftMinterContract:
+        clazz = RenounceNftMinterContract.class;
+        break;
+      case BurnNftTokenContract:
+        clazz = BurnNftTokenContract.class;
+        break;
+      case ApproveNftTokenContract:
+        clazz = ApproveNftTokenContract.class;
+        break;
+      case ApproveForAllNftTokenContract:
+        clazz = ApproveForAllNftTokenContract.class;
+        break;
+      case TransferNftTokenContract:
+        clazz = TransferNftTokenContract.class;
+        break;
+      //@todo add other contract
       default:
         break;
     }
@@ -614,13 +705,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       throw new P2pException(PROTOBUF_ERROR, PROTOBUF_ERROR.getDesc());
     }
     com.google.protobuf.Message src = contractParameter.unpack(clazz);
-    com.google.protobuf.Message contractMessage = parse(clazz,
-        Message.getCodedInputStream(src.toByteArray()));
-
-    //    if (!src.equals(contractMessage)) {
-    //      throw new P2pException(PROTOBUF_ERROR, PROTOBUF_ERROR.getDesc());
-    //    }
-
+    com.google.protobuf.Message contractMessage = parse(clazz, Message.getCodedInputStream(src.toByteArray()));
     Message.compareBytes(src.toByteArray(), contractMessage.toByteArray());
   }
 
@@ -640,7 +725,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           to = contractParameter.unpack(ParticipateAssetIssueContract.class).getToAddress();
           break;
         // todo add other contract
-
         default:
           return null;
       }
@@ -935,11 +1019,11 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case MintNftTokenContract:
       case AddNftMinterContract:
       case RemoveNftMinterContract:
-      case  RenounceNftMinterContract:
-      case  BurnNftTokenContract:
-      case  ApproveNftTokenContract:
-      case  ApproveForAllNftTokenContract:
-      case  TransferNftTokenContract:
+      case RenounceNftMinterContract:
+      case BurnNftTokenContract:
+      case ApproveNftTokenContract:
+      case ApproveForAllNftTokenContract:
+      case TransferNftTokenContract:
         return BLOCK_VERSION_5;
       case TransferTokenOwnerContract:
       case ExchangeTokenContract:

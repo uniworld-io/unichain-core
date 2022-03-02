@@ -73,7 +73,7 @@ public class NftMintActuator extends AbstractActuator {
       //save token
       var nftTokenBuilder = Protocol.NftToken.newBuilder()
               .setId(tokenIndex)
-              .setTemplateId(ByteString.copyFrom(templateKey))
+              .setSymbol(ctx.getSymbol().toUpperCase())
               .setUri(ctx.getUri())
               .clearApproval()
               .setOwnerAddress(ctx.getToAddress())

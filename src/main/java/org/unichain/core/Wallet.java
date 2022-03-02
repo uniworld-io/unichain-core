@@ -328,7 +328,7 @@ public class Wallet {
     Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
     var ownerAddr = query.getOwnerAddress().toByteArray();
-    var symbol = Util.stringAsBytesUppercase(query.getSymbol());
+    var symbol = query.getSymbol();
     var filterSymbol = query.hasField(NFT_TOKEN_QUERY_FIELD_SYMBOL);
     ArrayList<NftToken> unsorted;
     var relationStore = dbManager.getNftAccountTokenStore();
@@ -341,7 +341,7 @@ public class Wallet {
       unsorted = new ArrayList<>();
       var start = tokenStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
       while (true){
-        if(!filterSymbol || (filterSymbol && Arrays.equals(start.getTemplateId().toByteArray(), symbol)))
+        if(!filterSymbol || (filterSymbol && start.getSymbol().equalsIgnoreCase(symbol)))
            unsorted.add(start.getInstance());
 
          if(start.hasNext())
@@ -370,12 +370,12 @@ public class Wallet {
 
   public NftTokenGetResult getNftToken(NftTokenGet query) {
     Assert.notNull(query.getSymbol(), "Token symbol empty");
-    Assert.notNull(query.getTokenId(), "Token id empty");
-    var id = ArrayUtils.addAll(Util.stringAsBytesUppercase(query.getSymbol()), ByteArray.fromLong(query.getTokenId()));
+    Assert.notNull(query.getId(), "Token id empty");
+    var id = ArrayUtils.addAll(Util.stringAsBytesUppercase(query.getSymbol()), ByteArray.fromLong(query.getId()));
     var token = dbManager.getNftTokenStore().get(id).getInstance();
     return   NftTokenGetResult.newBuilder()
             .setId(token.getId())
-            .setTemplateId(query.getSymbol())
+            .setSymbol(query.getSymbol())
             .setApproval(token.getApproval())
             .setLastOperation(token.getLastOperation())
             .setOwnerAddress(token.getOwnerAddress())

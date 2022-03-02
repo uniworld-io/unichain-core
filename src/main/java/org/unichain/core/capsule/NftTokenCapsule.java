@@ -20,6 +20,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.unichain.common.utils.ByteArray;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Protocol;
 
 import static org.unichain.core.services.http.utils.Util.*;
@@ -32,7 +33,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   public NftTokenCapsule(byte[] data) {
     try {
       this.token = Protocol.NftToken.parseFrom(data);
-      this.key = ArrayUtils.addAll(token.getTemplateId().toByteArray(), ByteArray.fromLong(token.getId()));
+      this.key = ArrayUtils.addAll(Util.stringAsBytesUppercase(token.getSymbol()), ByteArray.fromLong(token.getId()));
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
@@ -40,7 +41,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
 
   public NftTokenCapsule(Protocol.NftToken token) {
     this.token = token;
-    this.key = ArrayUtils.addAll(token.getTemplateId().toByteArray(), ByteArray.fromLong(token.getId()));
+    this.key = ArrayUtils.addAll(Util.stringAsBytesUppercase(token.getSymbol()), ByteArray.fromLong(token.getId()));
   }
 
   public byte[] getData() {
@@ -121,7 +122,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
     return token.hasField(NFT_TOKEN_FIELD_NEXT);
   }
 
-  public ByteString getTemplateId() {
-    return token.getTemplateId();
+  public String getSymbol() {
+    return token.getSymbol();
   }
 }

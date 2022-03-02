@@ -793,7 +793,7 @@ message NftTemplate{
 }
 
 message NftToken{
-  bytes template_id = 1;
+  string symbol = 1;
   int64 id = 2;
   bytes owner_address = 3;
   bytes approval = 4;
@@ -843,11 +843,11 @@ message NftTokenQuery{
 
 message NftTokenGet{
   string symbol = 1;
-  int64 token_id = 2;
+  int64 id = 2;
 }
 
 message NftTokenGetResult{
-  string template_id = 1;
+  string symbol = 1;
   int64 id = 2;
   bytes owner_address = 3;
   bytes approval = 4;

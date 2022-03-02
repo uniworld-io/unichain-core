@@ -56,7 +56,7 @@ public class TransferNftTokenActuator extends AbstractActuator {
       var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getNftTemplate()), ByteArray.fromLong(ctx.getTokenId()));
 
       //create new acc if not exist
-      if (accountStore.has(toAddrBytes)) {
+      if (!accountStore.has(toAddrBytes)) {
         fee = Math.addExact(fee, dbManager.createNewAccount(toAddr));
       }
 

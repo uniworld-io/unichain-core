@@ -49,18 +49,16 @@ public class ListNftTemplateServlet extends HttpServlet {
     try {
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("owner_address");
-      String symbol = request.getParameter("symbol");
       long pageSize = Long.parseLong(request.getParameter("page_size"));
       long pageIndex = Long.parseLong(request.getParameter("page_index"));
-      Protocol.NftTokenQuery.Builder build = Protocol.NftTokenQuery.newBuilder();
+      Protocol.NftTemplateQuery.Builder build = Protocol.NftTemplateQuery.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
-      jsonObject.put("symbol", symbol);
       jsonObject.put("page_size", pageSize);
       jsonObject.put("page_index", pageIndex);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
-      Protocol.NftTokenQueryResult reply = wallet.listNftToken(build.build());
+      Protocol.NftTemplateQueryResult reply = wallet.listNftTemplate(build.build());
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, true));
       } else {
@@ -75,6 +73,8 @@ public class ListNftTemplateServlet extends HttpServlet {
       }
     }
   }
+
+
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {

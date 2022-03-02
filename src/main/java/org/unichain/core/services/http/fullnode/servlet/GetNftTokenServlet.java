@@ -49,11 +49,11 @@ public class GetNftTokenServlet extends HttpServlet {
     try {
       boolean visible = Util.getVisible(request);
       String symbol = request.getParameter("symbol");
-      String tokenId = request.getParameter("tokenid");
+      String tokenId = request.getParameter("token_id");
       Protocol.NftTokenGet.Builder build = Protocol.NftTokenGet.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("symbol", symbol);
-      jsonObject.put("tokenid", tokenId);
+      jsonObject.put("token_id", tokenId);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
       Protocol.NftTokenGetResult reply = wallet.getNftToken(build.build());

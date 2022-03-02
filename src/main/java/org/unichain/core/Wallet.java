@@ -370,8 +370,8 @@ public class Wallet {
 
   public NftTokenGetResult getNftToken(NftTokenGet query) {
     Assert.notNull(query.getSymbol(), "Token symbol empty");
-    Assert.notNull(query.getId(), "Token id empty");
-    var id = ArrayUtils.addAll(Util.stringAsBytesUppercase(query.getSymbol()), ByteArray.fromLong(query.getId()));
+    Assert.notNull(query.getTokenId(), "Token id empty");
+    var id = ArrayUtils.addAll(Util.stringAsBytesUppercase(query.getSymbol()), ByteArray.fromLong(query.getTokenId()));
     var token = dbManager.getNftTokenStore().get(id).getInstance();
     return   NftTokenGetResult.newBuilder()
             .setId(token.getId())

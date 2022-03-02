@@ -495,6 +495,7 @@ public class Wallet {
    * - broadcast to peers
    */
   public GrpcAPI.Return broadcastTransaction(Transaction signedTransaction) {
+    logger.info("broadcastTransaction -->" + signedTransaction);
     GrpcAPI.Return.Builder builder = GrpcAPI.Return.newBuilder();
     TransactionCapsule tx = new TransactionCapsule(signedTransaction);
     try {

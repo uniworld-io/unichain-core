@@ -49,6 +49,7 @@ public class NftCreateTemplateActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(CreateNftTemplateContract.class);
+      logger.info("CreateNftTemplateContract -->" + ctx.toString());
       var owner = ctx.getOwner().toByteArray();
       dbManager.saveNftTemplate(new NftTemplateCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
       chargeFee(owner, fee);

@@ -355,6 +355,7 @@ message Transaction {
       AccountPermissionUpdateContract = 46;
       ClearABIContract = 48;
       UpdateBrokerageContract = 49;
+
       FutureTransferContract = 50;
       FutureWithdrawContract = 52;
       CreateTokenContract = 53;
@@ -371,7 +372,6 @@ message Transaction {
       MintNftTokenContract = 64;
       RemoveNftMinterContract = 65;
       AddNftMinterContract = 66;
-
       RenounceNftMinterContract = 67;
       BurnNftTokenContract = 68;
       ApproveNftTokenContract = 69;

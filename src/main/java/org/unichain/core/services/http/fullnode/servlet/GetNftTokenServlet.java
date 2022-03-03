@@ -49,7 +49,7 @@ public class GetNftTokenServlet extends HttpServlet {
     try {
       boolean visible = Util.getVisible(request);
       String symbol = request.getParameter("symbol");
-      String tokenId = request.getParameter("id");
+      Integer tokenId = Integer.valueOf(request.getParameter("id"));
       Protocol.NftTokenGet.Builder build = Protocol.NftTokenGet.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("symbol", symbol);

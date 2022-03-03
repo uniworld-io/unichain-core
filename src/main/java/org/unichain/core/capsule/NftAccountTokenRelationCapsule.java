@@ -20,8 +20,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.protos.Protocol.NftAccountTokenRelation;
 
-import static org.unichain.core.services.http.utils.Util.NFT_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL;
-import static org.unichain.core.services.http.utils.Util.NFT_ACC_TOKEN_RELATION_FIELD_TAIL;
+import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
 public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTokenRelation> {
@@ -68,8 +67,24 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
     return relation.getTotal();
   }
 
+  public long getTotalApprove(){
+    return relation.getApproveTotal();
+  }
+
   public void setHead(ByteString head){
     relation = relation.toBuilder().setHead(head).build();
+  }
+
+  public void setHeadApprove(ByteString head){
+    relation = relation.toBuilder().setApproveHead(head).build();
+  }
+
+  public void setTailApprove(ByteString tail){
+    relation = relation.toBuilder().setApproveTail(tail).build();
+  }
+
+  public void setTotalApprove(long total){
+    relation = relation.toBuilder().setApproveTotal(total).build();
   }
 
   public ByteString getHead(){
@@ -84,12 +99,28 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
     return relation.getTail();
   }
 
+  public ByteString getTailApprove(){
+    return relation.getApproveTail();
+  }
+
   public void clearTail(){
     relation = relation.toBuilder().clearTail().build();
   }
 
+  public void clearTailApprove(){
+    relation = relation.toBuilder().clearApproveTail().build();
+  }
+
+  public void clearHeadApprove(){
+    relation = relation.toBuilder().clearApproveHead().build();
+  }
+
   public boolean hasTail(){
     return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_TAIL);
+  }
+
+  public boolean hasTailApprove(){
+    return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE);
   }
 
   public void setTail(ByteString tail){

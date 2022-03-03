@@ -58,6 +58,8 @@ public class ApproveNftTokenActuator extends AbstractActuator {
         nftToken.setApproval(ctx.getToAddress());
         nftTokenStore.put(tokenId, nftToken);
 
+        dbManager.addApproveToken(tokenId, ctx.getToAddress().toByteArray());
+
         var toAddr = ctx.getToAddress();
         if(!accountStore.has(toAddr.toByteArray())){
             var moreFee = dbManager.createNewAccount(toAddr);
@@ -67,6 +69,7 @@ public class ApproveNftTokenActuator extends AbstractActuator {
       else {
         nftToken.clearApproval();
         nftTokenStore.put(tokenId, nftToken);
+        dbManager.disapproveToken(tokenId, ctx.getToAddress().toByteArray());
       }
 
       chargeFee(owner, fee);

@@ -1,6 +1,7 @@
 package org.unichain.core.db;
 
 import com.google.common.collect.Streams;
+import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,5 +31,10 @@ public class NftTokenApproveRelationStore extends UnichainStoreWithRevoking<NftT
     return Streams.stream(iterator())
         .map(Entry::getValue)
         .collect(Collectors.toList());
+  }
+
+  //@fixme
+  public void disapprove(byte[] tokenId, byte[] toAddress){
+
   }
 }

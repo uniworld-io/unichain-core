@@ -12,11 +12,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import javafx.util.Pair;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import lombok.var;
 import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.DateTime;
 import org.spongycastle.util.encoders.Hex;
@@ -75,6 +72,7 @@ import static org.unichain.core.config.Parameter.ChainConstant.*;
 import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PENDING;
 
 
+@Data
 @Slf4j(topic = "DB")
 @Component
 public class Manager {
@@ -230,62 +228,10 @@ public class Manager {
   @Autowired
   private DelegationService delegationService;
 
-  public WitnessStore getWitnessStore() {
-    return this.witnessStore;
-  }
-
   public boolean needToUpdateAsset() {
     return getDynamicPropertiesStore().getTokenUpdateDone() == 0L;
   }
 
-  public DynamicPropertiesStore getDynamicPropertiesStore() {
-    return this.dynamicPropertiesStore;
-  }
-
-  public void setDynamicPropertiesStore(final DynamicPropertiesStore dynamicPropertiesStore) {
-    this.dynamicPropertiesStore = dynamicPropertiesStore;
-  }
-
-  public WitnessScheduleStore getWitnessScheduleStore() {
-    return this.witnessScheduleStore;
-  }
-
-  public void setWitnessScheduleStore(final WitnessScheduleStore witnessScheduleStore) {
-    this.witnessScheduleStore = witnessScheduleStore;
-  }
-
-
-  public DelegatedResourceStore getDelegatedResourceStore() {
-    return delegatedResourceStore;
-  }
-
-  public DelegatedResourceAccountIndexStore getDelegatedResourceAccountIndexStore() {
-    return delegatedResourceAccountIndexStore;
-  }
-
-  public CodeStore getCodeStore() {
-    return codeStore;
-  }
-
-  public ContractStore getContractStore() {
-    return contractStore;
-  }
-
-  public VotesStore getVotesStore() {
-    return this.votesStore;
-  }
-
-  public ProposalStore getProposalStore() {
-    return this.proposalStore;
-  }
-
-  public ExchangeStore getExchangeStore() {
-    return this.exchangeStore;
-  }
-
-  public ExchangeV2Store getExchangeV2Store() {
-    return this.exchangeV2Store;
-  }
 
   public ExchangeStore getExchangeStoreFinal() {
     if (getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
@@ -306,16 +252,8 @@ public class Manager {
     }
   }
 
-  public List<TransactionCapsule> getPendingTransactions() {
-    return this.pendingTransactions;
-  }
-
   public List<TransactionCapsule> getPoppedTransactions() {
     return this.popedTransactions;
-  }
-
-  public BlockingQueue<TransactionCapsule> getRepushTransactions() {
-    return repushTransactions;
   }
 
   // transactions cache
@@ -506,10 +444,6 @@ public class Manager {
     return this.genesisBlock.getBlockId();
   }
 
-  public BlockCapsule getGenesisBlock() {
-    return genesisBlock;
-  }
-
   /**
    * init genesis block.
    */
@@ -645,10 +579,6 @@ public class Manager {
         emptyBlockCount.get(),
         System.currentTimeMillis() - start
     );
-  }
-
-  public AccountStore getAccountStore() {
-    return this.accountStore;
   }
 
   public long createNewAccount(ByteString accAddr){
@@ -1587,18 +1517,6 @@ public class Manager {
     }
   }
 
-  public TransactionStore getTransactionStore() {
-    return this.transactionStore;
-  }
-
-  public TransactionHistoryStore getTransactionHistoryStore() {
-    return this.transactionHistoryStore;
-  }
-
-  public BlockStore getBlockStore() {
-    return this.blockStore;
-  }
-
 
   /**
    * process block.
@@ -1816,60 +1734,12 @@ public class Manager {
     return getDynamicPropertiesStore().getMaintenanceSkipSlots();
   }
 
-  public AssetIssueStore getAssetIssueStore() {
-    return assetIssueStore;
-  }
-
-  public TokenPoolStore getTokenPoolStore() {
-    return tokenPoolStore;
-  }
-
-  public FutureTokenStore getFutureTokenStore() {
-    return futureTokenStore;
-  }
-
-  public FutureTransferStore getFutureTransferStore() {
-    return futureTransferStore;
-  }
-
-  public AssetIssueV2Store getAssetIssueV2Store() {
-    return assetIssueV2Store;
-  }
-
   public AssetIssueStore getAssetIssueStoreFinal() {
     if (getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
       return getAssetIssueStore();
     } else {
       return getAssetIssueV2Store();
     }
-  }
-
-  public void setAssetIssueStore(AssetIssueStore assetIssueStore) {
-    this.assetIssueStore = assetIssueStore;
-  }
-
-  public void setTokenPoolStore(TokenPoolStore tokenPoolStore) {
-    this.tokenPoolStore = tokenPoolStore;
-  }
-
-  public void setBlockIndexStore(BlockIndexStore indexStore) {
-    this.blockIndexStore = indexStore;
-  }
-
-  public AccountIdIndexStore getAccountIdIndexStore() {
-    return this.accountIdIndexStore;
-  }
-
-  public void setAccountIdIndexStore(AccountIdIndexStore indexStore) {
-    this.accountIdIndexStore = indexStore;
-  }
-
-  public AccountIndexStore getAccountIndexStore() {
-    return this.accountIndexStore;
-  }
-
-  public void setAccountIndexStore(AccountIndexStore indexStore) {
-    this.accountIndexStore = indexStore;
   }
 
   public void closeAllStore() {
@@ -2227,8 +2097,9 @@ public class Manager {
   public void removeNftToken(byte[] tokenId){
     var tokenStore = getNftTokenStore();
     var relationStore = getNftAccountTokenStore();
+
     Assert.isTrue(tokenStore.has(tokenId), "not found nft token with id" + tokenId);
-    var tokenCap = tokenStore.get(tokenId);
+    val tokenCap = tokenStore.get(tokenId);
 
     var hasPrev = tokenCap.hasPrev();
     var hasNext = tokenCap.hasNext();
@@ -2289,5 +2160,146 @@ public class Manager {
     }
     relationStore.put(owner, relation);
     tokenStore.delete(tokenId);
+
+    //update approve relation store
+    if(tokenCap.hasApproval())
+    {
+      var approvedAddr = tokenCap.getApproval();
+      disapproveToken(tokenId, approvedAddr);
+    }
+  }
+
+  //@todo review
+  public void addApproveToken(byte[] tokenId, byte[] toAddress){
+    var approveStore = getNftTokenApproveRelationStore();
+    var relationStore = getNftAccountTokenStore();
+
+    var relationKey = toAddress;
+
+    if (!relationStore.has(relationKey)) {
+      var approve = new NftTokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
+              .clearNext()
+              .clearPrev()
+              .setOwnerAddress(ByteString.copyFrom(toAddress))
+              .setTokenId(ByteString.copyFrom(tokenId))
+              .build());
+      approveStore.put(approve.getKey(), approve);
+
+      var relation = new NftAccountTokenRelationCapsule(relationKey,
+              Protocol.NftAccountTokenRelation.newBuilder()
+                      .setOwner(ByteString.copyFrom(toAddress))
+                      .clearHead()
+                      .clearTail()
+                      .setTotal(0L)
+                      .clearApproveAll()
+                      .clearApprovedForAll()
+                      .setApproveHead(ByteString.copyFrom(approve.getKey()))
+                      .setApproveTail(ByteString.copyFrom(approve.getKey()))
+                      .setApproveTotal(1L)
+                      .build());
+      relationStore.put(relation.getKey(), relation);
+    } else {
+      var relation = relationStore.get(relationKey);
+      if (!relation.hasTailApprove()) {
+        //in the case that the relation created to store approve list only
+        var approve = new NftTokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
+                .clearNext()
+                .clearPrev()
+                .setOwnerAddress(ByteString.copyFrom(toAddress))
+                .setTokenId(ByteString.copyFrom(tokenId))
+                .build());
+        approveStore.put(approve.getKey(), approve);
+
+        relation.setTotalApprove(Math.incrementExact(relation.getTotalApprove()));
+        relation.setHeadApprove(ByteString.copyFrom(approve.getKey()));
+        relation.setTailApprove(ByteString.copyFrom(approve.getKey()));
+        relationStore.put(relationKey, relation);
+      } else {
+        var tailKey = relation.getTailApprove().toByteArray();
+        var tailApproveCap = approveStore.get(tailKey);
+
+        var approveKey = tokenId;
+        relation.setTotalApprove(Math.incrementExact(relation.getTotalApprove()));
+        relation.setTailApprove(ByteString.copyFrom(approveKey));
+        relationStore.put(relationKey, relation);
+
+        var approve = new NftTokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
+                .clearNext()
+                .setPrev(ByteString.copyFrom(tailKey))
+                .setOwnerAddress(ByteString.copyFrom(toAddress))
+                .setTokenId(ByteString.copyFrom(tokenId))
+                .build());
+        approveStore.put(approve.getKey(), approve);
+
+        tailApproveCap.setNext(approveKey);
+        approveStore.put(tailKey, tailApproveCap);
+      }
+    }
+  }
+
+  //@todo review
+  public void disapproveToken(byte[] tokenId, byte[] toAddress){
+    var approveStore = getNftTokenApproveRelationStore();
+    var relationStore = getNftAccountTokenStore();
+
+    Assert.isTrue(approveStore.has(tokenId), "not found nft token with id" + tokenId);
+    val approveCap = approveStore.get(tokenId);
+
+    var hasPrev = approveCap.hasPrev();
+    var hasNext = approveCap.hasNext();
+    var owner = approveCap.getOwner();
+    Assert.isTrue(Arrays.equals(toAddress, owner), "mismatched approval address");
+    Assert.isTrue(relationStore.has(owner), "missing account-nft relation of address: " + owner);
+    var relation = relationStore.get(owner);
+
+    if(hasNext){
+      var nextKey = approveCap.getNext();
+      if(hasPrev) {
+        /**
+         * just delete middle node
+         */
+        var prevKey = approveCap.getPrev();
+        var next = approveStore.get(nextKey);
+        var prev = approveStore.get(prevKey);
+
+        //update next, prev
+        next.setPrev(prevKey);
+        prev.setNext(nextKey);
+        approveStore.put(nextKey, next);
+        approveStore.put(prevKey, prev);
+        //update relation
+        relation.setTotalApprove(Math.decrementExact(relation.getTotalApprove()));
+      }
+      else {
+        var next = approveStore.get(nextKey);
+        next.clearPrev();
+        approveStore.put(nextKey, next);
+
+        //update relation
+        relation.setTotalApprove(Math.decrementExact(relation.getTotalApprove()));
+        relation.setHeadApprove(ByteString.copyFrom(nextKey));
+      }
+    }
+    else {
+      if(hasPrev){
+        var prevKey = approveCap.getPrev();
+        var prev = approveStore.get(prevKey);
+        //update next, prev
+        prev.clearNext();
+        approveStore.put(prevKey, prev);
+
+        //relation
+        relation.setTotalApprove(Math.decrementExact(relation.getTotalApprove()));
+        relation.setTailApprove(ByteString.copyFrom(prevKey));
+      }
+      else {
+        //only one node
+        relation.setTotalApprove(0L);
+        relation.clearTailApprove();
+        relation.clearHeadApprove();
+      }
+    }
+    relationStore.put(owner, relation);
+    approveStore.delete(tokenId);
   }
 }

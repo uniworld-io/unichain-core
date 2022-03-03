@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-//@fixme implement
 @Component
 @Slf4j(topic = "API")
 public class ListNftTokenApproveServlet extends HttpServlet {
@@ -52,14 +51,14 @@ public class ListNftTokenApproveServlet extends HttpServlet {
       String address = request.getParameter("owner_address");
       long pageSize = Long.parseLong(request.getParameter("page_size"));
       long pageIndex = Long.parseLong(request.getParameter("page_index"));
-      Protocol.NftTemplateQuery.Builder build = Protocol.NftTemplateQuery.newBuilder();
+      Protocol.NftTokenApproveQuery.Builder build = Protocol.NftTokenApproveQuery.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
       jsonObject.put("page_size", pageSize);
       jsonObject.put("page_index", pageIndex);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
-      Protocol.NftTemplateQueryResult reply = wallet.listNftTemplate(build.build());
+      Protocol.NftTokenApproveResult reply = wallet.listNftTokenApprove(build.build());
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, true));
       } else {

@@ -280,14 +280,14 @@ public class Wallet {
     return dbManager.getTokenPoolStore().query(query);
   }
 
-  //@fixme
+  //@fixme implement
   public NftTokenApproveResult listNftTokenApprove(NftTokenApproveQuery query) {
     var approveStore = dbManager.getNftTokenApproveRelationStore();
     var relationStore = dbManager.getNftAccountTokenStore();
     return null;
   }
 
-  //@fixme
+  //@fixme implement
   public NftTokenApproveAllResult listNftTokenApproveAll(NftTokenApproveAllQuery query) {
     var relationStore = dbManager.getNftAccountTokenStore();
     return null;

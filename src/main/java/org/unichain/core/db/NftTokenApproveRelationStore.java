@@ -32,9 +32,4 @@ public class NftTokenApproveRelationStore extends UnichainStoreWithRevoking<NftT
         .map(Entry::getValue)
         .collect(Collectors.toList());
   }
-
-  //@fixme
-  public void disapprove(byte[] tokenId, byte[] toAddress){
-
-  }
 }

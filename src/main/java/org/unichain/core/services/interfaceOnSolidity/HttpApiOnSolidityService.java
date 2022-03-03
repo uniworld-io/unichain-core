@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.unichain.common.application.Service;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.services.http.fullnode.servlet.GetFutureTransferServlet;
-import org.unichain.core.services.http.fullnode.servlet.GetNftTemplateServlet;
 import org.unichain.core.services.http.fullnode.servlet.GetTokenFutureServlet;
 import org.unichain.core.services.interfaceOnSolidity.http.*;
 

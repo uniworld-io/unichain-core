@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-//@fixme
+//@fixme implement
 @Component
 @Slf4j(topic = "API")
 public class ListNftTokenApproveServlet extends HttpServlet {

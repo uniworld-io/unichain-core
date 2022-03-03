@@ -811,6 +811,9 @@ message NftAccountTokenRelation{
   int64 total = 4;
   map<string, bool> approve_all = 5;
   bytes approved_for_all = 6;
+  bytes approve_head = 7;
+  bytes approve_tail = 8;
+  int64 approve_total = 9;
 }
 
 message NftAccountTemplateRelation{
@@ -872,4 +875,34 @@ message IsApprovedForAll{
   bytes owner_address = 1;
   bytes operator = 2;
   bool is_approved = 3;
+}
+
+message NftTokenApproveAllQuery{
+  bytes owner_address = 1;
+}
+
+message NftTokenApproveAllResult{
+  bytes owner_address = 1;
+  repeated NftAccountTokenRelation approve_list= 2;
+}
+
+message NftTokenApproveQuery{
+  bytes owner_address = 1;
+  int32 page_size = 2;
+  int32 page_index = 3;
+}
+
+message NftTokenApproveResult{
+  bytes owner_address = 1;
+  int32 page_size = 2;
+  int32 page_index = 3;
+  int64 total = 4;
+  repeated NftToken tokens= 5;
+}
+
+message NftTokenApproveRelation{
+  bytes owner_address = 1;
+  bytes token_id = 3;
+  bytes next = 8;
+  bytes prev = 9;
 }

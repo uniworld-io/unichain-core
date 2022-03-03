@@ -363,7 +363,7 @@ message UpdateBrokerageContract {
 message CreateNftTemplateContract{
   string symbol = 1;
   string name = 2;
-  int64  total_supply = 3;
+  int64 total_supply = 3;
   bytes minter = 4;
   bytes owner = 5;
 }

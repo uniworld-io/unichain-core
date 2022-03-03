@@ -41,6 +41,26 @@ service Wallet {
     };
   };
 
+  rpc ListNftTokenApprove (NftTokenApproveQuery) returns (NftTokenApproveResult) {
+    option (google.api.http) = {
+      post: "/wallet/listnfttokenapprove"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/listnfttokenapprove"
+      }
+    };
+  };
+
+  rpc ListNftTokenApproveAll (NftTokenApproveAllQuery) returns (NftTokenApproveAllResult) {
+    option (google.api.http) = {
+      post: "/wallet/listnfttokenapproveall"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/listnfttokenapproveall"
+      }
+    };
+  };
+
   rpc ListNftTemplate (NftTemplateQuery) returns (NftTemplateQueryResult) {
     option (google.api.http) = {
       post: "/wallet/listnfttemplate"
@@ -972,6 +992,26 @@ service WalletSolidity {
       body: "*"
       additional_bindings {
         get: "/walletsolidity/gettokenpool"
+      }
+    };
+  };
+
+  rpc ListNftTokenApprove (NftTokenApproveQuery) returns (NftTokenApproveResult) {
+    option (google.api.http) = {
+      post: "/walletsolidity/listnfttokenapprove"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/listnfttokenapprove"
+      }
+    };
+  };
+
+  rpc ListNftTokenApproveAll (NftTokenApproveAllQuery) returns (NftTokenApproveAllResult) {
+    option (google.api.http) = {
+      post: "/walletsolidity/listnfttokenapproveall"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/listnfttokenapproveall"
       }
     };
   };

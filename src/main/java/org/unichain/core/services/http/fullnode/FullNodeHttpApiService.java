@@ -90,6 +90,10 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private ListNftTemplateServlet listNftTemplateServlet;
   @Autowired
+  private ListNftTokenApproveServlet listNftTokenApproveServlet;
+  @Autowired
+  private ListNftTokenApproveAllServlet listNftTokenApproveAllServlet;
+  @Autowired
   private ListNftTokenServlet listNftTokenServlet;
   @Autowired
   private GetNftTemplateServlet getNftTemplateServlet;
@@ -282,6 +286,9 @@ public class FullNodeHttpApiService implements Service {
 
       context.addServlet(new ServletHolder(listNftTemplateServlet), "/listnfttemplate");
       context.addServlet(new ServletHolder(listNftTokenServlet), "/listnfttoken");
+
+      context.addServlet(new ServletHolder(listNftTokenApproveServlet), "/listnfttokenapprove");
+      context.addServlet(new ServletHolder(listNftTokenApproveAllServlet), "/listnfttokenapproveall");
 
       context.addServlet(new ServletHolder(getNftTemplateServlet), "/getnfttemplate");
       context.addServlet(new ServletHolder(getNftTokenServlet), "/getnfttoken");

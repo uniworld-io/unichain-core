@@ -280,6 +280,16 @@ public class Wallet {
     return dbManager.getTokenPoolStore().query(query);
   }
 
+  //@fixme
+  public NftTokenApproveResult listNftTokenApprove(NftTokenApproveQuery query) {
+    return null;
+  }
+
+  //@fixme
+  public NftTokenApproveAllResult listNftTokenApproveAll(NftTokenApproveAllQuery query) {
+    return null;
+  }
+
   public NftTemplateQueryResult listNftTemplate(NftTemplateQuery query) {
     Assert.notNull(query.getOwnerAddress(), "Owner address null");
 

@@ -294,6 +294,20 @@ public class RpcApiService implements Service {
     }
 
     @Override
+    public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
+      NftTokenApproveResult reply = wallet.listNftTokenApprove(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
+      NftTokenApproveAllResult reply = wallet.listNftTokenApproveAll(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
     public void listNftTemplate(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
       NftTemplateQueryResult reply = wallet.listNftTemplate(request);
       responseObserver.onNext(reply);
@@ -717,6 +731,20 @@ public class RpcApiService implements Service {
     @Override
     public void getTokenPool(TokenPoolQuery request, io.grpc.stub.StreamObserver<TokenPage> responseObserver) {
       TokenPage reply = wallet.getTokenPool(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
+      NftTokenApproveResult reply = wallet.listNftTokenApprove(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
+      NftTokenApproveAllResult reply = wallet.listNftTokenApproveAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

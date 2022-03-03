@@ -280,11 +280,38 @@ public class Wallet {
     return dbManager.getTokenPoolStore().query(query);
   }
 
-  //@fixme implement
   public NftTokenApproveResult listNftTokenApprove(NftTokenApproveQuery query) {
+    Assert.notNull(query.getOwnerAddress(), "Owner address null");
+
+    int pageSize = query.hasField(NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
+    int pageIndex = query.hasField(NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
+    Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
+
+    var ownerAddr = query.getOwnerAddress().toByteArray();
+    var nftTokenStore = dbManager.getNftTokenStore();
     var approveStore = dbManager.getNftTokenApproveRelationStore();
     var relationStore = dbManager.getNftAccountTokenStore();
-    return null;
+
+    List<NftToken> unsorted = new ArrayList<>();
+
+    if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0){
+      var relationCapsule = approveStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
+      while (true){
+        unsorted.add(nftTokenStore.get(relationCapsule.getKey()).getInstance());
+        if(relationCapsule.hasNext()) {
+          relationCapsule = approveStore.get(relationCapsule.getNext());
+          continue;
+        } else {
+          break;
+        }
+      }
+    }
+    return NftTokenApproveResult.newBuilder()
+            .setPageIndex(pageIndex)
+            .setPageSize(pageSize)
+            .setTotal(unsorted.size())
+            .addAllTokens(Utils.paging(unsorted, pageIndex, pageSize))
+            .build();
   }
 
   //@fixme implement

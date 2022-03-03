@@ -48,7 +48,10 @@ public class ApproveForAllNftTokenActuator extends AbstractActuator {
       var toAddr = ctx.getToAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
       var relationStore = dbManager.getNftAccountTokenStore();
-      relationStore.approveForAll(ownerAddr, toAddr);
+      if(ctx.getApprove())
+        relationStore.approveForAll(ownerAddr, toAddr);
+      else
+        relationStore.disApproveForAll(ownerAddr, toAddr);
 
       //create new account
       if (!accountStore.has(toAddr)) {

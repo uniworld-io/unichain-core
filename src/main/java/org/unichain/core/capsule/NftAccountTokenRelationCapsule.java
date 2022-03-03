@@ -112,7 +112,15 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
     relation = relation.toBuilder().setApprovedForAll(approvedForAll).build();
   }
 
+  public void removeApproveAll(ByteString approvedForAll){
+    relation = relation.toBuilder().removeApproveAll(approvedForAll.toString()).build();
+  }
+
   public void addApproveAll(ByteString owner){
     relation = relation.toBuilder().putApproveAll(owner.toString(), true).build();
+  }
+
+  public boolean hasApproveAll(ByteString owner){
+    return relation.containsApproveAll(owner.toString());
   }
 }

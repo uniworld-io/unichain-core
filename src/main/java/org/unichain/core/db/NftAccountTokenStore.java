@@ -3,12 +3,15 @@ package org.unichain.core.db;
 import com.google.common.collect.Streams;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.unichain.core.capsule.NftAccountTokenRelationCapsule;
 import org.unichain.protos.Protocol;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -31,6 +34,26 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
     return Streams.stream(iterator())
         .map(Entry::getValue)
         .collect(Collectors.toList());
+  }
+
+  //@todo review
+  public void disApproveForAll(byte[] ownerAddr, byte[] toAddr){
+      NftAccountTokenRelationCapsule ownerRelation;
+      if(has(ownerAddr)){
+          ownerRelation = get(ownerAddr);
+          Assert.isTrue(Arrays.equals(ownerRelation.getApprovedForAll(), toAddr), "approved address miss-matched!");
+          ownerRelation.clearApprovedForAll();
+          put(ownerAddr, ownerRelation);
+      }
+
+      NftAccountTokenRelationCapsule toRelation;
+      if(has(toAddr)){
+          toRelation = get(toAddr);
+          var ownerAddrBs= ByteString.copyFrom(ownerAddr);
+          Assert.isTrue(toRelation.hasApproveAll(ownerAddrBs), "approve address miss-matched!");
+          toRelation.removeApproveAll(ownerAddrBs);
+          put(toAddr, toRelation);
+      }
   }
 
   public void approveForAll(byte[] ownerAddr, byte[] toAddr){
@@ -63,7 +86,7 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
                         .clearHead()
                         .clearTail()
                         .setTotal(0L)
-                        .putApproveAll(ByteString.copyFrom(toAddr).toString(), true)
+                        .putApproveAll(ByteString.copyFrom(ownerAddr).toString(), true)
                         .build());
       }
       put(toAddr, toRelation);

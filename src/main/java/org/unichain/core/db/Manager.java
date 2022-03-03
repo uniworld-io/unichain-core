@@ -80,6 +80,10 @@ import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PE
 public class Manager {
   @Autowired
   @Getter
+  private NftTokenApproveRelationStore nftTokenApproveRelationStore;
+
+  @Autowired
+  @Getter
   private NftTemplateStore nftTemplateStore;
 
   @Autowired
@@ -1870,6 +1874,7 @@ public class Manager {
 
   public void closeAllStore() {
     logger.warn("******** begin to close db ********");
+    closeOneStore(nftTokenApproveRelationStore);
     closeOneStore(nftTokenStore);
     closeOneStore(nftTemplateStore);
     closeOneStore(nftAccountTemplateStore);

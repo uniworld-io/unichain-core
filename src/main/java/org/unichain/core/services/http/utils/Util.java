@@ -749,6 +749,10 @@ public class Util {
   public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_PREV = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.PREV_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_NEXT = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.NEXT_FIELD_NUMBER);
 
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_RELATION_FIELD_PREV = Protocol.NftTokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveRelation.PREV_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_RELATION_FIELD_NEXT = Protocol.NftTokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveRelation.NEXT_FIELD_NUMBER);
+
+
   public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_SIZE = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.PAGE_SIZE_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_INDEX = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.PAGE_INDEX_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_SYMBOL = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.SYMBOL_FIELD_NUMBER);

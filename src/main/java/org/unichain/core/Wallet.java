@@ -282,11 +282,14 @@ public class Wallet {
 
   //@fixme
   public NftTokenApproveResult listNftTokenApprove(NftTokenApproveQuery query) {
+    var approveStore = dbManager.getNftTokenApproveRelationStore();
+    var relationStore = dbManager.getNftAccountTokenStore();
     return null;
   }
 
   //@fixme
   public NftTokenApproveAllResult listNftTokenApproveAll(NftTokenApproveAllQuery query) {
+    var relationStore = dbManager.getNftAccountTokenStore();
     return null;
   }
 

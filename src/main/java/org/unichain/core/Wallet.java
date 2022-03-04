@@ -305,7 +305,10 @@ public class Wallet {
           break;
         }
       }
+    } else {
+      unsorted.add(NftToken.newBuilder().build());
     }
+
     return NftTokenApproveResult.newBuilder()
             .setPageIndex(pageIndex)
             .setPageSize(pageSize)
@@ -344,15 +347,14 @@ public class Wallet {
     Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
     var ownerAddr = query.getOwnerAddress().toByteArray();
-    ArrayList<NftTemplate> unsorted;
+    List<NftTemplate> unsorted = new ArrayList<>();
     var relationStore = dbManager.getNftAccountTemplateStore();
     var templateStore = dbManager.getNftTemplateStore();
 
     if(!relationStore.has(ownerAddr) || relationStore.get(ownerAddr).getTotal() <= 0){
-      unsorted = new ArrayList<>();
+      unsorted.add(NftTemplate.newBuilder().build());
     }
     else {
-      unsorted = new ArrayList<>();
       var start = templateStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
       while (true){
         unsorted.add(start.getInstance());
@@ -386,15 +388,14 @@ public class Wallet {
     var ownerAddr = query.getOwnerAddress().toByteArray();
     var symbol = query.getSymbol();
     var filterSymbol = query.hasField(NFT_TOKEN_QUERY_FIELD_SYMBOL);
-    ArrayList<NftToken> unsorted;
+    List<NftToken> unsorted = new ArrayList<>();
     var relationStore = dbManager.getNftAccountTokenStore();
     var tokenStore = dbManager.getNftTokenStore();
 
     if(!relationStore.has(ownerAddr) || relationStore.get(ownerAddr).getTotal() <= 0){
-      unsorted = new ArrayList<>();
+      unsorted.add(NftToken.newBuilder().build());
     }
     else {
-      unsorted = new ArrayList<>();
       var start = tokenStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
       while (true){
         if(!filterSymbol || (filterSymbol && start.getSymbol().equalsIgnoreCase(symbol)))

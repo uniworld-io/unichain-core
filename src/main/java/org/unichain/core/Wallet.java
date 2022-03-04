@@ -314,10 +314,26 @@ public class Wallet {
             .build();
   }
 
-  //@fixme implement
   public NftTokenApproveAllResult listNftTokenApproveAll(NftTokenApproveAllQuery query) {
+    Assert.notNull(query.getOwnerAddress(), "Owner address null");
+
     var relationStore = dbManager.getNftAccountTokenStore();
-    return null;
+    var relation = relationStore.get(query.getOwnerAddress().toByteArray());
+    var result = NftTokenApproveAllResult.newBuilder().setOwnerAddress(query.getOwnerAddress()).build();
+
+    relation.getApproveAllMap().forEach((owner, isApproveAll) -> {
+      if(isApproveAll){
+        var ownerRelationCap = relationStore.get(owner.getBytes());
+        var nftOwnerRelation = NftAccountTokenRelation.newBuilder()
+                .clear()
+                .setOwner(ownerRelationCap.getInstance().getOwner())
+                .setTotal(ownerRelationCap.getInstance().getTotal())
+                .build();
+        result.toBuilder().addApproveList(nftOwnerRelation);
+      }
+    });
+
+    return result;
   }
 
   public NftTemplateQueryResult listNftTemplate(NftTemplateQuery query) {

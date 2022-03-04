@@ -20,6 +20,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.protos.Protocol.NftAccountTokenRelation;
 
+import java.util.Map;
+
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
@@ -154,4 +156,9 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
   public boolean hasApproveAll(ByteString owner){
     return relation.containsApproveAll(owner.toString());
   }
+
+  public Map<String, Boolean> getApproveAllMap(){
+    return relation.getApproveAllMap();
+  }
+
 }

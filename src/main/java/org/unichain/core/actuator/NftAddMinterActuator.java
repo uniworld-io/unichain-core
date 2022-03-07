@@ -48,7 +48,7 @@ public class NftAddMinterActuator extends AbstractActuator {
       var ownerAddr = ctx.getOwner().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
       var accStore = dbManager.getAccountStore();
-      var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
+      var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
 
       //create new account
       if (!accStore.has(minterAddr)) {
@@ -83,7 +83,7 @@ public class NftAddMinterActuator extends AbstractActuator {
       val ctx = this.contract.unpack(AddNftMinterContract.class);
       var ownerAddr = ctx.getOwner().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
-      var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
+      var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
       var accStore = dbManager.getAccountStore();
       var templateStore = dbManager.getNftTemplateStore();
 

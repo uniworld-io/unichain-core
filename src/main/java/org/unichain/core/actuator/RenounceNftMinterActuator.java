@@ -45,7 +45,7 @@ public class RenounceNftMinterActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(RenounceNftMinterContract.class);
       var ownerAddr = ctx.getOwner().toByteArray();
-      var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
+      var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
 
       var templateStore = dbManager.getNftTemplateStore();
       var relationStore = dbManager.getNftAccountTemplateStore();
@@ -75,7 +75,7 @@ public class RenounceNftMinterActuator extends AbstractActuator {
 
       val ctx = this.contract.unpack(RenounceNftMinterContract.class);
       var ownerAddr = ctx.getOwner().toByteArray();
-      var templateId = Util.stringAsBytesUppercase(ctx.getNftTemplate());
+      var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
       var accountStore = dbManager.getAccountStore();
       var templateStore = dbManager.getNftTemplateStore();
 

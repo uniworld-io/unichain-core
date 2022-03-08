@@ -50,7 +50,7 @@ public class GetNftApprovedForAllServlet extends HttpServlet {
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("owner_address");
       String operator = request.getParameter("operator");
-      boolean isApproved = Boolean.valueOf(request.getParameter("is_approved"));
+      boolean isApproved = Boolean.parseBoolean(request.getParameter("is_approved"));
       Protocol.IsApprovedForAll.Builder build = Protocol.IsApprovedForAll.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);

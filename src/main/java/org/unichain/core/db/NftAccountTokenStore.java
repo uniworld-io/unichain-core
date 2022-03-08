@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.unichain.common.utils.ByteArray;
 import org.unichain.core.capsule.NftAccountTokenRelationCapsule;
 import org.unichain.protos.Protocol;
 
@@ -86,7 +87,7 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
                         .clearHead()
                         .clearTail()
                         .setTotal(0L)
-                        .putApproveAll(ByteString.copyFrom(ownerAddr).toString(), true)
+                        .putApproveAll(ByteArray.toHexString(ownerAddr), true)
                         .build());
       }
       put(toAddr, toRelation);

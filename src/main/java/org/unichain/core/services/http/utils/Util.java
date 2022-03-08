@@ -765,6 +765,8 @@ public class Util {
   public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE = Protocol.NftTokenApproveQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveQuery.PAGE_SIZE_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_INDEX = Protocol.NftTokenApproveQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveQuery.PAGE_INDEX_FIELD_NUMBER);
 
+
+
   public static int DEFAULT_PAGE_SIZE = 20;
   public static int DEFAULT_PAGE_INDEX = 0;
   public static int MAX_PAGE_SIZE = 50;

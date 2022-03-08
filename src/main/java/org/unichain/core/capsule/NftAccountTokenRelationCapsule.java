@@ -18,6 +18,7 @@ package org.unichain.core.capsule;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import org.unichain.common.utils.ByteArray;
 import org.unichain.protos.Protocol.NftAccountTokenRelation;
 
 import java.util.Map;
@@ -146,15 +147,15 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
   }
 
   public void removeApproveAll(ByteString approvedForAll){
-    relation = relation.toBuilder().removeApproveAll(approvedForAll.toString()).build();
+    relation = relation.toBuilder().removeApproveAll(ByteArray.toHexString(approvedForAll.toByteArray())).build();
   }
 
   public void addApproveAll(ByteString owner){
-    relation = relation.toBuilder().putApproveAll(owner.toString(), true).build();
+    relation = relation.toBuilder().putApproveAll(ByteArray.toHexString(owner.toByteArray()), true).build();
   }
 
   public boolean hasApproveAll(ByteString owner){
-    return relation.containsApproveAll(owner.toString());
+    return relation.containsApproveAll(ByteArray.toHexString(owner.toByteArray()));
   }
 
   public Map<String, Boolean> getApproveAllMap(){

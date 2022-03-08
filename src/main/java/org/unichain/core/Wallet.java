@@ -322,21 +322,30 @@ public class Wallet {
 
     var relationStore = dbManager.getNftAccountTokenStore();
     var relation = relationStore.get(query.getOwnerAddress().toByteArray());
-    var result = NftTokenApproveAllResult.newBuilder().setOwnerAddress(query.getOwnerAddress()).build();
+
+    if (relation.getApproveAllMap() == null)
+      return NftTokenApproveAllResult.newBuilder().setOwnerAddress(query.getOwnerAddress()).build();
+
+    List<NftAccountTokenRelation> approveList = new ArrayList<>();
 
     relation.getApproveAllMap().forEach((owner, isApproveAll) -> {
-      if(isApproveAll){
-        var ownerRelationCap = relationStore.get(owner.getBytes());
-        var nftOwnerRelation = NftAccountTokenRelation.newBuilder()
-                .clear()
-                .setOwner(ownerRelationCap.getInstance().getOwner())
-                .setTotal(ownerRelationCap.getInstance().getTotal())
-                .build();
-        result.toBuilder().addApproveList(nftOwnerRelation);
+      logger.info("---------------> Found owner approve all: {} - {}", owner, isApproveAll);
+      if (isApproveAll) {
+        var ownerRelationCap = relationStore.get(ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray());
+        if (ownerRelationCap != null) {
+          var nftOwnerRelation = NftAccountTokenRelation.newBuilder()
+                  .setOwner(ownerRelationCap.getInstance().getOwner())
+                  .setTotal(ownerRelationCap.getInstance().getTotal())
+                  .build();
+          approveList.add(nftOwnerRelation);
+        }
       }
     });
 
-    return result;
+    return NftTokenApproveAllResult.newBuilder()
+            .setOwnerAddress(query.getOwnerAddress())
+            .addAllApproveList(approveList)
+            .build();
   }
 
   public NftTemplateQueryResult listNftTemplate(NftTemplateQuery query) {

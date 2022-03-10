@@ -1,7 +1,11 @@
 <p align="center">
-  <a href="explorer.unichain.world">
-    <img alt="Unichain" src="https://i.imgur.com/vjSXXhU.png" width="250" />
-  </a>
+    <img alt="uniworld" width="1412" src="https://uniworld.io/img/banner/1.jpg">
+</p>
+
+<p align="center">
+    <a href="https://circleci.com/gh/AleoHQ/snarkOS"><img src="https://circleci.com/gh/AleoHQ/snarkOS.svg?style=svg&circle-token=6e9ad6d39d95350544f352d34e0e5c62ef54db26"></a>
+    <a href="https://codecov.io/gh/AleoHQ/snarkOS"><img src="https://codecov.io/gh/AleoHQ/snarkOS/branch/master/graph/badge.svg?token=cck8tS9HpO"/></a>
+    <a href="https://discord.com/channels/950290816981688340/950290816981688343"><img src="https://img.shields.io/discord/700454073459015690?logo=discord"/></a>
 </p>
 
 ## UINICHAIN CORE

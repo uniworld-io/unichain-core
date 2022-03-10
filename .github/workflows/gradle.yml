@@ -4,13 +4,13 @@ on:
     branches: [NativeNFT]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up jdk
         uses: actions/setup-java@v2
         with:
-          java-version: 11
+          java-version: 8
           distribution: 'adopt'
       - name: Build Gradle
         run: ./gradlew clean build

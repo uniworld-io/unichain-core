@@ -13,6 +13,6 @@ jobs:
           java-version: 8
           distribution: 'adopt'
       - name: Build Gradle
-        run: ./gradlew build
+        run: ./gradlew clean build
 
 

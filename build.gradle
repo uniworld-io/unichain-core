@@ -23,6 +23,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: "jacoco"
 apply plugin: 'maven-publish'
 
+
 jar.enabled = true
 shadowJar.enabled = true
 
@@ -109,8 +110,7 @@ dependencies {
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
 
 //    compile "org.projectlombok:lombok:1.16.18"
-//    compile group: 'org.projectlombok', name: 'lombok', version: '1.18.2'
-    compileOnly 'org.projectlombok:lombok:1.18.2'
+    compile group: 'org.projectlombok', name: 'lombok', version: '1.18.4'
 
     compile group: 'commons-codec', name: 'commons-codec', version: '1.11'
 

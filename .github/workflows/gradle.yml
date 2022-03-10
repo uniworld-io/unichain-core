@@ -4,15 +4,16 @@ on:
     branches: [NativeNFT]
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up jdk
-        uses: actions/setup-java@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v1
         with:
           java-version: 8
           distribution: 'adopt'
-      - name: Build Gradle
-        run: ./gradlew clean build
+          cache: gradle
+      - name: Build with Gradle
+        run: ./gradlew build
 
 

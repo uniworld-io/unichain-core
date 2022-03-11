@@ -23,6 +23,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: "jacoco"
 apply plugin: 'maven-publish'
 
+
 jar.enabled = true
 shadowJar.enabled = true
 

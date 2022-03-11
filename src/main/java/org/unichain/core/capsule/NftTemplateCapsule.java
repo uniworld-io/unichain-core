@@ -44,7 +44,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
     var builder = NftTemplate.newBuilder()
             .setSymbol(ctx.getSymbol().toUpperCase())
             .setName(ctx.getName())
-            .setOwner(ctx.getOwner())
+            .setOwner(ctx.getOwnerAddress())
             .setTotalSupply(ctx.getTotalSupply())
             .setTokenIndex(tokenIndex)
             .setLastOperation(lastOperation);

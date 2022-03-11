@@ -471,31 +471,31 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
           //NFT
         case CreateNftTemplateContract:
-          owner = contractParameter.unpack(CreateNftTemplateContract.class).getOwner();
+          owner = contractParameter.unpack(CreateNftTemplateContract.class).getOwnerAddress();
           break;
         case MintNftTokenContract:
           owner = contractParameter.unpack(MintNftTokenContract.class).getOwnerAddress();
           break;
         case RemoveNftMinterContract:
-          owner = contractParameter.unpack(RemoveNftMinterContract.class).getOwner();
+          owner = contractParameter.unpack(RemoveNftMinterContract.class).getOwnerAddress();
           break;
         case AddNftMinterContract:
-          owner = contractParameter.unpack(AddNftMinterContract.class).getOwner();
+          owner = contractParameter.unpack(AddNftMinterContract.class).getOwnerAddress();
           break;
         case RenounceNftMinterContract:
-          owner = contractParameter.unpack(RenounceNftMinterContract.class).getOwner();
+          owner = contractParameter.unpack(RenounceNftMinterContract.class).getOwnerAddress();
           break;
         case BurnNftTokenContract:
-          owner = contractParameter.unpack(BurnNftTokenContract.class).getOwner();
+          owner = contractParameter.unpack(BurnNftTokenContract.class).getOwnerAddress();
           break;
         case ApproveNftTokenContract:
-          owner = contractParameter.unpack(ApproveNftTokenContract.class).getOwner();
+          owner = contractParameter.unpack(ApproveNftTokenContract.class).getOwnerAddress();
           break;
         case ApproveForAllNftTokenContract:
-          owner = contractParameter.unpack(ApproveForAllNftTokenContract.class).getOwner();
+          owner = contractParameter.unpack(ApproveForAllNftTokenContract.class).getOwnerAddress();
           break;
         case TransferNftTokenContract:
-          owner = contractParameter.unpack(TransferNftTokenContract.class).getOwner();
+          owner = contractParameter.unpack(TransferNftTokenContract.class).getOwnerAddress();
           break;
 
         default:

@@ -2015,7 +2015,7 @@ public class Manager {
 
       var relation = new NftAccountTemplateRelationCapsule(relationKey,
               Protocol.NftAccountTemplateRelation.newBuilder()
-                      .setOwner(ByteString.copyFrom(relationKey))
+                      .setOwnerAddress(ByteString.copyFrom(relationKey))
                       .setHead(ByteString.copyFrom(templateKey))
                       .setTail(ByteString.copyFrom(templateKey))
                       .setTotal(1L)
@@ -2054,7 +2054,7 @@ public class Manager {
 
       var relation = new NftAccountTokenRelationCapsule(relationKey,
               Protocol.NftAccountTokenRelation.newBuilder()
-                      .setOwner(ByteString.copyFrom(tokenCap.getOwner()))
+                      .setOwnerAddress(ByteString.copyFrom(tokenCap.getOwner()))
                       .setHead(ByteString.copyFrom(tokenKey))
                       .setTail(ByteString.copyFrom(tokenKey))
                       .setTotal(1L)
@@ -2187,7 +2187,7 @@ public class Manager {
 
       var relation = new NftAccountTokenRelationCapsule(relationKey,
               Protocol.NftAccountTokenRelation.newBuilder()
-                      .setOwner(ByteString.copyFrom(toAddress))
+                      .setOwnerAddress(ByteString.copyFrom(toAddress))
                       .clearHead()
                       .clearTail()
                       .setTotal(0L)

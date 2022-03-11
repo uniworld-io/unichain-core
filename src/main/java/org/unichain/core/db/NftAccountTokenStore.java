@@ -66,7 +66,7 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
       else{
         ownerRelation = new NftAccountTokenRelationCapsule(ownerAddr,
                 Protocol.NftAccountTokenRelation.newBuilder()
-                          .setOwner(ByteString.copyFrom(ownerAddr))
+                          .setOwnerAddress(ByteString.copyFrom(ownerAddr))
                           .clearHead()
                           .clearTail()
                           .setTotal(0L)
@@ -83,7 +83,7 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
       else{
         toRelation = new NftAccountTokenRelationCapsule(toAddr,
                 Protocol.NftAccountTokenRelation.newBuilder()
-                        .setOwner(ByteString.copyFrom(toAddr))
+                        .setOwnerAddress(ByteString.copyFrom(toAddr))
                         .clearHead()
                         .clearTail()
                         .setTotal(0L)

@@ -46,7 +46,7 @@ public class BurnNftTokenActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(BurnNftTokenContract.class);
-      var ownerAddr = ctx.getOwner().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getSymbol()), ByteArray.fromLong(ctx.getTokenId()));
 
       dbManager.removeNftToken(tokenId);
@@ -73,7 +73,7 @@ public class BurnNftTokenActuator extends AbstractActuator {
       var accountStore = dbManager.getAccountStore();
       var tokenStore = dbManager.getNftTokenStore();
       var relationStore = dbManager.getNftAccountTokenStore();
-      var ownerAddr = ctx.getOwner().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getSymbol()), ByteArray.fromLong(ctx.getTokenId()));
 
       Assert.isTrue(accountStore.has(ownerAddr), "owner or approval not exist");
@@ -97,7 +97,7 @@ public class BurnNftTokenActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(BurnNftTokenContract.class).getOwner();
+    return contract.unpack(BurnNftTokenContract.class).getOwnerAddress();
   }
 
   @Override

@@ -365,7 +365,7 @@ message CreateNftTemplateContract{
   string name = 2;
   int64 total_supply = 3;
   bytes minter = 4;
-  bytes owner = 5;
+  bytes owner_address = 5;
 }
 
 message MintNftTokenContract{
@@ -377,29 +377,29 @@ message MintNftTokenContract{
 }
 
 message RemoveNftMinterContract{
-  bytes owner = 1;
+  bytes owner_address = 1;
   string symbol = 2;
 }
 
 message AddNftMinterContract{
   bytes minter = 1;
-  bytes owner = 2;
+  bytes owner_address = 2;
   string symbol = 3;
 }
 
 message RenounceNftMinterContract{
-  bytes owner = 1;
+  bytes owner_address = 1;
   string symbol = 2;
 }
 
 message BurnNftTokenContract{
-  bytes owner = 1;
+  bytes owner_address = 1;
   string symbol = 2;
   int64 token_id =3;
 }
 
 message ApproveNftTokenContract{
-  bytes owner = 1;
+  bytes owner_address = 1;
   bytes to_address = 2;
   bool approve = 3;
   string symbol = 4;
@@ -407,13 +407,13 @@ message ApproveNftTokenContract{
 }
 
 message ApproveForAllNftTokenContract{
-  bytes owner = 1;
+  bytes owner_address = 1;
   bytes to_address = 2;
   bool approve = 3;
 }
 
 message TransferNftTokenContract{
-  bytes owner = 1;
+  bytes owner_address = 1;
   bytes to_address = 2;
   string symbol = 3;
   int64 token_id = 4;

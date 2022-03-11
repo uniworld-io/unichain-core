@@ -47,7 +47,7 @@ public class ApproveNftTokenActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(ApproveNftTokenContract.class);
-      var owner = ctx.getOwner().toByteArray();
+      var owner = ctx.getOwnerAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
       var nftTokenStore = dbManager.getNftTokenStore();
       var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
@@ -93,7 +93,7 @@ public class ApproveNftTokenActuator extends AbstractActuator {
       var accountStore = dbManager.getAccountStore();
       var nftTokenStore = dbManager.getNftTokenStore();
       val ctx = this.contract.unpack(ApproveNftTokenContract.class);
-      var ownerAddr = ctx.getOwner().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
 
       var toAddr = ctx.getToAddress().toByteArray();
@@ -128,7 +128,7 @@ public class ApproveNftTokenActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(ApproveNftTokenContract.class).getOwner();
+    return contract.unpack(ApproveNftTokenContract.class).getOwnerAddress();
   }
 
   @Override

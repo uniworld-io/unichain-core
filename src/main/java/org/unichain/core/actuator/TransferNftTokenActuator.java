@@ -50,7 +50,7 @@ public class TransferNftTokenActuator extends AbstractActuator {
       val ctx = this.contract.unpack(TransferNftTokenContract.class);
       var accountStore = dbManager.getAccountStore();
       var tokenStore = dbManager.getNftTokenStore();
-      var ownerAddr = ctx.getOwner().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress();
       var toAddrBytes = toAddr.toByteArray();
       var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getSymbol()), ByteArray.fromLong(ctx.getTokenId()));
@@ -93,7 +93,7 @@ public class TransferNftTokenActuator extends AbstractActuator {
       var accountStore = dbManager.getAccountStore();
       var tokenStore = dbManager.getNftTokenStore();
       var relationStore = dbManager.getNftAccountTokenStore();
-      var ownerAddr = ctx.getOwner().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
       var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getSymbol()), ByteArray.fromLong(ctx.getTokenId()));
 
@@ -125,7 +125,7 @@ public class TransferNftTokenActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(TransferNftTokenContract.class).getOwner();
+    return contract.unpack(TransferNftTokenContract.class).getOwnerAddress();
   }
 
   @Override

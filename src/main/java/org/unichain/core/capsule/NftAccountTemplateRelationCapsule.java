@@ -30,7 +30,7 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
   public NftAccountTemplateRelationCapsule(byte[] data) {
     try {
       this.relation = NftAccountTemplateRelation.parseFrom(data);
-      this.key = this.relation.getOwner().toByteArray();
+      this.key = this.relation.getOwnerAddress().toByteArray();
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }

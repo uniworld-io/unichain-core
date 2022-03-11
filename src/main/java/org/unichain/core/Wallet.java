@@ -334,7 +334,7 @@ public class Wallet {
         var ownerRelationCap = relationStore.get(ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray());
         if (ownerRelationCap != null) {
           var nftOwnerRelation = NftAccountTokenRelation.newBuilder()
-                  .setOwner(ownerRelationCap.getInstance().getOwner())
+                  .setOwnerAddress(ownerRelationCap.getInstance().getOwnerAddress())
                   .setTotal(ownerRelationCap.getInstance().getTotal())
                   .build();
           approveList.add(nftOwnerRelation);

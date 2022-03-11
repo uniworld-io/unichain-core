@@ -50,7 +50,7 @@ public class NftCreateTemplateActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(CreateNftTemplateContract.class);
       logger.info("CreateNftTemplateContract -->" + ctx.toString());
-      var owner = ctx.getOwner().toByteArray();
+      var owner = ctx.getOwnerAddress().toByteArray();
       dbManager.saveNftTemplate(new NftTemplateCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
       chargeFee(owner, fee);
       dbManager.burnFee(fee);
@@ -75,7 +75,7 @@ public class NftCreateTemplateActuator extends AbstractActuator {
 
       var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
       var name = ctx.getName().getBytes();
-      var ownerAddr = ctx.getOwner().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
       Assert.isTrue(TransactionUtil.validTokenName(symbol), "Invalid template symbol");
       Assert.isTrue(TransactionUtil.validTokenName(name), "Invalid template name");
@@ -100,7 +100,7 @@ public class NftCreateTemplateActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(CreateNftTemplateContract.class).getOwner();
+    return contract.unpack(CreateNftTemplateContract.class).getOwnerAddress();
   }
 
   @Override

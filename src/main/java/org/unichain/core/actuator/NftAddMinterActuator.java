@@ -45,7 +45,7 @@ public class NftAddMinterActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(AddNftMinterContract.class);
-      var ownerAddr = ctx.getOwner().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
       var accStore = dbManager.getAccountStore();
       var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
@@ -81,7 +81,7 @@ public class NftAddMinterActuator extends AbstractActuator {
       Assert.isTrue(contract.is(AddNftMinterContract.class), "contract type error, expected type [AddNftMinterContract], real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(AddNftMinterContract.class);
-      var ownerAddr = ctx.getOwner().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
       var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
       var accStore = dbManager.getAccountStore();
@@ -114,7 +114,7 @@ public class NftAddMinterActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(AddNftMinterContract.class).getOwner();
+    return contract.unpack(AddNftMinterContract.class).getOwnerAddress();
   }
 
   @Override

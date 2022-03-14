@@ -83,15 +83,15 @@ public class NftAddMinterActuator extends AbstractActuator {
       val ctx = this.contract.unpack(AddNftMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
-      var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
+      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
       var accStore = dbManager.getAccountStore();
       var templateStore = dbManager.getNftTemplateStore();
 
       Assert.isTrue(accStore.has(ownerAddr), "Owner account not exist");
       Assert.isTrue(Wallet.addressValid(minterAddr), "Invalid minter address");
       Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not equal");
-      Assert.isTrue(templateStore.has(templateId), "Template not exist");
-      var template = templateStore.get(templateId);
+      Assert.isTrue(templateStore.has(symbol), "Symbol not exist");
+      var template = templateStore.get(symbol);
       Assert.isTrue(Arrays.equals(template.getOwner(), ownerAddr), "Not owner of NFT template");
 
       //check fee

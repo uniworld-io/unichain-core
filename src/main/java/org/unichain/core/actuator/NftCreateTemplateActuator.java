@@ -77,8 +77,8 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       var name = ctx.getName().getBytes();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
-      Assert.isTrue(TransactionUtil.validTokenName(symbol), "Invalid template symbol");
-      Assert.isTrue(TransactionUtil.validTokenName(name), "Invalid template name");
+      Assert.isTrue(TransactionUtil.validSymbol(symbol), "Invalid template symbol");
+      Assert.isTrue(TransactionUtil.validNftName(name), "Invalid template name");
       Assert.isTrue(!dbManager.getNftTemplateStore().has(symbol), "NftTemplate has existed");
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
@@ -86,7 +86,7 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER)){
         var minterAddr = ctx.getMinter().toByteArray();
         Assert.notNull(accountStore.get(minterAddr), "Minter account[" + StringUtil.createReadableString(minterAddr) + "] not exists");
-        Assert.notNull(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
+        Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
       }
       Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");
 

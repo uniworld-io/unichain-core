@@ -442,6 +442,7 @@ public class Wallet {
     return   NftTokenGetResult.newBuilder()
             .setId(token.getId())
             .setSymbol(query.getSymbol())
+            .setUri(token.getUri())
             .setApproval(token.getApproval())
             .setLastOperation(token.getLastOperation())
             .setOwnerAddress(token.getOwnerAddress())

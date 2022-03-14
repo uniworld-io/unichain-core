@@ -128,8 +128,9 @@ public class NftMintActuator extends AbstractActuator {
       Assert.isTrue(templateCap.getTokenIndex() < templateCap.getTotalSupply(), "All NFT token mint!");
 
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Owner not enough balance to create new account fee, require at least "+ fee + "ginza");
-      Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUri().getBytes()).toByteArray()), "invalid uri");
+      Assert.isTrue(TransactionUtil.validHttpURI(ctx.getUri()), "Invalid uri");
       Assert.isTrue(TransactionUtil.validJsonString(ByteString.copyFrom(ctx.getMetadata().getBytes()).toByteArray()), "invalid metadata, should be json format");
+
       return true;
     }
     catch (Exception e){

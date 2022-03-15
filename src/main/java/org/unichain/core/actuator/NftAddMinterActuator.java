@@ -24,6 +24,7 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -101,8 +102,8 @@ public class NftAddMinterActuator extends AbstractActuator {
         fee = Math.addExact(dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract(), fee);
       }
       Assert.isTrue(accStore.get(ownerAddr).getBalance() >= fee, "not enough balance, require at-least: " + fee +" ginza");
-
       Assert.isTrue(!template.hasMinter() || (!Arrays.equals(template.getMinter(), ctx.getMinter().toByteArray())), "already minter");
+      Assert.isTrue(!TransactionUtil.validGenericsAddress(minterAddr), "Minter is generics address");
 
       return true;
     }

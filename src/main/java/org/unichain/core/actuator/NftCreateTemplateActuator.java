@@ -26,9 +26,6 @@ import org.unichain.common.utils.StringUtil;
 import org.unichain.core.capsule.NftTemplateCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
-import org.unichain.core.config.args.Account;
-import org.unichain.core.config.args.Args;
-import org.unichain.core.config.args.Witness;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -85,13 +82,13 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       Assert.isTrue(TransactionUtil.validNftName(name), "Invalid template name");
       Assert.isTrue(!dbManager.getNftTemplateStore().has(symbol), "NftTemplate has existed");
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
-      Assert.isTrue(!isGenericsAddress(ownerAddr), "Owner is generics address");
+      Assert.isTrue(!TransactionUtil.validGenericsAddress(ownerAddr), "Owner is generics address");
 
       if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER)){
         var minterAddr = ctx.getMinter().toByteArray();
         Assert.notNull(accountStore.get(minterAddr), "Minter account[" + StringUtil.createReadableString(minterAddr) + "] not exists");
         Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
-        Assert.isTrue(!isGenericsAddress(minterAddr), "Minter is generics address");
+        Assert.isTrue(!TransactionUtil.validGenericsAddress(minterAddr), "Minter is generics address");
 
       }
       Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");
@@ -114,20 +111,4 @@ public class NftCreateTemplateActuator extends AbstractActuator {
   public long calcFee() {
     return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
   }
-
-  private boolean isGenericsAddress(byte[] address) {
-    var genericsBlock = Args.getInstance().getGenesisBlock();
-
-    for (Witness w : genericsBlock.getWitnesses()){
-      if(Arrays.equals(w.getAddress(), address))
-        return true;
-    }
-    for (Account acc : genericsBlock.getAssets()){
-      if(Arrays.equals(acc.getAddress(), address))
-        return true;
-    }
-
-    return false;
-  }
-
 }

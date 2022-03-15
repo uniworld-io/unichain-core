@@ -17,15 +17,20 @@ package org.unichain.core.capsule.utils;
 
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionCapsule;
+import org.unichain.core.config.args.Account;
+import org.unichain.core.config.args.Args;
+import org.unichain.core.config.args.Witness;
 import org.unichain.protos.Contract.TransferContract;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract;
 
 import java.net.URL;
+import java.util.Arrays;
 
 @Slf4j(topic = "capsule")
 public class TransactionUtil {
@@ -252,6 +257,21 @@ public class TransactionUtil {
     byte[] pubKey = tx.getRawData().getVin(0).getRawData().getPubKey().toByteArray();
     return ECKey.computeAddress(pubKey);
   } */
+
+  public static boolean validGenericsAddress(byte[] address) {
+    var genericsBlock = Args.getInstance().getGenesisBlock();
+
+    for (Witness w : genericsBlock.getWitnesses()){
+      if(Arrays.equals(w.getAddress(), address))
+        return true;
+    }
+    for (Account acc : genericsBlock.getAssets()){
+      if(Arrays.equals(acc.getAddress(), address))
+        return true;
+    }
+
+    return false;
+  }
 
   public static boolean validNftTemplateName(byte[] name) {
     return validAccountName(name);

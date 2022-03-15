@@ -360,20 +360,17 @@ public class Wallet {
     var relationStore = dbManager.getNftAccountTemplateStore();
     var templateStore = dbManager.getNftTemplateStore();
 
-    if(!relationStore.has(ownerAddr) || relationStore.get(ownerAddr).getTotal() <= 0){
+    if (!relationStore.has(ownerAddr) || relationStore.get(ownerAddr).getTotal() <= 0) {
       unsorted.add(NftTemplate.newBuilder().build());
-    }
-    else {
+    } else {
       var start = templateStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
-      while (true){
+      while (true) {
         unsorted.add(start.getInstance());
 
-        if(start.hasNext())
-        {
+        if (start.hasNext()) {
           start = templateStore.get(start.getNext());
           continue;
-        }
-        else {
+        } else {
           break;
         }
       }

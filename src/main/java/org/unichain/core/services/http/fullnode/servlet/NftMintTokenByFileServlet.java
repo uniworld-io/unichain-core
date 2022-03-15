@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 @Component
 @Slf4j(topic = "API")
-public class MintNftTokenByFileServlet extends MintNftTokenServlet{
+public class NftMintTokenByFileServlet extends NftMintTokenServlet {
 
     //@TODO
     @Override

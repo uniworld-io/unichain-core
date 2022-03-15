@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 //@todo later
 @Component
 @Slf4j(topic = "API")
-public class MintNftTokenServlet extends HttpServlet {
+public class NftMintTokenServlet extends HttpServlet {
 
   @Autowired
   private Wallet wallet;

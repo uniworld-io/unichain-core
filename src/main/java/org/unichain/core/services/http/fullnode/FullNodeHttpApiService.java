@@ -51,7 +51,7 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private RemoveNftMinterServlet removeNftMinterServlet;
   @Autowired
-  private MintNftTokenServlet mintNftTokenServlet;
+  private NftMintTokenServlet nftMintTokenServlet;
   @Autowired
   private AddNftMinterServlet addNftMinterServlet;
   @Autowired
@@ -309,7 +309,7 @@ public class FullNodeHttpApiService implements Service {
 
       context.addServlet(new ServletHolder(createNftTemplateServlet), "/createnfttemplate");
       context.addServlet(new ServletHolder(removeNftMinterServlet), "/removenftminter");
-      context.addServlet(new ServletHolder(mintNftTokenServlet), "/mintnfttoken");
+      context.addServlet(new ServletHolder(nftMintTokenServlet), "/mintnfttoken");
       context.addServlet(new ServletHolder(addNftMinterServlet), "/addnftminter");
       context.addServlet(new ServletHolder(renounceNftMinterServlet), "/renouncenftminter");
       context.addServlet(new ServletHolder(burnNftTokenServlet), "/burnnfttoken");

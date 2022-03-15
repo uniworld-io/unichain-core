@@ -76,6 +76,8 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
       var name = ctx.getName().getBytes();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var ownerAccountCap = accountStore.get(ownerAddr);
+
 
       Assert.isTrue(TransactionUtil.validSymbol(symbol), "Invalid template symbol");
       Assert.isTrue(TransactionUtil.validNftName(name), "Invalid template name");
@@ -89,6 +91,7 @@ public class NftCreateTemplateActuator extends AbstractActuator {
         Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
       }
       Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");
+      Assert.isTrue(ownerAccountCap.getBalance() >= calcFee(), "Not enough balance, require fee 500UNW");
 
       return true;
     }

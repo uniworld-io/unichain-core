@@ -48,7 +48,7 @@ public class NftAddMinterActuator extends AbstractActuator {
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
       var accStore = dbManager.getAccountStore();
-      var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
+      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
 
       //create new account
       if (!accStore.has(minterAddr)) {
@@ -57,9 +57,9 @@ public class NftAddMinterActuator extends AbstractActuator {
 
       //save relation
       var templateStore = dbManager.getNftTemplateStore();
-      var template = templateStore.get(templateId);
+      var template = templateStore.get(symbol);
       template.setMinter(ctx.getMinter());
-      templateStore.put(templateId, template);
+      templateStore.put(symbol, template);
 
       //charge fee
       chargeFee(ownerAddr, fee);

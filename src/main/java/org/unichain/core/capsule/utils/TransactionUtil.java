@@ -18,6 +18,7 @@ package org.unichain.core.capsule.utils;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.protos.Contract.TransferContract;
@@ -184,7 +185,7 @@ public class TransactionUtil {
     } catch (Exception e1) {
       return false;
     }
-    return validUrl(uri.getBytes()) && "http".equals(url.getProtocol());
+    return validUrl(uri.getBytes()) && StringUtils.startsWith(url.getProtocol(), "http");
   }
 
   public static boolean validTokenAbbrName(byte[] abbrName) {

@@ -41,9 +41,9 @@ import java.util.Objects;
 import static org.unichain.core.services.http.utils.Util.NFT_MINT_FIELD_METADATA;
 
 @Slf4j(topic = "actuator")
-public class NftMintActuator extends AbstractActuator {
+public class NftMintTokenActuator extends AbstractActuator {
 
-  NftMintActuator(Any contract, Manager dbManager) {
+  NftMintTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -125,7 +125,7 @@ public class NftMintActuator extends AbstractActuator {
       Assert.isTrue(dbManager.getNftTemplateStore().has(symbol), "NFT template not existed");
       var templateCap = dbManager.getNftTemplateStore().get(symbol);
       Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()) || (templateCap.hasMinter() && Arrays.equals(ownerAddr, templateCap.getMinter())), "Only owner or minter allowed to mint NFT token");
-      Assert.isTrue(templateCap.getTokenIndex() < templateCap.getTotalSupply(), "All NFT token mint!");
+      Assert.isTrue(templateCap.getTokenIndex() < templateCap.getTotalSupply(), "Over slot NFT token mint!");
 
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Owner not enough balance to create new account fee, require at least "+ fee + "ginza");
       Assert.isTrue(TransactionUtil.validHttpURI(ctx.getUri()), "Invalid uri");

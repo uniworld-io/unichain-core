@@ -194,15 +194,15 @@ public class ActuatorFactory {
       case RemoveNftMinterContract:
         return new NftRemoveMinterActuator(contract.getParameter(), manager);
       case RenounceNftMinterContract:
-        return new RenounceNftMinterActuator(contract.getParameter(), manager);
+        return new NftRenounceMinterActuator(contract.getParameter(), manager);
       case ApproveNftTokenContract:
-        return new ApproveNftTokenActuator(contract.getParameter(), manager);
+        return new NftApproveTokenActuator(contract.getParameter(), manager);
       case ApproveForAllNftTokenContract:
-        return new ApproveForAllNftTokenActuator(contract.getParameter(), manager);
+        return new NftApproveForAllTokenActuator(contract.getParameter(), manager);
       case BurnNftTokenContract:
-        return new BurnNftTokenActuator(contract.getParameter(), manager);
+        return new NftBurnTokenActuator(contract.getParameter(), manager);
       case TransferNftTokenContract:
-        return new TransferNftTokenActuator(contract.getParameter(), manager);
+        return new NftTransferTokenActuator(contract.getParameter(), manager);
       default:
         logger.warn("un-supported contract type {}!", contract.getType().name());
         return null;

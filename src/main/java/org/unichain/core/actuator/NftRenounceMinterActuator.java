@@ -33,9 +33,9 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
-public class RenounceNftMinterActuator extends AbstractActuator {
+public class NftRenounceMinterActuator extends AbstractActuator {
 
-  RenounceNftMinterActuator(Any contract, Manager dbManager) {
+  NftRenounceMinterActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -45,15 +45,15 @@ public class RenounceNftMinterActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(RenounceNftMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
+      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
 
       var templateStore = dbManager.getNftTemplateStore();
       var relationStore = dbManager.getNftAccountTemplateStore();
 
       //update template
-      var template = templateStore.get(templateId);
+      var template = templateStore.get(symbol);
       template.clearMinter();
-      templateStore.put(templateId, template);
+      templateStore.put(symbol, template);
 
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
@@ -75,13 +75,13 @@ public class RenounceNftMinterActuator extends AbstractActuator {
 
       val ctx = this.contract.unpack(RenounceNftMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
+      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
       var accountStore = dbManager.getAccountStore();
       var templateStore = dbManager.getNftTemplateStore();
 
       Assert.isTrue(accountStore.has(ownerAddr), "Not found owner account");
-      Assert.isTrue(templateStore.has(templateId), "Not found template");
-      var template = templateStore.get(templateId);
+      Assert.isTrue(templateStore.has(symbol), "Not found template");
+      var template = templateStore.get(symbol);
       Assert.isTrue(template.hasMinter() && Arrays.equals(ownerAddr, template.getMinter()), "Minter not exist or un-matched");
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "Not enough balance to cover fee");
       return true;

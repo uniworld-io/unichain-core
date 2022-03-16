@@ -63,10 +63,10 @@ service Wallet {
 
   rpc ListNftTemplate (NftTemplateQuery) returns (NftTemplateQueryResult) {
     option (google.api.http) = {
-      post: "/wallet/listnfttemplate"
+      post: "/wallet/listnftcontract"
       body: "*"
       additional_bindings {
-        get: "/wallet/listnfttemplate"
+        get: "/wallet/listnftcontract"
       }
     };
   };
@@ -84,10 +84,10 @@ service Wallet {
 
   rpc GetNftTemplate (NftTemplate) returns (NftTemplate) {
     option (google.api.http) = {
-      post: "/wallet/getnfttemplate"
+      post: "/wallet/getnftcontract"
       body: "*"
       additional_bindings {
-        get: "/wallet/getnfttemplate"
+        get: "/wallet/getnftcontract"
       }
     };
   };
@@ -250,10 +250,10 @@ service Wallet {
 
   rpc CreateNftTemplate (CreateNftTemplateContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/createnfttemplate"
+      post: "/wallet/createnftcontract"
       body: "*"
       additional_bindings {
-        get: "/wallet/createnfttemplate"
+        get: "/wallet/createnftcontract"
       }
     };
   };
@@ -1018,10 +1018,10 @@ service WalletSolidity {
 
   rpc ListNftTemplate (NftTemplateQuery) returns (NftTemplateQueryResult) {
     option (google.api.http) = {
-      post: "/walletsolidity/listnfttemplate"
+      post: "/walletsolidity/listnftcontract"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/listnfttemplate"
+        get: "/walletsolidity/listnftcontract"
       }
     };
   };
@@ -1038,10 +1038,10 @@ service WalletSolidity {
 
   rpc GetNftTemplate (NftTemplate) returns (NftTemplate) {
     option (google.api.http) = {
-      post: "/walletsolidity/getnfttemplate"
+      post: "/walletsolidity/getnftcontract"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/getnfttemplate"
+        get: "/walletsolidity/getnftcontract"
       }
     };
   };

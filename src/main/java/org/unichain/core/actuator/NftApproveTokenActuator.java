@@ -50,7 +50,7 @@ public class NftApproveTokenActuator extends AbstractActuator {
       var owner = ctx.getOwnerAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
       var nftTokenStore = dbManager.getNftTokenStore();
-      var templateId = Util.stringAsBytesUppercase(ctx.getSymbol());
+      var templateId = Util.stringAsBytesUppercase(ctx.getContract());
       var tokenId = ArrayUtils.addAll(templateId, ByteArray.fromLong(ctx.getTokenId()));
       var nftToken = nftTokenStore.get(tokenId);
 
@@ -103,7 +103,7 @@ public class NftApproveTokenActuator extends AbstractActuator {
       }
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee,"Not enough fee");
 
-      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getSymbol()), ByteArray.fromLong(ctx.getTokenId()));
+      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
       Assert.isTrue(nftTokenStore.has(tokenId), "Not found NFT token");
 
       var nftToken = nftTokenStore.get(tokenId);

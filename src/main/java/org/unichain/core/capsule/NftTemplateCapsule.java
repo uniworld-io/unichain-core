@@ -42,7 +42,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
 
   public NftTemplateCapsule(CreateNftTemplateContract ctx, long lastOperation, long tokenIndex) {
     var builder = NftTemplate.newBuilder()
-            .setSymbol(ctx.getSymbol().toUpperCase())
+            .setContract(ctx.getContract().toUpperCase())
             .setName(ctx.getName())
             .setOwner(ctx.getOwnerAddress())
             .setTotalSupply(ctx.getTotalSupply())
@@ -71,12 +71,12 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
     return this.template.toString();
   }
 
-  public String getSymbol() {
-    return this.template.getSymbol();
+  public String getContract() {
+    return this.template.getContract();
   }
 
-  public void setSymbol(String symbol) {
-    this.template = this.template.toBuilder().setSymbol(symbol).build();
+  public void setContract(String contract) {
+    this.template = this.template.toBuilder().setContract(contract).build();
   }
 
   public String getName() {
@@ -132,7 +132,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public byte[] getKey(){
-    return this.template.getSymbol().getBytes();
+    return this.template.getContract().getBytes();
   }
 
   public void clearMinter(){

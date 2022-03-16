@@ -38,9 +38,9 @@ import java.util.Arrays;
 import static org.unichain.core.services.http.utils.Util.NFT_CREATE_TEMPLATE_FIELD_MINTER;
 
 @Slf4j(topic = "actuator")
-public class NftCreateTemplateActuator extends AbstractActuator {
+public class NftCreateContractActuator extends AbstractActuator {
 
-  NftCreateTemplateActuator(Any contract, Manager dbManager) {
+  NftCreateContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -73,14 +73,14 @@ public class NftCreateTemplateActuator extends AbstractActuator {
       val ctx = this.contract.unpack(CreateNftTemplateContract.class);
       var accountStore = dbManager.getAccountStore();
 
-      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
+      var contract = Util.stringAsBytesUppercase(ctx.getContract());
       var name = ctx.getName().getBytes();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = accountStore.get(ownerAddr);
 
-      Assert.isTrue(TransactionUtil.validSymbol(symbol), "Invalid template symbol");
+      Assert.isTrue(TransactionUtil.validContract(contract), "Invalid template contract");
       Assert.isTrue(TransactionUtil.validNftName(name), "Invalid template name");
-      Assert.isTrue(!dbManager.getNftTemplateStore().has(symbol), "NftTemplate has existed");
+      Assert.isTrue(!dbManager.getNftTemplateStore().has(contract), "NftTemplate has existed");
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
       Assert.isTrue(!TransactionUtil.validGenericsAddress(ownerAddr), "Owner is generics address");
 

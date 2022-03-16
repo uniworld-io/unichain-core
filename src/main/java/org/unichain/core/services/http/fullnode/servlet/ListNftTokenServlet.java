@@ -49,13 +49,13 @@ public class ListNftTokenServlet extends HttpServlet {
     try {
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("owner_address");
-      String symbol = request.getParameter("symbol");
+      String contract = request.getParameter("contract");
       long pageSize = Long.parseLong(request.getParameter("page_size"));
       long pageIndex = Long.parseLong(request.getParameter("page_index"));
       Protocol.NftTokenQuery.Builder build = Protocol.NftTokenQuery.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
-      jsonObject.put("symbol", symbol);
+      jsonObject.put("contract", contract);
       jsonObject.put("page_size", pageSize);
       jsonObject.put("page_index", pageIndex);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);

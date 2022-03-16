@@ -54,7 +54,7 @@ public class NftMintTokenActuator extends AbstractActuator {
       var ctx = contract.unpack(Contract.MintNftTokenContract.class);
       var accountStore = dbManager.getAccountStore();
       var templateStore = dbManager.getNftTemplateStore();
-      var templateKey =  Util.stringAsBytesUppercase(ctx.getSymbol());
+      var templateKey =  Util.stringAsBytesUppercase(ctx.getContract());
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
       var template = templateStore.get(templateKey);
@@ -73,7 +73,7 @@ public class NftMintTokenActuator extends AbstractActuator {
       //save token
       var nftTokenBuilder = Protocol.NftToken.newBuilder()
               .setId(tokenIndex)
-              .setSymbol(ctx.getSymbol().toUpperCase())
+              .setContract(ctx.getContract().toUpperCase())
               .setUri(ctx.getUri())
               .clearApproval()
               .setOwnerAddress(ctx.getToAddress())
@@ -121,9 +121,9 @@ public class NftMintTokenActuator extends AbstractActuator {
          Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Mint to itself not allowed!");
       }
 
-      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
-      Assert.isTrue(dbManager.getNftTemplateStore().has(symbol), "NFT template not existed");
-      var templateCap = dbManager.getNftTemplateStore().get(symbol);
+      var contract = Util.stringAsBytesUppercase(ctx.getContract());
+      Assert.isTrue(dbManager.getNftTemplateStore().has(contract), "NFT template not existed");
+      var templateCap = dbManager.getNftTemplateStore().get(contract);
       Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()) || (templateCap.hasMinter() && Arrays.equals(ownerAddr, templateCap.getMinter())), "Only owner or minter allowed to mint NFT token");
       Assert.isTrue(templateCap.getTokenIndex() < templateCap.getTotalSupply(), "Over slot NFT token mint!");
 

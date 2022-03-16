@@ -128,7 +128,7 @@ message CreateTokenContract {
   int64 fee_pool = 12;
   int64 burned = 13;
   int64 latest_operation_time = 14;
-  int64 lot =15;
+  int64 lot = 15;
   int64 fee_pool_origin = 16;
   int64 exch_unx_num = 17; //#unw
   int64 exch_num = 18; //exchange to #token
@@ -145,7 +145,7 @@ message TransferTokenOwnerContract {
 message ExchangeTokenContract {
   bytes owner_address = 1;
   string token_name = 2;
-  int64 amount =3;
+  int64 amount = 3;
 }
 
 message ContributeTokenPoolFeeContract {
@@ -166,7 +166,7 @@ message UpdateTokenParamsContract {
   int64 fee_pool = 9;
   int64 exch_unx_num = 10; //exchange by unw
   int64 exch_num = 11; //exchange to by token
-  int64 create_acc_fee= 12; //create account fee by token
+  int64 create_acc_fee = 12; //create account fee by token
 }
 
 message MineTokenContract {
@@ -361,7 +361,7 @@ message UpdateBrokerageContract {
 }
 
 message CreateNftTemplateContract{
-  string symbol = 1;
+  string contract = 1;
   string name = 2;
   int64 total_supply = 3;
   bytes minter = 4;
@@ -370,7 +370,7 @@ message CreateNftTemplateContract{
 
 message MintNftTokenContract{
   bytes owner_address = 1;
-  string symbol = 2;
+  string contract = 2;
   bytes to_address = 3;
   string uri = 4;
   string metadata = 5;
@@ -378,32 +378,32 @@ message MintNftTokenContract{
 
 message RemoveNftMinterContract{
   bytes owner_address = 1;
-  string symbol = 2;
+  string contract = 2;
 }
 
 message AddNftMinterContract{
   bytes minter = 1;
   bytes owner_address = 2;
-  string symbol = 3;
+  string contract = 3;
 }
 
 message RenounceNftMinterContract{
   bytes owner_address = 1;
-  string symbol = 2;
+  string contract = 2;
 }
 
 message BurnNftTokenContract{
   bytes owner_address = 1;
-  string symbol = 2;
-  int64 token_id =3;
+  string contract = 2;
+  int64 token_id = 3;
 }
 
 message ApproveNftTokenContract{
   bytes owner_address = 1;
   bytes to_address = 2;
   bool approve = 3;
-  string symbol = 4;
-  int64 token_id =5;
+  string contract = 4;
+  int64 token_id = 5;
 }
 
 message ApproveForAllNftTokenContract{
@@ -415,6 +415,6 @@ message ApproveForAllNftTokenContract{
 message TransferNftTokenContract{
   bytes owner_address = 1;
   bytes to_address = 2;
-  string symbol = 3;
+  string contract = 3;
   int64 token_id = 4;
 }

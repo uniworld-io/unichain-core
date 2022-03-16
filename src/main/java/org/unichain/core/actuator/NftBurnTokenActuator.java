@@ -47,7 +47,7 @@ public class NftBurnTokenActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(BurnNftTokenContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getSymbol()), ByteArray.fromLong(ctx.getTokenId()));
+      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
 
       dbManager.removeNftToken(tokenId);
 
@@ -74,7 +74,7 @@ public class NftBurnTokenActuator extends AbstractActuator {
       var tokenStore = dbManager.getNftTokenStore();
       var relationStore = dbManager.getNftAccountTokenStore();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getSymbol()), ByteArray.fromLong(ctx.getTokenId()));
+      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
 
       Assert.isTrue(accountStore.has(ownerAddr), "owner or approval not exist");
       Assert.isTrue(tokenStore.has(tokenId), "nft token not exist");

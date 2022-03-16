@@ -24,7 +24,6 @@ import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.config.args.Account;
 import org.unichain.core.config.args.Args;
-import org.unichain.core.config.args.Witness;
 import org.unichain.protos.Contract.TransferContract;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract;
@@ -121,11 +120,11 @@ public class TransactionUtil {
     return true;
   }
 
-  public static boolean validSymbol(byte[] symbol){
-    if (ArrayUtils.isEmpty(symbol) || symbol.length > 32)
+  public static boolean validContract(byte[] contract){
+    if (ArrayUtils.isEmpty(contract) || contract.length > 32)
       return false;
 
-    for (byte c : symbol) {
+    for (byte c : contract) {
       if (isCharSpecial(c) || c == 0x20) //0x20~space
         return false;
     }
@@ -261,10 +260,6 @@ public class TransactionUtil {
   public static boolean validGenericsAddress(byte[] address) {
     var genericsBlock = Args.getInstance().getGenesisBlock();
 
-    for (Witness w : genericsBlock.getWitnesses()){
-      if(Arrays.equals(w.getAddress(), address))
-        return true;
-    }
     for (Account acc : genericsBlock.getAssets()){
       if(Arrays.equals(acc.getAddress(), address))
         return true;

@@ -53,7 +53,7 @@ public class NftTransferTokenActuator extends AbstractActuator {
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress();
       var toAddrBytes = toAddr.toByteArray();
-      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getSymbol()), ByteArray.fromLong(ctx.getTokenId()));
+      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
 
       //create new acc if not exist
       if (!accountStore.has(toAddrBytes)) {
@@ -95,7 +95,7 @@ public class NftTransferTokenActuator extends AbstractActuator {
       var relationStore = dbManager.getNftAccountTokenStore();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
-      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getSymbol()), ByteArray.fromLong(ctx.getTokenId()));
+      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
 
       Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");
       Assert.isTrue(accountStore.has(ownerAddr), "Owner, approval or approval-for-all not exist");

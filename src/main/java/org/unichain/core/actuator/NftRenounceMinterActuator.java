@@ -45,15 +45,15 @@ public class NftRenounceMinterActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(RenounceNftMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
+      var contract = Util.stringAsBytesUppercase(ctx.getContract());
 
       var templateStore = dbManager.getNftTemplateStore();
       var relationStore = dbManager.getNftAccountTemplateStore();
 
       //update template
-      var template = templateStore.get(symbol);
+      var template = templateStore.get(contract);
       template.clearMinter();
-      templateStore.put(symbol, template);
+      templateStore.put(contract, template);
 
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
@@ -75,13 +75,13 @@ public class NftRenounceMinterActuator extends AbstractActuator {
 
       val ctx = this.contract.unpack(RenounceNftMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
+      var contract = Util.stringAsBytesUppercase(ctx.getContract());
       var accountStore = dbManager.getAccountStore();
       var templateStore = dbManager.getNftTemplateStore();
 
       Assert.isTrue(accountStore.has(ownerAddr), "Not found owner account");
-      Assert.isTrue(templateStore.has(symbol), "Not found template");
-      var template = templateStore.get(symbol);
+      Assert.isTrue(templateStore.has(contract), "Not found template");
+      var template = templateStore.get(contract);
       Assert.isTrue(template.hasMinter() && Arrays.equals(ownerAddr, template.getMinter()), "Minter not exist or un-matched");
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "Not enough balance to cover fee");
       return true;

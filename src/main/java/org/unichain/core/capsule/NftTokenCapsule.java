@@ -33,7 +33,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   public NftTokenCapsule(byte[] data) {
     try {
       this.token = Protocol.NftToken.parseFrom(data);
-      this.key = ArrayUtils.addAll(Util.stringAsBytesUppercase(token.getSymbol()), ByteArray.fromLong(token.getId()));
+      this.key = ArrayUtils.addAll(Util.stringAsBytesUppercase(token.getContract()), ByteArray.fromLong(token.getId()));
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
@@ -41,7 +41,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
 
   public NftTokenCapsule(Protocol.NftToken token) {
     this.token = token;
-    this.key = ArrayUtils.addAll(Util.stringAsBytesUppercase(token.getSymbol()), ByteArray.fromLong(token.getId()));
+    this.key = ArrayUtils.addAll(Util.stringAsBytesUppercase(token.getContract()), ByteArray.fromLong(token.getId()));
   }
 
   public byte[] getData() {
@@ -122,7 +122,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
     return token.hasField(NFT_TOKEN_FIELD_NEXT);
   }
 
-  public String getSymbol() {
-    return token.getSymbol();
+  public String getContract() {
+    return token.getContract();
   }
 }

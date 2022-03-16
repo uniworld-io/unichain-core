@@ -45,12 +45,12 @@ public class NftRemoveMinterActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(RemoveNftMinterContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
+      var contract = Util.stringAsBytesUppercase(ctx.getContract());
       var templateStore = dbManager.getNftTemplateStore();
 
-      var templateCap = templateStore.get(symbol);
+      var templateCap = templateStore.get(contract);
       templateCap.clearMinter();
-      templateStore.put(symbol, templateCap);
+      templateStore.put(contract, templateCap);
 
       chargeFee(ownerAddress, fee);
       dbManager.burnFee(fee);
@@ -72,12 +72,12 @@ public class NftRemoveMinterActuator extends AbstractActuator {
 
       val ctx = this.contract.unpack(RemoveNftMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var symbol = Util.stringAsBytesUppercase(ctx.getSymbol());
+      var contract = Util.stringAsBytesUppercase(ctx.getContract());
       var accountStore = dbManager.getAccountStore();
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
 
-      var templateCap = dbManager.getNftTemplateStore().get(symbol);
+      var templateCap = dbManager.getNftTemplateStore().get(contract);
       Assert.notNull(templateCap, "NFT template not found");
       Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()), "Not owner of NFT template");
       Assert.isTrue(templateCap.hasMinter(), "Minter not set");

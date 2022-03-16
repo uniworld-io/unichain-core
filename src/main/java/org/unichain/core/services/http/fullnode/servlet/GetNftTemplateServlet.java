@@ -48,10 +48,10 @@ public class GetNftTemplateServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       boolean visible = Util.getVisible(request);
-      String symbol = request.getParameter("symbol");
+      String contract = request.getParameter("contract");
       Protocol.NftTemplate.Builder build = Protocol.NftTemplate.newBuilder();
       JSONObject jsonObject = new JSONObject();
-      jsonObject.put("symbol", symbol);
+      jsonObject.put("contract", contract);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
       Protocol.NftTemplate reply = wallet.getNftTemplate(build.build());

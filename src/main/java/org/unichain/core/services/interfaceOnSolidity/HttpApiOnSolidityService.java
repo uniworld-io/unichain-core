@@ -128,9 +128,9 @@ public class HttpApiOnSolidityService implements Service {
       context.addServlet(new ServletHolder(accountOnSolidityServlet), "/walletsolidity/getaccount");
       context.addServlet(new ServletHolder(tokenPoolOnSolidityServlet), "/walletsolidity/gettokenpool");
 
-      context.addServlet(new ServletHolder(listNftTemplateOnSolidityServlet), "/walletsolidity/listnfttemplate");
+      context.addServlet(new ServletHolder(listNftTemplateOnSolidityServlet), "/walletsolidity/listnftcontract");
       context.addServlet(new ServletHolder(listNftTokenOnSolidityServlet), "/walletsolidity/listnfttoken");
-      context.addServlet(new ServletHolder(getNftTemplateOnSolidityServlet), "/walletsolidity/getnfttemplate");
+      context.addServlet(new ServletHolder(getNftTemplateOnSolidityServlet), "/walletsolidity/getnftcontract");
       context.addServlet(new ServletHolder(getNftTokenOnSolidityServlet), "/walletsolidity/getnfttoken");
       context.addServlet(new ServletHolder(getNftBalanceOfOnSolidityServlet), "/walletsolidity/getnftbalanceOf");
       context.addServlet(new ServletHolder(getNftApprovedForAllOnSolidityServlet), "/walletsolidity/getnftapprovedforall");

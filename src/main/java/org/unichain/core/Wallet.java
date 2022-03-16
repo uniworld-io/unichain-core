@@ -392,8 +392,8 @@ public class Wallet {
     Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
     var ownerAddr = query.getOwnerAddress().toByteArray();
-    var symbol = query.getSymbol();
-    var filterSymbol = query.hasField(NFT_TOKEN_QUERY_FIELD_SYMBOL);
+    var contract = query.getContract();
+    var filtercontract = query.hasField(NFT_TOKEN_QUERY_FIELD_CONTRACT);
     List<NftToken> unsorted = new ArrayList<>();
     var relationStore = dbManager.getNftAccountTokenStore();
     var tokenStore = dbManager.getNftTokenStore();
@@ -404,7 +404,7 @@ public class Wallet {
     else {
       var start = tokenStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
       while (true){
-        if(!filterSymbol || (filterSymbol && start.getSymbol().equalsIgnoreCase(symbol)))
+        if(!filtercontract || (filtercontract && start.getContract().equalsIgnoreCase(contract)))
            unsorted.add(start.getInstance());
 
          if(start.hasNext())
@@ -427,18 +427,18 @@ public class Wallet {
   }
 
   public NftTemplate getNftTemplate(NftTemplate query) {
-    Assert.notNull(query.getSymbol(), "Template symbol empty");
-    return dbManager.getNftTemplateStore().get(Util.stringAsBytesUppercase(query.getSymbol())).getInstance();
+    Assert.notNull(query.getContract(), "Template contract empty");
+    return dbManager.getNftTemplateStore().get(Util.stringAsBytesUppercase(query.getContract())).getInstance();
   }
 
   public NftTokenGetResult getNftToken(NftTokenGet query) {
-    Assert.notNull(query.getSymbol(), "Token symbol empty");
+    Assert.notNull(query.getContract(), "Token contract empty");
     Assert.notNull(query.getId(), "Token id empty");
-    var id = ArrayUtils.addAll(Util.stringAsBytesUppercase(query.getSymbol()), ByteArray.fromLong(query.getId()));
+    var id = ArrayUtils.addAll(Util.stringAsBytesUppercase(query.getContract()), ByteArray.fromLong(query.getId()));
     var token = dbManager.getNftTokenStore().get(id).getInstance();
     return   NftTokenGetResult.newBuilder()
             .setId(token.getId())
-            .setSymbol(query.getSymbol())
+            .setContract(query.getContract())
             .setUri(token.getUri())
             .setApproval(token.getApproval())
             .setLastOperation(token.getLastOperation())

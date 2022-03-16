@@ -781,7 +781,7 @@ message NodeInfo {
 }
 
 message NftTemplate{
-  string symbol = 1;
+  string contract = 1;
   string name = 2;
   int64 total_supply = 3;
   int64 token_index = 4;
@@ -793,7 +793,7 @@ message NftTemplate{
 }
 
 message NftToken{
-  string symbol = 1;
+  string contract = 1;
   int64 id = 2;
   bytes owner_address = 3;
   bytes approval = 4;
@@ -839,18 +839,18 @@ message NftTemplateQueryResult{
 
 message NftTokenQuery{
   bytes owner_address = 1;
-  string symbol = 2;
+  string contract = 2;
   int32 page_size = 3;
   int32 page_index = 4;
 }
 
 message NftTokenGet{
-  string symbol = 1;
+  string contract = 1;
   int64 id = 2;
 }
 
 message NftTokenGetResult{
-  string symbol = 1;
+  string contract = 1;
   int64 id = 2;
   bytes owner_address = 3;
   bytes approval = 4;

@@ -141,11 +141,11 @@ public class SolidityNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getAccountServlet), "/walletsolidity/getaccount");
       context.addServlet(new ServletHolder(getTokenPoolServlet), "/walletsolidity/gettokenpool");
 
-      context.addServlet(new ServletHolder(listNftTemplateServlet), "/walletsolidity/listnfttemplate");
+      context.addServlet(new ServletHolder(listNftTemplateServlet), "/walletsolidity/listnftcontract");
       context.addServlet(new ServletHolder(listNftTokenApproveServlet), "/walletsolidity/listnfttokenapprove");
       context.addServlet(new ServletHolder(listNftTokenApproveAllServlet), "/walletsolidity/listnfttokenapproveall");
       context.addServlet(new ServletHolder(listNftTokenServlet), "/walletsolidity/listnfttoken");
-      context.addServlet(new ServletHolder(getNftTemplateServlet), "/walletsolidity/getnfttemplate");
+      context.addServlet(new ServletHolder(getNftTemplateServlet), "/walletsolidity/getnftcontract");
       context.addServlet(new ServletHolder(getNftTokenServlet), "/walletsolidity/getnfttoken");
       context.addServlet(new ServletHolder(getNftBalanceOfServlet), "/walletsolidity/getnftbalanceOf");
       context.addServlet(new ServletHolder(getNftApprovedForAllServlet), "/walletsolidity/getnftapprovedforall");

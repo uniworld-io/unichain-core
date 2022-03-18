@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.fullnode.servlet.GetNftBalanceOfServlet;
-import org.unichain.core.services.http.fullnode.servlet.ListNftTokenServlet;
 import org.unichain.core.services.interfaceOnSolidity.WalletOnSolidity;
 
 import javax.servlet.http.HttpServletRequest;

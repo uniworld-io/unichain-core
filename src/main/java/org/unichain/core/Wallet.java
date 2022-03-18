@@ -407,10 +407,7 @@ public class Wallet {
     var relationStore = dbManager.getNftAccountTokenStore();
     var tokenStore = dbManager.getNftTokenStore();
 
-    if(!relationStore.has(ownerAddr) || relationStore.get(ownerAddr).getTotal() <= 0){
-      unsorted.add(NftToken.newBuilder().build());
-    }
-    else {
+    if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0){
       var start = tokenStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
       while (true){
         if(!filtercontract || (filtercontract && start.getContract().equalsIgnoreCase(contract)))

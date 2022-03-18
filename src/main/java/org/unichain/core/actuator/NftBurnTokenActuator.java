@@ -102,6 +102,6 @@ public class NftBurnTokenActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getAssetUpdateFee();//2 UNW default
+    return 0;
   }
 }

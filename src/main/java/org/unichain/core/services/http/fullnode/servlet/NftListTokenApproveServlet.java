@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class ListNftTokenApproveServlet extends HttpServlet {
+public class NftListTokenApproveServlet extends HttpServlet {
   @Autowired
   private Wallet wallet;
 
@@ -67,7 +67,8 @@ public class ListNftTokenApproveServlet extends HttpServlet {
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       try {
-        response.getWriter().println(Util.printErrorMsg(e));
+        response.setStatus(400);
+        response.getWriter().println(Util.messageErrorHttp(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());
       }

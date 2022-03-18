@@ -2355,15 +2355,17 @@ public class Manager {
 
       relationCap.setHead(ByteString.copyFrom(contractCap.getNextOfMinter()));
       relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
-
-      contractCap.clearNextOfMinter();
       nftMinterContractStore.put(relationCap.getKey(), relationCap);
-    }else if(!contractCap.hasPrevOfMinter() && !contractCap.hasNextOfMinter()){
-      contractCap.clearNextOfMinter();
+
       contractCap.clearPrevOfMinter();
+      contractCap.clearNextOfMinter();
       nftTemplateStore.put(contractCap.getKey(), contractCap);
+    }else if(!contractCap.hasPrevOfMinter() && !contractCap.hasNextOfMinter()){
       nftMinterContractStore.delete(relationCap.getKey());
+
+      contractCap.clearPrevOfMinter();
+      contractCap.clearNextOfMinter();
+      nftTemplateStore.put(contractCap.getKey(), contractCap);
     }else if(contractCap.hasPrevOfMinter() && !contractCap.hasNextOfMinter()){
       var prev = nftTemplateStore.get(contractCap.getPrevOfMinter());
       prev.clearNextOfMinter();
@@ -2374,6 +2376,7 @@ public class Manager {
       nftMinterContractStore.put(relationCap.getKey(), relationCap);
 
       contractCap.clearPrevOfMinter();
+      contractCap.clearNextOfMinter();
       nftTemplateStore.put(contractCap.getKey(), contractCap);
     }else {
       var prev = nftTemplateStore.get(contractCap.getPrevOfMinter());
@@ -2386,6 +2389,10 @@ public class Manager {
 
       relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
       nftMinterContractStore.put(relationCap.getKey(), relationCap);
+
+      contractCap.clearPrevOfMinter();
+      contractCap.clearNextOfMinter();
+      nftTemplateStore.put(contractCap.getKey(), contractCap);
     }
   }
 }

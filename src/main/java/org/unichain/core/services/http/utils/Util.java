@@ -39,6 +39,13 @@ public class Util {
   public static final String TRANSACTION = "transaction";
   public static final String VALUE = "value";
 
+  public static String messageErrorHttp(Exception e){
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("status", 400);
+    jsonObject.put("message", e.getMessage());
+    return jsonObject.toJSONString();
+  }
+
   public static String printErrorMsg(Exception e) {
     JSONObject jsonObject = new JSONObject();
     jsonObject.put("Error", e.getClass() + " : " + e.getMessage());

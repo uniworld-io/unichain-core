@@ -35,13 +35,13 @@ public class SolidityNodeHttpApiService implements Service {
   private GetTokenPoolServlet getTokenPoolServlet;
 
   @Autowired
-  private ListNftTemplateServlet listNftTemplateServlet;
+  private NftListTemplateServlet nftListTemplateServlet;
   @Autowired
-  private ListNftTokenApproveServlet listNftTokenApproveServlet;
+  private NftListTokenApproveServlet listNftTokenApproveServlet;
   @Autowired
-  private ListNftTokenApproveAllServlet listNftTokenApproveAllServlet;
+  private NftListTokenApproveAllServlet listNftTokenApproveAllServlet;
   @Autowired
-  private ListNftTokenServlet listNftTokenServlet;
+  private NftListTokenServlet nftListTokenServlet;
   @Autowired
   private GetNftTemplateServlet getNftTemplateServlet;
   @Autowired
@@ -49,7 +49,7 @@ public class SolidityNodeHttpApiService implements Service {
   @Autowired
   private GetNftBalanceOfServlet getNftBalanceOfServlet;
   @Autowired
-  private GetNftApprovedForAllServlet getNftApprovedForAllServlet;
+  private NftGetApprovedForAllServlet nftGetApprovedForAllServlet;
 
   @Autowired
   private GetTokenFutureServlet getTokenFutureServlet;
@@ -141,14 +141,14 @@ public class SolidityNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getAccountServlet), "/walletsolidity/getaccount");
       context.addServlet(new ServletHolder(getTokenPoolServlet), "/walletsolidity/gettokenpool");
 
-      context.addServlet(new ServletHolder(listNftTemplateServlet), "/walletsolidity/listnftcontract");
+      context.addServlet(new ServletHolder(nftListTemplateServlet), "/walletsolidity/listnftcontract");
       context.addServlet(new ServletHolder(listNftTokenApproveServlet), "/walletsolidity/listnfttokenapprove");
       context.addServlet(new ServletHolder(listNftTokenApproveAllServlet), "/walletsolidity/listnfttokenapproveall");
-      context.addServlet(new ServletHolder(listNftTokenServlet), "/walletsolidity/listnfttoken");
+      context.addServlet(new ServletHolder(nftListTokenServlet), "/walletsolidity/listnfttoken");
       context.addServlet(new ServletHolder(getNftTemplateServlet), "/walletsolidity/getnftcontract");
       context.addServlet(new ServletHolder(getNftTokenServlet), "/walletsolidity/getnfttoken");
       context.addServlet(new ServletHolder(getNftBalanceOfServlet), "/walletsolidity/getnftbalanceOf");
-      context.addServlet(new ServletHolder(getNftApprovedForAllServlet), "/walletsolidity/getnftapprovedforall");
+      context.addServlet(new ServletHolder(nftGetApprovedForAllServlet), "/walletsolidity/getnftapprovedforall");
 
       context.addServlet(new ServletHolder(getTokenFutureServlet), "/walletsolidity/getfuturetoken");
       context.addServlet(new ServletHolder(getFutureTransferServlet), "/walletsolidity/getfuturetransfer");

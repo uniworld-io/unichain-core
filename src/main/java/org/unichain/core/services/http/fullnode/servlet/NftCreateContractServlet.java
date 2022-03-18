@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class ApproveNftTokenServlet extends HttpServlet {
+public class NftCreateContractServlet extends HttpServlet {
 
   @Autowired
   private Wallet wallet;
@@ -32,17 +32,18 @@ public class ApproveNftTokenServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.ApproveNftTokenContract.newBuilder();
+      var build = Contract.CreateNftTemplateContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
-      var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.ApproveNftTokenContract).getInstance();
+      var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.CreateNftTemplateContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
       try {
         logger.error(e.getMessage(), e);
-        response.getWriter().println(Util.printErrorMsg(e));
+        response.setStatus(400);
+        response.getWriter().println(Util.messageErrorHttp(e));
       } catch (IOException ioe) {
         logger.error("IOException: {}", ioe.getMessage());
       }

@@ -17,30 +17,33 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-//@todo later
 @Component
 @Slf4j(topic = "API")
-public class RemoveNftMinterServlet extends HttpServlet {
+public class NftTokenApproveForAllServlet extends HttpServlet {
 
   @Autowired
   private Wallet wallet;
+
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+  }
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.RemoveNftMinterContract.newBuilder();
+      var build = Contract.ApproveForAllNftTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
-      var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.RemoveNftMinterContract).getInstance();
+      var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.ApproveForAllNftTokenContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
       try {
         logger.error(e.getMessage(), e);
-        response.getWriter().println(Util.printErrorMsg(e));
+        response.setStatus(400);
+        response.getWriter().println(Util.messageErrorHttp(e));
       } catch (IOException ioe) {
         logger.error("IOException: {}", ioe.getMessage());
       }

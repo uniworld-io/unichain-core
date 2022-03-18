@@ -44,7 +44,8 @@ public class NftMintTokenServlet extends HttpServlet {
     } catch (Exception e) {
       try {
         logger.error(e.getMessage(), e);
-        response.getWriter().println(Util.printErrorMsg(e));
+        response.setStatus(400);
+        response.getWriter().println(Util.messageErrorHttp(e));
       } catch (IOException ioe) {
         logger.error("IOException: {}", ioe.getMessage());
       }

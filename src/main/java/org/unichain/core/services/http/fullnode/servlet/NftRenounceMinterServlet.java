@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class CreateNftTemplateServlet extends HttpServlet {
+public class NftRenounceMinterServlet extends HttpServlet {
 
   @Autowired
   private Wallet wallet;
@@ -32,10 +32,10 @@ public class CreateNftTemplateServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.CreateNftTemplateContract.newBuilder();
+      var build = Contract.RenounceNftMinterContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
-      var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.CreateNftTemplateContract).getInstance();
+      var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.RenounceNftMinterContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

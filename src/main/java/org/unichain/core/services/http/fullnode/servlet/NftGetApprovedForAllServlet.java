@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class GetNftApprovedForAllServlet extends HttpServlet {
+public class NftGetApprovedForAllServlet extends HttpServlet {
   @Autowired
   private Wallet wallet;
 
@@ -67,7 +67,8 @@ public class GetNftApprovedForAllServlet extends HttpServlet {
     } catch (Exception e) {
       logger.debug("Exception: {}", e.getMessage());
       try {
-        response.getWriter().println(Util.printErrorMsg(e));
+        response.setStatus(400);
+        response.getWriter().println(Util.messageErrorHttp(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());
       }
@@ -96,7 +97,8 @@ public class GetNftApprovedForAllServlet extends HttpServlet {
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       try {
-        response.getWriter().println(Util.printErrorMsg(e));
+        response.setStatus(400);
+        response.getWriter().println(Util.messageErrorHttp(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());
       }

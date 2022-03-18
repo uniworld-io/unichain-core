@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.common.utils.Utils;
@@ -51,11 +52,13 @@ public class ListNftTemplateServlet extends HttpServlet {
       String address = request.getParameter("owner_address");
       long pageSize = Long.parseLong(request.getParameter("page_size"));
       long pageIndex = Long.parseLong(request.getParameter("page_index"));
+      String ownerType = request.getParameter("owner_type");
       Protocol.NftTemplateQuery.Builder build = Protocol.NftTemplateQuery.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
       jsonObject.put("page_size", pageSize);
       jsonObject.put("page_index", pageIndex);
+      jsonObject.put("owner_type", StringUtils.isEmpty(ownerType) ? "OWNER" : ownerType);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
       Protocol.NftTemplateQueryResult reply = wallet.listNftTemplate(build.build());

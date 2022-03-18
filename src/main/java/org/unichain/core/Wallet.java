@@ -360,17 +360,26 @@ public class Wallet {
     var relationStore = dbManager.getNftAccountTemplateStore();
     var templateStore = dbManager.getNftTemplateStore();
 
-    if (!relationStore.has(ownerAddr) || relationStore.get(ownerAddr).getTotal() <= 0) {
-      unsorted.add(NftTemplate.newBuilder().build());
-    } else {
+    if ("OWNER".equals(query.getOwnerType()) && relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0) {
       var start = templateStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
       while (true) {
         unsorted.add(start.getInstance());
-
         if (start.hasNext()) {
           start = templateStore.get(start.getNext());
-          continue;
         } else {
+          break;
+        }
+      }
+    }
+    var minterRelationStore = dbManager.getNftMinterContractStore();
+    if("MINTER".equals(query.getOwnerType()) && minterRelationStore.has(ownerAddr) && minterRelationStore.get(ownerAddr).getTotal() > 0){
+      var relation = minterRelationStore.get(ownerAddr);
+      var start = templateStore.get(relation.getHead().toByteArray());
+      while (true){
+        unsorted.add(start.getInstance());
+        if(start.hasNextOfMinter()){
+          start = templateStore.get(start.getNextOfMinter());
+        }else {
           break;
         }
       }

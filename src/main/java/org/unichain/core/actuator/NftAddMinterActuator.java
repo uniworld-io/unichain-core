@@ -59,8 +59,12 @@ public class NftAddMinterActuator extends AbstractActuator {
       //save relation
       var templateStore = dbManager.getNftTemplateStore();
       var template = templateStore.get(contract);
+      var currMinter = template.getMinter();
+      dbManager.removeMinterContract(currMinter, contract);
+
       template.setMinter(ctx.getMinter());
       templateStore.put(contract, template);
+      dbManager.addMinterContractRelation(template);
 
       //charge fee
       chargeFee(ownerAddr, fee);

@@ -46,14 +46,8 @@ public class NftRenounceMinterActuator extends AbstractActuator {
       var ctx = contract.unpack(RenounceNftMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contract = Util.stringAsBytesUppercase(ctx.getContract());
-
-      var templateStore = dbManager.getNftTemplateStore();
-      var relationStore = dbManager.getNftAccountTemplateStore();
-
       //update template
-      var template = templateStore.get(contract);
-      template.clearMinter();
-      templateStore.put(contract, template);
+      dbManager.removeMinterContract(ownerAddr, contract);
 
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);

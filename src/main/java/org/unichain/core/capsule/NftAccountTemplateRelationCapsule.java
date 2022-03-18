@@ -67,6 +67,10 @@ public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccoun
     this.relation = relation.toBuilder().setTail(tail).build();
   }
 
+  public void setHead(ByteString head){
+    this.relation = relation.toBuilder().setHead(head).build();
+  }
+
   public boolean hasTail(){
     return relation.hasField(NFT_TEMPLATE_ACCOUNT_FIELD_TAIL);
   }

@@ -166,4 +166,38 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   public void clearPrev(){
     this.template = template.toBuilder().clearPrev().build();
   }
+
+  public void clearPrevOfMinter(){
+    this.template = template.toBuilder().clearPrevOfMinter().build();
+  }
+
+  public void clearNextOfMinter(){
+    this.template = template.toBuilder().clearNextOfMinter().build();
+  }
+
+  public void setNextOfMinter(byte[] next){
+    template = template.toBuilder().setNextOfMinter(ByteString.copyFrom(next)).build();
+  }
+
+  public void setPrevOfMinter(byte[] prev){
+    template = template.toBuilder().setPrevOfMinter(ByteString.copyFrom(prev)).build();
+  }
+
+  public boolean hasNextOfMinter(){
+    return this.template.hasField(NFT_TEMPLATE_FIELD_NEXT_OF_MINTER);
+  }
+
+  public boolean hasPrevOfMinter(){
+    return this.template.hasField(NFT_TEMPLATE_FIELD_PREV_OF_MINTER);
+  }
+
+  public byte[] getNextOfMinter(){
+    return template.getNextOfMinter().toByteArray();
+  }
+
+  public byte[] getPrevOfMinter(){
+    return template.getPrevOfMinter().toByteArray();
+  }
+
+
 }

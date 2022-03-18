@@ -94,6 +94,10 @@ public class Manager {
 
   @Autowired
   @Getter
+  private NftMinterContractStore nftMinterContractStore;
+
+  @Autowired
+  @Getter
   private NftAccountTokenStore nftAccountTokenStore;
 
   @Getter
@@ -1744,6 +1748,7 @@ public class Manager {
 
   public void closeAllStore() {
     logger.warn("******** begin to close db ********");
+    closeOneStore(nftMinterContractStore);
     closeOneStore(nftTokenApproveRelationStore);
     closeOneStore(nftTokenStore);
     closeOneStore(nftTemplateStore);
@@ -2039,6 +2044,9 @@ public class Manager {
       tailCap.setNext(templateKey);
       templateStore.put(tailKey, tailCap);
     }
+    if(templateCap.hasMinter()){
+      addMinterContractRelation(templateCap);
+    }
   }
 
   public void saveNftToken(NftTokenCapsule tokenCap) {
@@ -2169,7 +2177,6 @@ public class Manager {
     }
   }
 
-  //@todo review
   public void addApproveToken(byte[] tokenId, byte[] toAddress){
     var approveStore = getNftTokenApproveRelationStore();
     var relationStore = getNftAccountTokenStore();
@@ -2237,7 +2244,6 @@ public class Manager {
     }
   }
 
-  //@todo review
   public void disapproveToken(byte[] tokenId, byte[] toAddress){
     var approveStore = getNftTokenApproveRelationStore();
     var relationStore = getNftAccountTokenStore();
@@ -2301,5 +2307,85 @@ public class Manager {
     }
     relationStore.put(owner, relation);
     approveStore.delete(tokenId);
+  }
+
+  public void addMinterContractRelation(NftTemplateCapsule contractCap){
+    var minterAddress = contractCap.getMinter();
+    if(!nftMinterContractStore.has(minterAddress)){
+      contractCap.clearNextOfMinter();
+      contractCap.clearPrevOfMinter();
+      nftTemplateStore.put(contractCap.getKey(), contractCap);
+
+      var relation = Protocol.NftAccountTemplateRelation.newBuilder()
+              .setOwnerAddress(ByteString.copyFrom(minterAddress))
+              .setHead(ByteString.copyFrom(contractCap.getKey()))
+              .setTail(ByteString.copyFrom(contractCap.getKey()))
+              .setTotal(1L)
+              .build();
+      nftMinterContractStore.put(minterAddress, new NftAccountTemplateRelationCapsule(minterAddress, relation));
+    }else {
+      var relationCap = nftMinterContractStore.get(minterAddress);
+      var tail  = nftTemplateStore.get(relationCap.getTail().toByteArray());
+
+      tail.setNextOfMinter(contractCap.getKey());
+      nftTemplateStore.put(tail.getKey(), tail);
+
+      contractCap.clearNextOfMinter();
+      contractCap.setPrevOfMinter(tail.getKey());
+      nftTemplateStore.put(contractCap.getKey(), contractCap);
+
+      relationCap.setTail(ByteString.copyFrom(contractCap.getKey()));
+      relationCap.setTotal(Math.incrementExact(relationCap.getTotal()));
+      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+    }
+  }
+
+  public void removeMinterContract(byte[] minterAddress, byte[] contract){
+    nftTemplateStore.deleteMinter(contract);
+    var contractCap = nftTemplateStore.get(contract);
+
+    if(!nftMinterContractStore.has(minterAddress))
+      return;
+
+    var relationCap = nftMinterContractStore.get(minterAddress);
+    if(!contractCap.hasPrevOfMinter() && contractCap.hasNextOfMinter()){
+      var next = nftTemplateStore.get(contractCap.getNextOfMinter());
+      next.clearPrevOfMinter();
+      nftTemplateStore.put(next.getKey(), next);
+
+      relationCap.setHead(ByteString.copyFrom(contractCap.getNextOfMinter()));
+      relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
+      nftTemplateStore.put(contractCap.getKey(), contractCap);
+
+      contractCap.clearNextOfMinter();
+      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+    }else if(!contractCap.hasPrevOfMinter() && !contractCap.hasNextOfMinter()){
+      contractCap.clearNextOfMinter();
+      contractCap.clearPrevOfMinter();
+      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      nftMinterContractStore.delete(relationCap.getKey());
+    }else if(contractCap.hasPrevOfMinter() && !contractCap.hasNextOfMinter()){
+      var prev = nftTemplateStore.get(contractCap.getPrevOfMinter());
+      prev.clearNextOfMinter();
+      nftTemplateStore.put(prev.getKey(), prev);
+
+      relationCap.setTail(ByteString.copyFrom(contractCap.getPrevOfMinter()));
+      relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
+      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+
+      contractCap.clearPrevOfMinter();
+      nftTemplateStore.put(contractCap.getKey(), contractCap);
+    }else {
+      var prev = nftTemplateStore.get(contractCap.getPrevOfMinter());
+      var next = nftTemplateStore.get(contractCap.getNextOfMinter());
+
+      prev.setNextOfMinter(next.getKey());
+      next.setPrevOfMinter(prev.getKey());
+      nftTemplateStore.put(prev.getKey(), prev);
+      nftTemplateStore.put(next.getKey(), next);
+
+      relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
+      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+    }
   }
 }

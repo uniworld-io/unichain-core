@@ -80,13 +80,13 @@ public class NftCreateContractActuator extends AbstractActuator {
 
       Assert.isTrue(TransactionUtil.validContract(contract), "Invalid template contract");
       Assert.isTrue(TransactionUtil.validNftName(name), "Invalid template name");
-      Assert.isTrue(!dbManager.getNftTemplateStore().has(contract), "NftTemplate has existed");
+      Assert.isTrue(!dbManager.getNftTemplateStore().has(contract), "Contract has existed");
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
       Assert.isTrue(!TransactionUtil.validGenericsAddress(ownerAddr), "Owner is generics address");
 
       if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER)){
         var minterAddr = ctx.getMinter().toByteArray();
-        Assert.notNull(accountStore.get(minterAddr), "Minter account[" + StringUtil.createReadableString(minterAddr) + "] not exists");
+        Assert.notNull(accountStore.get(minterAddr), "Minter account[" + StringUtil.createReadableString(minterAddr) + "] not exists or not active");
         Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
         Assert.isTrue(!TransactionUtil.validGenericsAddress(minterAddr), "Minter is generics address");
 
@@ -111,4 +111,7 @@ public class NftCreateContractActuator extends AbstractActuator {
   public long calcFee() {
     return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
   }
+
 }
+
+

@@ -83,7 +83,7 @@ public class NftApproveForAllTokenActuator extends AbstractActuator {
       var toAddr = ctx.getToAddress().toByteArray();
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
-      Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");
+      Assert.isTrue(Wallet.addressValid(toAddr), "Target address not exists or not active");
       Assert.isTrue(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0, "Not found any token");
       var relation = relationStore.get(ownerAddr);
 

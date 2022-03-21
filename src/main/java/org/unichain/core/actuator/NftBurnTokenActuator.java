@@ -67,7 +67,7 @@ public class NftBurnTokenActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(BurnNftTokenContract.class), "contract type error,expected type [BurnNftTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(BurnNftTokenContract.class), "Contract type error,expected type [BurnNftTokenContract],real type[" + contract.getClass() + "]");
       var fee = calcFee();
       val ctx = this.contract.unpack(BurnNftTokenContract.class);
       var accountStore = dbManager.getAccountStore();
@@ -76,8 +76,8 @@ public class NftBurnTokenActuator extends AbstractActuator {
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
 
-      Assert.isTrue(accountStore.has(ownerAddr), "owner or approval not exist");
-      Assert.isTrue(tokenStore.has(tokenId), "nft token not exist");
+      Assert.isTrue(accountStore.has(ownerAddr), "Owner address not exist");
+      Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");
       var nft = tokenStore.get(tokenId);
       var nftOwner = nft.getOwner();
       var relation = relationStore.get(nftOwner);
@@ -86,7 +86,7 @@ public class NftBurnTokenActuator extends AbstractActuator {
               || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
               || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to burn NFT token");
 
-      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "not enough fee");
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough fee");
       return true;
     }
     catch (Exception e){

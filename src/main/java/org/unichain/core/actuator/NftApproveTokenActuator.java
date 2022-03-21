@@ -97,7 +97,7 @@ public class NftApproveTokenActuator extends AbstractActuator {
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
 
       var toAddr = ctx.getToAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(toAddr), "Invalid toAddress");
+      Assert.isTrue(Wallet.addressValid(toAddr), "Target address not active or not exists");
       if(!accountStore.has(toAddr)){
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }

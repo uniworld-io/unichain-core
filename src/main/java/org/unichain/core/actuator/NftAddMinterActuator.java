@@ -93,7 +93,7 @@ public class NftAddMinterActuator extends AbstractActuator {
       var templateStore = dbManager.getNftTemplateStore();
 
       Assert.isTrue(accStore.has(ownerAddr), "Owner account not exist");
-      Assert.isTrue(Wallet.addressValid(minterAddr), "Invalid minter address");
+      Assert.isTrue(Wallet.addressValid(minterAddr), "Minter address not active or not exists");
       Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not equal");
       Assert.isTrue(templateStore.has(contract), "contract not exist");
       var template = templateStore.get(contract);

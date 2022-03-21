@@ -109,7 +109,7 @@ public class NftCreateContractActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
+    return dbManager.getDynamicPropertiesStore().getNftIssueFee();//500 UNW default
   }
 
 }

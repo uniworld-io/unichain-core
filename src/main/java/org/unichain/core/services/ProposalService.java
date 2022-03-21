@@ -65,7 +65,8 @@ public class ProposalService {
     MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN(36), // max future transfer token 36
     TOKEN_UPDATE_FEE(37), // token update(burn, mine, update params..) fee 37
     MAX_FROZEN_TIME_BY_DAY(38), //max time to freeze balance 38
-    MIN_FROZEN_TIME_BY_DAY(39); //min time to freeze balance 39
+    MIN_FROZEN_TIME_BY_DAY(39), //min time to freeze balance 39
+    NFT_ISSUE_FEE(40);
 
     ProposalType(long code) {
       this.code = code;
@@ -119,6 +120,7 @@ public class ProposalService {
       case CREATE_ACCOUNT_FEE:
       case TRANSACTION_FEE:
       case ASSET_ISSUE_FEE:
+      case NFT_ISSUE_FEE:
       case WITNESS_PAY_PER_BLOCK:
       case WITNESS_STANDBY_ALLOWANCE:
       case CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT:
@@ -374,6 +376,10 @@ public class ProposalService {
         }
         case ASSET_ISSUE_FEE: {
           manager.getDynamicPropertiesStore().saveAssetIssueFee(entry.getValue());
+          break;
+        }
+        case NFT_ISSUE_FEE: {
+          manager.getDynamicPropertiesStore().saveNftIssueFee(entry.getValue());
           break;
         }
         case WITNESS_PAY_PER_BLOCK: {

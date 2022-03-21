@@ -186,7 +186,16 @@ public class ActuatorFactory {
       case UpdateBrokerageContract:
         return new UpdateBrokerageActuator(contract.getParameter(), manager);
       case CreateNftTemplateContract:
-        return new NftCreateContractActuator(contract.getParameter(), manager);
+        switch (blockVersion) {
+          case BLOCK_VERSION_0:
+          case BLOCK_VERSION_1:
+          case BLOCK_VERSION_2:
+          case BLOCK_VERSION_3:
+          case BLOCK_VERSION_4:
+            break;
+          default:
+            return new NftCreateContractActuator(contract.getParameter(), manager);
+        }
       case MintNftTokenContract:
         return new NftMintTokenActuator(contract.getParameter(), manager);
       case AddNftMinterContract:

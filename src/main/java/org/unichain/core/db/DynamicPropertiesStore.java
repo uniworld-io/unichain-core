@@ -98,6 +98,8 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
 
   private static final byte[] ASSET_ISSUE_FEE = "ASSET_ISSUE_FEE".getBytes();
 
+  private static final byte[] NFT_ISSUE_FEE = "NFT_ISSUE_FEE".getBytes();
+
   private static final byte[] ASSET_UPDATE_FEE = "ASSET_UPDATE_FEE".getBytes();
 
   private static final byte[] UPDATE_ACCOUNT_PERMISSION_FEE = "UPDATE_ACCOUNT_PERMISSION_FEE".getBytes();
@@ -1176,6 +1178,11 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
         new BytesCapsule(ByteArray.fromLong(fee)));
   }
 
+  public void saveNftIssueFee(long fee) {
+    this.put(NFT_ISSUE_FEE,
+            new BytesCapsule(ByteArray.fromLong(fee)));
+  }
+
   public void saveAssetUpdateFee(long fee) {
     this.put(ASSET_UPDATE_FEE,
             new BytesCapsule(ByteArray.fromLong(fee)));
@@ -1198,6 +1205,14 @@ public class DynamicPropertiesStore extends UnichainStoreWithRevoking<BytesCapsu
         .map(ByteArray::toLong)
         .orElseThrow(
             () -> new IllegalArgumentException("not found ASSET_ISSUE_FEE"));
+  }
+
+  public long getNftIssueFee() {
+    return Optional.ofNullable(getUnchecked(NFT_ISSUE_FEE))
+            .map(BytesCapsule::getData)
+            .map(ByteArray::toLong)
+            .orElseThrow(
+                    () -> new IllegalArgumentException("not found NFT_ISSUE_FEE"));
   }
 
   public long getAssetUpdateFee() {

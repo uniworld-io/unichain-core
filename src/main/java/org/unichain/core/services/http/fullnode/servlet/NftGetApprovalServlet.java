@@ -16,7 +16,8 @@ import java.io.IOException;
 
 @Component
 @Slf4j(topic = "API")
-public class NftListTokenApproveServlet extends HttpServlet {
+public class NftGetApprovalServlet extends HttpServlet {
+
   @Autowired
   private NftService nftService;
 
@@ -24,24 +25,24 @@ public class NftListTokenApproveServlet extends HttpServlet {
     try {
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("owner_address");
-      long pageSize = Long.parseLong(request.getParameter("page_size"));
-      long pageIndex = Long.parseLong(request.getParameter("page_index"));
-      Protocol.NftTokenApproveQuery.Builder build = Protocol.NftTokenApproveQuery.newBuilder();
+      String operator = request.getParameter("operator");
+      boolean isApproved = Boolean.parseBoolean(request.getParameter("is_approved"));
+      Protocol.IsApprovedForAll.Builder build = Protocol.IsApprovedForAll.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
-      jsonObject.put("page_size", pageSize);
-      jsonObject.put("page_index", pageIndex);
+      jsonObject.put("operator", operator);
+      jsonObject.put("is_approved", isApproved);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
-      Protocol.NftTokenApproveResult reply = nftService.approval(build.build());
+      Protocol.IsApprovedForAll reply = nftService.isApprovalForAll(build.build());
 
       if (reply != null) {
-        response.getWriter().println(JsonFormat.printToString(reply, true));
+        response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {
-        response.getWriter().println("[]");
+        response.getWriter().println("{}");
       }
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      logger.debug("Exception: {}", e.getMessage());
       try {
         response.setStatus(400);
         response.getWriter().println(Util.messageErrorHttp(e));

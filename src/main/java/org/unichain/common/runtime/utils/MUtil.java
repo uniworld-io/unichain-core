@@ -41,8 +41,7 @@ public class MUtil {
     if (0 == amount) {
       return;
     }
-    TransferAssetActuator
-        .validateForSmartContract(deposit, fromAddress, toAddress, tokenId.getBytes(), amount);
+    TransferAssetActuator.validateForSmartContract(deposit, fromAddress, toAddress, tokenId.getBytes(), amount);
     deposit.addTokenBalance(toAddress, tokenId.getBytes(), amount);
     deposit.addTokenBalance(fromAddress, tokenId.getBytes(), -amount);
   }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
+import org.unichain.core.services.internal.NftService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 
@@ -22,10 +23,7 @@ import java.util.stream.Collectors;
 public class NftTransferTokenServlet extends HttpServlet {
 
   @Autowired
-  private Wallet wallet;
-
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-  }
+  private NftService nftService;
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
@@ -35,7 +33,9 @@ public class NftTransferTokenServlet extends HttpServlet {
       var build = Contract.TransferNftTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
-      var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.TransferNftTokenContract).getInstance();
+
+      var tx = nftService.transfer(tokenCtx);
+
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

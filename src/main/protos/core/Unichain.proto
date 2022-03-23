@@ -886,7 +886,8 @@ message NftTokenApproveAllQuery{
 
 message NftTokenApproveAllResult{
   bytes owner_address = 1;
-  repeated NftAccountTokenRelation approve_list= 2;
+  repeated NftAccountTokenRelation approve_list = 2;
+  bytes approval_for_all = 3;
 }
 
 message NftTokenApproveQuery{

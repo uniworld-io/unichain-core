@@ -1,22 +1,29 @@
 package org.unichain.core.services.http.fullnode.servlet;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.unichain.common.utils.Utils;
+import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.services.internal.NftService;
+import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class NftListTokenApproveServlet extends HttpServlet {
+public class NftGetBalanceOfServlet extends HttpServlet {
+
   @Autowired
   private NftService nftService;
 
@@ -24,27 +31,22 @@ public class NftListTokenApproveServlet extends HttpServlet {
     try {
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("owner_address");
-      long pageSize = Long.parseLong(request.getParameter("page_size"));
-      long pageIndex = Long.parseLong(request.getParameter("page_index"));
-      Protocol.NftTokenApproveQuery.Builder build = Protocol.NftTokenApproveQuery.newBuilder();
+      Protocol.NftBalanceOf.Builder build = Protocol.NftBalanceOf.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
-      jsonObject.put("page_size", pageSize);
-      jsonObject.put("page_index", pageIndex);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
-      Protocol.NftTokenApproveResult reply = nftService.approval(build.build());
+      Protocol.NftBalanceOf reply = nftService.balanceOf(build.build());
 
       if (reply != null) {
-        response.getWriter().println(JsonFormat.printToString(reply, true));
+        response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {
-        response.getWriter().println("[]");
+        response.getWriter().println("{}");
       }
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      logger.debug("Exception: {}", e.getMessage());
       try {
-        response.setStatus(400);
-        response.getWriter().println(Util.messageErrorHttp(e));
+        response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());
       }

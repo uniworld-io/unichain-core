@@ -30,17 +30,17 @@ public class HttpApiOnSolidityService implements Service {
   private GetTokenPoolOnSolidityServlet tokenPoolOnSolidityServlet;
 
   @Autowired
-  private NftListTemplateOnSolidityServlet listNftTemplateOnSolidityServlet;
+  private NftListContractOnSolidityServlet listNftTemplateOnSolidityServlet;
   @Autowired
   private NftListTokenOnSolidityServlet nftListTokenOnSolidityServlet;
   @Autowired
-  private GetNftTemplateOnSolidityServlet getNftTemplateOnSolidityServlet;
+  private NftGetOnSolidityContractServlet getNftTemplateOnSolidityServlet;
   @Autowired
-  private GetNftTokenOnSolidityServlet getNftTokenOnSolidityServlet;
+  private NftGetTokenOnSolidityServlet getNftTokenOnSolidityServlet;
   @Autowired
-  private GetNftBalanceOfOnSolidityServlet getNftBalanceOfOnSolidityServlet;
+  private NftGetBalanceOfOnSolidityServlet getNftBalanceOfOnSolidityServlet;
   @Autowired
-  private NftGetApprovedForAllOnSolidityServlet getNftApprovedForAllOnSolidityServlet;
+  private NftGetApprovalOnSolidityServlet getNftApprovedForAllOnSolidityServlet;
 
   @Autowired
   private GetTokenFutureServlet getTokenFutureServlet;

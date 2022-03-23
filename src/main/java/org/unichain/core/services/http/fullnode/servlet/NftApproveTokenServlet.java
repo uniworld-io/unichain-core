@@ -5,11 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
+import org.unichain.core.services.internal.NftService;
 import org.unichain.protos.Contract;
-import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -19,13 +18,10 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class NftCreateTokenServlet extends HttpServlet {
+public class NftApproveTokenServlet extends HttpServlet {
 
   @Autowired
-  private Wallet wallet;
-
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-  }
+  private NftService nftService;
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
@@ -35,7 +31,8 @@ public class NftCreateTokenServlet extends HttpServlet {
       var build = Contract.ApproveNftTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
-      var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.ApproveNftTokenContract).getInstance();
+      var tx = nftService.approve(tokenCtx);
+
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

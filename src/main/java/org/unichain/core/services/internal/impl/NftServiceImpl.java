@@ -53,10 +53,11 @@ public class NftServiceImpl implements NftService {
     @Override
     public Protocol.NftTokenGetResult getToken(Protocol.NftTokenGet query) {
         Assert.notNull(query.getContract(), "Token contract empty");
-        Assert.notNull(query.getId(), "Token id empty");
         var id = ArrayUtils.addAll(Util.stringAsBytesUppercase(query.getContract()), ByteArray.fromLong(query.getId()));
+        if(!dbManager.getNftTokenStore().has(id))
+            return Protocol.NftTokenGetResult.newBuilder().build();
         var token = dbManager.getNftTokenStore().get(id).getInstance();
-        return   Protocol.NftTokenGetResult.newBuilder()
+        return  Protocol.NftTokenGetResult.newBuilder()
                 .setId(token.getId())
                 .setContract(query.getContract())
                 .setUri(token.getUri())
@@ -107,7 +108,6 @@ public class NftServiceImpl implements NftService {
                 unsorted.add(nftTokenStore.get(relationCapsule.getKey()).getInstance());
                 if(relationCapsule.hasNext()) {
                     relationCapsule = approveStore.get(relationCapsule.getNext());
-                    continue;
                 } else {
                     break;
                 }
@@ -200,7 +200,7 @@ public class NftServiceImpl implements NftService {
         var relationStore = dbManager.getNftAccountTemplateStore();
         var templateStore = dbManager.getNftTemplateStore();
 
-        if ("OWNER".equals(query.getOwnerType()) && relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0) {
+        if ("OWNER".equalsIgnoreCase(query.getOwnerType()) && relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0) {
             var start = templateStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
             while (true) {
                 unsorted.add(start.getInstance());
@@ -212,7 +212,7 @@ public class NftServiceImpl implements NftService {
             }
         }
         var minterRelationStore = dbManager.getNftMinterContractStore();
-        if("MINTER".equals(query.getOwnerType()) && minterRelationStore.has(ownerAddr) && minterRelationStore.get(ownerAddr).getTotal() > 0){
+        if("MINTER".equalsIgnoreCase(query.getOwnerType()) && minterRelationStore.has(ownerAddr) && minterRelationStore.get(ownerAddr).getTotal() > 0){
             var relation = minterRelationStore.get(ownerAddr);
             var start = templateStore.get(relation.getHead().toByteArray());
             while (true){
@@ -243,7 +243,7 @@ public class NftServiceImpl implements NftService {
 
         var ownerAddr = query.getOwnerAddress().toByteArray();
         var contract = query.getContract();
-        var filtercontract = query.hasField(NFT_TOKEN_QUERY_FIELD_CONTRACT);
+        var hasFieldContract = query.hasField(NFT_TOKEN_QUERY_FIELD_CONTRACT);
         List<Protocol.NftToken> unsorted = new ArrayList<>();
         var relationStore = dbManager.getNftAccountTokenStore();
         var tokenStore = dbManager.getNftTokenStore();
@@ -251,13 +251,12 @@ public class NftServiceImpl implements NftService {
         if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0){
             var start = tokenStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
             while (true){
-                if(!filtercontract || (filtercontract && start.getContract().equalsIgnoreCase(contract)))
+                if(!hasFieldContract || start.getContract().equalsIgnoreCase(contract))
                     unsorted.add(start.getInstance());
 
                 if(start.hasNext())
                 {
                     start = tokenStore.get(start.getNext());
-                    continue;
                 }
                 else {
                     break;
@@ -283,11 +282,15 @@ public class NftServiceImpl implements NftService {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
 
         var nftAccountTokenStore = dbManager.getNftAccountTokenStore();
-        var firstAccTokenRelation = nftAccountTokenStore.get(query.getOwnerAddress().toByteArray());
+        var owner = query.getOwnerAddress().toByteArray();
+        var result = Protocol.NftBalanceOf.newBuilder()
+                .setCount(0)
+                .setOwnerAddress(query.getOwnerAddress());
 
-        return Protocol.NftBalanceOf.newBuilder()
-                .setCount(firstAccTokenRelation.getTotal())
-                .setOwnerAddress(query.getOwnerAddress())
-                .build();
+        if(nftAccountTokenStore.has(owner))
+            return result.build();
+
+        var firstAccTokenRelation = nftAccountTokenStore.get(owner);
+        return result.setCount(firstAccTokenRelation.getTotal()).build();
     }
 }

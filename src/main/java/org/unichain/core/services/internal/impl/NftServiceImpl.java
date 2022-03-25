@@ -68,8 +68,8 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.Transaction addMinter(Contract.AddNftMinterContract addNftMinterContract) {
-        return null;
+    public Protocol.Transaction addMinter(Contract.AddNftMinterContract contract) throws ContractValidateException {
+        return wallet.createTransactionCapsule(contract, ContractType.AddNftMinterContract).getInstance();
     }
 
     @Override
@@ -268,7 +268,7 @@ public class NftServiceImpl implements NftService {
                 .setPageIndex(pageIndex)
                 .setPageSize(pageSize)
                 .setTotal(unsorted.size())
-                .addAllTokens(Utils.paging(unsorted, pageIndex, pageSize))
+                .addAllTokens(unsorted.isEmpty() ? null : Utils.paging(unsorted, pageIndex, pageSize))
                 .build();
     }
 

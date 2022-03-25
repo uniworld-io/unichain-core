@@ -13,7 +13,7 @@ public interface NftService {
     Protocol.Transaction createToken(Contract.MintNftTokenContract contract) throws ContractValidateException;
     Protocol.NftTokenGetResult getToken(Protocol.NftTokenGet query);
 
-    Protocol.Transaction addMinter(Contract.AddNftMinterContract addNftMinterContract);
+    Protocol.Transaction addMinter(Contract.AddNftMinterContract addNftMinterContract) throws ContractValidateException;
     Protocol.Transaction removeMinter(Contract.RemoveNftMinterContract contract) throws ContractValidateException;
     Protocol.Transaction renounceMinter(Contract.RenounceNftMinterContract contract) throws ContractValidateException;
 

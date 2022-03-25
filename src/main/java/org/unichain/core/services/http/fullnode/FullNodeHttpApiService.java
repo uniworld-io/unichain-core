@@ -306,7 +306,6 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(voteWitnessAccountServlet), "/votewitnessaccount");
       context.addServlet(new ServletHolder(createAssetIssueServlet), "/createassetissue");
 
-
       context.addServlet(new ServletHolder(nftCreateContractServlet), "/createnftcontract");
       context.addServlet(new ServletHolder(nftRemoveMinterServlet), "/removenftminter");
       context.addServlet(new ServletHolder(nftMintTokenServlet), "/mintnfttoken");

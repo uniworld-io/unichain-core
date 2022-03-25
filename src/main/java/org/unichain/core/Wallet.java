@@ -1450,9 +1450,9 @@ public class Wallet {
 
     ContractStore contractStore = dbManager.getContractStore();
     byte[] contractAddress = triggerSmartContract.getContractAddress().toByteArray();
-    byte[] isContractExiste = contractStore.findContractByHash(contractAddress);
+    byte[] isExistsContract = contractStore.findContractByHash(contractAddress);
 
-    if (ArrayUtils.isEmpty(isContractExiste)) { throw new ContractValidateException("No contract or not a smart contract");
+    if (ArrayUtils.isEmpty(isExistsContract)) { throw new ContractValidateException("No contract or not a smart contract");
     }
 
     if (!Args.getInstance().isSupportConstant()) {
@@ -1519,7 +1519,7 @@ public class Wallet {
       return null;
     }
 
-    ContractCapsule contractCapsule = dbManager.getContractStore().get(bytesMessage.getValue().toByteArray());
+    ContractCapsule contractCapsule = dbManager.getContractStore().get(address);
     if (Objects.nonNull(contractCapsule)) {
       return contractCapsule.getInstance();
     }

@@ -2102,11 +2102,15 @@ public class Manager {
     }
   }
 
+  /**
+   * remove then disapprove
+   * @param tokenId
+   */
   public void removeNftToken(byte[] tokenId){
     var tokenStore = getNftTokenStore();
     var relationStore = getNftAccountTokenStore();
 
-    Assert.isTrue(tokenStore.has(tokenId), "not found nft token with id" + tokenId);
+    Assert.isTrue(tokenStore.has(tokenId), "not found nft token with id " + tokenId);
     val tokenCap = tokenStore.get(tokenId);
 
     var hasPrev = tokenCap.hasPrev();
@@ -2181,9 +2185,7 @@ public class Manager {
     var approveStore = getNftTokenApproveRelationStore();
     var relationStore = getNftAccountTokenStore();
 
-    var relationKey = toAddress;
-
-    if (!relationStore.has(relationKey)) {
+    if (!relationStore.has(toAddress)) {
       var approve = new NftTokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
               .clearNext()
               .clearPrev()
@@ -2192,7 +2194,7 @@ public class Manager {
               .build());
       approveStore.put(approve.getKey(), approve);
 
-      var relation = new NftAccountTokenRelationCapsule(relationKey,
+      var relation = new NftAccountTokenRelationCapsule(toAddress,
               Protocol.NftAccountTokenRelation.newBuilder()
                       .setOwnerAddress(ByteString.copyFrom(toAddress))
                       .clearHead()
@@ -2206,7 +2208,7 @@ public class Manager {
                       .build());
       relationStore.put(relation.getKey(), relation);
     } else {
-      var relation = relationStore.get(relationKey);
+      var relation = relationStore.get(toAddress);
       if (!relation.hasTailApprove()) {
         //in the case that the relation created to store approve list only
         var approve = new NftTokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
@@ -2220,15 +2222,14 @@ public class Manager {
         relation.setTotalApprove(Math.incrementExact(relation.getTotalApprove()));
         relation.setHeadApprove(ByteString.copyFrom(approve.getKey()));
         relation.setTailApprove(ByteString.copyFrom(approve.getKey()));
-        relationStore.put(relationKey, relation);
+        relationStore.put(toAddress, relation);
       } else {
         var tailKey = relation.getTailApprove().toByteArray();
         var tailApproveCap = approveStore.get(tailKey);
 
-        var approveKey = tokenId;
         relation.setTotalApprove(Math.incrementExact(relation.getTotalApprove()));
-        relation.setTailApprove(ByteString.copyFrom(approveKey));
-        relationStore.put(relationKey, relation);
+        relation.setTailApprove(ByteString.copyFrom(tokenId));
+        relationStore.put(toAddress, relation);
 
         var approve = new NftTokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
                 .clearNext()
@@ -2238,7 +2239,7 @@ public class Manager {
                 .build());
         approveStore.put(approve.getKey(), approve);
 
-        tailApproveCap.setNext(approveKey);
+        tailApproveCap.setNext(tokenId);
         approveStore.put(tailKey, tailApproveCap);
       }
     }

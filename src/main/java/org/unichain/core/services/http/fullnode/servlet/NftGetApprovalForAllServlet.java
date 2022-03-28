@@ -25,9 +25,15 @@ public class NftGetApprovalForAllServlet extends HttpServlet {
     try {
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("owner_address");
+      Integer pageIndex = Integer.valueOf(request.getParameter("page_index"));
+      Integer pageSize = Integer.valueOf(request.getParameter("page_size"));
+
+
       Protocol.NftTokenApproveAllQuery.Builder build = Protocol.NftTokenApproveAllQuery.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
+      jsonObject.put("page_index", pageIndex);
+      jsonObject.put("page_size", pageSize);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
       Protocol.NftTokenApproveAllResult reply = nftService.approvalForAll(build.build());

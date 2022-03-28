@@ -882,12 +882,18 @@ message IsApprovedForAll{
 
 message NftTokenApproveAllQuery{
   bytes owner_address = 1;
+  int32 page_index = 2;
+  int32 page_size = 3;
 }
 
 message NftTokenApproveAllResult{
   bytes owner_address = 1;
   repeated NftAccountTokenRelation approve_list = 2;
   bytes approval_for_all = 3;
+  repeated NftToken tokens = 4;
+  int32 page_size = 5;
+  int32 page_index = 6;
+  int32 total = 7;
 }
 
 message NftTokenApproveQuery{

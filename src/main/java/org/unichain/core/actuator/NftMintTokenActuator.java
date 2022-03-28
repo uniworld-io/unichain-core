@@ -116,8 +116,7 @@ public class NftMintTokenActuator extends AbstractActuator {
       var toAccountCap = dbManager.getAccountStore().get(toAddr);
       if(Objects.isNull(toAccountCap)){
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
-      }
-      else {
+      } else {
          Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Mint to itself not allowed!");
       }
 
@@ -125,8 +124,8 @@ public class NftMintTokenActuator extends AbstractActuator {
       Assert.isTrue(dbManager.getNftTemplateStore().has(contract), "NFT template not existed");
       var templateCap = dbManager.getNftTemplateStore().get(contract);
       Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()) || (templateCap.hasMinter() && Arrays.equals(ownerAddr, templateCap.getMinter())), "Only owner or minter allowed to mint NFT token");
+      Assert.isTrue(!(Arrays.equals(toAddr, templateCap.getOwner()) || Arrays.equals(toAddr, templateCap.getMinter())), "Can not create token for minter or owner");
       Assert.isTrue(templateCap.getTokenIndex() < templateCap.getTotalSupply(), "Over slot NFT token mint!");
-
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Owner not enough balance to create new account fee, require at least "+ fee + "ginza");
       Assert.isTrue(TransactionUtil.validHttpURI(ctx.getUri()), "Invalid uri");
       Assert.isTrue(TransactionUtil.validJsonString(ByteString.copyFrom(ctx.getMetadata().getBytes()).toByteArray()), "invalid metadata, should be json format");

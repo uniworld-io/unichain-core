@@ -10,6 +10,7 @@ import org.springframework.util.Assert;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
+import org.unichain.core.capsule.NftTokenCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
@@ -21,6 +22,7 @@ import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
@@ -102,10 +104,11 @@ public class NftServiceImpl implements NftService {
 
         List<Protocol.NftToken> unsorted = new ArrayList<>();
 
-        if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0){
+        if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotalApprove() > 0){
             var relationCapsule = approveStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
             while (true){
-                unsorted.add(nftTokenStore.get(relationCapsule.getKey()).getInstance());
+                if(nftTokenStore.has(relationCapsule.getKey()))
+                    unsorted.add(nftTokenStore.get(relationCapsule.getKey()).getInstance());
                 if(relationCapsule.hasNext()) {
                     relationCapsule = approveStore.get(relationCapsule.getNext());
                 } else {
@@ -132,6 +135,9 @@ public class NftServiceImpl implements NftService {
     @Override
     public Protocol.NftTokenApproveAllResult approvalForAll(Protocol.NftTokenApproveAllQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
+        int pageSize = query.hasField(NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
+        int pageIndex = query.hasField(NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
+        Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
         var relationStore = dbManager.getNftAccountTokenStore();
         var relation = relationStore.get(query.getOwnerAddress().toByteArray());
@@ -140,18 +146,18 @@ public class NftServiceImpl implements NftService {
             return Protocol.NftTokenApproveAllResult.newBuilder().setOwnerAddress(query.getOwnerAddress()).build();
 
         List<Protocol.NftAccountTokenRelation> approveList = new ArrayList<>();
+        List<Protocol.NftToken> tokens = new ArrayList<>();
 
         relation.getApproveAllMap().forEach((owner, isApproveAll) -> {
-            logger.info("---------------> Found owner approve all: {} - {}", owner, isApproveAll);
-            if (isApproveAll) {
-                var ownerRelationCap = relationStore.get(ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray());
-                if (ownerRelationCap != null) {
-                    var nftOwnerRelation = Protocol.NftAccountTokenRelation.newBuilder()
-                            .setOwnerAddress(ownerRelationCap.getInstance().getOwnerAddress())
-                            .setTotal(ownerRelationCap.getInstance().getTotal())
-                            .build();
-                    approveList.add(nftOwnerRelation);
-                }
+            byte[] ownerApprove = ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray();
+            if (isApproveAll && relationStore.has(ownerApprove)) {
+                var ownerRelationCap = relationStore.get(ownerApprove);
+                var tokenRelation = Protocol.NftAccountTokenRelation.newBuilder()
+                        .setOwnerAddress(ownerRelationCap.getInstance().getOwnerAddress())
+                        .setTotal(ownerRelationCap.getInstance().getTotal())
+                        .build();
+                approveList.add(tokenRelation);
+                tokens.addAll(listTokenByOwner(tokenRelation.getOwnerAddress().toByteArray(), cap -> true));
             }
         });
 
@@ -159,6 +165,10 @@ public class NftServiceImpl implements NftService {
                 .setOwnerAddress(query.getOwnerAddress())
                 .addAllApproveList(approveList)
                 .setApprovalForAll(ByteString.copyFrom(relation.getApprovedForAll()))
+                .addAllTokens(Utils.paging(tokens, pageIndex, pageSize))
+                .setTotal(tokens.size())
+                .setPageIndex(pageIndex)
+                .setPageSize(pageSize)
                 .build();
     }
 
@@ -244,25 +254,8 @@ public class NftServiceImpl implements NftService {
         var ownerAddr = query.getOwnerAddress().toByteArray();
         var contract = query.getContract();
         var hasFieldContract = query.hasField(NFT_TOKEN_QUERY_FIELD_CONTRACT);
-        List<Protocol.NftToken> unsorted = new ArrayList<>();
-        var relationStore = dbManager.getNftAccountTokenStore();
-        var tokenStore = dbManager.getNftTokenStore();
 
-        if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0){
-            var start = tokenStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
-            while (true){
-                if(!hasFieldContract || start.getContract().equalsIgnoreCase(contract))
-                    unsorted.add(start.getInstance());
-
-                if(start.hasNext())
-                {
-                    start = tokenStore.get(start.getNext());
-                }
-                else {
-                    break;
-                }
-            }
-        }
+        List<Protocol.NftToken> unsorted = listTokenByOwner(ownerAddr, cap -> !hasFieldContract || cap.getContract().equalsIgnoreCase(contract));
 
         return  Protocol.NftTokenQueryResult.newBuilder()
                 .setPageIndex(pageIndex)
@@ -270,6 +263,26 @@ public class NftServiceImpl implements NftService {
                 .setTotal(unsorted.size())
                 .addAllTokens(unsorted.isEmpty() ? null : Utils.paging(unsorted, pageIndex, pageSize))
                 .build();
+    }
+
+    private List<Protocol.NftToken> listTokenByOwner(byte[] ownerAddr, Predicate<NftTokenCapsule> filter){
+        List<Protocol.NftToken> unsorted = new ArrayList<>();
+        var relationStore = dbManager.getNftAccountTokenStore();
+        var tokenStore = dbManager.getNftTokenStore();
+
+        if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0){
+            var start = tokenStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
+            while (true){
+                if(filter.test(start))
+                    unsorted.add(start.getInstance());
+                if(start.hasNext()) {
+                    start = tokenStore.get(start.getNext());
+                } else {
+                    break;
+                }
+            }
+        }
+        return unsorted;
     }
 
     @Override

@@ -184,7 +184,7 @@ public class NftServiceImpl implements NftService {
 
     @Override
     public Protocol.Transaction burnToken(Contract.BurnNftTokenContract contract) throws ContractValidateException {
-        return wallet.createTransactionCapsule(contract, ContractType.ApproveNftTokenContract).getInstance();
+        return wallet.createTransactionCapsule(contract, ContractType.BurnNftTokenContract).getInstance();
     }
 
     @Override

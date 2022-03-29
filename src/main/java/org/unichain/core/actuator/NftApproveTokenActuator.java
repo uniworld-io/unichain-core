@@ -118,6 +118,9 @@ public class NftApproveTokenActuator extends AbstractActuator {
         Assert.isTrue(nftToken.hasApproval() && Arrays.equals(ctx.getToAddress().toByteArray(), nftToken.getApproval()), "Unmatched approval address");
       }
 
+      Assert.isTrue(Arrays.equals(nftToken.getOwner(), ownerAddr), "Not owner of token");
+      Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and approver cannot be the same");
+
       return true;
     }
     catch (Exception e){

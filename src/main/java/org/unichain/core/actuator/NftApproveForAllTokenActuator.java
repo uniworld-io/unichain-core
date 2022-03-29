@@ -91,8 +91,7 @@ public class NftApproveForAllTokenActuator extends AbstractActuator {
         if(relation.hasApprovalForAll()) {
           Assert.isTrue(!Arrays.equals(toAddr, relation.getApprovedForAll()), "Already approved");
         }
-      }
-      else {
+      } else {
         Assert.isTrue(relation.hasApprovalForAll() && Arrays.equals(toAddr, relation.getApprovedForAll()), "Not approved yet");
       }
 
@@ -101,6 +100,7 @@ public class NftApproveForAllTokenActuator extends AbstractActuator {
       }
 
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee");
+      Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and approver cannot be the same");
       return true;
     }
     catch (Exception e){

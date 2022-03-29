@@ -590,7 +590,7 @@ public class Manager {
     var withDefaultPermission = getDynamicPropertiesStore().getAllowMultiSign() == 1;
     var toAccountCap = new AccountCapsule(accAddr, Protocol.AccountType.Normal, getHeadBlockTimeStamp(), withDefaultPermission, this);
     getAccountStore().put(accAddr.toByteArray(), toAccountCap);
-    return getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+    return getDynamicPropertiesStore().getCreateAccountFee();
   }
 
   public void adjustBalance(byte[] accountAddress, long amount) throws BalanceInsufficientException {

@@ -1490,7 +1490,7 @@ public class Wallet {
     // TODO exception
     if (runtime.getResult().getException() != null) {
       RuntimeException e = runtime.getResult().getException();
-      logger.warn("Constant call has error {}", e.getMessage());
+      logger.error("Constant call has error {}", e.getMessage(), e);
       throw e;
     }
 
@@ -1505,7 +1505,7 @@ public class Wallet {
     }
     if (runtime.getResult().isRevert()) {
       ret.setStatus(0, code.FAILED);
-      retBuilder.setMessage(ByteString.copyFromUtf8("REVERT opcode executed")).build();
+      retBuilder.setMessage(ByteString.copyFromUtf8("REVERT OPCODE EXECUTED")).build();
     }
     unxCap.setResult(ret);
     return unxCap.getInstance();

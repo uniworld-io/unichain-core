@@ -23,11 +23,11 @@ public class NftGetApprovalForAllServlet extends HttpServlet {
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
+
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("owner_address");
-      Integer pageIndex = Integer.valueOf(request.getParameter("page_index"));
-      Integer pageSize = Integer.valueOf(request.getParameter("page_size"));
-
+      Integer pageIndex = Integer.parseInt(request.getParameter("page_index"));
+      Integer pageSize = Integer.parseInt(request.getParameter("page_size"));
 
       Protocol.NftTokenApproveAllQuery.Builder build = Protocol.NftTokenApproveAllQuery.newBuilder();
       JSONObject jsonObject = new JSONObject();
@@ -36,7 +36,7 @@ public class NftGetApprovalForAllServlet extends HttpServlet {
       jsonObject.put("page_size", pageSize);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
-      Protocol.NftTokenApproveAllResult reply = nftService.approvalForAll(build.build());
+      Protocol.NftTokenApproveAllResult reply = nftService.getApprovalForAll(build.build());
 
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, true));

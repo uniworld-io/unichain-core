@@ -33,7 +33,7 @@ public class NftListTokenApproveServlet extends HttpServlet {
       jsonObject.put("page_index", pageIndex);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
-      Protocol.NftTokenApproveResult reply = nftService.approval(build.build());
+      Protocol.NftTokenApproveResult reply = nftService.getApproval(build.build());
 
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, true));

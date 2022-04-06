@@ -39,96 +39,95 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class NftTransferTokenActuator extends AbstractActuator {
 
-  NftTransferTokenActuator(Any contract, Manager dbManager) {
-    super(contract, dbManager);
-  }
-
-  @Override
-  public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
-    var fee = calcFee();
-    try {
-      val ctx = this.contract.unpack(TransferNftTokenContract.class);
-      var accountStore = dbManager.getAccountStore();
-      var tokenStore = dbManager.getNftTokenStore();
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var toAddr = ctx.getToAddress();
-      var toAddrBytes = toAddr.toByteArray();
-      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
-
-      //create new acc if not exist
-      if (!accountStore.has(toAddrBytes)) {
-        fee = Math.addExact(fee, dbManager.createNewAccount(toAddr));
-      }
-
-      var token = tokenStore.get(tokenId);
-      dbManager.removeNftToken(tokenId);
-
-      //then set new info and save
-      token.setOwner(toAddr);
-      token.setLastOperation(dbManager.getHeadBlockTimeStamp());
-      token.clearApproval();
-      token.clearNext();
-      token.clearPrev();
-      dbManager.saveNftToken(token);
-
-      chargeFee(ownerAddr, fee);
-      dbManager.burnFee(fee);
-      ret.setStatus(fee, code.SUCESS);
-      return true;
-    } catch (Exception e) {
-      logger.error("Actuator error: {} --> ", e.getMessage(), e);
-      ret.setStatus(fee, code.FAILED);
-      throw new ContractExeException(e.getMessage());
+    NftTransferTokenActuator(Any contract, Manager dbManager) {
+        super(contract, dbManager);
     }
-  }
 
-  @Override
-  public boolean validate() throws ContractValidateException {
-    try {
-      Assert.notNull(contract, "No contract!");
-      Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(TransferNftTokenContract.class), "contract type error,expected type [TransferNftTokenContract],real type[" + contract.getClass() + "]");
-      var fee = calcFee();
-      val ctx = this.contract.unpack(TransferNftTokenContract.class);
-      var accountStore = dbManager.getAccountStore();
-      var tokenStore = dbManager.getNftTokenStore();
-      var relationStore = dbManager.getNftAccountTokenStore();
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var toAddr = ctx.getToAddress().toByteArray();
-      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
+    @Override
+    public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
+        var fee = calcFee();
+        try {
+            val ctx = this.contract.unpack(TransferNftTokenContract.class);
+            var accountStore = dbManager.getAccountStore();
+            var tokenStore = dbManager.getNftTokenStore();
+            var ownerAddr = ctx.getOwnerAddress().toByteArray();
+            var toAddr = ctx.getToAddress();
+            var toAddrBytes = toAddr.toByteArray();
+            var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
 
-      Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");
-      Assert.isTrue(accountStore.has(ownerAddr), "Owner, approval or approval-for-all not exist");
-      Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");
-      var nft = tokenStore.get(tokenId);
-      var nftOwner = nft.getOwner();
-      var relation = relationStore.get(nftOwner);
+            //create new acc if not exist
+            if (!accountStore.has(toAddrBytes)) {
+                fee = Math.addExact(fee, dbManager.createNewAccount(toAddr));
+            }
 
-      Assert.isTrue(Arrays.equals(ownerAddr, nftOwner)
-              || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
-              || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to burn NFT token");
+            var token = tokenStore.get(tokenId);
+            dbManager.removeNftToken(tokenId);
 
-      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough fee");
+            //then set new info and save
+            token.setOwner(toAddr);
+            token.setLastOperation(dbManager.getHeadBlockTimeStamp());
+            token.clearApproval();
+            token.clearNext();
+            token.clearPrev();
+            dbManager.saveNftToken(token);
 
-      if(accountStore.has(toAddr))
-      {
-        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
-      }
-      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee");
-      return true;
+            chargeFee(ownerAddr, fee);
+            dbManager.burnFee(fee);
+            ret.setStatus(fee, code.SUCESS);
+            return true;
+        } catch (Exception e) {
+            logger.error("Actuator error: {} --> ", e.getMessage(), e);
+            ret.setStatus(fee, code.FAILED);
+            throw new ContractExeException(e.getMessage());
+        }
     }
-    catch (Exception e){
-      logger.error("Actuator error: {} --> ", e.getMessage(), e);
-      throw new ContractValidateException(e.getMessage());
+
+    @Override
+    public boolean validate() throws ContractValidateException {
+        try {
+            Assert.notNull(contract, "No contract!");
+            Assert.notNull(dbManager, "No dbManager!");
+            Assert.isTrue(contract.is(TransferNftTokenContract.class), "contract type error,expected type [TransferNftTokenContract],real type[" + contract.getClass() + "]");
+            var fee = calcFee();
+            val ctx = this.contract.unpack(TransferNftTokenContract.class);
+            var accountStore = dbManager.getAccountStore();
+            var tokenStore = dbManager.getNftTokenStore();
+            var relationStore = dbManager.getNftAccountTokenStore();
+            var ownerAddr = ctx.getOwnerAddress().toByteArray();
+            var toAddr = ctx.getToAddress().toByteArray();
+            var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
+
+            Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");
+            Assert.isTrue(accountStore.has(ownerAddr), "Owner, approval or approval-for-all not exist");
+            Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");
+            var nft = tokenStore.get(tokenId);
+            var nftOwner = nft.getOwner();
+            var relation = relationStore.get(nftOwner);
+
+            Assert.isTrue(Arrays.equals(ownerAddr, nftOwner)
+                    || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
+                    || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to burn NFT token");
+
+            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough fee");
+
+            if (accountStore.has(toAddr)) {
+                fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+            }
+            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee");
+            return true;
+        } catch (Exception e) {
+            logger.error("Actuator error: {} --> ", e.getMessage(), e);
+            throw new ContractValidateException(e.getMessage());
+        }
     }
-  }
 
-  @Override
-  public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(TransferNftTokenContract.class).getOwnerAddress();
-  }
+    @Override
+    public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
+        return contract.unpack(TransferNftTokenContract.class).getOwnerAddress();
+    }
 
-  @Override
-  public long calcFee() {
-    return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;  }
+    @Override
+    public long calcFee() {
+        return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
+    }
 }

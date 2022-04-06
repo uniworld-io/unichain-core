@@ -90,7 +90,7 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.NftTokenApproveResult approval(Protocol.NftTokenApproveQuery query) {
+    public Protocol.NftTokenApproveResult getApproval(Protocol.NftTokenApproveQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
 
         int pageSize = query.hasField(NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
@@ -115,13 +115,12 @@ public class NftServiceImpl implements NftService {
                     break;
                 }
             }
-        } else {
-            unsorted.add(Protocol.NftToken.newBuilder().build());
         }
 
         return Protocol.NftTokenApproveResult.newBuilder()
                 .setPageIndex(pageIndex)
                 .setPageSize(pageSize)
+                .setPageIndex(pageIndex)
                 .setTotal(unsorted.size())
                 .addAllTokens(Utils.paging(unsorted, pageIndex, pageSize))
                 .build();
@@ -133,7 +132,7 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.NftTokenApproveAllResult approvalForAll(Protocol.NftTokenApproveAllQuery query) {
+    public Protocol.NftTokenApproveAllResult getApprovalForAll(Protocol.NftTokenApproveAllQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
         int pageSize = query.hasField(NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
         int pageIndex = query.hasField(NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
@@ -261,7 +260,7 @@ public class NftServiceImpl implements NftService {
                 .setPageIndex(pageIndex)
                 .setPageSize(pageSize)
                 .setTotal(unsorted.size())
-                .addAllTokens(unsorted.isEmpty() ? null : Utils.paging(unsorted, pageIndex, pageSize))
+                .addAllTokens(Utils.paging(unsorted, pageIndex, pageSize))
                 .build();
     }
 

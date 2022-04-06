@@ -18,10 +18,10 @@ public interface NftService {
     Protocol.Transaction renounceMinter(Contract.RenounceNftMinterContract contract) throws ContractValidateException;
 
     Protocol.Transaction approve(Contract.ApproveNftTokenContract contract) throws ContractValidateException;
-    Protocol.NftTokenApproveResult approval(Protocol.NftTokenApproveQuery query);
+    Protocol.NftTokenApproveResult getApproval(Protocol.NftTokenApproveQuery query);
 
     Protocol.Transaction setApprovalForAll(Contract.ApproveForAllNftTokenContract approvalAll) throws ContractValidateException;
-    Protocol.NftTokenApproveAllResult approvalForAll(Protocol.NftTokenApproveAllQuery query);
+    Protocol.NftTokenApproveAllResult getApprovalForAll(Protocol.NftTokenApproveAllQuery query);
     Protocol.IsApprovedForAll isApprovalForAll(Protocol.IsApprovedForAll query);
 
     Protocol.Transaction burnToken(Contract.BurnNftTokenContract burnNftTokenContract) throws ContractValidateException;

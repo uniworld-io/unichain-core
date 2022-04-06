@@ -159,15 +159,15 @@ public class RpcApiService implements Service {
     } catch (ContractValidateException | VMIllegalException e) {
       retBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR).setMessage(ByteString.copyFromUtf8(CONTRACT_VALIDATE_ERROR + e.getMessage()));
       unxExtBuilder.setResult(retBuilder);
-      logger.warn(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      logger.error(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
     } catch (RuntimeException e) {
       retBuilder.setResult(false).setCode(response_code.CONTRACT_EXE_ERROR).setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
       unxExtBuilder.setResult(retBuilder);
-      logger.warn("When run constant call in VM, have RuntimeException: " + e.getMessage());
+      logger.error("When run constant call in VM, have RuntimeException: " + e.getMessage());
     } catch (Exception e) {
       retBuilder.setResult(false).setCode(response_code.OTHER_ERROR).setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
       unxExtBuilder.setResult(retBuilder);
-      logger.warn("unknown exception caught: " + e.getMessage(), e);
+      logger.error("unknown exception caught: " + e.getMessage(), e);
     } finally {
       responseObserver.onNext(unxExtBuilder.build());
       responseObserver.onCompleted();
@@ -297,14 +297,14 @@ public class RpcApiService implements Service {
 
     @Override
     public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
-      NftTokenApproveResult reply = nftService.approval(request);
+      NftTokenApproveResult reply = nftService.getApproval(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void listNftTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
-      NftTokenApproveAllResult reply = nftService.approvalForAll(request);
+      NftTokenApproveAllResult reply = nftService.getApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -739,14 +739,14 @@ public class RpcApiService implements Service {
 
     @Override
     public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
-      NftTokenApproveResult reply = nftService.approval(request);
+      NftTokenApproveResult reply = nftService.getApproval(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void listNftTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
-      NftTokenApproveAllResult reply = nftService.approvalForAll(request);
+      NftTokenApproveAllResult reply = nftService.getApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

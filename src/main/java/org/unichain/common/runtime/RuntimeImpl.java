@@ -218,6 +218,7 @@ public class RuntimeImpl implements Runtime {
    * Get account energy with float ratio
    */
   private long getAccountEnergyLimitV1(AccountCapsule account, long feeLimit, long callValue) {
+
     long ginzaPerEnergy = Constant.GINZA_PER_ENERGY;
     if (deposit.getDbManager().getDynamicPropertiesStore().getEnergyFee() > 0) {
       ginzaPerEnergy = deposit.getDbManager().getDynamicPropertiesStore().getEnergyFee();
@@ -382,8 +383,11 @@ public class RuntimeImpl implements Runtime {
       AccountCapsule creator = this.deposit.getAccount(newSmartContract.getOriginAddress().toByteArray());
 
       //estimate energy limit affordable to execute TX
+      logger.info("==============================Before cal energyLimit===================");
       long energyLimit = (findBlockVersion() <= BLOCK_VERSION_1) ?
               getAccountEnergyLimitV1(creator, feeLimit, callValue) : getAccountEnergyLimitV2(creator, feeLimit, callValue);
+      logger.info("==============================After cal energyLimit===================");
+
 
       checkTokenValueAndId(tokenValue, tokenId);
 
@@ -424,7 +428,9 @@ public class RuntimeImpl implements Runtime {
 
     //transfer from callerAddress to  contractAddress amount [callValue]
     if (callValue > 0) {
+      logger.info("==============================Before  transfer contract===================");
       transfer(this.deposit, callerAddress, contractAddress, callValue);
+      logger.info("==============================After  transfer contract===================");
     }
 
     //also transfer token
@@ -485,6 +491,7 @@ public class RuntimeImpl implements Runtime {
         //estimate affordable energy limit
         AccountCapsule creator = this.deposit.getAccount(deployedContract.getInstance().getOriginAddress().toByteArray());
         energyLimit = getTotalEnergyLimit(creator, caller, contract, feeLimit, callValue);
+        logger.info("================================After cal energyLimit===========================");
       }
 
       //estimate affordable exec time limit
@@ -511,7 +518,9 @@ public class RuntimeImpl implements Runtime {
 
     program.getResult().setContractAddress(contractAddress);
     if (callValue > 0) {
+      logger.info("================================Before transfer contract===========================");
       transfer(this.deposit, callerAddress, contractAddress, callValue);
+      logger.info("================================After transfer contract===========================");
     }
     if (VMConfig.allowTvmTransferUnc()) {
       if (tokenValue > 0) {
@@ -532,6 +541,7 @@ public class RuntimeImpl implements Runtime {
   public void go() {
     try {
       if (vm != null) {
+        logger.info("==============================VM is null ");
         //if out of time: spend all energy left = energyLimit - energyUsed
         TransactionCapsule unxCap = new TransactionCapsule(unx);
         if (null != blockCap && blockCap.generatedByMyself && null != unxCap.getContractRet() && contractResult.OUT_OF_TIME == unxCap.getContractRet()) {
@@ -554,6 +564,7 @@ public class RuntimeImpl implements Runtime {
           if (callValue > 0 || callTokenValue > 0) {
             runtimeError = "constant cannot set call value or call token value.";
             result.rejectInternalTransactions();
+            logger.info(runtimeError);
           }
           if (result.getException() != null) {
             runtimeError = result.getException().getMessage();
@@ -589,6 +600,7 @@ public class RuntimeImpl implements Runtime {
           result.rejectInternalTransactions();
 
           if (result.getException() != null) {
+            logger.info("=====================Exception when create contract {}", result.getException().getMessage());
             if (!(result.getException() instanceof TransferException)) {
               //spend all energy
               program.spendAllEnergy();
@@ -597,9 +609,11 @@ public class RuntimeImpl implements Runtime {
             throw result.getException();
           } else {
             runtimeError = "REVERT opcode executed";
+            logger.info("========================Revert when create contract");
           }
         } else {
           deposit.commit();
+          logger.info("================================Commit cache");
           if (logInfoTriggerParser != null) {
             List<ContractTrigger> triggers = logInfoTriggerParser.parseLogInfos(program.getResult().getLogInfoList(), this.deposit);
             program.getResult().setTriggerList(triggers);
@@ -608,6 +622,7 @@ public class RuntimeImpl implements Runtime {
         }
       } else {
         deposit.commit();
+        logger.info("================================Commit cache");
       }
     } catch (JVMStackOverFlowException e) {
       program.spendAllEnergy();
@@ -615,14 +630,14 @@ public class RuntimeImpl implements Runtime {
       result.setException(e);
       result.rejectInternalTransactions();
       runtimeError = result.getException().getMessage();
-      logger.info("JVMStackOverFlowException: {}", result.getException().getMessage());
+      logger.error("JVMStackOverFlowException: {}", result.getException().getMessage(), result.getException());
     } catch (OutOfTimeException e) {
       program.spendAllEnergy();
       result = program.getResult();
       result.setException(e);
       result.rejectInternalTransactions();
       runtimeError = result.getException().getMessage();
-      logger.info("Timeout: {}", result.getException().getMessage());
+      logger.error("Timeout: {}", result.getException().getMessage(), result.getException());
     } catch (Throwable e) {
       if (!(e instanceof TransferException)) {
         program.spendAllEnergy();
@@ -636,7 +651,7 @@ public class RuntimeImpl implements Runtime {
       if (StringUtils.isEmpty(runtimeError)) {
         runtimeError = result.getException().getMessage();
       }
-      logger.info("Runtime result is :{}", result.getException().getMessage());
+      logger.error("Runtime result is :{}", result.getException().getMessage(), result.getException());
     }
 
     if (!isConstantCall) {

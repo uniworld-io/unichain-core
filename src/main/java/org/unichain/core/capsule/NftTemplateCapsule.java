@@ -19,8 +19,11 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.unichain.common.utils.TypeConversion;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.NftTemplate;
+
+import java.util.UUID;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
@@ -47,7 +50,8 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
             .setOwner(ctx.getOwnerAddress())
             .setTotalSupply(ctx.getTotalSupply())
             .setTokenIndex(tokenIndex)
-            .setLastOperation(lastOperation);
+            .setLastOperation(lastOperation)
+            .setContractId(UUID.randomUUID().timestamp());
 
     if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER))
       builder.setMinter(ctx.getMinter());
@@ -132,7 +136,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public byte[] getKey(){
-    return this.template.getContract().getBytes();
+    return TypeConversion.longToBytes(this.template.getContractId());
   }
 
   public void clearMinter(){

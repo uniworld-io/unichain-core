@@ -297,7 +297,7 @@ public class RpcApiService implements Service {
 
     @Override
     public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
-      NftTokenApproveResult reply = nftService.getApproval(request);
+      NftTokenApproveResult reply = nftService.getListApproval(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -739,7 +739,7 @@ public class RpcApiService implements Service {
 
     @Override
     public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
-      NftTokenApproveResult reply = nftService.getApproval(request);
+      NftTokenApproveResult reply = nftService.getListApproval(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

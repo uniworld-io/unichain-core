@@ -162,4 +162,9 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
     return relation.getApproveAllMap();
   }
 
+  public byte[] getHeadApprove(){
+    return relation.getApproveHead().toByteArray();
+  }
+
+
 }

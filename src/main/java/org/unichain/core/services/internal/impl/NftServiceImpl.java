@@ -90,7 +90,7 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.NftTokenApproveResult getApproval(Protocol.NftTokenApproveQuery query) {
+    public Protocol.NftTokenApproveResult getListApproval(Protocol.NftTokenApproveQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
 
         int pageSize = query.hasField(NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
@@ -105,12 +105,13 @@ public class NftServiceImpl implements NftService {
         List<Protocol.NftToken> unsorted = new ArrayList<>();
 
         if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotalApprove() > 0){
-            var relationCapsule = approveStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
+            var accTokenRelation = relationStore.get(ownerAddr);
+            var approveRelation = approveStore.get(accTokenRelation.getHeadApprove());
             while (true){
-                if(nftTokenStore.has(relationCapsule.getKey()))
-                    unsorted.add(nftTokenStore.get(relationCapsule.getKey()).getInstance());
-                if(relationCapsule.hasNext()) {
-                    relationCapsule = approveStore.get(relationCapsule.getNext());
+                if(nftTokenStore.has(approveRelation.getKey()))
+                    unsorted.add(nftTokenStore.get(approveRelation.getKey()).getInstance());
+                if(approveRelation.hasNext()) {
+                    approveRelation = approveStore.get(approveRelation.getNext());
                 } else {
                     break;
                 }

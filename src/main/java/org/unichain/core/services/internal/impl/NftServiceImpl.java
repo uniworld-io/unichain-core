@@ -44,7 +44,10 @@ public class NftServiceImpl implements NftService {
     @Override
     public Protocol.NftTemplate getContract(Protocol.NftTemplate query) {
         Assert.notNull(query.getContract(), "Template contract empty");
-        return dbManager.getNftTemplateStore().get(Util.stringAsBytesUppercase(query.getContract())).getInstance();
+        byte[] symbol = Util.stringAsBytesUppercase(query.getContract());
+        if(dbManager.getNftTemplateStore().has(symbol))
+            return dbManager.getNftTemplateStore().get(symbol).getInstance();
+        return Protocol.NftTemplate.newBuilder().clear().build();
     }
 
     @Override

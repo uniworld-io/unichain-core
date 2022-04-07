@@ -19,7 +19,9 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
-import org.unichain.common.utils.TypeConversion;
+import org.unichain.common.crypto.Hash;
+import org.unichain.common.utils.ByteUtil;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.NftTemplate;
 
@@ -48,7 +50,8 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
             .setOwner(ctx.getOwnerAddress())
             .setTotalSupply(ctx.getTotalSupply())
             .setTokenIndex(tokenIndex)
-            .setLastOperation(lastOperation);
+            .setLastOperation(lastOperation)
+            .setContractAddress(generateNftContractAddress(ctx));
 
     if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER))
       builder.setMinter(ctx.getMinter());
@@ -133,7 +136,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public byte[] getKey(){
-    return TypeConversion.longToBytes(this.template.getContractId());
+    return this.template.getContractAddress().toByteArray();
   }
 
   public void clearMinter(){
@@ -200,5 +203,10 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
     return template.getPrevOfMinter().toByteArray();
   }
 
-
+  private ByteString generateNftContractAddress(CreateNftTemplateContract ctx) {
+    byte[] addressByte = ctx.getOwnerAddress().toByteArray();
+    byte[] contractByte = Util.stringAsBytesUppercase(ctx.getContract());
+    byte[] mergedData = ByteUtil.merge(addressByte, Hash.sha3(contractByte));
+    return ByteString.copyFrom(Hash.sha3omit12(mergedData));
+  }
 }

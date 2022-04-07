@@ -23,8 +23,6 @@ import org.unichain.common.utils.TypeConversion;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.NftTemplate;
 
-import java.util.UUID;
-
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
@@ -50,8 +48,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
             .setOwner(ctx.getOwnerAddress())
             .setTotalSupply(ctx.getTotalSupply())
             .setTokenIndex(tokenIndex)
-            .setLastOperation(lastOperation)
-            .setContractId(UUID.randomUUID().timestamp());
+            .setLastOperation(lastOperation);
 
     if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER))
       builder.setMinter(ctx.getMinter());

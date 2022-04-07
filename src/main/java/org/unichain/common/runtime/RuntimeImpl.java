@@ -541,7 +541,6 @@ public class RuntimeImpl implements Runtime {
   public void go() {
     try {
       if (vm != null) {
-        logger.info("==============================VM is null ");
         //if out of time: spend all energy left = energyLimit - energyUsed
         TransactionCapsule unxCap = new TransactionCapsule(unx);
         if (null != blockCap && blockCap.generatedByMyself && null != unxCap.getContractRet() && contractResult.OUT_OF_TIME == unxCap.getContractRet()) {
@@ -622,7 +621,7 @@ public class RuntimeImpl implements Runtime {
         }
       } else {
         deposit.commit();
-        logger.info("================================Commit cache");
+        logger.info("==============================VM is null ");
       }
     } catch (JVMStackOverFlowException e) {
       program.spendAllEnergy();

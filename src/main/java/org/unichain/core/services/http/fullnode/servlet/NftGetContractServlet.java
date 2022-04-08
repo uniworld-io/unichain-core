@@ -43,11 +43,11 @@ public class NftGetContractServlet extends HttpServlet {
         response.getWriter().println("{}");
       }
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
+      logger.error("Exception: {}", e.getMessage(), e);
       try {
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
-        logger.debug("IOException: {}", ioe.getMessage());
+        logger.error("IOException: {}", ioe.getMessage(), ioe);
       }
     }
   }

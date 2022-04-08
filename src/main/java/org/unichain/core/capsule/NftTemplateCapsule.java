@@ -136,7 +136,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public byte[] getKey(){
-    return this.template.getContractAddress().toByteArray();
+    return this.template.getContract().getBytes();
   }
 
   public void clearMinter(){

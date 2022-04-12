@@ -16,7 +16,7 @@ import java.io.IOException;
 
 @Component
 @Slf4j(topic = "API")
-public class NftListTokenApproveServlet extends HttpServlet {
+public class NftGetListTokenApprovalServlet extends HttpServlet {
   @Autowired
   private NftService nftService;
 
@@ -24,8 +24,10 @@ public class NftListTokenApproveServlet extends HttpServlet {
     try {
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("owner_address");
-      long pageSize = Long.parseLong(request.getParameter("page_size"));
-      long pageIndex = Long.parseLong(request.getParameter("page_index"));
+
+      Integer pageIndex = request.getParameter("page_index") == null ? 0 : Integer.parseInt(request.getParameter("page_index"));
+      Integer pageSize = request.getParameter("page_size") == null ? 10 : Integer.parseInt(request.getParameter("page_size"));
+
       Protocol.NftTokenApproveQuery.Builder build = Protocol.NftTokenApproveQuery.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);

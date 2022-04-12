@@ -37,7 +37,7 @@ public class SolidityNodeHttpApiService implements Service {
   @Autowired
   private NftListContractServlet nftListContractServlet;
   @Autowired
-  private NftListTokenApproveServlet listNftTokenApproveServlet;
+  private NftGetListTokenApprovalServlet listNftTokenApproveServlet;
   @Autowired
   private NftGetApprovalForAllServlet listNftTokenApproveAllServlet;
   @Autowired

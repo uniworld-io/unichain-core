@@ -94,7 +94,7 @@ public class NftServiceImpl implements NftService {
 
     @Override
     public Protocol.NftTokenApproveResult getListApproval(Protocol.NftTokenApproveQuery query) {
-        Assert.notNull(query.getOwnerAddress(), "Owner address null");
+        Assert.notNull(query.getOwnerAddress(), "Owner address empty");
 
         int pageSize = query.hasField(NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
         int pageIndex = query.hasField(NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
@@ -119,6 +119,18 @@ public class NftServiceImpl implements NftService {
                     break;
                 }
             }
+        }
+        //@TODO discord
+        var accTokenRelation = relationStore.get(ownerAddr);
+        if (accTokenRelation != null && accTokenRelation.getApproveAllMap() != null) {
+            accTokenRelation.getApproveAllMap().forEach((owner, isApproveAll) -> {
+                byte[] ownerBytes = ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray();
+                if (isApproveAll && relationStore.has(ownerBytes)) {
+                    List<Protocol.NftToken> tokens = listTokenByOwner(ownerBytes, cap -> true);
+                    tokens.removeIf(token -> token.hasField(NFT_TOKEN_FIELD_APPROVAL) && Arrays.equals(token.getApproval().toByteArray(), ownerAddr));
+                    unsorted.addAll(tokens);
+                }
+            });
         }
 
         return Protocol.NftTokenApproveResult.newBuilder()
@@ -145,7 +157,7 @@ public class NftServiceImpl implements NftService {
         var relationStore = dbManager.getNftAccountTokenStore();
         var relation = relationStore.get(query.getOwnerAddress().toByteArray());
 
-        if (relation.getApproveAllMap() == null)
+        if (relation == null || relation.getApproveAllMap() == null)
             return Protocol.NftTokenApproveAllResult.newBuilder().setOwnerAddress(query.getOwnerAddress()).build();
 
         List<Protocol.NftAccountTokenRelation> approveList = new ArrayList<>();

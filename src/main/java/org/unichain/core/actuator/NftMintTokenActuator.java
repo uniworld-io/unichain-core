@@ -121,10 +121,10 @@ public class NftMintTokenActuator extends AbstractActuator {
       }
 
       var contract = Util.stringAsBytesUppercase(ctx.getContract());
-      Assert.isTrue(dbManager.getNftTemplateStore().has(contract), "NFT template not existed");
+      Assert.isTrue(dbManager.getNftTemplateStore().has(contract), "Contract symbol not existed!");
       var templateCap = dbManager.getNftTemplateStore().get(contract);
       Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()) || (templateCap.hasMinter() && Arrays.equals(ownerAddr, templateCap.getMinter())), "Only owner or minter allowed to mint NFT token");
-      Assert.isTrue(!(Arrays.equals(toAddr, templateCap.getOwner()) || Arrays.equals(toAddr, templateCap.getMinter())), "Can not create token for minter or owner");
+      Assert.isTrue(!(Arrays.equals(toAddr, templateCap.getOwner()) || Arrays.equals(toAddr, templateCap.getMinter())), "Can not create token for minter or owner!");
       Assert.isTrue(templateCap.getTokenIndex() < templateCap.getTotalSupply(), "Over slot NFT token mint!");
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Owner not enough balance to create new account fee, require at least "+ fee + "ginza");
       Assert.isTrue(TransactionUtil.validHttpURI(ctx.getUri()), "Invalid uri");

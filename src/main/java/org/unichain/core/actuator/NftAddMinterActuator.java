@@ -95,7 +95,7 @@ public class NftAddMinterActuator extends AbstractActuator {
       Assert.isTrue(accStore.has(ownerAddr), "Owner account not exist");
       Assert.isTrue(Wallet.addressValid(minterAddr), "Minter address not active or not exists");
       Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
-      Assert.isTrue(templateStore.has(contract), "contract not exist");
+      Assert.isTrue(templateStore.has(contract), "Contract symbol not exist");
       var template = templateStore.get(contract);
       Assert.isTrue(Arrays.equals(template.getOwner(), ownerAddr), "Not owner of NFT template");
 
@@ -105,7 +105,7 @@ public class NftAddMinterActuator extends AbstractActuator {
       {
         fee = Math.addExact(dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract(), fee);
       }
-      Assert.isTrue(accStore.get(ownerAddr).getBalance() >= fee, "not enough balance, require at-least: " + fee +" ginza");
+      Assert.isTrue(accStore.get(ownerAddr).getBalance() >= fee, "Not enough balance, require at-least: " + fee +" ginza");
       Assert.isTrue(!template.hasMinter() || (!Arrays.equals(template.getMinter(), ctx.getMinter().toByteArray())), "already minter");
       Assert.isTrue(!TransactionUtil.validGenericsAddress(minterAddr), "Minter is generics address");
 

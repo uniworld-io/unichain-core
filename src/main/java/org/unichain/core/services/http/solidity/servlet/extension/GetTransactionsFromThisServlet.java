@@ -1,4 +1,4 @@
-package org.unichain.core.services.http.solidity.servlet;
+package org.unichain.core.services.http.solidity.servlet.extension;
 
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class GetTransactionsToThisServlet extends HttpServlet {
+public class GetTransactionsFromThisServlet extends HttpServlet {
 
   @Autowired
   private WalletSolidity walletSolidity;
@@ -33,11 +33,11 @@ public class GetTransactionsToThisServlet extends HttpServlet {
       AccountPaginated.Builder builder = AccountPaginated.newBuilder();
       JsonFormat.merge(input, builder, visible);
       AccountPaginated accountPaginated = builder.build();
-      ByteString toAddress = accountPaginated.getAccount().getAddress();
+      ByteString thisAddress = accountPaginated.getAccount().getAddress();
       long offset = accountPaginated.getOffset();
       long limit = accountPaginated.getLimit();
-      if (toAddress != null && offset >= 0 && limit >= 0) {
-        TransactionList list = walletSolidity.getTransactionsToThis(toAddress, offset, limit);
+      if (thisAddress != null && offset >= 0 && limit >= 0) {
+        TransactionList list = walletSolidity.getTransactionsFromThis(thisAddress, offset, limit);
         resp.getWriter().println(Util.printTransactionList(list, visible));
       } else {
         resp.getWriter().print("{}");

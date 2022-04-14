@@ -194,5 +194,4 @@ public class NodeInfoService {
       nodeInfo.getCheatWitnessInfoMap().put(entry.getKey(), entry.getValue().toString());
     }
   }
-
 }

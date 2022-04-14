@@ -95,10 +95,8 @@ public class Manager {
   private TokenPoolStore tokenPoolStore;
   @Autowired
   private FutureTokenStore futureTokenStore;
-
   @Autowired
   private FutureTransferStore futureTransferStore;
-
   @Autowired
   private AssetIssueV2Store assetIssueV2Store;
   @Autowired
@@ -110,49 +108,64 @@ public class Manager {
   @Getter
   private TransactionRetStore transactionRetStore;
   @Autowired
+  @Getter
   private AccountIdIndexStore accountIdIndexStore;
   @Autowired
+  @Getter
   private AccountIndexStore accountIndexStore;
   @Autowired
+  @Getter
   private WitnessScheduleStore witnessScheduleStore;
   @Autowired
+  @Getter
   private RecentBlockStore recentBlockStore;
   @Autowired
+  @Getter
   private VotesStore votesStore;
   @Autowired
+  @Getter
   private ProposalStore proposalStore;
   @Autowired
+  @Getter
   private ExchangeStore exchangeStore;
   @Autowired
+  @Getter
   private ExchangeV2Store exchangeV2Store;
   @Autowired
+  @Getter
   private TransactionHistoryStore transactionHistoryStore;
   @Autowired
+  @Getter
   private CodeStore codeStore;
   @Autowired
+  @Getter
   private ContractStore contractStore;
   @Autowired
+  @Getter
   private DelegatedResourceStore delegatedResourceStore;
   @Autowired
+  @Getter
   private DelegatedResourceAccountIndexStore delegatedResourceAccountIndexStore;
   @Autowired
   @Getter
   private StorageRowStore storageRowStore;
 
-  @Setter
-  private UnichainNetService unichainNetService;
-
   @Autowired
   private PeersStore peersStore;
+
+  ////end of store
+
+  @Getter
+  @Autowired
+  private RevokingDatabase revokingDb;
+
+  @Setter
+  private UnichainNetService unichainNetService;
 
   @Autowired
   private KhaosDatabase khaosDb;
 
   private BlockCapsule genesisBlock;
-
-  @Getter
-  @Autowired
-  private RevokingDatabase revokingStore;
 
   @Getter
   private SessionOptional session = SessionOptional.instance();
@@ -179,22 +192,19 @@ public class Manager {
 
   private ExecutorService validateSignService;
 
-  private boolean isRunRepushThread = true;
+  private boolean isRunRePushThread = true;
 
   private boolean isRunTriggerCapsuleProcessThread = true;
 
   private long latestSolidifiedBlockNumber;
 
-  @Getter
-  @Setter
-  public boolean eventPluginLoaded = false;
+  private boolean eventPluginLoaded = false;
 
   private BlockingQueue<TransactionCapsule> pushTransactionQueue = new LinkedBlockingQueue<>();
 
   @Getter
   private Cache<Sha256Hash, Boolean> transactionIdCache = CacheBuilder.newBuilder().maximumSize(100_000).recordStats().build();
 
-  @Getter
   private ForkController forkController = ForkController.instance();
 
   @Autowired
@@ -202,6 +212,7 @@ public class Manager {
 
   @Autowired
   private TrieService trieService;
+
   private Set<String> ownerAddressSet = new HashSet<>();
 
   @Getter
@@ -231,7 +242,6 @@ public class Manager {
   public void setWitnessScheduleStore(final WitnessScheduleStore witnessScheduleStore) {
     this.witnessScheduleStore = witnessScheduleStore;
   }
-
 
   public DelegatedResourceStore getDelegatedResourceStore() {
     return delegatedResourceStore;
@@ -368,11 +378,11 @@ public class Manager {
   }
 
   /**
-   * Cycle thread to repush Transactions
+   * Cycle thread to re-push Transactions
    */
-  private Runnable repushLoop =
+  private Runnable rePushLoop =
       () -> {
-        while (isRunRepushThread) {
+        while (isRunRePushThread) {
           TransactionCapsule tx = null;
           try {
             if (isGeneratingBlock()) {
@@ -417,7 +427,7 @@ public class Manager {
       };
 
   public void stopRePushThread() {
-    isRunRepushThread = false;
+    isRunRePushThread = false;
   }
 
   public void stopRePushTriggerThread() {
@@ -430,8 +440,8 @@ public class Manager {
     delegationService.setManager(this);
     accountStateCallBack.setManager(this);
     trieService.setManager(this);
-    revokingStore.disable();
-    revokingStore.check();
+    revokingDb.disable();
+    revokingDb.check();
     this.setWitnessController(WitnessController.createInstance(this));
     this.setProposalController(ProposalController.createInstance(this));
     this.pendingTransactions = Collections.synchronizedList(Lists.newArrayList());
@@ -468,9 +478,9 @@ public class Manager {
     dynamicPropertiesStore.updateDynamicStoreByConfig();
 
     initCacheTxs();
-    revokingStore.enable();
+    revokingDb.enable();
     validateSignService = Executors.newFixedThreadPool(Args.getInstance().getValidateSignThreadNum());
-    Thread repushThread = new Thread(repushLoop);
+    Thread repushThread = new Thread(rePushLoop);
     repushThread.start();
     // add contract event listener for subscribing
     if (Args.getInstance().isEventSubscribe() || Args.getInstance().getEventPluginConfig().isEnable()) {
@@ -759,10 +769,10 @@ public class Manager {
           - next session reuse that session
          */
         if (!session.valid()) {
-          session.setValue(revokingStore.buildSession());
+          session.setValue(revokingDb.buildSession());
         }
 
-        try (ISession tmpSession = revokingStore.buildSession()) {
+        try (ISession tmpSession = revokingDb.buildSession()) {
           processTransaction(tx, null);
           pendingTransactions.add(tx);
           tmpSession.merge();
@@ -862,7 +872,7 @@ public class Manager {
       BlockCapsule oldHeadBlock = getBlockById(getDynamicPropertiesStore().getLatestBlockHeaderHash());
       logger.info("begin to erase block:" + oldHeadBlock);
       khaosDb.pop();
-      revokingStore.fastPop();
+      revokingDb.fastPop();
       logger.info("end to erase block:" + oldHeadBlock);
       popedTransactions.addAll(oldHeadBlock.getTransactions());
     } catch (ItemNotFoundException | BadItemException e) {
@@ -907,9 +917,9 @@ public class Manager {
 
     updateFork(block);
     if (System.currentTimeMillis() - block.getTimeStamp() >= 60_000) {
-      revokingStore.setMaxFlushCount(SnapshotManager.DEFAULT_MAX_FLUSH_COUNT);
+      revokingDb.setMaxFlushCount(SnapshotManager.DEFAULT_MAX_FLUSH_COUNT);
     } else {
-      revokingStore.setMaxFlushCount(SnapshotManager.DEFAULT_MIN_FLUSH_COUNT);
+      revokingDb.setMaxFlushCount(SnapshotManager.DEFAULT_MIN_FLUSH_COUNT);
     }
   }
 
@@ -957,7 +967,7 @@ public class Manager {
       for (KhaosBlock kForkBlock : forkBranch) {
         Exception exception = null;
         //@todo process the exception carefully later
-        try (ISession tmpSession = revokingStore.buildSession()) {
+        try (ISession tmpSession = revokingDb.buildSession()) {
           applyBlock(kForkBlock.getBlk());
           tmpSession.commit();
         } catch (AccountResourceInsufficientException
@@ -993,7 +1003,7 @@ public class Manager {
             Collections.reverse(second);
             for (KhaosBlock khaosBlock : second) {
               //@todo process the exception carefully later
-              try (ISession tmpSession = revokingStore.buildSession()) {
+              try (ISession tmpSession = revokingDb.buildSession()) {
                 applyBlock(khaosBlock.getBlk());
                 tmpSession.commit();
               } catch (AccountResourceInsufficientException
@@ -1114,7 +1124,7 @@ public class Manager {
           - apply block to main chain
           - commit to next stage
          */
-        try (ISession tmpSession = revokingStore.buildSession()) {
+        try (ISession tmpSession = revokingDb.buildSession()) {
           applyBlock(newBlock);
           tmpSession.commit();
           //notify new block
@@ -1173,7 +1183,7 @@ public class Manager {
     this.dynamicPropertiesStore.saveLatestBlockHeaderNumber(block.getNum());
     this.dynamicPropertiesStore.saveLatestBlockHeaderTimestamp(block.getTimeStamp());
     //set max snapshot size that can be revoked
-    revokingStore.setMaxSize((int) (dynamicPropertiesStore.getLatestBlockHeaderNumber() - dynamicPropertiesStore.getLatestSolidifiedBlockNum() + 1));
+    revokingDb.setMaxSize((int) (dynamicPropertiesStore.getLatestBlockHeaderNumber() - dynamicPropertiesStore.getLatestSolidifiedBlockNum() + 1));
     //max khaos DB size to maintain
     khaosDb.setMaxSize((int)(dynamicPropertiesStore.getLatestBlockHeaderNumber() - dynamicPropertiesStore.getLatestSolidifiedBlockNum() + 1));
   }
@@ -1385,7 +1395,7 @@ public class Manager {
        - create new snapshot to apply all block's tx
      */
     session.reset();
-    session.setValue(revokingStore.buildSession());
+    session.setValue(revokingDb.buildSession());
 
     accountStateCallBack.preExecute(blockCapsule);
 
@@ -1435,7 +1445,7 @@ public class Manager {
          - process tx
          - merge back to common session and create one consistent block's view
        */
-      try (ISession tmpSession = revokingStore.buildSession()) {
+      try (ISession tmpSession = revokingDb.buildSession()) {
         accountStateCallBack.preExeTrans();
         var result = processTransaction(tx, blockCapsule);
         accountStateCallBack.exeTransFinish();
@@ -1695,9 +1705,9 @@ public class Manager {
    */
   public long getSyncBeginNumber() {
     logger.info("headNumber:" + dynamicPropertiesStore.getLatestBlockHeaderNumber());
-    logger.info("syncBeginNumber:" + (dynamicPropertiesStore.getLatestBlockHeaderNumber() - revokingStore.size()));
+    logger.info("syncBeginNumber:" + (dynamicPropertiesStore.getLatestBlockHeaderNumber() - revokingDb.size()));
     logger.info("solidBlockNumber:" + dynamicPropertiesStore.getLatestSolidifiedBlockNum());
-    return dynamicPropertiesStore.getLatestBlockHeaderNumber() - revokingStore.size();
+    return dynamicPropertiesStore.getLatestBlockHeaderNumber() - revokingDb.size();
   }
 
   public BlockId getSolidBlockId() {
@@ -1968,7 +1978,7 @@ public class Manager {
   }
 
   public void setMode(boolean mode) {
-    revokingStore.setMode(mode);
+    revokingDb.setMode(mode);
   }
 
   private void startEventSubscribing() {

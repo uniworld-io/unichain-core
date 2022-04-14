@@ -3,7 +3,8 @@ package org.unichain.core.services.interfaceOnSolidity.http;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.unichain.core.services.http.fullnode.servlet.GetTransactionByIdServlet;
+import org.unichain.core.services.http.fullnode.servlet.GetAccountByIdServlet;
+import org.unichain.core.services.http.fullnode.servlet.GetTokenFutureServlet;
 import org.unichain.core.services.interfaceOnSolidity.WalletOnSolidity;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,7 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 @Component
 @Slf4j(topic = "API")
-public class GetTransactionByIdOnSolidityServlet extends GetTransactionByIdServlet {
+public class GetTokenFutureOnSolidityServlet extends GetTokenFutureServlet {
 
   @Autowired
   private WalletOnSolidity walletOnSolidity;

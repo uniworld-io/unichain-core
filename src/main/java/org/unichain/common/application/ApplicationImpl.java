@@ -57,7 +57,7 @@ public class ApplicationImpl implements Application {
   public void shutdown() {
     logger.info("******** begin to shutdown ********");
     unichainNetService.close();
-    synchronized (dbManager.getRevokingStore()) {
+    synchronized (dbManager.getRevokingDb()) {
       closeRevokingStore();
       closeAllStore();
     }
@@ -97,7 +97,7 @@ public class ApplicationImpl implements Application {
 
   private void closeRevokingStore() {
     logger.info("******** begin to closeRevokingStore ********");
-    dbManager.getRevokingStore().shutdown();
+    dbManager.getRevokingDb().shutdown();
   }
 
   private void closeAllStore() {

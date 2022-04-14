@@ -7,8 +7,7 @@ import org.springframework.stereotype.Component;
 import org.unichain.core.capsule.DelegatedResourceAccountIndexCapsule;
 
 @Component
-public class DelegatedResourceAccountIndexStore extends
-    UnichainStoreWithRevoking<DelegatedResourceAccountIndexCapsule> {
+public class DelegatedResourceAccountIndexStore extends UnichainStoreWithRevoking<DelegatedResourceAccountIndexCapsule> {
 
   @Autowired
   public DelegatedResourceAccountIndexStore(@Value("DelegatedResourceAccountIndex") String dbName) {

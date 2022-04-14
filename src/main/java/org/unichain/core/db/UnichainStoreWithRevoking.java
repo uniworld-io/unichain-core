@@ -10,7 +10,6 @@ import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.capsule.ProtoCapsule;
-import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.api.IndexHelper;
 import org.unichain.core.db.common.DataPage;
@@ -20,10 +19,8 @@ import org.unichain.core.db2.common.LevelDB;
 import org.unichain.core.db2.common.RocksDB;
 import org.unichain.core.db2.core.IUnichainChainBase;
 import org.unichain.core.db2.core.RevokingDBWithCachingNewValue;
-import org.unichain.core.db2.core.RevokingDBWithCachingOldValue;
 import org.unichain.core.exception.BadItemException;
 import org.unichain.core.exception.ItemNotFoundException;
-import org.unichain.core.services.http.utils.Util;
 
 import javax.annotation.PostConstruct;
 import java.lang.reflect.Constructor;
@@ -54,16 +51,14 @@ public abstract class UnichainStoreWithRevoking<T extends ProtoCapsule> implemen
     this.dbName = dbName;
     int dbVersion = Args.getInstance().getStorage().getDbVersion();
     String dbEngine = Args.getInstance().getStorage().getDbEngine();
-    if (dbVersion == 1) {
-      this.revokingDB = new RevokingDBWithCachingOldValue(dbName);
-    } else if (dbVersion == 2) {
-      if ("LEVELDB".equals(dbEngine.toUpperCase())) {
+    if (dbVersion == 2) {
+      if ("LEVELDB".equalsIgnoreCase(dbEngine)) {
         this.revokingDB = new RevokingDBWithCachingNewValue(dbName, LevelDB.class);
-      } else if ("ROCKSDB".equals(dbEngine.toUpperCase())) {
+      } else if ("ROCKSDB".equalsIgnoreCase(dbEngine)) {
         this.revokingDB = new RevokingDBWithCachingNewValue(dbName, RocksDB.class);
       }
     } else {
-      throw new RuntimeException("db version is error.");
+      throw new RuntimeException("db version is only 2.(" + dbVersion + ")");
     }
   }
 
@@ -80,12 +75,6 @@ public abstract class UnichainStoreWithRevoking<T extends ProtoCapsule> implemen
   @PostConstruct
   private void init() {
     revokingDatabase.add(revokingDB);
-  }
-
-  // only for test
-  protected UnichainStoreWithRevoking(String dbName, RevokingDatabase revokingDatabase) {
-    this.revokingDB = new RevokingDBWithCachingOldValue(dbName,
-        (AbstractRevokingStore) revokingDatabase);
   }
 
   @Override

@@ -29,10 +29,9 @@ public class HttpApiOnSolidityService implements Service {
   @Autowired
   private GetTokenPoolOnSolidityServlet tokenPoolOnSolidityServlet;
   @Autowired
-  private GetTokenFutureServlet getTokenFutureServlet;
+  private GetTokenFutureOnSolidityServlet getTokenFutureServlet;
   @Autowired
-  private GetFutureTransferServlet getFutureTransferServlet;
-
+  private GetFutureTransferOnSolidityServlet getFutureTransferServlet;
   @Autowired
   private GetTransactionByIdOnSolidityServlet getTransactionByIdOnSolidityServlet;
   @Autowired

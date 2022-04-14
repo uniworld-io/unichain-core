@@ -49,9 +49,9 @@ public class GetTransactionInfoByIdServlet extends HttpServlet {
       String input = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(input);
       boolean visible = Util.getVisiblePost(input);
-      BytesMessage.Builder build = BytesMessage.newBuilder();
-      JsonFormat.merge(input, build, visible);
-      TransactionInfo reply = wallet.getTransactionInfoById(build.getValue());
+      BytesMessage.Builder builder = BytesMessage.newBuilder();
+      JsonFormat.merge(input, builder, visible);
+      TransactionInfo reply = wallet.getTransactionInfoById(builder.build().getValue());
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {

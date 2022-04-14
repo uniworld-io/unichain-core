@@ -12,10 +12,8 @@ import org.springframework.stereotype.Component;
 import org.unichain.common.application.Service;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.services.http.fullnode.servlet.*;
-import org.unichain.core.services.http.solidity.servlet.GetTransactionByIdSolidityServlet;
-import org.unichain.core.services.http.solidity.servlet.GetTransactionInfoByIdSolidityServlet;
-import org.unichain.core.services.http.solidity.servlet.GetTransactionsFromThisServlet;
-import org.unichain.core.services.http.solidity.servlet.GetTransactionsToThisServlet;
+import org.unichain.core.services.http.solidity.servlet.extension.GetTransactionsFromThisServlet;
+import org.unichain.core.services.http.solidity.servlet.extension.GetTransactionsToThisServlet;
 
 import javax.servlet.DispatcherType;
 import java.util.EnumSet;
@@ -39,9 +37,9 @@ public class SolidityNodeHttpApiService implements Service {
   private GetFutureTransferServlet getFutureTransferServlet;
 
   @Autowired
-  private GetTransactionByIdSolidityServlet getTransactionByIdServlet;
+  private GetTransactionByIdServlet getTransactionByIdServlet;
   @Autowired
-  private GetTransactionInfoByIdSolidityServlet getTransactionInfoByIdServlet;
+  private GetTransactionInfoByIdServlet getTransactionInfoByIdServlet;
   @Autowired
   private GetTransactionsFromThisServlet getTransactionsFromThisServlet;
   @Autowired

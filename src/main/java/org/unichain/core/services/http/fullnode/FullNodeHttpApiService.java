@@ -212,7 +212,6 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private UpdateBrokerageServlet updateBrokerageServlet;
 
-
   @Override
   public void init() {
 

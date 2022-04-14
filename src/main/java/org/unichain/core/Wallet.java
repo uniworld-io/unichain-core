@@ -86,8 +86,8 @@ public class Wallet {
   private static byte addressPreFixByte = Constant.ADD_PRE_FIX_BYTE_MAINNET;
   private final int minEffectiveConnection = Args.getInstance().getMinEffectiveConnection();
 
-  @Getter
   private final ECKey ecKey;
+
   @Autowired
   private UnichainNetService unichainNetService;
   @Autowired

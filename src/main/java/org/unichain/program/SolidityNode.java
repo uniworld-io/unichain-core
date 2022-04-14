@@ -206,7 +206,6 @@ public class SolidityNode {
 
     SolidityNode node = new SolidityNode(appT.getDbManager());
     node.start();
-
     rpcApiService.blockUntilShutdown();
   }
 }

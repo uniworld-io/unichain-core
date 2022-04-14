@@ -14,6 +14,7 @@ import org.unichain.common.utils.ByteUtil;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.capsule.*;
 import org.unichain.core.db.*;
+import org.unichain.core.db.store.*;
 import org.unichain.core.exception.BadItemException;
 import org.unichain.core.exception.ItemNotFoundException;
 import org.unichain.protos.Protocol;

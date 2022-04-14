@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.common.logsfilter.EventPluginLoader;
 import org.unichain.core.config.args.Args;
-import org.unichain.core.db.BlockStore;
+import org.unichain.core.db.store.BlockStore;
 import org.unichain.core.db.Manager;
 import org.unichain.core.net.UnichainNetService;
 

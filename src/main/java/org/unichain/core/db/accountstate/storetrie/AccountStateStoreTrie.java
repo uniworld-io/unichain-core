@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.unichain.core.capsule.BytesCapsule;
 import org.unichain.core.capsule.utils.RLP;
-import org.unichain.core.db.UnichainStoreWithRevoking;
+import org.unichain.core.db.store.UnichainStoreWithRevoking;
 import org.unichain.core.db.accountstate.AccountStateEntity;
 import org.unichain.core.db.accountstate.TrieService;
 import org.unichain.core.db2.common.DB;
@@ -17,8 +17,7 @@ import javax.annotation.PostConstruct;
 
 @Slf4j(topic = "AccountState")
 @Component
-public class AccountStateStoreTrie extends UnichainStoreWithRevoking<BytesCapsule> implements
-    DB<byte[], BytesCapsule> {
+public class AccountStateStoreTrie extends UnichainStoreWithRevoking<BytesCapsule> implements DB<byte[], BytesCapsule> {
 
   @Autowired
   private TrieService trieService;

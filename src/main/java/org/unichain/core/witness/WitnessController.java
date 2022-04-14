@@ -16,10 +16,10 @@ import org.unichain.core.capsule.VotesCapsule;
 import org.unichain.core.capsule.WitnessCapsule;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.config.args.Args;
-import org.unichain.core.db.AccountStore;
+import org.unichain.core.db.store.AccountStore;
 import org.unichain.core.db.Manager;
-import org.unichain.core.db.VotesStore;
-import org.unichain.core.db.WitnessStore;
+import org.unichain.core.db.store.VotesStore;
+import org.unichain.core.db.store.WitnessStore;
 import org.unichain.core.exception.HeaderNotFound;
 
 import java.util.*;

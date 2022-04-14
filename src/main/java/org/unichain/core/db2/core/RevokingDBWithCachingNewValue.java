@@ -13,8 +13,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class RevokingDBWithCachingNewValue implements IRevokingDB {
-  private ThreadLocal<Boolean> mode = new ThreadLocal<>();
+  private ThreadLocal<Boolean> snapshotMode = new ThreadLocal<>();
   private Snapshot head;
+
   @Getter
   private String dbName;
   private Class<? extends DB> clz;
@@ -23,20 +24,15 @@ public class RevokingDBWithCachingNewValue implements IRevokingDB {
     this.dbName = dbName;
     this.clz = clz;
     head = new SnapshotRoot(Args.getInstance().getOutputDirectoryByDbName(dbName), dbName, clz);
-    mode.set(true);
+    snapshotMode.set(true);
   }
 
-  /**
-   *
-   * @param mode true: fullNode, false: solidityNode
-   */
-  @Override
-  public void setMode(boolean mode) {
-    this.mode.set(mode);
+  public void setSnapshotMode(boolean snapshotMode) {
+    this.snapshotMode.set(snapshotMode);
   }
 
   private Snapshot head() {
-    if (mode.get() == null || mode.get()) {
+    if (snapshotMode.get() == null || snapshotMode.get()) {
       return head;
     } else {
       return head.getSolidity();
@@ -51,9 +47,6 @@ public class RevokingDBWithCachingNewValue implements IRevokingDB {
     this.head = head;
   }
 
-  /**
-   * close the database.
-   */
   @Override
   public synchronized void close() {
     head().close();
@@ -103,12 +96,12 @@ public class RevokingDBWithCachingNewValue implements IRevokingDB {
 
   //for blockstore
   @Override
-  public Set<byte[]> getlatestValues(long limit) {
-    return getlatestValues(head(), limit);
+  public Set<byte[]> getLatestValues(long limit) {
+    return getLatestValues(head(), limit);
   }
 
   //for blockstore
-  private synchronized Set<byte[]> getlatestValues(Snapshot head, long limit) {
+  private synchronized Set<byte[]> getLatestValues(Snapshot head, long limit) {
     if (limit <= 0) {
       return Collections.emptySet();
     }
@@ -138,7 +131,7 @@ public class RevokingDBWithCachingNewValue implements IRevokingDB {
   }
 
   //for blockstore
-  private Set<byte[]> getValuesNext(Snapshot head, byte[] key, long limit) {
+  private Set<byte[]> getNextValues(Snapshot head, byte[] key, long limit) {
     if (limit <= 0) {
       return Collections.emptySet();
     }
@@ -176,12 +169,12 @@ public class RevokingDBWithCachingNewValue implements IRevokingDB {
   }
 
   @Override
-  public Set<byte[]> getValuesNext(byte[] key, long limit) {
-    return getValuesNext(head(), key, limit);
+  public Set<byte[]> getNextValues(byte[] key, long limit) {
+    return getNextValues(head(), key, limit);
   }
 
   @Override
-  public Set<byte[]> getValuesPrevious(byte[] key, long limit) {
+  public Set<byte[]> getPrevValues(byte[] key, long limit) {
     Map<WrappedByteArray, WrappedByteArray> collection = new HashMap<>();
     if (head.getPrevious() != null) {
       ((SnapshotImpl) head).collect(collection);

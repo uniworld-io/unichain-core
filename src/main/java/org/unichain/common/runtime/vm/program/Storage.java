@@ -5,7 +5,7 @@ import org.unichain.common.crypto.Hash;
 import org.unichain.common.runtime.vm.DataWord;
 import org.unichain.common.utils.ByteUtil;
 import org.unichain.core.capsule.StorageRowCapsule;
-import org.unichain.core.db.StorageRowStore;
+import org.unichain.core.db.store.StorageRowStore;
 
 import java.util.HashMap;
 import java.util.Map;

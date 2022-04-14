@@ -24,8 +24,7 @@ public class SnapshotRoot extends AbstractSnapshot<byte[], byte[]> {
       if (clz == LevelDB.class || clz == RocksDB.class) {
         Constructor constructor = clz.getConstructor(String.class, String.class);
         @SuppressWarnings("unchecked")
-        DB<byte[], byte[]> db = (DB<byte[], byte[]>) constructor
-            .newInstance((Object) parentName, (Object) name);
+        DB<byte[], byte[]> db = (DB<byte[], byte[]>) constructor.newInstance((Object) parentName, (Object) name);
         this.db = db;
       } else if (clz == TxCacheDB.class) {
         @SuppressWarnings("unchecked")
@@ -60,8 +59,7 @@ public class SnapshotRoot extends AbstractSnapshot<byte[], byte[]> {
   public void merge(Snapshot from) {
     SnapshotImpl snapshot = (SnapshotImpl) from;
     Map<WrappedByteArray, WrappedByteArray> batch = Streams.stream(snapshot.db)
-        .map(e -> Maps.immutableEntry(WrappedByteArray.of(e.getKey().getBytes()),
-            WrappedByteArray.of(e.getValue().getBytes())))
+        .map(e -> Maps.immutableEntry(WrappedByteArray.of(e.getKey().getBytes()), WrappedByteArray.of(e.getValue().getBytes())))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     ((Flusher) db).flush(batch);
   }

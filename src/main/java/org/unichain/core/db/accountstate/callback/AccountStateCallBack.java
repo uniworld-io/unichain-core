@@ -124,10 +124,8 @@ public class AccountStateCallBack {
     if (!exe()) {
       return;
     }
-    ByteString oldRoot = blockCapsule.getInstance().getBlockHeader().getRawData()
-        .getAccountStateRoot();
+    ByteString oldRoot = blockCapsule.getInstance().getBlockHeader().getRawData().getAccountStateRoot();
     execute = false;
-    //
     byte[] newRoot = trie.getRootHash();
     if (ArrayUtils.isEmpty(newRoot)) {
       newRoot = Hash.EMPTY_TRIE_HASH;

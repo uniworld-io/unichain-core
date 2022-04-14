@@ -37,8 +37,7 @@ public class TrieService {
     byte[] rootHash = null;
     try {
       BlockCapsule blockCapsule = manager.getBlockByNum(latestNumber);
-      ByteString value = blockCapsule.getInstance().getBlockHeader().getRawData()
-          .getAccountStateRoot();
+      ByteString value = blockCapsule.getInstance().getBlockHeader().getRawData().getAccountStateRoot();
       rootHash = value == null ? null : value.toByteArray();
       if (Arrays.equals(rootHash, Internal.EMPTY_BYTE_ARRAY)) {
         rootHash = Hash.EMPTY_TRIE_HASH;

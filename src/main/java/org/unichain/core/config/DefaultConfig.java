@@ -1,6 +1,7 @@
 package org.unichain.core.config;
 
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.apache.commons.lang3.BooleanUtils;
 import org.rocksdb.RocksDB;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,14 +12,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.RevokingDatabase;
-import org.unichain.core.db.RevokingStore;
 import org.unichain.core.db.TransactionCache;
 import org.unichain.core.db.api.IndexHelper;
 import org.unichain.core.db.backup.BackupRocksDBAspect;
 import org.unichain.core.db.backup.NeedBeanCondition;
 import org.unichain.core.db2.core.SnapshotManager;
-import org.unichain.core.services.interfaceOnSolidity.RpcApiServiceOnSolidity;
 import org.unichain.core.services.interfaceOnSolidity.HttpApiOnSolidityService;
+import org.unichain.core.services.interfaceOnSolidity.RpcApiServiceOnSolidity;
 
 @Slf4j(topic = "app")
 @Configuration
@@ -50,15 +50,13 @@ public class DefaultConfig {
 
   @Bean
   public RevokingDatabase revokingDatabase() {
-    int dbVersion = Args.getInstance().getStorage().getDbVersion();
+    var dbVersion = Args.getInstance().getStorage().getDbVersion();
     RevokingDatabase revokingDatabase;
     try {
-      if (dbVersion == 1) {
-        revokingDatabase = RevokingStore.getInstance();
-      } else if (dbVersion == 2) {
+      if (dbVersion == 2) {
         revokingDatabase = new SnapshotManager();
       } else {
-        throw new RuntimeException("DB version is error.");
+        throw new RuntimeException("DB version 2 only, found: "+ dbVersion);
       }
       return revokingDatabase;
     } finally {

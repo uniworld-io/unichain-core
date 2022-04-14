@@ -1,8 +1,6 @@
 package org.unichain.core.trie;
 
-/**
- *
- */
+
 public interface Trie<V> {
 
   byte[] getRootHash();

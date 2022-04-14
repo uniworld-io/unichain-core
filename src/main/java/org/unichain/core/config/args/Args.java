@@ -27,7 +27,7 @@ import org.unichain.core.config.Configuration;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.config.Parameter.NetConstants;
 import org.unichain.core.config.Parameter.NodeConstant;
-import org.unichain.core.db.AccountStore;
+import org.unichain.core.db.store.AccountStore;
 import org.unichain.core.db.backup.DbBackupConfig;
 import org.unichain.keystore.CipherException;
 import org.unichain.keystore.Credentials;

@@ -13,15 +13,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RocksDB implements DB<byte[], byte[]>, Flusher {
-
   @Getter
   private RocksDbDataSourceImpl db;
-  private WriteOptionsWrapper optionsWrapper = WriteOptionsWrapper.getInstance()
-      .sync(Args.getInstance().getStorage().isDbSync());
+  private WriteOptionsWrapper optionsWrapper = WriteOptionsWrapper.getInstance().sync(Args.getInstance().getStorage().isDbSync());
 
   public RocksDB(String parentName, String name) {
-    db = new RocksDbDataSourceImpl(
-        Paths.get(parentName, Args.getInstance().getStorage().getDbDirectory()).toString(), name);
+    db = new RocksDbDataSourceImpl(Paths.get(parentName, Args.getInstance().getStorage().getDbDirectory()).toString(), name);
     db.initDB();
   }
 

@@ -28,21 +28,16 @@ import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.unichain.common.utils.ByteUtil.toHexString;
 import static org.unichain.core.capsule.utils.RLP.*;
 
-/**
- *
- */
 public class TrieImpl implements Trie<byte[]> {
-
   private final static Object NULL_NODE = new Object();
   private final static int MIN_BRANCHES_CONCURRENTLY = 3;
-  private static ExecutorService executor;
 
+  private static ExecutorService executor;
   private static final Logger logger = LoggerFactory.getLogger(TrieImpl.class);
 
   public static ExecutorService getExecutor() {
     if (executor == null) {
-      executor = Executors.newFixedThreadPool(4,
-          new ThreadFactoryBuilder().setNameFormat("trie-calc-thread-%d").build());
+      executor = Executors.newFixedThreadPool(4, new ThreadFactoryBuilder().setNameFormat("trie-calc-thread-%d").build());
     }
     return executor;
   }
@@ -54,13 +49,11 @@ public class TrieImpl implements Trie<byte[]> {
   }
 
   public final class Node {
-
     byte[] hash = null;
     private byte[] rlp = null;
     private RLP.LList parsedRlp = null;
     private boolean dirty = false;
     private NodeType nodeType;
-
     private Object[] children = null;
 
     // new empty BranchNode
@@ -192,8 +185,7 @@ public class TrieImpl implements Trie<byte[]> {
     }
 
     @SafeVarargs
-    private final byte[] encodeRlpListFutures(Object... list)
-        throws ExecutionException, InterruptedException {
+    private final byte[] encodeRlpListFutures(Object... list) throws ExecutionException, InterruptedException {
       byte[][] vals = new byte[list.length][];
       for (int i = 0; i < list.length; i++) {
         if (list[i] instanceof Future) {
@@ -352,9 +344,7 @@ public class TrieImpl implements Trie<byte[]> {
 
     public NodeType getType() {
       parse();
-
-      return children.length == 17 ? NodeType.BranchNode :
-          (children[1] instanceof Node ? NodeType.KVNodeNode : NodeType.KVNodeValue);
+      return children.length == 17 ? NodeType.BranchNode : (children[1] instanceof Node ? NodeType.KVNodeNode : NodeType.KVNodeValue);
     }
 
     public void dispose() {
@@ -445,8 +435,7 @@ public class TrieImpl implements Trie<byte[]> {
 
     @Override
     public String toString() {
-      return getType() + (dirty ? " *" : "") + (hash == null ? ""
-          : "(hash: " + toHexString(hash) + " )");
+      return getType() + (dirty ? " *" : "") + (hash == null ? "" : "(hash: " + toHexString(hash) + " )");
     }
   }
 
@@ -494,7 +483,6 @@ public class TrieImpl implements Trie<byte[]> {
     } else {
       this.root = null;
     }
-
   }
 
   private boolean hasRoot() {

@@ -15,7 +15,7 @@
 package org.unichain.common.application;
 
 import org.unichain.core.config.args.Args;
-import org.unichain.core.db.BlockStore;
+import org.unichain.core.db.store.BlockStore;
 import org.unichain.core.db.Manager;
 
 public class CliApplication implements Application {

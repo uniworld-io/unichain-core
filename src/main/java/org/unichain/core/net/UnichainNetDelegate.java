@@ -13,7 +13,7 @@ import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.db.Manager;
-import org.unichain.core.db.WitnessScheduleStore;
+import org.unichain.core.db.store.WitnessScheduleStore;
 import org.unichain.core.exception.*;
 import org.unichain.core.exception.P2pException.TypeEnum;
 import org.unichain.core.net.message.BlockMessage;

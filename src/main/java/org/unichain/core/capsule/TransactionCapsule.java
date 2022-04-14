@@ -30,7 +30,7 @@ import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.Sha256Hash;
 import org.unichain.core.Wallet;
 import org.unichain.core.config.args.Args;
-import org.unichain.core.db.AccountStore;
+import org.unichain.core.db.store.AccountStore;
 import org.unichain.core.db.Manager;
 import org.unichain.core.db.TransactionTrace;
 import org.unichain.core.exception.*;

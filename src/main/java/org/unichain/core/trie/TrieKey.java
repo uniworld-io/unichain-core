@@ -8,7 +8,6 @@ import static org.unichain.common.utils.ByteUtil.toHexString;
  * Created by Anton Nashatyrev on 13.02.2017.
  */
 public final class TrieKey {
-
   public static final int ODD_OFFSET_FLAG = 0x1;
   public static final int TERMINATOR_FLAG = 0x2;
   private final byte[] key;
@@ -56,8 +55,7 @@ public final class TrieKey {
 
   public byte[] toNormal() {
     if ((off & 1) != 0) {
-      throw new RuntimeException(
-          "Can't convert a key with odd number of hexes to normal: " + this);
+      throw new RuntimeException("Can't convert a key with odd number of hexes to normal: " + this);
     }
     int arrLen = key.length - off / 2;
     byte[] ret = new byte[arrLen];
@@ -82,13 +80,11 @@ public final class TrieKey {
     int prefixLen = 0;
     int thisLength = getLength();
     int kLength = k.getLength();
-    while (prefixLen < thisLength && prefixLen < kLength && getHex(prefixLen) == k
-        .getHex(prefixLen)) {
+    while (prefixLen < thisLength && prefixLen < kLength && getHex(prefixLen) == k.getHex(prefixLen)) {
       prefixLen++;
     }
     byte[] prefixKey = new byte[(prefixLen + 1) >> 1];
-    TrieKey ret = new TrieKey(prefixKey, (prefixLen & 1) == 0 ? 0 : 1,
-        prefixLen == getLength() && prefixLen == k.getLength() && terminal && k.isTerminal());
+    TrieKey ret = new TrieKey(prefixKey, (prefixLen & 1) == 0 ? 0 : 1, prefixLen == getLength() && prefixLen == k.getLength() && terminal && k.isTerminal());
     for (int i = 0; i < prefixLen; i++) {
       ret.setHex(i, k.getHex(i));
     }

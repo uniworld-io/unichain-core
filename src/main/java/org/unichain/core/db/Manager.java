@@ -40,10 +40,11 @@ import org.unichain.core.capsule.utils.BlockUtil;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.config.args.GenesisBlock;
-import org.unichain.core.db.KhaosDatabase.KhaosBlock;
+import org.unichain.core.db.ChaosDatabase.KhaosBlock;
 import org.unichain.core.db.accountstate.TrieService;
 import org.unichain.core.db.accountstate.callback.AccountStateCallBack;
 import org.unichain.core.db.api.AssetUpdateHelper;
+import org.unichain.core.db.store.*;
 import org.unichain.core.db2.core.ISession;
 import org.unichain.core.db2.core.IUnichainChainBase;
 import org.unichain.core.db2.core.SnapshotManager;
@@ -83,11 +84,10 @@ public class Manager {
   private AccountStore accountStore;
   @Autowired
   private TransactionStore transactionStore;
-  @Autowired(required = false)
-  private TransactionCache transactionCache;
   @Autowired
   private BlockStore blockStore;
   @Autowired
+  @Getter
   private WitnessStore witnessStore;
   @Autowired
   private AssetIssueStore assetIssueStore;
@@ -100,6 +100,7 @@ public class Manager {
   @Autowired
   private AssetIssueV2Store assetIssueV2Store;
   @Autowired
+  @Getter
   private DynamicPropertiesStore dynamicPropertiesStore;
   @Autowired
   @Getter
@@ -151,9 +152,11 @@ public class Manager {
   private StorageRowStore storageRowStore;
 
   @Autowired
-  private PeersStore peersStore;
-
+  private PeersDb peersDb;
   ////end of store
+
+  @Autowired(required = false)
+  private TransactionCache transactionCache;
 
   @Getter
   @Autowired
@@ -163,7 +166,7 @@ public class Manager {
   private UnichainNetService unichainNetService;
 
   @Autowired
-  private KhaosDatabase khaosDb;
+  private ChaosDatabase chaosDb;
 
   private BlockCapsule genesisBlock;
 
@@ -219,60 +222,8 @@ public class Manager {
   @Autowired
   private DelegationService delegationService;
 
-  public WitnessStore getWitnessStore() {
-    return this.witnessStore;
-  }
-
   public boolean needToUpdateAsset() {
     return getDynamicPropertiesStore().getTokenUpdateDone() == 0L;
-  }
-
-  public DynamicPropertiesStore getDynamicPropertiesStore() {
-    return this.dynamicPropertiesStore;
-  }
-
-  public void setDynamicPropertiesStore(final DynamicPropertiesStore dynamicPropertiesStore) {
-    this.dynamicPropertiesStore = dynamicPropertiesStore;
-  }
-
-  public WitnessScheduleStore getWitnessScheduleStore() {
-    return this.witnessScheduleStore;
-  }
-
-  public void setWitnessScheduleStore(final WitnessScheduleStore witnessScheduleStore) {
-    this.witnessScheduleStore = witnessScheduleStore;
-  }
-
-  public DelegatedResourceStore getDelegatedResourceStore() {
-    return delegatedResourceStore;
-  }
-
-  public DelegatedResourceAccountIndexStore getDelegatedResourceAccountIndexStore() {
-    return delegatedResourceAccountIndexStore;
-  }
-
-  public CodeStore getCodeStore() {
-    return codeStore;
-  }
-
-  public ContractStore getContractStore() {
-    return contractStore;
-  }
-
-  public VotesStore getVotesStore() {
-    return this.votesStore;
-  }
-
-  public ProposalStore getProposalStore() {
-    return this.proposalStore;
-  }
-
-  public ExchangeStore getExchangeStore() {
-    return this.exchangeStore;
-  }
-
-  public ExchangeV2Store getExchangeV2Store() {
-    return this.exchangeV2Store;
   }
 
   public ExchangeStore getExchangeStoreFinal() {
@@ -294,35 +245,21 @@ public class Manager {
     }
   }
 
-  public List<TransactionCapsule> getPendingTransactions() {
-    return this.pendingTransactions;
-  }
-
-  public List<TransactionCapsule> getPoppedTransactions() {
-    return this.popedTransactions;
-  }
-
-  public BlockingQueue<TransactionCapsule> getRepushTransactions() {
-    return repushTransactions;
-  }
-
-  // transactions cache
+  @Getter
   private List<TransactionCapsule> pendingTransactions;
 
-  // transactions popped
-  private List<TransactionCapsule> popedTransactions = Collections.synchronizedList(Lists.newArrayList());
+  @Getter
+  private List<TransactionCapsule> poppedTransactions = Collections.synchronizedList(Lists.newArrayList());
 
-  // the capacity is equal to Integer.MAX_VALUE default
-  private BlockingQueue<TransactionCapsule> repushTransactions;
+  @Getter
+  private BlockingQueue<TransactionCapsule> rePushTransactions;
 
   private BlockingQueue<TriggerCapsule> triggerCapsuleQueue;
 
-  // for test only
   public List<ByteString> getWitnesses() {
     return witnessController.getActiveWitnesses();
   }
 
-  // for test only
   public void addWitness(final ByteString address) {
     List<ByteString> witnessAddresses = witnessController.getActiveWitnesses();
     witnessAddresses.add(address);
@@ -370,11 +307,11 @@ public class Manager {
   }
 
   public void clearAndWriteNeighbours(Set<Node> nodes) {
-    this.peersStore.put("neighbours".getBytes(), nodes);
+    this.peersDb.put("neighbours".getBytes(), nodes);
   }
 
   public Set<Node> readNeighbours() {
-    return this.peersStore.get("neighbours".getBytes());
+    return this.peersDb.get("neighbours".getBytes());
   }
 
   /**
@@ -389,7 +326,7 @@ public class Manager {
               TimeUnit.MILLISECONDS.sleep(10L);
               continue;
             }
-            tx = getRepushTransactions().peek();
+            tx = getRePushTransactions().peek();
             if (tx != null) {
               this.rePush(tx);
             } else {
@@ -401,7 +338,7 @@ public class Manager {
             logger.error("Unknown throwable happened in repush loop", throwable);
           } finally {
             if (tx != null) {
-              getRepushTransactions().remove(tx);
+              getRePushTransactions().remove(tx);
             }
           }
         }
@@ -445,12 +382,12 @@ public class Manager {
     this.setWitnessController(WitnessController.createInstance(this));
     this.setProposalController(ProposalController.createInstance(this));
     this.pendingTransactions = Collections.synchronizedList(Lists.newArrayList());
-    this.repushTransactions = new LinkedBlockingQueue<>();
+    this.rePushTransactions = new LinkedBlockingQueue<>();
     this.triggerCapsuleQueue = new LinkedBlockingQueue<>();
 
     this.initGenesis();
     try {
-      this.khaosDb.start(getBlockById(getDynamicPropertiesStore().getLatestBlockHeaderHash()));
+      this.chaosDb.start(getBlockById(getDynamicPropertiesStore().getLatestBlockHeaderHash()));
     } catch (ItemNotFoundException e) {
       logger.error(
           "Can not find Dynamic highest block from DB! \nnumber={} \nhash={}",
@@ -527,7 +464,7 @@ public class Manager {
         this.initAccount();
         this.initWitness();
         this.witnessController.initWits();
-        this.khaosDb.start(genesisBlock);
+        this.chaosDb.start(genesisBlock);
         this.updateRecentBlock(genesisBlock);
       }
     }
@@ -871,10 +808,10 @@ public class Manager {
     try {
       BlockCapsule oldHeadBlock = getBlockById(getDynamicPropertiesStore().getLatestBlockHeaderHash());
       logger.info("begin to erase block:" + oldHeadBlock);
-      khaosDb.pop();
+      chaosDb.pop();
       revokingDb.fastPop();
       logger.info("end to erase block:" + oldHeadBlock);
-      popedTransactions.addAll(oldHeadBlock.getTransactions());
+      poppedTransactions.addAll(oldHeadBlock.getTransactions());
     } catch (ItemNotFoundException | BadItemException e) {
       logger.warn(e.getMessage(), e);
     }
@@ -941,13 +878,13 @@ public class Manager {
     Pair<LinkedList<KhaosBlock>, LinkedList<KhaosBlock>> branchPair;
     try {
       //trace back fork chain & main chain
-      branchPair = khaosDb.getBranch(newHead.getBlockId(), getDynamicPropertiesStore().getLatestBlockHeaderHash());
+      branchPair = chaosDb.getBranch(newHead.getBlockId(), getDynamicPropertiesStore().getLatestBlockHeaderHash());
     } catch (NonCommonBlockException e) {
       logger.info("there is not the most recent common ancestor, need to remove all blocks in the fork chain.");
       BlockCapsule tmp = newHead;
       while (tmp != null) {
-        khaosDb.removeBlk(tmp.getBlockId());
-        tmp = khaosDb.getBlock(tmp.getParentHash());
+        chaosDb.removeBlk(tmp.getBlockId());
+        tmp = chaosDb.getBlock(tmp.getParentHash());
       }
       throw e;
     }
@@ -990,8 +927,8 @@ public class Manager {
           if (exception != null) {
             logger.warn("switch back because exception thrown while switching forks. " + exception.getMessage(), exception);
             //remove bad fork branch from khaos db
-            forkBranch.forEach(_kForkBlock -> khaosDb.removeBlk(_kForkBlock.getBlk().getBlockId()));
-            khaosDb.setHead(branchPair.getValue().peekFirst());
+            forkBranch.forEach(_kForkBlock -> chaosDb.removeBlk(_kForkBlock.getBlk().getBlockId()));
+            chaosDb.setHead(branchPair.getValue().peekFirst());
 
             //revert the result of fork branch
             while (!getDynamicPropertiesStore().getLatestBlockHeaderHash().equals(branchPair.getValue().peekLast().getParentHash())) {
@@ -1052,7 +989,7 @@ public class Manager {
          - if a block of forked chain come with invalid order, it will be rejected due to unlinked block
          - KhaosDB make sure that it maintain valid block that build a tree having root is genesis block
        */
-      BlockCapsule newBlock = this.khaosDb.push(block);
+      BlockCapsule newBlock = this.chaosDb.push(block);
 
       //DB don't need lower block
       if (getDynamicPropertiesStore().getLatestBlockHeaderHash() == null) {
@@ -1091,11 +1028,11 @@ public class Manager {
                   + ", dynamic head timestamp: "
                   + dynamicPropertiesStore.getLatestBlockHeaderTimestamp()
                   + ", khaosDb head: "
-                  + khaosDb.getHead()
+                  + chaosDb.getHead()
                   + ", khaosDb miniStore size: "
-                  + khaosDb.getMiniStore().size()
+                  + chaosDb.getMiniStore().size()
                   + ", khaosDb unlinkMiniStore size: "
-                  + khaosDb.getMiniUnlinkedStore().size());
+                  + chaosDb.getMiniUnlinkedStore().size());
 
           switchFork(newBlock);
           logger.info("saved block: " + newBlock);
@@ -1111,11 +1048,11 @@ public class Manager {
                   + ", dynamic head timestamp: "
                   + dynamicPropertiesStore.getLatestBlockHeaderTimestamp()
                   + ", khaosDb head: "
-                  + khaosDb.getHead()
+                  + chaosDb.getHead()
                   + ", khaosDb miniStore size: "
-                  + khaosDb.getMiniStore().size()
+                  + chaosDb.getMiniStore().size()
                   + ", khaosDb unlinkMiniStore size: "
-                  + khaosDb.getMiniUnlinkedStore().size());
+                  + chaosDb.getMiniUnlinkedStore().size());
           return;
         }
 
@@ -1131,7 +1068,7 @@ public class Manager {
           postBlockTrigger(newBlock);
         } catch (Throwable throwable) {
           logger.error(throwable.getMessage(), throwable);
-          khaosDb.removeBlk(block.getBlockId());
+          chaosDb.removeBlk(block.getBlockId());
           throw throwable;
         }
       }
@@ -1142,7 +1079,7 @@ public class Manager {
     synchronized (pushTransactionQueue) {
       if (CollectionUtils.isNotEmpty(ownerAddressSet)) {
         Set<String> result = new HashSet<>();
-        for (TransactionCapsule transactionCapsule : repushTransactions) {
+        for (TransactionCapsule transactionCapsule : rePushTransactions) {
           filterOwnerAddress(transactionCapsule, result);
         }
         for (TransactionCapsule transactionCapsule : pushTransactionQueue) {
@@ -1185,14 +1122,14 @@ public class Manager {
     //set max snapshot size that can be revoked
     revokingDb.setMaxSize((int) (dynamicPropertiesStore.getLatestBlockHeaderNumber() - dynamicPropertiesStore.getLatestSolidifiedBlockNum() + 1));
     //max khaos DB size to maintain
-    khaosDb.setMaxSize((int)(dynamicPropertiesStore.getLatestBlockHeaderNumber() - dynamicPropertiesStore.getLatestSolidifiedBlockNum() + 1));
+    chaosDb.setMaxSize((int)(dynamicPropertiesStore.getLatestBlockHeaderNumber() - dynamicPropertiesStore.getLatestSolidifiedBlockNum() + 1));
   }
 
   /**
    * Get the fork branch.
    */
   public LinkedList<BlockId> getBlockChainHashesOnFork(final BlockId forkBlockHash) throws NonCommonBlockException {
-    final Pair<LinkedList<KhaosBlock>, LinkedList<KhaosBlock>> branch = this.khaosDb.getBranch(getDynamicPropertiesStore().getLatestBlockHeaderHash(), forkBlockHash);
+    final Pair<LinkedList<KhaosBlock>, LinkedList<KhaosBlock>> branch = this.chaosDb.getBranch(getDynamicPropertiesStore().getLatestBlockHeaderHash(), forkBlockHash);
     LinkedList<KhaosBlock> blockCapsules = branch.getValue();
 
     if (blockCapsules.isEmpty()) {
@@ -1216,7 +1153,7 @@ public class Manager {
    */
   public boolean containBlock(final Sha256Hash blockHash) {
     try {
-      return this.khaosDb.containBlockInMiniStore(blockHash) || blockStore.get(blockHash.getBytes()) != null;
+      return this.chaosDb.containBlockInMiniStore(blockHash) || blockStore.get(blockHash.getBytes()) != null;
     } catch (ItemNotFoundException | BadItemException e) {
       return false;
     }
@@ -1245,7 +1182,7 @@ public class Manager {
    */
   public BlockCapsule getBlockById(final Sha256Hash hash)
       throws BadItemException, ItemNotFoundException {
-    BlockCapsule block = this.khaosDb.getBlock(hash);
+    BlockCapsule block = this.chaosDb.getBlock(hash);
     if (block == null) {
       block = blockStore.get(hash.getBytes());
     }
@@ -1256,7 +1193,7 @@ public class Manager {
    * judge has blocks.
    */
   public boolean hasBlocks() {
-    return blockStore.iterator().hasNext() || this.khaosDb.hasData();
+    return blockStore.iterator().hasNext() || this.chaosDb.hasData();
   }
 
   /**
@@ -1407,14 +1344,14 @@ public class Manager {
 
     Set<String> accountSet = new HashSet<>();
     Iterator<TransactionCapsule> iterator = pendingTransactions.iterator();
-    while (iterator.hasNext() || repushTransactions.size() > 0) {
+    while (iterator.hasNext() || rePushTransactions.size() > 0) {
       boolean fromPending = false;
       TransactionCapsule tx;
       if (iterator.hasNext()) {
         fromPending = true;
         tx = iterator.next();
       } else {
-        tx = repushTransactions.poll();
+        tx = rePushTransactions.poll();
       }
 
       if (DateTime.now().getMillis() - when > ChainConstant.BLOCK_PRODUCED_INTERVAL * 0.5 * Args.getInstance().getBlockProducedTimeOut() / 100) {
@@ -1507,7 +1444,7 @@ public class Manager {
       logger.info("{} transactions over the block size limit", postponedUnxCount);
     }
 
-    logger.info("postponedUnxCount[" + postponedUnxCount + "],UnxLeft[" + pendingTransactions.size() + "], repushUnxCount[" + repushTransactions.size() + "]");
+    logger.info("postponedUnxCount[" + postponedUnxCount + "],UnxLeft[" + pendingTransactions.size() + "], repushUnxCount[" + rePushTransactions.size() + "]");
     blockCapsule.setMerkleRoot();
     blockCapsule.sign(privateKey);
     blockCapsule.setResult(txRetCapsule);
@@ -1745,10 +1682,7 @@ public class Manager {
    */
   public void updateSignedWitness(BlockCapsule block) {
     // TODO: add verification
-    WitnessCapsule witnessCapsule =
-        witnessStore.getUnchecked(
-            block.getInstance().getBlockHeader().getRawData().getWitnessAddress()
-                .toByteArray());
+    WitnessCapsule witnessCapsule = witnessStore.getUnchecked(block.getInstance().getBlockHeader().getRawData().getWitnessAddress().toByteArray());
     witnessCapsule.setTotalProduced(witnessCapsule.getTotalProduced() + 1);
     witnessCapsule.setLatestBlockNum(block.getNum());
     witnessCapsule.setLatestSlotNum(witnessController.getAbSlotAtTime(block.getTimeStamp()));
@@ -1779,8 +1713,8 @@ public class Manager {
     }
   }
 
-  public void updateMaintenanceState(boolean needMaint) {
-    if (needMaint) {
+  public void updateMaintenanceState(boolean maintain) {
+    if (maintain) {
       getDynamicPropertiesStore().saveStateFlag(1);
     } else {
       getDynamicPropertiesStore().saveStateFlag(0);
@@ -1836,16 +1770,8 @@ public class Manager {
     this.blockIndexStore = indexStore;
   }
 
-  public AccountIdIndexStore getAccountIdIndexStore() {
-    return this.accountIdIndexStore;
-  }
-
   public void setAccountIdIndexStore(AccountIdIndexStore indexStore) {
     this.accountIdIndexStore = indexStore;
-  }
-
-  public AccountIndexStore getAccountIndexStore() {
-    return this.accountIndexStore;
   }
 
   public void setAccountIndexStore(AccountIndexStore indexStore) {
@@ -1868,7 +1794,7 @@ public class Manager {
     closeOneStore(contractStore);
     closeOneStore(storageRowStore);
     closeOneStore(exchangeStore);
-    closeOneStore(peersStore);
+    closeOneStore(peersDb);
     closeOneStore(proposalStore);
     closeOneStore(recentBlockStore);
     closeOneStore(transactionHistoryStore);
@@ -1896,7 +1822,7 @@ public class Manager {
   }
 
   public boolean isTooManyPending() {
-    return getPendingTransactions().size() + getRepushTransactions().size() > MAX_TRANSACTION_PENDING;
+    return getPendingTransactions().size() + getRePushTransactions().size() > MAX_TRANSACTION_PENDING;
   }
 
   public boolean isGeneratingBlock() {

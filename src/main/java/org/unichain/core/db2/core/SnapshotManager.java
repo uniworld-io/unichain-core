@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.unichain.common.storage.WriteOptionsWrapper;
 import org.unichain.core.config.args.Args;
-import org.unichain.core.db.CheckTmpStore;
+import org.unichain.core.db.CheckPointDb;
 import org.unichain.core.db.RevokingDatabase;
 import org.unichain.core.db.common.WrappedByteArray;
 import org.unichain.core.db2.common.DB;
@@ -53,7 +53,7 @@ public class SnapshotManager implements RevokingDatabase {
   @Autowired
   @Setter
   @Getter
-  private CheckTmpStore checkTmpStore;
+  private CheckPointDb checkPointDb;
 
   @Setter
   private volatile int maxFlushCount = DEFAULT_MIN_FLUSH_COUNT;
@@ -86,7 +86,7 @@ public class SnapshotManager implements RevokingDatabase {
 
   @Override
   public void setMode(boolean mode) {
-    dbs.forEach(db -> db.setMode(mode));
+    dbs.forEach(db -> db.setSnapshotMode(mode));
   }
 
   @Override
@@ -212,7 +212,7 @@ public class SnapshotManager implements RevokingDatabase {
       System.out.println(e.getMessage() + e);
       Thread.currentThread().interrupt();
     }
-    checkTmpStore.getDbSource().closeDB();
+    checkPointDb.getDbSource().closeDB();
     System.err.println("******** end to pop revokingDb ********");
   }
 
@@ -311,7 +311,7 @@ public class SnapshotManager implements RevokingDatabase {
       }
     }
 
-    checkTmpStore.getDbSource().updateByBatch(batch.entrySet().stream()
+    checkPointDb.getDbSource().updateByBatch(batch.entrySet().stream()
             .map(e -> Maps.immutableEntry(e.getKey().getBytes(), e.getValue().getBytes()))
             .collect(HashMap::new, (m, k) -> m.put(k.getKey(), k.getValue()), HashMap::putAll),
         WriteOptionsWrapper.getInstance().sync(Args.getInstance().getStorage().isDbSync()));
@@ -319,13 +319,13 @@ public class SnapshotManager implements RevokingDatabase {
 
   private void deleteCheckPoint() {
     Map<byte[], byte[]> hmap = new HashMap<byte[], byte[]>();
-    if (!checkTmpStore.getDbSource().allKeys().isEmpty()) {
-      for (Map.Entry<byte[], byte[]> e : checkTmpStore.getDbSource()) {
+    if (!checkPointDb.getDbSource().allKeys().isEmpty()) {
+      for (Map.Entry<byte[], byte[]> e : checkPointDb.getDbSource()) {
         hmap.put(e.getKey(), null);
       }
     }
 
-    checkTmpStore.getDbSource().updateByBatch(hmap, WriteOptionsWrapper.getInstance()
+    checkPointDb.getDbSource().updateByBatch(hmap, WriteOptionsWrapper.getInstance()
         .sync(Args.getInstance().getStorage().isDbSync()));
   }
 
@@ -338,12 +338,12 @@ public class SnapshotManager implements RevokingDatabase {
       }
     }
 
-    if (!checkTmpStore.getDbSource().allKeys().isEmpty()) {
+    if (!checkPointDb.getDbSource().allKeys().isEmpty()) {
       Map<String, RevokingDBWithCachingNewValue> dbMap = dbs.stream()
           .map(db -> Maps.immutableEntry(db.getDbName(), db))
           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
       advance();
-      for (Map.Entry<byte[], byte[]> e : checkTmpStore.getDbSource()) {
+      for (Map.Entry<byte[], byte[]> e : checkPointDb.getDbSource()) {
         byte[] key = e.getKey();
         byte[] value = e.getValue();
         String db = simpleDecode(key);

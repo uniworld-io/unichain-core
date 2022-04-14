@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.unichain.core.capsule.BytesCapsule;
+import org.unichain.core.db.store.UnichainStoreWithRevoking;
 import org.unichain.core.db2.common.TxCacheDB;
 
 @Slf4j

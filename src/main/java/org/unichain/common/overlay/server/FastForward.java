@@ -9,7 +9,7 @@ import org.unichain.common.backup.BackupManager;
 import org.unichain.common.backup.BackupManager.BackupStatusEnum;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.core.config.args.Args;
-import org.unichain.core.db.WitnessScheduleStore;
+import org.unichain.core.db.store.WitnessScheduleStore;
 import org.unichain.protos.Protocol.ReasonCode;
 
 import java.net.InetAddress;

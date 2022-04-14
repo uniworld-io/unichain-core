@@ -21,6 +21,7 @@ import java.util.Map.Entry;
 public abstract class UnichainDatabase<T> implements IUnichainChainBase<T> {
 
   protected DbSourceInter<byte[]> dbSource;
+
   @Getter
   private String dbName;
 
@@ -29,15 +30,11 @@ public abstract class UnichainDatabase<T> implements IUnichainChainBase<T> {
 
   protected UnichainDatabase(String dbName) {
     this.dbName = dbName;
-
-    if ("LEVELDB".equals(Args.getInstance().getStorage().getDbEngine().toUpperCase())) {
-      dbSource =
-          new LevelDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName(dbName), dbName);
-    } else if ("ROCKSDB".equals(Args.getInstance().getStorage().getDbEngine().toUpperCase())) {
-      String parentName = Paths.get(Args.getInstance().getOutputDirectoryByDbName(dbName),
-          Args.getInstance().getStorage().getDbDirectory()).toString();
-      dbSource =
-          new RocksDbDataSourceImpl(parentName, dbName);
+    if ("LEVELDB".equalsIgnoreCase(Args.getInstance().getStorage().getDbEngine())) {
+      dbSource = new LevelDbDataSourceImpl(Args.getInstance().getOutputDirectoryByDbName(dbName), dbName);
+    } else if ("ROCKSDB".equalsIgnoreCase(Args.getInstance().getStorage().getDbEngine())) {
+      String parentName = Paths.get(Args.getInstance().getOutputDirectoryByDbName(dbName), Args.getInstance().getStorage().getDbDirectory()).toString();
+      dbSource = new RocksDbDataSourceImpl(parentName, dbName);
     }
 
     dbSource.initDB();
@@ -69,8 +66,7 @@ public abstract class UnichainDatabase<T> implements IUnichainChainBase<T> {
 
   public abstract void delete(byte[] key);
 
-  public abstract T get(byte[] key)
-      throws InvalidProtocolBufferException, ItemNotFoundException, BadItemException;
+  public abstract T get(byte[] key) throws InvalidProtocolBufferException, ItemNotFoundException, BadItemException;
 
   public T getUnchecked(byte[] key) {
     return null;

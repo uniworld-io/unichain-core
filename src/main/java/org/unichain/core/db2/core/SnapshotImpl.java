@@ -24,7 +24,6 @@ public class SnapshotImpl extends AbstractSnapshot<Key, Value> {
     synchronized (this) {
       db = new HashDB();
     }
-
   }
 
   @Override

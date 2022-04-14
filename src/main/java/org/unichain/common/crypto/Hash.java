@@ -33,12 +33,9 @@ import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
 
 @Slf4j(topic = "crypto")
 public class Hash {
-
   private static final Provider CRYPTO_PROVIDER;
-
   private static final String HASH_256_ALGORITHM_NAME;
   private static final String HASH_512_ALGORITHM_NAME;
-
   public static final byte[] EMPTY_TRIE_HASH;
 
   static {
@@ -52,22 +49,19 @@ public class Hash {
   public static byte[] sha3(byte[] input) {
     MessageDigest digest;
     try {
-      digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME,
-          CRYPTO_PROVIDER);
+      digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
       digest.update(input);
       return digest.digest();
     } catch (NoSuchAlgorithmException e) {
       logger.error("Can't find such algorithm", e);
       throw new RuntimeException(e);
     }
-
   }
 
   public static byte[] sha3(byte[] input1, byte[] input2) {
     MessageDigest digest;
     try {
-      digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME,
-          CRYPTO_PROVIDER);
+      digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
       digest.update(input1, 0, input1.length);
       digest.update(input2, 0, input2.length);
       return digest.digest();
@@ -88,8 +82,7 @@ public class Hash {
   public static byte[] sha3(byte[] input, int start, int length) {
     MessageDigest digest;
     try {
-      digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME,
-          CRYPTO_PROVIDER);
+      digest = MessageDigest.getInstance(HASH_256_ALGORITHM_NAME, CRYPTO_PROVIDER);
       digest.update(input, start, length);
       return digest.digest();
     } catch (NoSuchAlgorithmException e) {
@@ -101,8 +94,7 @@ public class Hash {
   public static byte[] sha512(byte[] input) {
     MessageDigest digest;
     try {
-      digest = MessageDigest.getInstance(HASH_512_ALGORITHM_NAME,
-          CRYPTO_PROVIDER);
+      digest = MessageDigest.getInstance(HASH_512_ALGORITHM_NAME, CRYPTO_PROVIDER);
       digest.update(input);
       return digest.digest();
     } catch (NoSuchAlgorithmException e) {

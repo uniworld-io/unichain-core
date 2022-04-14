@@ -11,7 +11,6 @@ public class ConcurrentHashDB implements DB<byte[], BytesCapsule> {
 
   private Map<Key, BytesCapsule> db = new ConcurrentHashMap<>();
 
-
   @Override
   public BytesCapsule get(byte[] bytes) {
     return db.get(Key.of(bytes));

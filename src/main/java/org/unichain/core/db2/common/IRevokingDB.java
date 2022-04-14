@@ -22,16 +22,16 @@ public interface IRevokingDB extends Iterable<Map.Entry<byte[], byte[]>> {
 
   void reset();
 
-  void setMode(boolean mode);
+  void setSnapshotMode(boolean snapshotMode);
 
   // for blockstore
-  Set<byte[]> getlatestValues(long limit);
+  Set<byte[]> getLatestValues(long limit);
 
   // for blockstore
-  Set<byte[]> getValuesNext(byte[] key, long limit);
+  Set<byte[]> getNextValues(byte[] key, long limit);
   
   // for deferTransaction
-  Set<byte[]> getValuesPrevious(byte[] key, long limit);
+  Set<byte[]> getPrevValues(byte[] key, long limit);
 
   Map<WrappedByteArray, WrappedByteArray> getAllValues();
 }

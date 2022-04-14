@@ -92,7 +92,7 @@ public class NftCreateContractActuator extends AbstractActuator {
 
       }
       Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");
-      Assert.isTrue(ownerAccountCap.getBalance() >= calcFee(), "Not enough balance, require fee 500UNW");
+      Assert.isTrue(ownerAccountCap.getBalance() >= calcFee(), "Not enough balance, require 500 UNW");
 
       return true;
     }

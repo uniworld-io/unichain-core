@@ -273,8 +273,8 @@ public class NftServiceImpl implements NftService {
         List<Protocol.NftToken> unsorted = listTokenByOwner(ownerAddr, cap -> !hasFieldContract || cap.getContract().equalsIgnoreCase(contract));
 
         return  Protocol.NftTokenQueryResult.newBuilder()
-                .setPageIndex(pageIndex)
                 .setPageSize(pageSize)
+                .setPageIndex(pageIndex)
                 .setTotal(unsorted.size())
                 .addAllTokens(Utils.paging(unsorted, pageIndex, pageSize))
                 .build();

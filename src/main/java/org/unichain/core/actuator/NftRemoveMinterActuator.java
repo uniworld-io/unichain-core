@@ -79,7 +79,8 @@ public class NftRemoveMinterActuator extends AbstractActuator {
       Assert.notNull(templateCap, "Contract not found");
       Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()), "Not owner of NFT template");
       Assert.isTrue(templateCap.hasMinter(), "Minter not set");
-      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "Not enough fee");
+      long fee = calcFee();
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
       return true;
     }
     catch (Exception e){

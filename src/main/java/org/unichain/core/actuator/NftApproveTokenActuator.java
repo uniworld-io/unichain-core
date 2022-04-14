@@ -101,7 +101,7 @@ public class NftApproveTokenActuator extends AbstractActuator {
       if(!accountStore.has(toAddr)){
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
-      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee,"Not enough fee");
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee,"Not enough Balance to cover transaction fee, require " + fee + "ginza");
 
       var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
       Assert.isTrue(nftTokenStore.has(tokenId), "Not found NFT token");
@@ -110,7 +110,7 @@ public class NftApproveTokenActuator extends AbstractActuator {
       if(ctx.getApprove()){
         if(nftToken.hasApproval()){
           //approve: just override exception: already approved
-          Assert.isTrue(!Arrays.equals(ctx.getToAddress().toByteArray(), nftToken.getApproval()), "Already approved");
+          Assert.isTrue(!Arrays.equals(ctx.getToAddress().toByteArray(), nftToken.getApproval()), "The address has already been approver");
         }
       }
       else {

@@ -21,75 +21,75 @@ import java.util.stream.Collectors;
 @Component
 public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTokenRelationCapsule> {
 
-  @Autowired
-  protected NftAccountTokenStore(@Value("nft-acc-token-relation") String dbName) {
-    super(dbName);
-  }
+    @Autowired
+    protected NftAccountTokenStore(@Value("nft-acc-token-relation") String dbName) {
+        super(dbName);
+    }
 
-  @Override
-  public NftAccountTokenRelationCapsule get(byte[] key) {
-    return super.getUnchecked(key);
-  }
+    @Override
+    public NftAccountTokenRelationCapsule get(byte[] key) {
+        return super.getUnchecked(key);
+    }
 
-  public List<NftAccountTokenRelationCapsule> getAllTokens() {
-    return Streams.stream(iterator())
-        .map(Entry::getValue)
-        .collect(Collectors.toList());
-  }
+    public List<NftAccountTokenRelationCapsule> getAllTokens() {
+        return Streams.stream(iterator())
+                .map(Entry::getValue)
+                .collect(Collectors.toList());
+    }
 
-  //@todo review
-  public void disApproveForAll(byte[] ownerAddr, byte[] toAddr){
-      NftAccountTokenRelationCapsule ownerRelation;
-      if(has(ownerAddr)){
-          ownerRelation = get(ownerAddr);
-          Assert.isTrue(Arrays.equals(ownerRelation.getApprovedForAll(), toAddr), "approved address miss-matched!");
-          ownerRelation.clearApprovedForAll();
-          put(ownerAddr, ownerRelation);
-      }
+    public void disApproveForAll(byte[] ownerAddr, byte[] toAddr) {
+        NftAccountTokenRelationCapsule ownerRelation;
+        if (has(ownerAddr)) {
+            ownerRelation = get(ownerAddr);
+            Assert.isTrue(Arrays.equals(ownerRelation.getApprovedForAll(), toAddr), "approved address miss-matched!");
+            ownerRelation.clearApprovedForAll();
+            put(ownerAddr, ownerRelation);
+        }
 
-      NftAccountTokenRelationCapsule toRelation;
-      if(has(toAddr)){
-          toRelation = get(toAddr);
-          var ownerAddrBs= ByteString.copyFrom(ownerAddr);
-          Assert.isTrue(toRelation.hasApproveAll(ownerAddrBs), "approve address miss-matched!");
-          toRelation.removeApproveAll(ownerAddrBs);
-          put(toAddr, toRelation);
-      }
-  }
+        NftAccountTokenRelationCapsule toRelation;
+        if (has(toAddr)) {
+            toRelation = get(toAddr);
+            var ownerAddrBs = ByteString.copyFrom(ownerAddr);
+            Assert.isTrue(toRelation.hasApproveAll(ownerAddrBs), "approve address miss-matched!");
+            toRelation.removeApproveAll(ownerAddrBs);
+            put(toAddr, toRelation);
+        }
+    }
 
-  public void approveForAll(byte[] ownerAddr, byte[] toAddr){
-      NftAccountTokenRelationCapsule ownerRelation;
-      if(has(ownerAddr)){
-        ownerRelation = get(ownerAddr);
-        ownerRelation.setApprovedForAll(ByteString.copyFrom(toAddr));
-      }
-      else{
-        ownerRelation = new NftAccountTokenRelationCapsule(ownerAddr,
-                Protocol.NftAccountTokenRelation.newBuilder()
-                          .setOwnerAddress(ByteString.copyFrom(ownerAddr))
-                          .clearHead()
-                          .clearTail()
-                          .setTotal(0L)
-                          .setApprovedForAll(ByteString.copyFrom(toAddr))
-                          .build());
-      }
-      put(ownerAddr, ownerRelation);
+    public void approveForAll(byte[] ownerAddr, byte[] toAddr) {
+        NftAccountTokenRelationCapsule ownerRelation;
+        if (has(ownerAddr)) {
+            ownerRelation = get(ownerAddr);
+            if (ownerRelation.hasApprovalForAll()) {
+                disApproveForAll(ownerAddr, ownerRelation.getApprovedForAll());
+            }
+            ownerRelation.setApprovedForAll(ByteString.copyFrom(toAddr));
+        } else {
+            ownerRelation = new NftAccountTokenRelationCapsule(ownerAddr,
+                    Protocol.NftAccountTokenRelation.newBuilder()
+                            .setOwnerAddress(ByteString.copyFrom(ownerAddr))
+                            .clearHead()
+                            .clearTail()
+                            .setTotal(0L)
+                            .setApprovedForAll(ByteString.copyFrom(toAddr))
+                            .build());
+        }
+        put(ownerAddr, ownerRelation);
 
-      NftAccountTokenRelationCapsule toRelation;
-      if(has(toAddr)){
-        toRelation = get(toAddr);
-        toRelation.addApproveAll(ByteString.copyFrom(ownerAddr));
-      }
-      else{
-        toRelation = new NftAccountTokenRelationCapsule(toAddr,
-                Protocol.NftAccountTokenRelation.newBuilder()
-                        .setOwnerAddress(ByteString.copyFrom(toAddr))
-                        .clearHead()
-                        .clearTail()
-                        .setTotal(0L)
-                        .putApproveAll(ByteArray.toHexString(ownerAddr), true)
-                        .build());
-      }
-      put(toAddr, toRelation);
-  }
+        NftAccountTokenRelationCapsule toRelation;
+        if (has(toAddr)) {
+            toRelation = get(toAddr);
+            toRelation.addApproveAll(ByteString.copyFrom(ownerAddr));
+        } else {
+            toRelation = new NftAccountTokenRelationCapsule(toAddr,
+                    Protocol.NftAccountTokenRelation.newBuilder()
+                            .setOwnerAddress(ByteString.copyFrom(toAddr))
+                            .clearHead()
+                            .clearTail()
+                            .setTotal(0L)
+                            .putApproveAll(ByteArray.toHexString(ownerAddr), true)
+                            .build());
+        }
+        put(toAddr, toRelation);
+    }
 }

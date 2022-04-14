@@ -105,8 +105,8 @@ public class NftAddMinterActuator extends AbstractActuator {
       {
         fee = Math.addExact(dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract(), fee);
       }
-      Assert.isTrue(accStore.get(ownerAddr).getBalance() >= fee, "Not enough balance, require at-least: " + fee +" ginza");
-      Assert.isTrue(!template.hasMinter() || (!Arrays.equals(template.getMinter(), ctx.getMinter().toByteArray())), "already minter");
+      Assert.isTrue(accStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
+      Assert.isTrue(!template.hasMinter() || (!Arrays.equals(template.getMinter(), ctx.getMinter().toByteArray())), "Already minter");
       Assert.isTrue(!TransactionUtil.validGenericsAddress(minterAddr), "Minter is generics address");
 
       return true;

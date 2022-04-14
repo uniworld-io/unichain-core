@@ -86,7 +86,7 @@ public class NftBurnTokenActuator extends AbstractActuator {
               || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
               || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to burn NFT token");
 
-      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough fee");
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
       return true;
     }
     catch (Exception e){

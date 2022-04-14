@@ -97,6 +97,7 @@ public class NftTransferTokenActuator extends AbstractActuator {
             var toAddr = ctx.getToAddress().toByteArray();
             var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
 
+            Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Owner address and to address must be not the same");
             Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");
             Assert.isTrue(accountStore.has(ownerAddr), "Owner, approval or approval-for-all not exist");
             Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");
@@ -106,14 +107,14 @@ public class NftTransferTokenActuator extends AbstractActuator {
 
             Assert.isTrue(Arrays.equals(ownerAddr, nftOwner)
                     || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
-                    || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to burn NFT token");
+                    || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to transfer NFT token");
 
             Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough fee");
 
             if (accountStore.has(toAddr)) {
                 fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
             }
-            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee");
+            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);

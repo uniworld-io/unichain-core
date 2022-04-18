@@ -396,8 +396,7 @@ public class WitnessController {
 
       Args.getInstance().getGenesisBlock().getWitnesses().forEach(witnessInGenesisBlock -> {
         WitnessCapsule witnessCapsule = witnessStore.get(witnessInGenesisBlock.getAddress());
-        witnessCapsule
-            .setVoteCount(witnessCapsule.getVoteCount() - witnessInGenesisBlock.getVoteCount());
+        witnessCapsule.setVoteCount(witnessCapsule.getVoteCount() - witnessInGenesisBlock.getVoteCount());
 
         witnessStore.put(witnessCapsule.createDbKey(), witnessCapsule);
       });

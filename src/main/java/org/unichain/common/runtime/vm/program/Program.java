@@ -431,19 +431,16 @@ public class Program {
     // [1] FETCH THE CODE FROM THE MEMORY
     byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
 
-    byte[] newAddress = Wallet
-        .generateContractAddress(rootTransactionId, nonce);
+    byte[] newAddress = Wallet.generateContractAddress(rootTransactionId, nonce);
 
     createContractImpl(value, programCode, newAddress, false);
   }
 
-  private void createContractImpl(DataWord value, byte[] programCode, byte[] newAddress,
-      boolean isCreate2) {
+  private void createContractImpl(DataWord value, byte[] programCode, byte[] newAddress, boolean isCreate2) {
     byte[] senderAddress = convertToUnichainAddress(this.getContractAddress().getLast20Bytes());
 
     if (logger.isDebugEnabled()) {
-      logger.debug("creating a new contract inside contract run: [{}]",
-          Hex.toHexString(senderAddress));
+      logger.debug("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
     }
 
     long endowment = value.value().longValueExact();
@@ -456,14 +453,12 @@ public class Program {
     boolean contractAlreadyExists = existingAccount != null;
 
     if (VMConfig.allowTvmConstantinople()) {
-      contractAlreadyExists =
-          contractAlreadyExists && isContractExist(existingAccount, getContractState());
+      contractAlreadyExists = contractAlreadyExists && isContractExist(existingAccount, getContractState());
     }
     Deposit deposit = getContractState().newDepositChild();
     if (VMConfig.allowTvmConstantinople()) {
       if (existingAccount == null) {
-        deposit.createAccount(newAddress, "CreatedByContract",
-            AccountType.Contract);
+        deposit.createAccount(newAddress, "CreatedByContract", AccountType.Contract);
       } else if (!contractAlreadyExists) {
         existingAccount.updateAccountType(AccountType.Contract);
         existingAccount.clearDelegatedResource();
@@ -482,8 +477,7 @@ public class Program {
         deposit.createContract(newAddress, new ContractCapsule(newSmartContract));
       }
     } else {
-      deposit.createAccount(newAddress, "CreatedByContract",
-          Protocol.AccountType.Contract);
+      deposit.createAccount(newAddress, "CreatedByContract", Protocol.AccountType.Contract);
       SmartContract newSmartContract = SmartContract.newBuilder()
           .setContractAddress(ByteString.copyFrom(newAddress)).setConsumeUserResourcePercent(100)
           .setOriginAddress(ByteString.copyFrom(senderAddress)).build();
@@ -798,7 +792,7 @@ public class Program {
         }
       }
     } else {
-      refundEnergy(msg.getEnergy().longValue(), "remaining esnergy from the internal call");
+      refundEnergy(msg.getEnergy().longValue(), "remaining energy from the internal call");
     }
   }
 
@@ -842,8 +836,7 @@ public class Program {
   }
 
   public void refundEnergy(long energyValue, String cause) {
-    logger
-        .debug("[{}] Refund for cause: [{}], energy: [{}]", invoke.hashCode(), cause, energyValue);
+    logger.debug("[{}] Refund for cause: [{}], energy: [{}]", invoke.hashCode(), cause, energyValue);
     getResult().refundEnergy(energyValue);
   }
 

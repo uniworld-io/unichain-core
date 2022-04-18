@@ -9,7 +9,6 @@ import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.storage.Deposit;
-import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionResultCapsule;

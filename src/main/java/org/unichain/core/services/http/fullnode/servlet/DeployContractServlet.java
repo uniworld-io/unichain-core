@@ -85,8 +85,7 @@ public class DeployContractServlet extends HttpServlet {
 
       long feeLimit = Util.getJsonLongValue(jsonObject, "fee_limit");
       build.setNewContract(smartBuilder);
-      Transaction tx = wallet
-          .createTransactionCapsule(build.build(), ContractType.CreateSmartContract).getInstance();
+      Transaction tx = wallet.createTransactionCapsule(build.build(), ContractType.CreateSmartContract).getInstance();
       Transaction.Builder txBuilder = tx.toBuilder();
       Transaction.raw.Builder rawBuilder = tx.getRawData().toBuilder();
       rawBuilder.setFeeLimit(feeLimit);

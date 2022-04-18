@@ -39,6 +39,13 @@ public class Util {
   public static final String TRANSACTION = "transaction";
   public static final String VALUE = "value";
 
+  public static String messageErrorHttp(Exception e){
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("status", 400);
+    jsonObject.put("message", e.getMessage());
+    return jsonObject.toJSONString();
+  }
+
   public static String printErrorMsg(Exception e) {
     JSONObject jsonObject = new JSONObject();
     jsonObject.put("Error", e.getClass() + " : " + e.getMessage());
@@ -275,7 +282,6 @@ public class Util {
             Contract.UpdateBrokerageContract updateBrokerageContract = contractParameter.unpack(Contract.UpdateBrokerageContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(updateBrokerageContract, selfType));
             break;
-          //future transfer
           case FutureTransferContract:
             FutureTransferContract futureTransferContract = contractParameter.unpack(FutureTransferContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(futureTransferContract, selfType));
@@ -284,7 +290,6 @@ public class Util {
             FutureWithdrawContract futureWithdrawContract = contractParameter.unpack(FutureWithdrawContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(futureWithdrawContract, selfType));
             break;
-          //token economy
           case CreateTokenContract:
             CreateTokenContract createTokenContract = contractParameter.unpack(CreateTokenContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(createTokenContract, selfType));
@@ -320,6 +325,44 @@ public class Util {
           case WithdrawFutureTokenContract:
             WithdrawFutureTokenContract withdrawFutureTokenContract = contractParameter.unpack(WithdrawFutureTokenContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(withdrawFutureTokenContract, selfType));
+            break;
+          case CreateNftTemplateContract:
+            CreateNftTemplateContract createNftTemplateContract = contractParameter.unpack(CreateNftTemplateContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(createNftTemplateContract, selfType));
+            break;
+          case MintNftTokenContract:
+            MintNftTokenContract mintNftTokenContract = contractParameter.unpack(MintNftTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(mintNftTokenContract, selfType));
+            break;
+          case RemoveNftMinterContract:
+            RemoveNftMinterContract removeNftMinterContract = contractParameter.unpack(RemoveNftMinterContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(removeNftMinterContract, selfType));
+            break;
+          case AddNftMinterContract:
+            AddNftMinterContract addNftMinterContract = contractParameter.unpack(AddNftMinterContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(addNftMinterContract, selfType));
+            break;
+          case RenounceNftMinterContract:
+            RenounceNftMinterContract renounceNftMinterContract = contractParameter.unpack(RenounceNftMinterContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(renounceNftMinterContract, selfType));
+            break;
+          case BurnNftTokenContract:
+            BurnNftTokenContract burnNftTokenContract = contractParameter.unpack(BurnNftTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(burnNftTokenContract, selfType));
+            break;
+          case ApproveNftTokenContract:
+            ApproveNftTokenContract approveNftTokenContract = contractParameter.unpack(ApproveNftTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(approveNftTokenContract, selfType));
+            break;
+
+          case ApproveForAllNftTokenContract:
+            ApproveForAllNftTokenContract approveForAllNftTokenContract = contractParameter.unpack(ApproveForAllNftTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(approveForAllNftTokenContract, selfType));
+            break;
+
+          case TransferNftTokenContract:
+            TransferNftTokenContract transferNftTokenContract = contractParameter.unpack(TransferNftTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(transferNftTokenContract, selfType));
             break;
           default:
         }
@@ -575,6 +618,57 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), withdrawFutureTokenContractBuilder, selfType);
             any = Any.pack(withdrawFutureTokenContractBuilder.build());
             break;
+          case "CreateNftTemplateContract":
+            CreateNftTemplateContract.Builder createNftTemplateContractBuilder = CreateNftTemplateContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), createNftTemplateContractBuilder, selfType);
+            any = Any.pack(createNftTemplateContractBuilder.build());
+            break;
+          case "MintNftTokenContract":
+            MintNftTokenContract.Builder  mintNftTokenContractBuilder = MintNftTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), mintNftTokenContractBuilder, selfType);
+            any = Any.pack(mintNftTokenContractBuilder.build());
+            break;
+          case "RemoveNftMinterContract":
+            RemoveNftMinterContract.Builder removeNftMinterContractBuilder = RemoveNftMinterContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), removeNftMinterContractBuilder, selfType);
+            any = Any.pack(removeNftMinterContractBuilder.build());
+            break;
+
+          case "AddNftMinterContract":
+            AddNftMinterContract.Builder addNftMinterContractBuilder = AddNftMinterContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), addNftMinterContractBuilder, selfType);
+            any = Any.pack(addNftMinterContractBuilder.build());
+            break;
+
+          case "RenounceNftMinterContract":
+            RenounceNftMinterContract.Builder renounceNftMinterContractBuilder = RenounceNftMinterContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), renounceNftMinterContractBuilder, selfType);
+            any = Any.pack(renounceNftMinterContractBuilder.build());
+            break;
+
+          case "BurnNftTokenContract":
+            BurnNftTokenContract.Builder burnNftTokenContractBuilder = BurnNftTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), burnNftTokenContractBuilder, selfType);
+            any = Any.pack(burnNftTokenContractBuilder.build());
+            break;
+
+          case "ApproveNftTokenContract":
+            ApproveNftTokenContract.Builder approveNftTokenContractBuilder = ApproveNftTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), approveNftTokenContractBuilder, selfType);
+            any = Any.pack(approveNftTokenContractBuilder.build());
+            break;
+
+          case "ApproveForAllNftTokenContract":
+            ApproveForAllNftTokenContract.Builder approveForAllNftTokenContractBuilder = ApproveForAllNftTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), approveForAllNftTokenContractBuilder, selfType);
+            any = Any.pack(approveForAllNftTokenContractBuilder.build());
+            break;
+
+          case "TransferNftTokenContract":
+            TransferNftTokenContract.Builder transferNftTokenContractBuilder = TransferNftTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferNftTokenContractBuilder, selfType);
+            any = Any.pack(transferNftTokenContractBuilder.build());
+            break;
           default:
         }
         if (any != null) {
@@ -648,6 +742,41 @@ public class Util {
 
   public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_CREATE_ACC_FEE = CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
+  public static Descriptors.FieldDescriptor NFT_CREATE_TEMPLATE_FIELD_MINTER = CreateNftTemplateContract.getDescriptor().findFieldByNumber(CreateNftTemplateContract.MINTER_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_ACCOUNT_FIELD_TAIL = Protocol.NftAccountTemplateRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTemplateRelation.TAIL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_NEXT = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.NEXT_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.MINTER_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_NEXT_OF_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.NEXT_OF_MINTER_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_PREV_OF_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.PREV_OF_MINTER_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor NFT_MINT_FIELD_METADATA = MintNftTokenContract.getDescriptor().findFieldByNumber(MintNftTokenContract.METADATA_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.TAIL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.APPROVED_FOR_ALL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.APPROVE_TAIL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_HEAD_APPROVE = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.APPROVE_HEAD_FIELD_NUMBER);
+
+
+  public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_APPROVAL = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.APPROVAL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_PREV = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.PREV_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_NEXT = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.NEXT_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_RELATION_FIELD_PREV = Protocol.NftTokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveRelation.PREV_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_RELATION_FIELD_NEXT = Protocol.NftTokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveRelation.NEXT_FIELD_NUMBER);
+
+
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_SIZE = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_INDEX = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.PAGE_INDEX_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_CONTRACT = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.CONTRACT_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_SIZE = Protocol.NftTemplateQuery.getDescriptor().findFieldByNumber(Protocol.NftTemplateQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_INDEX = Protocol.NftTemplateQuery.getDescriptor().findFieldByNumber(Protocol.NftTemplateQuery.PAGE_INDEX_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE = Protocol.NftTokenApproveQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_INDEX = Protocol.NftTokenApproveQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveQuery.PAGE_INDEX_FIELD_NUMBER);
+
+
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_SIZE = Protocol.NftTokenApproveAllQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveAllQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_INDEX = Protocol.NftTokenApproveAllQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveAllQuery.PAGE_INDEX_FIELD_NUMBER);
 
   public static int DEFAULT_PAGE_SIZE = 20;
   public static int DEFAULT_PAGE_INDEX = 0;

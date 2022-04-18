@@ -355,6 +355,7 @@ message Transaction {
       AccountPermissionUpdateContract = 46;
       ClearABIContract = 48;
       UpdateBrokerageContract = 49;
+
       FutureTransferContract = 50;
       FutureWithdrawContract = 52;
       CreateTokenContract = 53;
@@ -366,6 +367,16 @@ message Transaction {
       WithdrawFutureTokenContract = 60;
       TransferTokenOwnerContract = 61;
       ExchangeTokenContract = 62;
+
+      CreateNftTemplateContract = 63;
+      MintNftTokenContract = 64;
+      RemoveNftMinterContract = 65;
+      AddNftMinterContract = 66;
+      RenounceNftMinterContract = 67;
+      BurnNftTokenContract = 68;
+      ApproveNftTokenContract = 69;
+      ApproveForAllNftTokenContract = 70;
+      TransferNftTokenContract = 71;
     }
     ContractType type = 1;
     google.protobuf.Any parameter = 2;
@@ -767,4 +778,142 @@ message NodeInfo {
       string stackTrace = 7;
     }
   }
+}
+
+message NftTemplate{
+  string contract = 1;
+  string name = 2;
+  int64 total_supply = 3;
+  int64 token_index = 4;
+  bytes minter = 5;
+  bytes owner = 6;
+  int64 last_operation = 7;
+  bytes next = 8;
+  bytes prev = 9;
+  bytes next_of_minter = 10;
+  bytes prev_of_minter = 11;
+  bytes contract_address = 12;
+}
+
+message NftToken{
+  string contract = 1;
+  int64 id = 2;
+  bytes owner_address = 3;
+  bytes approval = 4;
+  string uri = 5;
+  string metadata = 6;
+  int64 last_operation = 7;
+  bytes next = 8;
+  bytes prev = 9;
+}
+
+message NftAccountTokenRelation{
+  bytes owner_address = 1;
+  bytes head = 2;
+  bytes tail = 3;
+  int64 total = 4;
+  map<string, bool> approve_all = 5;
+  bytes approved_for_all = 6;
+  bytes approve_head = 7;
+  bytes approve_tail = 8;
+  int64 approve_total = 9;
+}
+
+message NftAccountTemplateRelation{
+  bytes owner_address = 1;
+  bytes head = 2;
+  bytes tail = 3;
+  int64 total = 4;
+}
+
+message NftTemplateQuery{
+  bytes owner_address = 1;
+  int32 page_size = 2;
+  int32 page_index = 3;
+  string owner_type = 4;
+}
+
+message NftTemplateQueryResult{
+  bytes owner_address = 1;
+  int32 page_size = 2;
+  int32 page_index = 3;
+  int64 total = 4;
+  repeated NftTemplate templates = 5;
+}
+
+message NftTokenQuery{
+  bytes owner_address = 1;
+  string contract = 2;
+  int32 page_size = 3;
+  int32 page_index = 4;
+}
+
+message NftTokenGet{
+  string contract = 1;
+  int64 id = 2;
+}
+
+message NftTokenGetResult{
+  string contract = 1;
+  int64 id = 2;
+  bytes owner_address = 3;
+  bytes approval = 4;
+  string uri = 5;
+  string metadata = 6;
+  int64 last_operation = 7;
+}
+
+message NftTokenQueryResult{
+  int32 page_size = 1;
+  int32 page_index = 2;
+  int64 total = 3;
+  repeated NftToken tokens = 4;
+}
+
+message NftBalanceOf{
+  bytes owner_address = 1;
+  int64 count = 2;
+}
+
+message IsApprovedForAll{
+  bytes owner_address = 1;
+  bytes operator = 2;
+  bool is_approved = 3;
+}
+
+message NftTokenApproveAllQuery{
+  bytes owner_address = 1;
+  int32 page_index = 2;
+  int32 page_size = 3;
+}
+
+message NftTokenApproveAllResult{
+  bytes owner_address = 1;
+  repeated NftAccountTokenRelation approve_list = 2;
+  bytes approval_for_all = 3;
+  repeated NftToken tokens = 4;
+  int32 page_size = 5;
+  int32 page_index = 6;
+  int32 total = 7;
+}
+
+message NftTokenApproveQuery{
+  bytes owner_address = 1;
+  int32 page_size = 2;
+  int32 page_index = 3;
+}
+
+message NftTokenApproveResult{
+  bytes owner_address = 1;
+  int32 page_size = 2;
+  int32 page_index = 3;
+  int64 total = 4;
+  repeated NftToken tokens= 5;
+}
+
+message NftTokenApproveRelation{
+  bytes owner_address = 1;
+  bytes token_id = 2;
+  bytes next = 3;
+  bytes prev = 4;
 }

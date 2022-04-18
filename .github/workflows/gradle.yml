@@ -1,0 +1,22 @@
+name: Gradle CI
+on:
+  push:
+    branches: [NativeNFT]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: 8
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Build with Gradle
+        run: ./gradlew clean build
+
+

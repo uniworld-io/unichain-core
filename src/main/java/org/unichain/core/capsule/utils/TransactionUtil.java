@@ -17,12 +17,19 @@ package org.unichain.core.capsule.utils;
 
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionCapsule;
+import org.unichain.core.config.args.Account;
+import org.unichain.core.config.args.Args;
 import org.unichain.protos.Contract.TransferContract;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Contract;
+
+import java.net.URL;
+import java.util.Arrays;
 
 @Slf4j(topic = "capsule")
 public class TransactionUtil {
@@ -113,6 +120,78 @@ public class TransactionUtil {
     return true;
   }
 
+  public static boolean validContract(byte[] contract){
+    if (ArrayUtils.isEmpty(contract) || contract.length > 32)
+      return false;
+
+    for (byte c : contract) {
+      if (isCharSpecial(c) || c == 0x20) //0x20~space
+        return false;
+    }
+    return true;
+  }
+
+  public static boolean validNftName(byte[] chars) {
+    if (ArrayUtils.isEmpty(chars) || chars.length > 32)
+      return false;
+
+    for (byte c : chars) {
+      if (isCharSpecial(c))
+        return false;
+    }
+    return true;
+  }
+
+  private static boolean isCharSpecial(byte c){
+    switch (c){
+      case 0x21:
+      case 0x22:
+      case 0x23:
+      case 0x24:
+      case 0x25:
+      case 0x26:
+      case 0x27:
+      case 0x28:
+      case 0x29:
+      case 0x60:
+      case 0x2b:
+      case 0x2d:
+      case 0x5b:
+      case 0x5d:
+      case 0x7b:
+      case 0x7d:
+      case 0x5c:
+      case 0x7c:
+      case 0x2e:
+      case 0x2c:
+      case 0x2f:
+      case 0x3c:
+      case 0x3f:
+      case 0x3e:
+      case 0x3a:
+      case 0x3b:
+      case 0x3d:
+      case 0x5f:
+      case 0x40:
+      case 0x5e:
+      case 0x2a:
+      case 0x7e:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  public static boolean validHttpURI(String uri){
+    final URL url;
+    try {
+      url = new URL(uri);
+    } catch (Exception e1) {
+      return false;
+    }
+    return validUrl(uri.getBytes()) && StringUtils.startsWith(url.getProtocol(), "http");
+  }
+
   public static boolean validTokenAbbrName(byte[] abbrName) {
     if (ArrayUtils.isEmpty(abbrName)) {
       return false;
@@ -139,6 +218,15 @@ public class TransactionUtil {
     }
 
     return description.length <= 200;
+  }
+
+  //@todo later
+  public static boolean validJsonString(byte[] jsonString) {
+    if (ArrayUtils.isEmpty(jsonString)) {
+      return true;   //jsonString can empty
+    }
+
+    return jsonString.length <= 10*1024L;
   }
 
   public static boolean validUrl(byte[] url) {
@@ -169,4 +257,18 @@ public class TransactionUtil {
     return ECKey.computeAddress(pubKey);
   } */
 
+  public static boolean validGenericsAddress(byte[] address) {
+    var genericsBlock = Args.getInstance().getGenesisBlock();
+
+    for (Account acc : genericsBlock.getAssets()){
+      if(Arrays.equals(acc.getAddress(), address))
+        return true;
+    }
+
+    return false;
+  }
+
+  public static boolean validNftTemplateName(byte[] name) {
+    return validAccountName(name);
+  }
 }

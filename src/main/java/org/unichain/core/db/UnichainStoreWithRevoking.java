@@ -4,6 +4,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import com.google.common.reflect.TypeToken;
+import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;

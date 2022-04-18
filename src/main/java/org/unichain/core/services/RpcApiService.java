@@ -8,6 +8,7 @@ import io.grpc.netty.NettyServerBuilder;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -38,6 +39,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.exception.NonUniqueObjectException;
 import org.unichain.core.exception.StoreException;
 import org.unichain.core.exception.VMIllegalException;
+import org.unichain.core.services.internal.NftService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol;
@@ -71,6 +73,9 @@ public class RpcApiService implements Service {
   private WalletSolidity walletSolidity;
   @Autowired
   private Wallet wallet;
+
+  @Autowired
+  private NftService nftService;
 
   @Autowired
   private NodeInfoService nodeInfoService;
@@ -154,15 +159,15 @@ public class RpcApiService implements Service {
     } catch (ContractValidateException | VMIllegalException e) {
       retBuilder.setResult(false).setCode(response_code.CONTRACT_VALIDATE_ERROR).setMessage(ByteString.copyFromUtf8(CONTRACT_VALIDATE_ERROR + e.getMessage()));
       unxExtBuilder.setResult(retBuilder);
-      logger.warn(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      logger.error(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
     } catch (RuntimeException e) {
       retBuilder.setResult(false).setCode(response_code.CONTRACT_EXE_ERROR).setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
       unxExtBuilder.setResult(retBuilder);
-      logger.warn("When run constant call in VM, have RuntimeException: " + e.getMessage());
+      logger.error("When run constant call in VM, have RuntimeException: " + e.getMessage());
     } catch (Exception e) {
       retBuilder.setResult(false).setCode(response_code.OTHER_ERROR).setMessage(ByteString.copyFromUtf8(e.getClass() + " : " + e.getMessage()));
       unxExtBuilder.setResult(retBuilder);
-      logger.warn("unknown exception caught: " + e.getMessage(), e);
+      logger.error("unknown exception caught: " + e.getMessage(), e);
     } finally {
       responseObserver.onNext(unxExtBuilder.build());
       responseObserver.onCompleted();
@@ -286,6 +291,62 @@ public class RpcApiService implements Service {
     @Override
     public void getTokenPool(TokenPoolQuery request, io.grpc.stub.StreamObserver<TokenPage> responseObserver) {
       TokenPage reply = wallet.getTokenPool(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
+      NftTokenApproveResult reply = nftService.getListApproval(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
+      NftTokenApproveAllResult reply = nftService.getApprovalForAll(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftTemplate(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
+      NftTemplateQueryResult reply = nftService.listContract(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
+      NftTokenQueryResult reply = nftService.listToken(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftTemplate(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
+      NftTemplate reply = nftService.getContract(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
+      var reply = nftService.getToken(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftBalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
+      NftBalanceOf reply = nftService.balanceOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
+      IsApprovedForAll reply = nftService.isApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -671,8 +732,63 @@ public class RpcApiService implements Service {
 
     @Override
     public void getTokenPool(TokenPoolQuery request, io.grpc.stub.StreamObserver<TokenPage> responseObserver) {
-      String tokenName = request.getTokenName();
       TokenPage reply = wallet.getTokenPool(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
+      NftTokenApproveResult reply = nftService.getListApproval(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
+      NftTokenApproveAllResult reply = nftService.getApprovalForAll(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftTemplate(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
+      NftTemplateQueryResult reply = nftService.listContract(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listNftToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
+      NftTokenQueryResult reply = nftService.listToken(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftTemplate(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
+      NftTemplate reply = nftService.getContract(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
+      NftTokenGetResult reply = nftService.getToken(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftBalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
+      NftBalanceOf reply = nftService.balanceOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNftApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
+      IsApprovedForAll reply = nftService.isApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -1163,6 +1279,123 @@ public class RpcApiService implements Service {
     public void withdrawBalance(Contract.WithdrawBalanceContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.WithdrawBalanceContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void createNftTemplate(Contract.CreateNftTemplateContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.CreateNftTemplateContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void mintNftToken(Contract.MintNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.MintNftTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void removeNftMinter(Contract.RemoveNftMinterContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.RemoveNftMinterContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void addNftMinter(Contract.AddNftMinterContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.AddNftMinterContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void renounceNftMinter(Contract.RenounceNftMinterContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.RenounceNftMinterContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void burnNftToken(Contract.BurnNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.BurnNftTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void approveNftToken(Contract.ApproveNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.ApproveNftTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void approveForAllNftToken(Contract.ApproveForAllNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.ApproveForAllNftTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
+    public void transferNftToken(Contract.TransferNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.TransferNftTokenContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1859,12 +2092,10 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void getBrokerageInfo(BytesMessage request,
-        StreamObserver<NumberMessage> responseObserver) {
+    public void getBrokerageInfo(BytesMessage request, StreamObserver<NumberMessage> responseObserver) {
       try {
         long cycle = dbManager.getDynamicPropertiesStore().getCurrentCycleNumber();
-        long value = dbManager.getDelegationStore()
-            .getBrokerage(cycle, request.getValue().toByteArray());
+        long value = dbManager.getDelegationStore().getBrokerage(cycle, request.getValue().toByteArray());
         NumberMessage.Builder builder = NumberMessage.newBuilder();
         builder.setNum(value);
         responseObserver.onNext(builder.build());

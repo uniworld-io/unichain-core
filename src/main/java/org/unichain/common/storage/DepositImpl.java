@@ -402,8 +402,7 @@ public class DepositImpl implements Deposit {
     if (accountCapsule == null) {
       accountCapsule = createAccount(address, AccountType.Normal);
     }
-    long balance = accountCapsule.getAssetMapV2()
-        .getOrDefault(new String(tokenIdWithoutLeadingZero), new Long(0));
+    long balance = accountCapsule.getAssetMapV2().getOrDefault(new String(tokenIdWithoutLeadingZero), new Long(0));
     if (value == 0) {
       return balance;
     }

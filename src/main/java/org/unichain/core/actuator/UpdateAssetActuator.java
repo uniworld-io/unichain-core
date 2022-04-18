@@ -114,7 +114,7 @@ public class UpdateAssetActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(AccountUpdateContract.class).getOwnerAddress();
+    return contract.unpack(UpdateAssetContract.class).getOwnerAddress();
   }
 
   @Override

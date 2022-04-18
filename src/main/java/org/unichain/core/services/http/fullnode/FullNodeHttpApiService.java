@@ -47,6 +47,26 @@ public class FullNodeHttpApiService implements Service {
   private CreateAssetIssueServlet createAssetIssueServlet;
 
   @Autowired
+  private NftCreateContractServlet nftCreateContractServlet;
+  @Autowired
+  private NftRemoveMinterServlet nftRemoveMinterServlet;
+  @Autowired
+  private NftMintTokenServlet nftMintTokenServlet;
+  @Autowired
+  private NftAddMinterServlet addNftMinterServlet;
+  @Autowired
+  private NftRenounceMinterServlet nftRenounceMinterServlet;
+  @Autowired
+  private NftBurnTokenServlet burnNftTokenServlet;
+  @Autowired
+  private NftApproveTokenServlet nftApproveTokenServlet;
+  @Autowired
+  private NftSetApprovalForAllServlet nftApprovalForAllServlet;
+  @Autowired
+  private NftTransferTokenServlet nftTransferTokenServlet;
+
+
+  @Autowired
   private CreateTokenServlet createTokenServlet;
   @Autowired
   private TransferTokenOwnerServlet transferTokenOwnerServlet;
@@ -66,6 +86,24 @@ public class FullNodeHttpApiService implements Service {
   private WithdrawFutureTokenServlet withdrawFutureTokenServlet;
   @Autowired
   private GetTokenPoolServlet getTokenPoolServlet;
+
+  @Autowired
+  private NftListContractServlet nftListContractServlet;
+  @Autowired
+  private NftGetListTokenApprovalServlet listNftTokenApproveServlet;
+  @Autowired
+  private NftGetApprovalForAllServlet listNftTokenApproveAllServlet;
+  @Autowired
+  private NftListTokenServlet nftListTokenServlet;
+  @Autowired
+  private NftGetContractServlet nftGetContractServlet;
+  @Autowired
+  private NftGetTokenServlet nftGetTokenServlet;
+  @Autowired
+  private NftGetBalanceOfServlet nftGetBalanceOfServlet;
+  @Autowired
+  private NftGetApprovalServlet nftGetApprovalServlet;
+
   @Autowired
   private GetTokenFutureServlet getTokenFutureServlet;
   @Autowired
@@ -245,6 +283,18 @@ public class FullNodeHttpApiService implements Service {
 //      context.addServlet(new ServletHolder(showFutureDealServlet), "/showfuturedeal");
       context.addServlet(new ServletHolder(getAccountServlet), "/getaccount");
       context.addServlet(new ServletHolder(getTokenPoolServlet), "/gettokenpool");
+
+      context.addServlet(new ServletHolder(nftListContractServlet), "/listnftcontract");
+      context.addServlet(new ServletHolder(nftListTokenServlet), "/listnfttoken");
+
+      context.addServlet(new ServletHolder(listNftTokenApproveServlet), "/listnfttokenapprove");
+      context.addServlet(new ServletHolder(listNftTokenApproveAllServlet), "/listnfttokenapproveall");
+
+      context.addServlet(new ServletHolder(nftGetContractServlet), "/getnftcontract");
+      context.addServlet(new ServletHolder(nftGetTokenServlet), "/getnfttoken");
+      context.addServlet(new ServletHolder(nftGetBalanceOfServlet), "/getnftbalanceOf");
+      context.addServlet(new ServletHolder(nftGetApprovalServlet), "/getnftapprovedforall");
+
       context.addServlet(new ServletHolder(getTokenFutureServlet), "/getfuturetoken");
       context.addServlet(new ServletHolder(getFutureTransferServlet), "/getfuturetransfer");
       context.addServlet(new ServletHolder(transferServlet), "/createtransaction");
@@ -256,6 +306,15 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(voteWitnessAccountServlet), "/votewitnessaccount");
       context.addServlet(new ServletHolder(createAssetIssueServlet), "/createassetissue");
 
+      context.addServlet(new ServletHolder(nftCreateContractServlet), "/createnftcontract");
+      context.addServlet(new ServletHolder(nftRemoveMinterServlet), "/removenftminter");
+      context.addServlet(new ServletHolder(nftMintTokenServlet), "/mintnfttoken");
+      context.addServlet(new ServletHolder(addNftMinterServlet), "/addnftminter");
+      context.addServlet(new ServletHolder(nftRenounceMinterServlet), "/renouncenftminter");
+      context.addServlet(new ServletHolder(burnNftTokenServlet), "/burnnfttoken");
+      context.addServlet(new ServletHolder(nftApproveTokenServlet), "/approvenfttoken");
+      context.addServlet(new ServletHolder(nftApprovalForAllServlet), "/approveforallnfttoken");
+      context.addServlet(new ServletHolder(nftTransferTokenServlet), "/transfernfttoken");
 
       context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
       context.addServlet(new ServletHolder(transferTokenOwnerServlet), "/transfertokenowner");

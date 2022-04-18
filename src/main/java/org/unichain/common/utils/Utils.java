@@ -25,10 +25,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public interface Utils {
 
@@ -120,6 +117,8 @@ public interface Utils {
 
   static <V> List<V> paging(List<V> all, int pageIndex, int pageSize){
     Assert.isTrue(pageIndex >=0 && pageSize > 0, "invalid paging info");
+    if(all == null || all.isEmpty())
+      return Collections.emptyList();
     int start = pageIndex * pageSize;
     int end = start + pageSize;
     if(start >= all.size())

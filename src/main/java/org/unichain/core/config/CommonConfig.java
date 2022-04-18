@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration
 @EnableTransactionManagement
 @EnableAspectJAutoProxy
-@ComponentScan(basePackages = "org.unichain")
+@ComponentScan(basePackages = "org.unichain.*")
 public class CommonConfig {
 
 }

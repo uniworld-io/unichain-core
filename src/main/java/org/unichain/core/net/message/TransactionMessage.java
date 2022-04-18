@@ -15,8 +15,7 @@ public class TransactionMessage extends UnichainMessage {
     this.type = MessageTypes.UNW.asByte();
     if (Message.isFilter()) {
       compareBytes(data, transactionCapsule.getInstance().toByteArray());
-      transactionCapsule
-          .validContractProto(transactionCapsule.getInstance().getRawData().getContract(0));
+      transactionCapsule.validContractProto(transactionCapsule.getInstance().getRawData().getContract(0));
     }
   }
 

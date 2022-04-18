@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-versionName='2.0.5'
+versionName='2.0.6'
 versionCode='205'
 
 versionPath="src/main/java/org/unichain/program/Version.java"

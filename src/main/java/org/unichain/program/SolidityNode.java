@@ -52,8 +52,8 @@ public class SolidityNode {
 
   private void start() {
     try {
-      new Thread(() -> getBlock()).start();
-      new Thread(() -> processBlock()).start();
+      new Thread(this::getBlock).start();
+      new Thread(this::processBlock).start();
       logger.info("Success to start solid node, ID: {}, remoteBlockNum: {}.", ID.get(), remoteBlockNum);
     } catch (Exception e) {
       logger.error("Failed to start solid node, address: {}.", Args.getInstance().getTrustNodeAddr());

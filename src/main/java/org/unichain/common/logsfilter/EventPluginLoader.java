@@ -3,15 +3,11 @@ package org.unichain.common.logsfilter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.pf4j.CompoundPluginDescriptorFinder;
-import org.pf4j.DefaultPluginManager;
-import org.pf4j.ManifestPluginDescriptorFinder;
-import org.pf4j.PluginManager;
-import org.springframework.util.StringUtils;
 import org.unichain.common.logsfilter.nativequeue.NativeMessageQueue;
 import org.unichain.common.logsfilter.trigger.*;
+import org.unichain.eventplugin.mongodb.MongodbEventListener;
 
-import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,9 +16,7 @@ public class EventPluginLoader {
 
   private static EventPluginLoader instance;
 
-  private PluginManager pluginManager = null;
-
-  private List<IPluginEventListener> eventListeners;
+  private List<IPluginEventListener> eventListeners = new ArrayList<>();
 
   private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -74,59 +68,40 @@ public class EventPluginLoader {
   }
 
   private boolean launchEventPlugin(EventPluginConfig config){
-    boolean success = false;
-    // parsing subscribe config from config.conf
-    String pluginPath = config.getPluginPath();
     this.serverAddress = config.getServerAddress();
     this.dbConfig = config.getDbConfig();
 
-    if (!startPlugin(pluginPath)) {
-      logger.error("failed to load '{}'", pluginPath);
-      return success;
+    if (!startPlugins()) {
+      logger.error("failed to load plugins");
+      return false;
     }
 
     setPluginConfig();
-
-    if (Objects.nonNull(eventListeners)) {
-      eventListeners.forEach(listener -> listener.start());
-    }
-
+    eventListeners.forEach(listener -> listener.start());
     return true;
   }
 
   public boolean start(EventPluginConfig config) {
-    boolean success = false;
-
     if (Objects.isNull(config)) {
-      return success;
+      return false;
     }
 
-    this.triggerConfigList = config.getTriggerConfigList();
-
+    triggerConfigList = config.getTriggerConfigList();
     useNativeQueue = config.isUseNativeQueue();
 
     if (config.isUseNativeQueue()){
       return launchNativeQueue(config);
     }
-
-    return launchEventPlugin(config);
+    else
+    {
+      return launchEventPlugin(config);
+    }
   }
 
   private void setPluginConfig() {
-
-    if (Objects.isNull(eventListeners)) {
-      return;
-    }
-
-    // set server address to plugin
     eventListeners.forEach(listener -> listener.setServerAddress(this.serverAddress));
-
-    // set dbconfig to plugin
     eventListeners.forEach(listener -> listener.setDBConfig(this.dbConfig));
-
-    triggerConfigList.forEach(triggerConfig -> {
-      setSingleTriggerConfig(triggerConfig);
-    });
+    triggerConfigList.forEach(triggerConfig -> setSingleTriggerConfig(triggerConfig));
   }
 
   private void setSingleTriggerConfig(TriggerConfig triggerConfig){
@@ -140,9 +115,7 @@ public class EventPluginLoader {
       if (!useNativeQueue){
         setPluginTopic(Trigger.BLOCK_TRIGGER, triggerConfig.getTopic());
       }
-
-    } else if (EventPluginConfig.TRANSACTION_TRIGGER_NAME
-            .equalsIgnoreCase(triggerConfig.getTriggerName())) {
+    } else if (EventPluginConfig.TRANSACTION_TRIGGER_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
       if (triggerConfig.isEnabled()) {
         transactionLogTriggerEnable = true;
       } else {
@@ -153,8 +126,7 @@ public class EventPluginLoader {
         setPluginTopic(Trigger.TRANSACTION_TRIGGER, triggerConfig.getTopic());
       }
 
-    } else if (EventPluginConfig.CONTRACTEVENT_TRIGGER_NAME
-            .equalsIgnoreCase(triggerConfig.getTriggerName())) {
+    } else if (EventPluginConfig.CONTRACTEVENT_TRIGGER_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
       if (triggerConfig.isEnabled()) {
         contractEventTriggerEnable = true;
       } else {
@@ -165,8 +137,7 @@ public class EventPluginLoader {
         setPluginTopic(Trigger.CONTRACTEVENT_TRIGGER, triggerConfig.getTopic());
       }
 
-    } else if (EventPluginConfig.CONTRACTLOG_TRIGGER_NAME
-            .equalsIgnoreCase(triggerConfig.getTriggerName())) {
+    } else if (EventPluginConfig.CONTRACTLOG_TRIGGER_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
       if (triggerConfig.isEnabled()) {
         contractLogTriggerEnable = true;
       } else {
@@ -199,57 +170,22 @@ public class EventPluginLoader {
     eventListeners.forEach(listener -> listener.setTopic(eventType, topic));
   }
 
-  private boolean startPlugin(String path) {
-    boolean loaded = false;
-    logger.info("start loading '{}'", path);
-
-    File pluginPath = new File(path);
-    if (!pluginPath.exists()) {
-      logger.error("'{}' doesn't exist", path);
-      return loaded;
+  private boolean startPlugins() {
+    try {
+      eventListeners.add(new MongodbEventListener());
+      return true;
     }
-
-    if (Objects.isNull(pluginManager)) {
-
-      pluginManager = new DefaultPluginManager(pluginPath.toPath()) {
-        @Override
-        protected CompoundPluginDescriptorFinder createPluginDescriptorFinder() {
-          return new CompoundPluginDescriptorFinder()
-              .add(new ManifestPluginDescriptorFinder());
-        }
-      };
+    catch (Exception e){
+      logger.error("failed to start plugins -->", e);
+      return false;
     }
-
-    String pluginId = pluginManager.loadPlugin(pluginPath.toPath());
-    if (StringUtils.isEmpty(pluginId)) {
-      logger.error("invalid pluginID");
-      return loaded;
-    }
-
-    pluginManager.startPlugins();
-
-    eventListeners = pluginManager.getExtensions(IPluginEventListener.class);
-
-    if (Objects.isNull(eventListeners) || eventListeners.isEmpty()) {
-      logger.error("No eventListener is registered");
-      return loaded;
-    }
-
-    loaded = true;
-
-    logger.info("'{}' loaded", path);
-
-    return loaded;
   }
 
-  public void stopPlugin() {
-    if (Objects.nonNull(pluginManager)){
-      pluginManager.stopPlugins();
-    }
-
+  public void stopPlugins() {
+    logger.info("EventPlugin stopping...");
+    eventListeners.forEach(IPluginEventListener::stop);
     NativeMessageQueue.getInstance().stop();
-
-    logger.info("EventPlugin stopped");
+    logger.info("EventPlugin stopped!");
   }
 
   public void postBlockTrigger(BlockLogTrigger trigger) {
@@ -257,8 +193,7 @@ public class EventPluginLoader {
       NativeMessageQueue.getInstance().publishTrigger(toJsonString(trigger), trigger.getTriggerName());
     }
     else {
-      eventListeners.forEach(listener ->
-              listener.handleBlockEvent(toJsonString(trigger)));
+      eventListeners.forEach(listener -> listener.handleBlockEvent(toJsonString(trigger)));
     }
   }
 
@@ -276,8 +211,7 @@ public class EventPluginLoader {
       NativeMessageQueue.getInstance().publishTrigger(toJsonString(trigger), trigger.getTriggerName());
     }
     else {
-      eventListeners.forEach(listener ->
-              listener.handleContractLogTrigger(toJsonString(trigger)));
+      eventListeners.forEach(listener -> listener.handleContractLogTrigger(toJsonString(trigger)));
     }
   }
 
@@ -286,8 +220,7 @@ public class EventPluginLoader {
       NativeMessageQueue.getInstance().publishTrigger(toJsonString(trigger), trigger.getTriggerName());
     }
     else {
-      eventListeners.forEach(listener ->
-              listener.handleContractEventTrigger(toJsonString(trigger)));
+      eventListeners.forEach(listener -> listener.handleContractEventTrigger(toJsonString(trigger)));
     }
   }
 

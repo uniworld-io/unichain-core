@@ -85,7 +85,7 @@ public class AccountStateCallBack {
     trieEntryList.clear();
   }
 
-  public void exeTransFinish() {
+  public void finExeTrans() {
     for (TrieEntry trieEntry : trieEntryList) {
       trie.put(RLP.encodeElement(trieEntry.getKey()), trieEntry.getData());
     }
@@ -99,7 +99,7 @@ public class AccountStateCallBack {
     trie.delete(RLP.encodeElement(key));
   }
 
-  public void preExecute(BlockCapsule blockCapsule) {
+  public void preExeBlock(BlockCapsule blockCapsule) {
     this.blockCapsule = blockCapsule;
     this.execute = true;
     this.allowGenerateRoot = manager.getDynamicPropertiesStore().allowAccountStateRoot();
@@ -120,7 +120,7 @@ public class AccountStateCallBack {
     trie = new TrieImpl(db, rootHash);
   }
 
-  public void executePushFinish() throws BadBlockException {
+  public void finExeBlock() throws BadBlockException {
     if (!exe()) {
       return;
     }

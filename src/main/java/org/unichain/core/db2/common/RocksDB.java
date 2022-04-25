@@ -16,10 +16,12 @@ public class RocksDB implements DB<byte[], byte[]>, Flusher {
   @Getter
   private RocksDbDataSourceImpl db;
   private WriteOptionsWrapper optionsWrapper = WriteOptionsWrapper.getInstance().sync(Args.getInstance().getStorage().isDbSync());
+  private SolidStateCallback solidStateCallback;
 
-  public RocksDB(String parentName, String name) {
+  public RocksDB(String parentName, String name, SolidStateCallback solidStateCallback) {
     db = new RocksDbDataSourceImpl(Paths.get(parentName, Args.getInstance().getStorage().getDbDirectory()).toString(), name);
     db.initDB();
+    this.solidStateCallback = solidStateCallback;
   }
 
   @Override

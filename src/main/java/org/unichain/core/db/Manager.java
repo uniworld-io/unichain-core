@@ -1334,7 +1334,7 @@ public class Manager {
     session.reset();
     session.setValue(revokingDb.buildSession());
 
-    accountStateCallBack.preExecute(blockCapsule);
+    accountStateCallBack.preExeBlock(blockCapsule);
 
     if (needCheckWitnessPermission && !witnessService.validateWitnessPermission(witnessCapsule.getAddress())) {
       logger.warn("Witness permission is wrong");
@@ -1385,7 +1385,7 @@ public class Manager {
       try (ISession tmpSession = revokingDb.buildSession()) {
         accountStateCallBack.preExeTrans();
         var result = processTransaction(tx, blockCapsule);
-        accountStateCallBack.exeTransFinish();
+        accountStateCallBack.finExeTrans();
         tmpSession.merge();
         // push into block
         blockCapsule.addTransaction(tx);
@@ -1544,7 +1544,7 @@ public class Manager {
     TransactionRetCapsule transactionRetCapsule = new TransactionRetCapsule(block);
 
     try {
-      accountStateCallBack.preExecute(block);
+      accountStateCallBack.preExeBlock(block);
       for (TransactionCapsule transactionCapsule : block.getTransactions()) {
         transactionCapsule.setBlockNum(block.getNum());
         if (block.generatedByMyself) {
@@ -1552,12 +1552,12 @@ public class Manager {
         }
         accountStateCallBack.preExeTrans();
         TransactionInfo result = processTransaction(transactionCapsule, block);
-        accountStateCallBack.exeTransFinish();
+        accountStateCallBack.finExeTrans();
         if (Objects.nonNull(result)) {
           transactionRetCapsule.addTransactionInfo(result);
         }
       }
-      accountStateCallBack.executePushFinish();
+      accountStateCallBack.finExeBlock();
     } finally {
       accountStateCallBack.exceptionFinish();
     }

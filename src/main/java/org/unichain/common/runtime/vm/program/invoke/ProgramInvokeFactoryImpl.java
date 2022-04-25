@@ -73,8 +73,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         case ET_PRE_TYPE:
           if (null != block) {
             lastHash = block.getBlockHeader().getRawDataOrBuilder().getParentHash().toByteArray();
-            coinbase = block.getBlockHeader().getRawDataOrBuilder().getWitnessAddress()
-                .toByteArray();
+            coinbase = block.getBlockHeader().getRawDataOrBuilder().getWitnessAddress().toByteArray();
             timestamp = block.getBlockHeader().getRawDataOrBuilder().getTimestamp() / 1000;
             number = block.getBlockHeader().getRawDataOrBuilder().getNumber();
           }
@@ -88,8 +87,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
           vmShouldEndInUs, energyLimit);
 
     } else if (unxType == UNW_CONTRACT_CALL_TYPE) {
-      Contract.TriggerSmartContract contract = ContractCapsule
-          .getTriggerContractFromTransaction(tx);
+      Contract.TriggerSmartContract contract = ContractCapsule.getTriggerContractFromTransaction(tx);
       /***         ADDRESS op       ***/
       // YP: Get address of currently executing account.
       byte[] address = contract.getContractAddress().toByteArray();
@@ -135,9 +133,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
       }
 
       return new ProgramInvokeImpl(address, origin, caller, balance, callValue, tokenValue, tokenId,
-          data,
-          lastHash, coinbase, timestamp, number, deposit, vmStartInUs, vmShouldEndInUs,
-          energyLimit);
+          data, lastHash, coinbase, timestamp, number, deposit, vmStartInUs, vmShouldEndInUs, energyLimit);
     }
     throw new ContractValidateException("Unknown contract type");
   }

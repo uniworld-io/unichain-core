@@ -42,8 +42,7 @@ public class MongoManager {
       return;
     }
 
-    MongoCredential credential = MongoCredential.createScramSha1Credential(username, databaseName,
-        password.toCharArray());
+    MongoCredential credential = MongoCredential.createScramSha1Credential(username, databaseName, password.toCharArray());
     List<MongoCredential> credentials = new ArrayList<MongoCredential>();
     credentials.add(credential);
 

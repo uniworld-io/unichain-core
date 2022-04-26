@@ -27,7 +27,6 @@ import java.util.List;
 
 @Data
 public class RawData {
-
   // for mongodb
   @Getter
   private String address;

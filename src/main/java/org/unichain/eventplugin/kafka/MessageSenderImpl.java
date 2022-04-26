@@ -61,11 +61,11 @@ public class MessageSenderImpl{
 
         createProducer(Trigger.BLOCK_TRIGGER);
         createProducer(Trigger.TRANSACTION_TRIGGER);
-        createProducer(Trigger.CONTRACTLOG_TRIGGER);
-        createProducer(Trigger.CONTRACTEVENT_TRIGGER);
+        createProducer(Trigger.CONTRACT_LOG_TRIGGER);
+        createProducer(Trigger.CONTRACT_EVENT_TRIGGER);
         createProducer(Trigger.SOLIDITY_TRIGGER);
-        createProducer(Trigger.SOLIDITY_EVENT);
-        createProducer(Trigger.SOLIDITY_LOG);
+        createProducer(Trigger.SOLIDITY_EVENT_TRIGGER);
+        createProducer(Trigger.SOLIDITY_LOG_TRIGGER);
 
         triggerProcessThread = new Thread(triggerProcessLoop);
         triggerProcessThread.start();
@@ -78,15 +78,15 @@ public class MessageSenderImpl{
             blockTopic = topic;
         } else if (triggerType == Trigger.TRANSACTION_TRIGGER) {
             transactionTopic = topic;
-        } else if (triggerType == Trigger.CONTRACTEVENT_TRIGGER) {
+        } else if (triggerType == Trigger.CONTRACT_EVENT_TRIGGER) {
             contractEventTopic = topic;
-        } else if (triggerType == Trigger.CONTRACTLOG_TRIGGER) {
+        } else if (triggerType == Trigger.CONTRACT_LOG_TRIGGER) {
             contractLogTopic = topic;
         } else if (triggerType == Trigger.SOLIDITY_TRIGGER) {
             solidityTopic = topic;
-        } else if (triggerType == Trigger.SOLIDITY_EVENT) {
+        } else if (triggerType == Trigger.SOLIDITY_EVENT_TRIGGER) {
             solidityEventTopic = topic;
-        } else if (triggerType == Trigger.SOLIDITY_LOG) {
+        } else if (triggerType == Trigger.SOLIDITY_LOG_TRIGGER) {
             solidityLogTopic = topic;
         }
     }
@@ -177,7 +177,7 @@ public class MessageSenderImpl{
             return;
         }
 
-        MessageSenderImpl.getInstance().sendKafkaRecord(Trigger.CONTRACTLOG_TRIGGER, contractLogTopic, data);
+        MessageSenderImpl.getInstance().sendKafkaRecord(Trigger.CONTRACT_LOG_TRIGGER, contractLogTopic, data);
     }
 
     public void handleContractEventTrigger(Object data) {
@@ -185,7 +185,7 @@ public class MessageSenderImpl{
             return;
         }
 
-        MessageSenderImpl.getInstance().sendKafkaRecord(Trigger.CONTRACTEVENT_TRIGGER, contractEventTopic, data);
+        MessageSenderImpl.getInstance().sendKafkaRecord(Trigger.CONTRACT_EVENT_TRIGGER, contractEventTopic, data);
     }
 
     public void handleSolidityTrigger(Object data) {
@@ -198,13 +198,13 @@ public class MessageSenderImpl{
         if (Objects.isNull(data) || Objects.isNull(solidityLogTopic)){
             return;
         }
-        MessageSenderImpl.getInstance().sendKafkaRecord(Trigger.SOLIDITY_LOG, solidityLogTopic, data);
+        MessageSenderImpl.getInstance().sendKafkaRecord(Trigger.SOLIDITY_LOG_TRIGGER, solidityLogTopic, data);
     }
     public void handleSolidityEventTrigger(Object data) {
         if (Objects.isNull(data) || Objects.isNull(solidityEventTopic)){
             return;
         }
-        MessageSenderImpl.getInstance().sendKafkaRecord(Trigger.SOLIDITY_EVENT, solidityEventTopic, data);
+        MessageSenderImpl.getInstance().sendKafkaRecord(Trigger.SOLIDITY_EVENT_TRIGGER, solidityEventTopic, data);
     }
 
     private Runnable triggerProcessLoop =
@@ -223,19 +223,19 @@ public class MessageSenderImpl{
                         else if (triggerData.contains(Trigger.TRANSACTION_TRIGGER_NAME)){
                             handleTransactionTrigger(triggerData);
                         }
-                        else if (triggerData.contains(Trigger.CONTRACTLOG_TRIGGER_NAME)){
+                        else if (triggerData.contains(Trigger.CONTRACT_LOG_TRIGGER_NAME)){
                             handleContractLogTrigger(triggerData);
                         }
-                        else if (triggerData.contains(Trigger.CONTRACTEVENT_TRIGGER_NAME)){
+                        else if (triggerData.contains(Trigger.CONTRACT_EVENT_TRIGGER_NAME)){
                             handleContractEventTrigger(triggerData);
                         }
                         else if (triggerData.contains(Trigger.SOLIDITY_TRIGGER_NAME)) {
                             handleSolidityTrigger(triggerData);
                         }
-                        else if (triggerData.contains(Trigger.SOLIDITYLOG_TRIGGER_NAME)) {
+                        else if (triggerData.contains(Trigger.SOLIDITY_LOG_TRIGGER_NAME)) {
                             handleSolidityLogTrigger(triggerData);
                         }
-                        else if (triggerData.contains(Trigger.SOLIDITYEVENT_TRIGGER_NAME)) {
+                        else if (triggerData.contains(Trigger.SOLIDITY_EVENT_TRIGGER_NAME)) {
                             handleSolidityEventTrigger(triggerData);
                         }
                     } catch (InterruptedException ex) {

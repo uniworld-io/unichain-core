@@ -13,11 +13,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.common.crypto.ECKey;
 import org.unichain.common.logsfilter.EventPluginConfig;
 import org.unichain.common.logsfilter.FilterQuery;
 import org.unichain.common.logsfilter.TriggerConfig;
+import org.unichain.common.logsfilter.trigger.ContractEventTrigger;
+import org.unichain.common.logsfilter.trigger.ContractLogTrigger;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.common.storage.RocksDbSettings;
 import org.unichain.common.utils.ByteArray;
@@ -39,6 +42,8 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
@@ -465,6 +470,14 @@ public class Args {
   @Getter
   @Setter
   private int validContractProtoThreadNum;
+
+  @Autowired(required = false)
+  @Getter
+  private static ConcurrentHashMap<Long, BlockingQueue<ContractLogTrigger>> solidityContractLogTriggerMap = new ConcurrentHashMap<>();
+
+  @Autowired(required = false)
+  @Getter
+  private static ConcurrentHashMap<Long, BlockingQueue<ContractEventTrigger>> solidityContractEventTriggerMap = new ConcurrentHashMap<>();
 
   public static void clearParam() {
     INSTANCE.outputDirectory = "unichain";
@@ -1066,11 +1079,20 @@ public class Args {
 
     boolean enable = false;
     boolean useNativeQueue = false;
+    boolean enableMongoPlugin = false;
+    boolean enableKafkaPlugin = false;
     int bindPort = 0;
     int sendQueueLength = 0;
     if (config.hasPath("event.subscribe.enable")) {
       enable = config.getBoolean("event.subscribe.enable");
     }
+    if (config.hasPath("event.subscribe.enable")) {
+      enableMongoPlugin = config.getBoolean("event.subscribe.mongodb");
+    }
+    if (config.hasPath("event.subscribe.enable")) {
+      enableKafkaPlugin = config.getBoolean("event.subscribe.kafka");
+    }
+
     if (config.hasPath("event.subscribe.native.useNativeQueue")) {
       useNativeQueue = config.getBoolean("event.subscribe.native.useNativeQueue");
 
@@ -1086,6 +1108,8 @@ public class Args {
       eventPluginConfig.setUseNativeQueue(useNativeQueue);
       eventPluginConfig.setBindPort(bindPort);
       eventPluginConfig.setSendQueueLength(sendQueueLength);
+      eventPluginConfig.setMongodb(enableMongoPlugin);
+      eventPluginConfig.setKafka(enableKafkaPlugin);
     }
 
     // use event plugin

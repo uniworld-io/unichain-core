@@ -197,16 +197,14 @@ public class MongodbSenderImpl {
       properties.load(input);
 
       int connectionsPerHost = Integer.parseInt(properties.getProperty("mongo.connectionsPerHost"));
-      int threadsAllowedToBlockForConnectionMultiplie = Integer.parseInt(
-          properties.getProperty("mongo.threadsAllowedToBlockForConnectionMultiplier"));
+      int threadsAllowedToBlockForConnectionMultiplie = Integer.parseInt(properties.getProperty("mongo.threadsAllowedToBlockForConnectionMultiplier"));
 
       mongoConfig.setDbName(dbName);
       mongoConfig.setUsername(dbUserName);
       mongoConfig.setPassword(dbPassword);
       mongoConfig.setVersion(version);
       mongoConfig.setConnectionsPerHost(connectionsPerHost);
-      mongoConfig.setThreadsAllowedToBlockForConnectionMultiplier(
-          threadsAllowedToBlockForConnectionMultiplie);
+      mongoConfig.setThreadsAllowedToBlockForConnectionMultiplier(threadsAllowedToBlockForConnectionMultiplie);
     } catch (IOException e) {
       e.printStackTrace();
     } catch (Exception e) {
@@ -244,15 +242,15 @@ public class MongodbSenderImpl {
       blockTopic = topic;
     } else if (triggerType == Trigger.TRANSACTION_TRIGGER) {
       transactionTopic = topic;
-    } else if (triggerType == Trigger.CONTRACTEVENT_TRIGGER) {
+    } else if (triggerType == Trigger.CONTRACT_EVENT_TRIGGER) {
       contractEventTopic = topic;
-    } else if (triggerType == Trigger.CONTRACTLOG_TRIGGER) {
+    } else if (triggerType == Trigger.CONTRACT_LOG_TRIGGER) {
       contractLogTopic = topic;
     } else if (triggerType == Trigger.SOLIDITY_TRIGGER) {
       solidityTopic = topic;
-    } else if (triggerType == Trigger.SOLIDITY_EVENT) {
+    } else if (triggerType == Trigger.SOLIDITY_EVENT_TRIGGER) {
       solidityEventTopic = topic;
-    } else if (triggerType == Trigger.SOLIDITY_LOG) {
+    } else if (triggerType == Trigger.SOLIDITY_LOG_TRIGGER) {
       solidityLogTopic = topic;
     } else {
       return;
@@ -432,8 +430,6 @@ public class MongodbSenderImpl {
           try {
             String triggerData = (String) triggerQueue.poll(1, TimeUnit.SECONDS);
 
-            logger.info("polling event to mongo --> {}", triggerData);
-
             if (Objects.isNull(triggerData)) {
               continue;
             }
@@ -442,15 +438,15 @@ public class MongodbSenderImpl {
               handleBlockEvent(triggerData);
             } else if (triggerData.contains(Trigger.TRANSACTION_TRIGGER_NAME)) {
               handleTransactionTrigger(triggerData);
-            } else if (triggerData.contains(Trigger.CONTRACTLOG_TRIGGER_NAME)) {
+            } else if (triggerData.contains(Trigger.CONTRACT_LOG_TRIGGER_NAME)) {
               handleContractLogTrigger(triggerData);
-            } else if (triggerData.contains(Trigger.CONTRACTEVENT_TRIGGER_NAME)) {
+            } else if (triggerData.contains(Trigger.CONTRACT_EVENT_TRIGGER_NAME)) {
               handleContractEventTrigger(triggerData);
             } else if (triggerData.contains(Trigger.SOLIDITY_TRIGGER_NAME)) {
               handleSolidityTrigger(triggerData);
-            } else if (triggerData.contains(Trigger.SOLIDITYLOG_TRIGGER_NAME)) {
+            } else if (triggerData.contains(Trigger.SOLIDITY_LOG_TRIGGER_NAME)) {
               handleSolidityLogTrigger(triggerData);
-            } else if (triggerData.contains(Trigger.SOLIDITYEVENT_TRIGGER_NAME)) {
+            } else if (triggerData.contains(Trigger.SOLIDITY_EVENT_TRIGGER_NAME)) {
               handleSolidityEventTrigger(triggerData);
             }
           } catch (InterruptedException ex) {

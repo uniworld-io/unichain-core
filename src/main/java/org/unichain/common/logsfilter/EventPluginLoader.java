@@ -2,9 +2,11 @@ package org.unichain.common.logsfilter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.logsfilter.nativequeue.NativeMessageQueue;
 import org.unichain.common.logsfilter.trigger.*;
+import org.unichain.eventplugin.kafka.KafkaEventListener;
 import org.unichain.eventplugin.mongodb.MongodbEventListener;
 
 import java.util.ArrayList;
@@ -26,17 +28,32 @@ public class EventPluginLoader {
 
   private List<TriggerConfig> triggerConfigList;
 
+  @Getter
   private boolean blockLogTriggerEnable = false;
 
+  @Getter
   private boolean transactionLogTriggerEnable = false;
 
+  @Getter
   private boolean contractEventTriggerEnable = false;
 
+  @Getter
   private boolean contractLogTriggerEnable = false;
 
-  private FilterQuery filterQuery;
-
+  @Getter
   private boolean useNativeQueue = false;
+
+  //@todo set config
+  @Getter
+  private boolean solidityEventTriggerEnable = false;
+
+  @Getter
+  private boolean solidityLogTriggerEnable = false;
+
+  @Getter
+  private boolean solidityTriggerEnable = false;
+
+  private FilterQuery filterQuery;
 
   public static EventPluginLoader getInstance() {
     if (Objects.isNull(instance)) {
@@ -50,7 +67,6 @@ public class EventPluginLoader {
   }
 
   private boolean launchNativeQueue(EventPluginConfig config){
-
     if (!NativeMessageQueue.getInstance().start(config.getBindPort(), config.getSendQueueLength())){
       return false;
     }
@@ -60,9 +76,7 @@ public class EventPluginLoader {
       return false;
     }
 
-    triggerConfigList.forEach(triggerConfig -> {
-      setSingleTriggerConfig(triggerConfig);
-    });
+    triggerConfigList.forEach(triggerConfig -> setSingleTriggerConfig(triggerConfig));
 
     return true;
   }
@@ -71,14 +85,15 @@ public class EventPluginLoader {
     this.serverAddress = config.getServerAddress();
     this.dbConfig = config.getDbConfig();
 
-    if (!startPlugins()) {
-      logger.error("failed to load plugins");
+    if (!startPlugins(config)) {
+      logger.error("failed to load plugins!");
       return false;
     }
-
-    setPluginConfig();
-    eventListeners.forEach(listener -> listener.start());
-    return true;
+    else{
+      setPluginConfig();
+      eventListeners.forEach(listener -> listener.start());
+      return true;
+    }
   }
 
   public boolean start(EventPluginConfig config) {
@@ -89,13 +104,10 @@ public class EventPluginLoader {
     triggerConfigList = config.getTriggerConfigList();
     useNativeQueue = config.isUseNativeQueue();
 
-    if (config.isUseNativeQueue()){
+    if (config.isUseNativeQueue())
       return launchNativeQueue(config);
-    }
     else
-    {
       return launchEventPlugin(config);
-    }
   }
 
   private void setPluginConfig() {
@@ -115,7 +127,8 @@ public class EventPluginLoader {
       if (!useNativeQueue){
         setPluginTopic(Trigger.BLOCK_TRIGGER, triggerConfig.getTopic());
       }
-    } else if (EventPluginConfig.TRANSACTION_TRIGGER_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
+    }
+    else if (EventPluginConfig.TRANSACTION_TRIGGER_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
       if (triggerConfig.isEnabled()) {
         transactionLogTriggerEnable = true;
       } else {
@@ -125,8 +138,8 @@ public class EventPluginLoader {
       if (!useNativeQueue){
         setPluginTopic(Trigger.TRANSACTION_TRIGGER, triggerConfig.getTopic());
       }
-
-    } else if (EventPluginConfig.CONTRACTEVENT_TRIGGER_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
+    }
+    else if (EventPluginConfig.CONTRACTEVENT_TRIGGER_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
       if (triggerConfig.isEnabled()) {
         contractEventTriggerEnable = true;
       } else {
@@ -134,10 +147,11 @@ public class EventPluginLoader {
       }
 
       if (!useNativeQueue){
-        setPluginTopic(Trigger.CONTRACTEVENT_TRIGGER, triggerConfig.getTopic());
+        setPluginTopic(Trigger.CONTRACT_EVENT_TRIGGER, triggerConfig.getTopic());
       }
 
-    } else if (EventPluginConfig.CONTRACTLOG_TRIGGER_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
+    }
+    else if (EventPluginConfig.CONTRACTLOG_TRIGGER_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
       if (triggerConfig.isEnabled()) {
         contractLogTriggerEnable = true;
       } else {
@@ -145,34 +159,52 @@ public class EventPluginLoader {
       }
 
       if (!useNativeQueue){
-        setPluginTopic(Trigger.CONTRACTLOG_TRIGGER, triggerConfig.getTopic());
+        setPluginTopic(Trigger.CONTRACT_LOG_TRIGGER, triggerConfig.getTopic());
       }
     }
-  }
+    else if (EventPluginConfig.SOLIDITY_TRIGGER_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
+      if (triggerConfig.isEnabled()) {
+        solidityTriggerEnable = true;
+      } else {
+        solidityTriggerEnable = false;
+      }
+      if (!useNativeQueue) {
+        setPluginTopic(Trigger.SOLIDITY_TRIGGER, triggerConfig.getTopic());
+      }
+    }
+    else if (EventPluginConfig.SOLIDITY_EVENT_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
+      if (triggerConfig.isEnabled()) {
+        solidityEventTriggerEnable = true;
+      } else {
+        solidityEventTriggerEnable = false;
+      }
 
-  public synchronized boolean isBlockLogTriggerEnable() {
-    return blockLogTriggerEnable;
-  }
-
-  public synchronized boolean isTransactionLogTriggerEnable() {
-    return transactionLogTriggerEnable;
-  }
-
-  public synchronized boolean isContractEventTriggerEnable() {
-    return contractEventTriggerEnable;
-  }
-
-  public synchronized boolean isContractLogTriggerEnable() {
-    return contractLogTriggerEnable;
+      if (!useNativeQueue) {
+        setPluginTopic(Trigger.SOLIDITY_EVENT_TRIGGER, triggerConfig.getTopic());
+      }
+    }
+    else if (EventPluginConfig.SOLIDITY_LOG_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
+      if (triggerConfig.isEnabled()) {
+        solidityLogTriggerEnable = true;
+      } else {
+        solidityLogTriggerEnable = false;
+      }
+      if (!useNativeQueue) {
+        setPluginTopic(Trigger.SOLIDITY_LOG_TRIGGER, triggerConfig.getTopic());
+      }
+    }
   }
 
   private void setPluginTopic(int eventType, String topic) {
     eventListeners.forEach(listener -> listener.setTopic(eventType, topic));
   }
 
-  private boolean startPlugins() {
+  private boolean startPlugins(EventPluginConfig config) {
     try {
-      eventListeners.add(new MongodbEventListener());
+      if(config.isMongodb())
+        eventListeners.add(new MongodbEventListener());
+      if(config.isKafka())
+        eventListeners.add(new KafkaEventListener());
       return true;
     }
     catch (Exception e){
@@ -221,6 +253,30 @@ public class EventPluginLoader {
     }
     else {
       eventListeners.forEach(listener -> listener.handleContractEventTrigger(toJsonString(trigger)));
+    }
+  }
+
+  public void postSolidityLogTrigger(ContractLogTrigger trigger) {
+    if (useNativeQueue) {
+      NativeMessageQueue.getInstance().publishTrigger(toJsonString(trigger), trigger.getTriggerName());
+    } else {
+      eventListeners.forEach(listener -> listener.handleSolidityLogTrigger(toJsonString(trigger)));
+    }
+  }
+
+  public void postSolidityEventTrigger(ContractEventTrigger trigger) {
+    if (useNativeQueue) {
+      NativeMessageQueue.getInstance().publishTrigger(toJsonString(trigger), trigger.getTriggerName());
+    } else {
+      eventListeners.forEach(listener -> listener.handleSolidityEventTrigger(toJsonString(trigger)));
+    }
+  }
+
+  public void postSolidityTrigger(SolidityTrigger trigger) {
+    if (useNativeQueue) {
+      NativeMessageQueue.getInstance().publishTrigger(toJsonString(trigger), trigger.getTriggerName());
+    } else {
+      eventListeners.forEach(listener -> listener.handleSolidityTrigger(toJsonString(trigger)));
     }
   }
 

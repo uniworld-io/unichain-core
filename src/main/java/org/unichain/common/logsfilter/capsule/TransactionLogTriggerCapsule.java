@@ -28,7 +28,6 @@ import static org.unichain.protos.Protocol.Transaction.Contract.ContractType.Tra
 
 @Slf4j
 public class TransactionLogTriggerCapsule extends TriggerCapsule {
-
   @Getter
   @Setter
   TransactionLogTrigger transactionLogTrigger;
@@ -93,8 +92,7 @@ public class TransactionLogTriggerCapsule extends TriggerCapsule {
             }
 
           } else if (contract.getType() == TransferAssetContract) {
-            TransferAssetContract contractTransfer = contractParameter
-                .unpack(TransferAssetContract.class);
+            TransferAssetContract contractTransfer = contractParameter.unpack(TransferAssetContract.class);
 
             if (Objects.nonNull(contractTransfer)) {
               if (Objects.nonNull(contractTransfer.getAssetName())) {
@@ -129,7 +127,7 @@ public class TransactionLogTriggerCapsule extends TriggerCapsule {
       transactionLogTrigger.setEnergyUsage(unwTrace.getReceipt().getEnergyUsage());
     }
 
-    // program result
+    //program result
     if (Objects.nonNull(unwTrace) && Objects.nonNull(unwTrace.getRuntime()) &&  Objects.nonNull(unwTrace.getRuntime().getResult())) {
       ProgramResult programResult = unwTrace.getRuntime().getResult();
       ByteString contractResult = ByteString.copyFrom(programResult.getHReturn());
@@ -140,13 +138,10 @@ public class TransactionLogTriggerCapsule extends TriggerCapsule {
       }
 
       if (Objects.nonNull(contractAddress) && contractAddress.size() > 0) {
-        transactionLogTrigger
-            .setContractAddress(Wallet.encode58Check((contractAddress.toByteArray())));
+        transactionLogTrigger.setContractAddress(Wallet.encode58Check((contractAddress.toByteArray())));
       }
 
-      // internal transaction
-      transactionLogTrigger.setInternalTrananctionList(
-          getInternalTransactionList(programResult.getInternalTransactions()));
+      transactionLogTrigger.setInternalTrananctionList(getInternalTransactionList(programResult.getInternalTransactions()));
     }
   }
 

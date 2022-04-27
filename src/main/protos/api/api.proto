@@ -429,6 +429,79 @@ service Wallet {
     };
   }
 
+  /**
+    PoS Bridge interface
+   */
+  rpc PosBridgeSetup (PosBridgeSetupContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgesetup"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgesetup"
+      }
+    };
+  }
+
+  rpc PosBridgeMapToken (PosBridgeMapTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgemaptoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgemaptoken"
+      }
+    };
+  }
+
+  rpc PosBridgeCleanMapToken (PosBridgeCleanMapTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgecleanmaptoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgecleanmaptoken"
+      }
+    };
+  }
+
+  rpc PosBridgeDeposit(PosBridgeDepositContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgedeposit"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgedeposit"
+      }
+    };
+  }
+
+  rpc PosBridgeDepositExec(PosBridgeDepositExecContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgedepositexec"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgedepositexec"
+      }
+    };
+  }
+
+  rpc PosBridgeWithdraw(PosBridgeWithdrawContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgewithdraw"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgewithdraw"
+      }
+    };
+  }
+
+  rpc PosBridgeWithdrawExec(PosBridgeWithdrawExecContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgewithdrawexec"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgewithdrawexec"
+      }
+    };
+  }
+
   //Please use UpdateWitness2 instead of this function.
   rpc UpdateWitness (WitnessUpdateContract) returns (Transaction) {
     option (google.api.http) = {

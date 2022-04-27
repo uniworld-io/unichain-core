@@ -377,7 +377,16 @@ message Transaction {
       ApproveNftTokenContract = 69;
       ApproveForAllNftTokenContract = 70;
       TransferNftTokenContract = 71;
+
+      PosBridgeSetupContract = 90;
+      PosBridgeMapTokenContract = 91;
+      PosBridgeCleanMapTokenContract =92;
+      PosBridgeDepositContract = 93;
+      PosBridgeDepositExecContract = 94;
+      PosBridgeWithdrawContract =95;
+      PosBridgeWithdrawExecContract = 96;
     }
+
     ContractType type = 1;
     google.protobuf.Any parameter = 2;
     bytes provider = 3;

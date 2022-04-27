@@ -418,3 +418,84 @@ message TransferNftTokenContract{
   string contract = 3;
   int64 token_id = 4;
 }
+
+
+/**
+ all calldata is abi params encoded
+ */
+message PosBridgeSetupContract{
+  bytes owner_address = 1;
+  bytes new_owner= 2;
+  int64 min_validator = 3;
+  repeated bytes validators = 4;
+}
+
+/**
+calldata format:
+        bytes root_token= 2;
+        int64 root_chainid = 3;
+        bytes child_token= 4;
+        int64 child_chainid = 5;
+        bool  root_or_child = 6; //if root: this network is root, bytes is string or else standard hex address
+ */
+message PosBridgeMapTokenContract{
+  bytes owner_address = 1;
+  bytes calldata = 2;
+}
+
+/**
+calldata format:
+        bytes root_token= 2;
+        int64 root_chainid = 3;
+        bytes child_token= 4;
+        int64 child_chainid = 5;
+        bool  root_or_child = 6; //if root: this network is root, bytes is string or else standard hex address
+ */
+message PosBridgeCleanMapTokenContract{
+   bytes owner_address = 1;
+   bytes calldata = 2;
+}
+
+/*
+calldata format
+      int64 type; // 1: native, 2: urc20, 3: nft
+      string root_token; //if native : unw hardcoded
+      bytes child_address;
+      int64 child_chainid;
+      int64 data; //amount or token id
+*/
+message PosBridgeDepositContract{
+  bytes owner_address = 1;
+  bytes calldata = 2;
+}
+
+/**
+  calldata format:
+    comming soon
+ */
+message PosBridgeDepositExecContract{
+  bytes owner_address = 1;
+  bytes calldata= 2;
+}
+
+
+/**
+    int64 type; // 1: native 2: urc20, 3: nft
+    string childToken
+    uint32 rootChainId
+    address rootAddress
+    uint256 data: amount or tokenid
+ */
+message PosBridgeWithdrawContract{
+  bytes owner_address = 1;
+  bytes calldata= 2;
+}
+
+/**
+  format:
+    comming soon
+ */
+message PosBridgeWithdrawExecContract{
+  bytes owner_address = 1;
+  bytes calldata= 2;
+}

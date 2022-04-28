@@ -24,8 +24,8 @@
       // Account 
       message Account {   
         message Vote {     
-           bytes vote_address = 1;     
-           int64 vote_count = 2;   }   
+        bytes vote_address = 1;     
+        int64 vote_count = 2;   }   
         bytes accout_name = 1;   
         AccountType type = 2;   
         bytes address = 3;   
@@ -209,7 +209,7 @@
      `owner_address`: the address for contract owner – e.g. “_0xu82h…7237_”.  
      `name`: the name for this contract – e.g. “Billscontract”.  
      `total_supply`: the maximum supply of this asset – e.g. _1000000000_.  
-     `unx_num`: the number of UNICHAINIX – e.g._232241_.  
+     `unx_num`: the number of UNW – e.g._232241_.  
      `num`: number of corresponding asset.  
      `start_time`: the starting date of this contract – e.g._20170312_.  
      `end_time`: the expiring date of this contract – e.g. _20170512_.  
@@ -234,7 +234,7 @@
      `owner_address`: the address for contract owner – e.g. “_0xu82h…7237_”.  
      `to_address`: the receiver address – e.g. “_0xu82h…7237_”.  
      `asset_name`: the name of target asset.  
-     `amount`: the amount of drops.
+     `amount`: the amount of Ginza.
      
          message ParticipateAssetIssueContract {
            bytes owner_address = 1;
@@ -242,12 +242,21 @@
            bytes asset_name = 3; 
            int64 amount = 4; 
           }
+          
+     A `DeployContract` contains 2 parameters:  
+     `script`: the script of this contract.  
+     `owner_address`: the address for contract owner – e.g. “_0xu82h…7237_”. 
 
-An `FutureTransferContract` contains 4 parameters:
-`owner_address`: the address of contract owner – e.g. “_0xu92h…7236_”.
-`to_address`: the target address to send fund – e.g. “_0xu82h…7237_”.
-`amount`: the amount of unw to send – e.g. “_10000_”.
-`expire_time`: expire timestamp – e.g. “_1633458714000_”.
+         message DeployContract {   
+           bytes owner_address = 1;   
+           bytes script = 2; 
+     }
+
+     An `FutureTransferContract` contains 4 parameters:
+     `owner_address`: the address of contract owner – e.g. “_0xu92h…7236_”.
+     `to_address`: the target address to send fund – e.g. “_0xu82h…7237_”.
+     `amount`: the amount of unw to send – e.g. “_10000_”.
+     `expire_time`: expire timestamp – e.g. “_1633458714000_”.
 
         message FutureTransferContract {   
           bytes owner_address = 1;   
@@ -292,6 +301,18 @@ An `FutureTransferContract` contains 4 parameters:
             int64 extra_fee_rate = 11;  
             int64 fee_pool = 12;  
             int64 lot =15;  
+            }
+
+
+    An `ExchangeTokenContract` contains 3 parameters:
+    `owner_address`: the address that is the owner of token – e.g. “_0xu92h…7236_”.
+    `token_name`: token name – e.g. “_pwr_”.
+    `amount`: unw amount with ginza factor to exchange – e.g. “_1000000_”.
+
+            message ExchangeTokenContract {
+            bytes owner_address = 1;  
+            string token_name = 2;  
+            int64 amount =3;  
             }
 
     An `TransferTokenOwnerContract` contains 3 parameters:
@@ -384,15 +405,6 @@ An `FutureTransferContract` contains 4 parameters:
         bytes owner_address = 1;  
         string token_name = 2;  
        }
-
-     A `DeployContract` contains 2 parameters:  
-     `script`: the script of this contract.  
-     `owner_address`: the address for contract owner – e.g. “_0xu82h…7237_”. 
-
-         message DeployContract {   
-           bytes owner_address = 1;   
-           bytes script = 2;
-           }                       t
 
 +	Each transaction contains several TXInputs, TXOutputs and other related qualities.
 Input, transaction and head block all require signature.
@@ -780,15 +792,15 @@ Input, transaction and head block all require signature.
         rpc TotalTransaction (EmptyMessage) returns (NumberMessage) {
       
         }
-
         rpc CreateToken (CreateTokenContract) returns (Transaction){
         
         }
-
         rpc TransferTokenOwner (TransferTokenOwnerContract) returns (Transaction){
 
         }
+        rpc ExchangeToken (ExchangeTokenContract) returns (Transaction){
 
+        }
         rpc ContributeTokenFee (ContributeTokenPoolFeeContract) returns (Transaction){
 
         }

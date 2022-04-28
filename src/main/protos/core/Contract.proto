@@ -430,70 +430,76 @@ message PosBridgeSetupContract{
   repeated bytes validators = 4;
 }
 
-/**
-calldata format:
-        bytes root_token= 2;
-        int64 root_chainid = 3;
-        bytes child_token= 4;
-        int64 child_chainid = 5;
-        bool  root_or_child = 6; //if root: this network is root, bytes is string or else standard hex address
- */
 message PosBridgeMapTokenContract{
   bytes owner_address = 1;
   bytes calldata = 2;
+  bytes root_token= 3;
+  int64 root_chainid = 4;
+  bytes child_token= 5;
+  int64 child_chainid = 6;
+  bool  root_or_child = 7; //if root: this network is root, bytes is string or else standard hex address
 }
 
-/**
-calldata format:
-        bytes root_token= 2;
-        int64 root_chainid = 3;
-        bytes child_token= 4;
-        int64 child_chainid = 5;
-        bool  root_or_child = 6; //if root: this network is root, bytes is string or else standard hex address
- */
 message PosBridgeCleanMapTokenContract{
-   bytes owner_address = 1;
-   bytes calldata = 2;
+    bytes owner_address = 1;
+    bytes root_token= 2;
+    int64 root_chainid = 3;
+    bytes child_token= 4;
+    int64 child_chainid = 5;
+    bool  root_or_child = 6; //if root: this network is root, bytes is string or else standard hex address
 }
 
-/*
-calldata format
-      int64 type; // 1: native, 2: urc20, 3: nft
-      string root_token; //if native : unw hardcoded
-      bytes child_address;
-      int64 child_chainid;
-      int64 data; //amount or token id
-*/
 message PosBridgeDepositContract{
   bytes owner_address = 1;
-  bytes calldata = 2;
+  int64 type = 2; // 1: native, 2: urc20, 3: nft
+  string root_token = 3; //if native : unw hardcoded
+  bytes child_address = 4;
+  int64 child_chainid = 5;
+  int64 data = 6; //amount or token id
 }
 
 /**
-  calldata format:
-    comming soon
+  calldata format: comming soon
+  {
+     digest: bytes32,
+     message: {
+       rootTokenAddr: 0x...,
+       rootChainId: 0x...,
+       childTokenAddr: 0x...,
+       childChainId: 0x...,
+       depositedAddr: 0x...,
+       amount: 1000
+     },
+     signatures: bytes[]
+  }
  */
 message PosBridgeDepositExecContract{
   bytes owner_address = 1;
   bytes calldata= 2;
 }
 
-
-/**
-    int64 type; // 1: native 2: urc20, 3: nft
-    string childToken
-    uint32 rootChainId
-    address rootAddress
-    uint256 data: amount or tokenid
- */
 message PosBridgeWithdrawContract{
   bytes owner_address = 1;
-  bytes calldata= 2;
+  int64 type = 2; // 1: native 2: urc20, 3: nft
+  string childToken = 3;
+  uint32 rootChainId = 4;
+  bytes rootAddress = 5;
+  int64 data = 6; //amount or tokenid
 }
 
 /**
-  format:
-    comming soon
+  calldata format: comming soon
+     digest: bytes32,
+     signatures: bytes[]
+     message: {
+       childAddr: 0x...,
+       childToken: 0x...,
+       rootToken: 0x...,
+       rootAddress: 0x...,
+       rootChainId: 0x...,
+       withdrawedAddr: 0x...
+       amount: 1000
+     }
  */
 message PosBridgeWithdrawExecContract{
   bytes owner_address = 1;

@@ -1404,6 +1404,92 @@ public class RpcApiService implements Service {
     }
 
     /**
+     * POSBridge
+     */
+    @Override
+    public void posBridgeSetup(Contract.PosBridgeSetupContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeSetupContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeMapToken(Contract.PosBridgeMapTokenContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeMapTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeCleanMapToken(Contract.PosBridgeCleanMapTokenContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeCleanMapTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeDeposit(Contract.PosBridgeDepositContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeDepositContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeDepositExec(Contract.PosBridgeDepositExecContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeDepositExecContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeWithdraw(Contract.PosBridgeWithdrawContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeWithdrawContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeWithdrawExec(Contract.PosBridgeWithdrawExecContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeWithdrawExecContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
      */
     @Override
     public void createToken(Contract.CreateTokenContract request, StreamObserver<Transaction> responseObserver) {

@@ -498,6 +498,30 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           owner = contractParameter.unpack(TransferNftTokenContract.class).getOwnerAddress();
           break;
 
+        /**
+         * POSBridge
+         */
+        case PosBridgeSetupContract:
+          owner = contractParameter.unpack(PosBridgeSetupContract.class).getOwnerAddress();
+          break;
+        case PosBridgeMapTokenContract:
+          owner = contractParameter.unpack(PosBridgeMapTokenContract.class).getOwnerAddress();
+          break;
+        case PosBridgeCleanMapTokenContract:
+          owner = contractParameter.unpack(PosBridgeCleanMapTokenContract.class).getOwnerAddress();
+          break;
+        case PosBridgeDepositContract:
+          owner = contractParameter.unpack(PosBridgeDepositContract.class).getOwnerAddress();
+          break;
+        case PosBridgeDepositExecContract:
+          owner = contractParameter.unpack(PosBridgeDepositExecContract.class).getOwnerAddress();
+          break;
+        case PosBridgeWithdrawContract:
+          owner = contractParameter.unpack(PosBridgeWithdrawContract.class).getOwnerAddress();
+          break;
+        case PosBridgeWithdrawExecContract:
+          owner = contractParameter.unpack(PosBridgeWithdrawExecContract.class).getOwnerAddress();
+          break;
         default:
           return null;
       }
@@ -696,6 +720,30 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         break;
       case TransferNftTokenContract:
         clazz = TransferNftTokenContract.class;
+        break;
+      /**
+       * POSBridge
+       */
+      case PosBridgeSetupContract:
+        clazz = PosBridgeSetupContract.class;
+        break;
+      case PosBridgeMapTokenContract:
+        clazz = PosBridgeMapTokenContract.class;
+        break;
+      case PosBridgeCleanMapTokenContract:
+        clazz = PosBridgeCleanMapTokenContract.class;
+        break;
+      case PosBridgeDepositContract:
+        clazz = PosBridgeDepositContract.class;
+        break;
+      case PosBridgeDepositExecContract:
+        clazz = PosBridgeDepositExecContract.class;
+        break;
+      case PosBridgeWithdrawContract:
+        clazz = PosBridgeWithdrawContract.class;
+        break;
+      case PosBridgeWithdrawExecContract:
+        clazz = PosBridgeWithdrawExecContract.class;
         break;
       //@todo add other contract
       default:
@@ -1025,6 +1073,17 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case ApproveForAllNftTokenContract:
       case TransferNftTokenContract:
         return BLOCK_VERSION_5;
+      /**
+       * POSBridge
+       */
+      case PosBridgeSetupContract:
+      case PosBridgeMapTokenContract:
+      case PosBridgeCleanMapTokenContract:
+      case PosBridgeDepositContract:
+      case PosBridgeDepositExecContract:
+      case PosBridgeWithdrawContract:
+      case PosBridgeWithdrawExecContract:
+        return BLOCK_VERSION_6;
       case TransferTokenOwnerContract:
       case ExchangeTokenContract:
         return BLOCK_VERSION_3;

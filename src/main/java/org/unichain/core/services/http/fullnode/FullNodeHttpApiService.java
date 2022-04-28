@@ -65,6 +65,22 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private NftTransferTokenServlet nftTransferTokenServlet;
 
+  //POSBridge
+  @Autowired
+  private PosBridgeCleanMapTokenServlet posBridgeCleanMapTokenServlet;
+  @Autowired
+  private PosBridgeDepositExecServlet posBridgeDepositExecServlet;
+  @Autowired
+  private PosBridgeDepositServlet posBridgeDepositServlet;
+  @Autowired
+  private PosBridgeMapTokenServlet posBridgeMapTokenServlet;
+  @Autowired
+  private PosBridgeSetupServlet posBridgeSetupServlet;
+  @Autowired
+  private PosBridgeWithdrawExecServlet posBridgeWithdrawExecServlet;
+  @Autowired
+  private PosBridgeWithdrawServlet posBridgeWithdrawServlet;
+
 
   @Autowired
   private CreateTokenServlet createTokenServlet;
@@ -315,6 +331,17 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(nftApproveTokenServlet), "/approvenfttoken");
       context.addServlet(new ServletHolder(nftApprovalForAllServlet), "/approveforallnfttoken");
       context.addServlet(new ServletHolder(nftTransferTokenServlet), "/transfernfttoken");
+
+      /**
+       * POSBridge
+       */
+      context.addServlet(new ServletHolder(posBridgeSetupServlet), "/posbridgesetup");
+      context.addServlet(new ServletHolder(posBridgeMapTokenServlet), "/posbridgemaptoken");
+      context.addServlet(new ServletHolder(posBridgeCleanMapTokenServlet), "/posbridgecleanmaptoken");
+      context.addServlet(new ServletHolder(posBridgeDepositServlet), "/posbridgedeposit");
+      context.addServlet(new ServletHolder(posBridgeDepositExecServlet), "/posbridgedepositexec");
+      context.addServlet(new ServletHolder(posBridgeWithdrawServlet), "/posbridgewithdraw");
+      context.addServlet(new ServletHolder(posBridgeWithdrawExecServlet), "/posbridgewithdrawexec");
 
       context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
       context.addServlet(new ServletHolder(transferTokenOwnerServlet), "/transfertokenowner");

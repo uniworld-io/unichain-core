@@ -212,6 +212,24 @@ public class ActuatorFactory {
         return new NftBurnTokenActuator(contract.getParameter(), manager);
       case TransferNftTokenContract:
         return new NftTransferTokenActuator(contract.getParameter(), manager);
+
+      /**
+        POSBridge
+       */
+      case PosBridgeSetupContract:
+        return new PosBridgeSetupActuator(contract.getParameter(), manager);
+      case PosBridgeMapTokenContract:
+        return new PosBridgeMapTokenActuator(contract.getParameter(), manager);
+      case PosBridgeCleanMapTokenContract:
+        return new PosBridgeCleanMapTokenActuator(contract.getParameter(), manager);
+      case PosBridgeDepositContract:
+        return new PosBridgeDepositActuator(contract.getParameter(), manager);
+      case PosBridgeDepositExecContract:
+        return new PosBridgeDepositExecActuator(contract.getParameter(), manager);
+      case PosBridgeWithdrawContract:
+        return new PosBridgeWithdrawActuator(contract.getParameter(), manager);
+      case PosBridgeWithdrawExecContract:
+        return new PosBridgeWithdrawExecActuator(contract.getParameter(), manager);
       default:
         logger.warn("un-supported contract type {}!", contract.getType().name());
         return null;

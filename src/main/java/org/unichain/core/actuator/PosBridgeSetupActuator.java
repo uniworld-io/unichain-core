@@ -21,22 +21,23 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
+import org.unichain.common.utils.Base58;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.Wallet;
+import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.TransferNftTokenContract;
+import org.unichain.protos.Contract.PosBridgeSetupContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
-//@todo later
+import static org.unichain.core.services.http.utils.Util.*;
+
 @Slf4j(topic = "actuator")
 public class PosBridgeSetupActuator extends AbstractActuator {
 
@@ -48,30 +49,29 @@ public class PosBridgeSetupActuator extends AbstractActuator {
     public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
         var fee = calcFee();
         try {
-            val ctx = this.contract.unpack(TransferNftTokenContract.class);
-            var accountStore = dbManager.getAccountStore();
-            var tokenStore = dbManager.getNftTokenStore();
+            val ctx = this.contract.unpack(PosBridgeSetupContract.class);
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
-            var toAddr = ctx.getToAddress();
-            var toAddrBytes = toAddr.toByteArray();
-            var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
-
-            //create new acc if not exist
-            if (!accountStore.has(toAddrBytes)) {
-                fee = Math.addExact(fee, dbManager.createNewAccount(toAddr));
+            var configStore = dbManager.getPosBridgeConfigStore();
+            var config = configStore.get();
+            if(ctx.hasField(POSBRIDGE_NEW_OWNER))
+                config.setNewOwner(ctx.getNewOwner().toByteArray());
+            if(ctx.hasField(POSBRIDGE_MIN_VALIDATOR))
+                config.setMinValidator(ctx.getMinValidator());
+            if(ctx.hasField(POSBRIDGE_VALIDATOR_F1))
+                config.setConsensusF1(ctx.getConsensusF1());
+            if(ctx.hasField(POSBRIDGE_VALIDATOR_F2))
+                config.setConsensusF2(ctx.getConsensusF2());
+            if(ctx.hasField(POSBRIDGE_VALIDATORS))
+            {
+                //clear then set all validators
+                var hexValidators= ctx.getValidatorsList()
+                        .stream()
+                        .map(v -> ByteArray.toHexString(v.toByteArray()))
+                        .collect(Collectors.toList());
+                config.clearThenPutValidators(hexValidators);
             }
-
-            var token = tokenStore.get(tokenId);
-            dbManager.removeNftToken(tokenId);
-
-            //then set new info and save
-            token.setOwner(toAddr);
-            token.setLastOperation(dbManager.getHeadBlockTimeStamp());
-            token.clearApproval();
-            token.clearNext();
-            token.clearPrev();
-            dbManager.saveNftToken(token);
-
+            config.setInitialized(true);
+            configStore.put(config);
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
@@ -88,34 +88,33 @@ public class PosBridgeSetupActuator extends AbstractActuator {
         try {
             Assert.notNull(contract, "No contract!");
             Assert.notNull(dbManager, "No dbManager!");
-            Assert.isTrue(contract.is(TransferNftTokenContract.class), "contract type error,expected type [TransferNftTokenContract],real type[" + contract.getClass() + "]");
+            Assert.isTrue(contract.is(PosBridgeSetupContract.class), "contract type error, expected type [PosBridgeSetupContract], real type[" + contract.getClass() + "]");
             var fee = calcFee();
-            val ctx = this.contract.unpack(TransferNftTokenContract.class);
-            var accountStore = dbManager.getAccountStore();
-            var tokenStore = dbManager.getNftTokenStore();
-            var relationStore = dbManager.getNftAccountTokenStore();
-            var ownerAddr = ctx.getOwnerAddress().toByteArray();
-            var toAddr = ctx.getToAddress().toByteArray();
-            var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
+            val ctx = this.contract.unpack(PosBridgeSetupContract.class);
+            var ownerAcc = dbManager.getAccountStore().get(ctx.getOwnerAddress().toByteArray());
+            var configStore = dbManager.getPosBridgeConfigStore();
+            var config = configStore.get();
 
-            Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Owner address and to address must be not the same");
-            Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");
-            Assert.isTrue(accountStore.has(ownerAddr), "Owner, approval or approval-for-all not exist");
-            Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");
-            var nft = tokenStore.get(tokenId);
-            var nftOwner = nft.getOwner();
-            var relation = relationStore.get(nftOwner);
+            //check permission
+            Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), Base58.decode(PosBridgeConfigCapsule.GENESIS_ADMIN_WALLET)), "unmatched owner");
 
-            Assert.isTrue(Arrays.equals(ownerAddr, nftOwner)
-                    || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
-                    || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to transfer NFT token");
-
-            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough fee");
-
-            if (accountStore.has(toAddr)) {
-                fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+            if(ctx.hasField(POSBRIDGE_NEW_OWNER)) {
+                Assert.isTrue(Wallet.addressValid(ctx.getOwnerAddress().toByteArray()), "Invalid new owner address");
             }
-            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
+            if(ctx.hasField(POSBRIDGE_MIN_VALIDATOR)) {
+                Assert.isTrue(ctx.getMinValidator() >= 1 && ctx.getMinValidator() <= 100, "Invalid new min validator");
+            }
+            if(ctx.hasField(POSBRIDGE_VALIDATOR_F1)) {
+                Assert.isTrue(ctx.hasField(POSBRIDGE_VALIDATOR_F2), "Missing consensus F2");
+                Assert.isTrue(ctx.getConsensusF1() >= 1 &&  ctx.getConsensusF2() >= 1 && ctx.getConsensusF1() <= ctx.getConsensusF2(), "Invalid consensus rate F1/F2");
+            }
+            if(ctx.hasField(POSBRIDGE_MIN_VALIDATOR)) {
+                Assert.isTrue(ctx.getMinValidator() >= 1 && ctx.getMinValidator() <= 100, "Invalid new min validator");
+            }
+            if(ctx.hasField(POSBRIDGE_VALIDATORS)){
+                ctx.getValidatorsList().forEach(v -> Assert.isTrue(Wallet.addressValid(v.toByteArray()), "Invalid validator address -->" + v));
+            }
+            Assert.isTrue( ownerAcc.getBalance() >= fee, "Balance is not sufficient.");
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -125,11 +124,11 @@ public class PosBridgeSetupActuator extends AbstractActuator {
 
     @Override
     public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-        return contract.unpack(TransferNftTokenContract.class).getOwnerAddress();
+        return contract.unpack(PosBridgeSetupContract.class).getOwnerAddress();
     }
 
     @Override
     public long calcFee() {
-        return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
+        return dbManager.getDynamicPropertiesStore().getNftIssueFee();//500 UNW default
     }
 }

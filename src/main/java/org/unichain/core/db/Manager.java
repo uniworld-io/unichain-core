@@ -24,7 +24,6 @@ import org.unichain.common.logsfilter.EventPluginLoader;
 import org.unichain.common.logsfilter.FilterQuery;
 import org.unichain.common.logsfilter.capsule.*;
 import org.unichain.common.logsfilter.trigger.ContractEventTrigger;
-import org.unichain.common.logsfilter.trigger.ContractLogTrigger;
 import org.unichain.common.logsfilter.trigger.ContractTrigger;
 import org.unichain.common.logsfilter.trigger.Trigger;
 import org.unichain.common.overlay.discover.node.Node;
@@ -103,8 +102,15 @@ public class Manager {
   @Getter
   @Autowired
   private DelegationStore delegationStore;
+
   @Autowired
+  @Getter
   private AccountStore accountStore;
+
+  @Autowired
+  @Getter
+  private PosBridgeConfigStore posBridgeConfigStore;
+
   @Autowired
   private TransactionStore transactionStore;
   @Autowired(required = false)
@@ -1761,6 +1767,7 @@ public class Manager {
     closeOneStore(nftAccountTemplateStore);
     closeOneStore(nftAccountTokenStore);
     closeOneStore(accountStore);
+    closeOneStore(posBridgeConfigStore);
     closeOneStore(blockStore);
     closeOneStore(blockIndexStore);
     closeOneStore(accountIdIndexStore);

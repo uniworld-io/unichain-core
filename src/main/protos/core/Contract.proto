@@ -428,6 +428,8 @@ message PosBridgeSetupContract{
   bytes new_owner= 2;
   int64 min_validator = 3;
   repeated bytes validators = 4;
+  uint32 consensus_f1 = 5;
+  uint32 consensus_f2 = 6; //consensus rate: f1/f2 = 2/3 for example
 }
 
 message PosBridgeMapTokenContract{

@@ -933,4 +933,5 @@ message PosBridgeConfig{
   int64 consensus_f1 =3;
   int64 consensus_f2 =4;
   map<string, string> validators = 5;
+  bool initialized = 6;
 }

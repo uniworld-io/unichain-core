@@ -926,3 +926,11 @@ message NftTokenApproveRelation{
   bytes next = 3;
   bytes prev = 4;
 }
+
+message PosBridgeConfig{
+  bytes owner_address = 1;
+  int64 min_validator = 2;
+  int64 consensus_f1 =3;
+  int64 consensus_f2 =4;
+  map<string, string> validators = 5;
+}

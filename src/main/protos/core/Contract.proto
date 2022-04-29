@@ -421,7 +421,7 @@ message TransferNftTokenContract{
 
 
 /**
- all calldata is abi params encoded
+  PoS Bridge contracts
  */
 message PosBridgeSetupContract{
   bytes owner_address = 1;
@@ -459,9 +459,10 @@ message PosBridgeDepositContract{
 }
 
 /**
-  calldata format: comming soon
+  calldata format:
   {
      digest: bytes32,
+     signatures: bytes[]
      message: {
        rootTokenAddr: 0x...,
        rootChainId: 0x...,
@@ -469,8 +470,7 @@ message PosBridgeDepositContract{
        childChainId: 0x...,
        depositedAddr: 0x...,
        amount: 1000
-     },
-     signatures: bytes[]
+     }
   }
  */
 message PosBridgeDepositExecContract{
@@ -488,7 +488,8 @@ message PosBridgeWithdrawContract{
 }
 
 /**
-  calldata format: comming soon
+  calldata format:
+  {
      digest: bytes32,
      signatures: bytes[]
      message: {
@@ -500,6 +501,7 @@ message PosBridgeWithdrawContract{
        withdrawedAddr: 0x...
        amount: 1000
      }
+  }
  */
 message PosBridgeWithdrawExecContract{
   bytes owner_address = 1;

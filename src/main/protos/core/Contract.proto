@@ -434,12 +434,11 @@ message PosBridgeSetupContract{
 
 message PosBridgeMapTokenContract{
   bytes owner_address = 1;
-  bytes calldata = 2;
-  bytes root_token= 3;
-  int64 root_chainid = 4;
-  bytes child_token= 5;
-  int64 child_chainid = 6;
-  bool  root_or_child = 7; //if root: this network is root, bytes is string or else standard hex address
+  bytes root_token= 2;
+  int64 root_chainid = 3;
+  bytes child_token= 4;
+  int64 child_chainid = 5;
+  bool  root_or_child = 6; //if root: this network is root, bytes is string or else standard hex address
 }
 
 message PosBridgeCleanMapTokenContract{

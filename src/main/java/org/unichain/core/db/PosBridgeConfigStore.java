@@ -21,7 +21,7 @@ public class PosBridgeConfigStore extends UnichainStoreWithRevoking<PosBridgeCon
     {
       //initialize default config
       var config = Protocol.PosBridgeConfig.newBuilder()
-              .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.GENESIS_ADMIN_WALLET)))
+              .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_GENESIS_ADMIN_WALLET)))
               .setMinValidator(3)
               .setConsensusF1(2)
               .setConsensusF2(3)

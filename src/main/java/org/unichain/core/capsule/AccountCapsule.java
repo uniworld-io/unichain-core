@@ -85,7 +85,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     if (withDefaultPermission) {
       Permission owner = createDefaultOwnerPermission(contract.getAccountAddress());
       Permission active = createDefaultActivePermission(contract.getAccountAddress(), manager);
-
       this.account = Account.newBuilder()
           .setType(contract.getType())
           .setAddress(contract.getAccountAddress())

@@ -28,7 +28,10 @@ import java.util.List;
 @Slf4j(topic = "capsule")
 public class PosBridgeConfigCapsule implements ProtoCapsule<Protocol.PosBridgeConfig> {
   public static final byte[] DEFAULT_KEY = ArrayUtils.addAll(Util.stringAsBytesUppercase("PosBridgeConfig"));
-  public static final String GENESIS_ADMIN_WALLET = "UmKK513F4s81Lmp1xW3VLbjewVUPBDVm1k";
+  public static final String POSBRIDGE_GENESIS_ADMIN_WALLET = "UmKK513F4s81Lmp1xW3VLbjewVUPBDVm1k";
+  public static final String POSBRIDGE_PREDICATE_NATIVE_WALLET = "UeUDL12QJYvyFyQhreUnjvtV2yMoRMrecg";
+  public static final String POSBRIDGE_PREDICATE_TOKEN_WALLET = "UikVt2k4YfmkrDyp7cnJxKxVdz7sjsd5cN";
+  public static final String POSBRIDGE_PREDICATE_NFT_WALLET = "Uh7L9ekSh4ckGHmRWRY7mD8dRAmMHPo131";
 
   private Protocol.PosBridgeConfig config;
   private byte[] key;
@@ -72,6 +75,10 @@ public class PosBridgeConfigCapsule implements ProtoCapsule<Protocol.PosBridgeCo
 
   public void setNewOwner(byte[] newOwner){
     this.config = this.config.toBuilder().setOwnerAddress(ByteString.copyFrom(newOwner)).build();
+  }
+
+  public byte[] getOwner(){
+    return this.config.getOwnerAddress().toByteArray();
   }
 
   public void setMinValidator(long minValidator){

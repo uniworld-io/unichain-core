@@ -934,4 +934,12 @@ message PosBridgeConfig{
   int64 consensus_f2 =4;
   map<string, string> validators = 5;
   bool initialized = 6;
+  bytes native_predicate_address = 7;
+  bytes token_predicate_address = 8;
+  bytes nft_predicate_address = 9;
+}
+
+message PosBridgeTokenMapping{
+  map<string, string>  tokens = 1;//chainid_addr --> chainid_addr, addr: hex format, symbol: keep unchanged
+  int64 type = 2; //1:native, 2: erc20 3: nft
 }

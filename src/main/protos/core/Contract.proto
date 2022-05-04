@@ -134,6 +134,7 @@ message CreateTokenContract {
   int64 exch_num = 18; //exchange to #token
   int64 critical_update_time = 19;//critical update time, ex: fee, ownership...
   int64 create_acc_fee = 20; //create new account fee
+  bytes address = 21; //address for compatible
 }
 
 message TransferTokenOwnerContract {
@@ -438,7 +439,7 @@ message PosBridgeMapTokenContract{
   int64 root_chainid = 3;
   bytes child_token= 4;
   int64 child_chainid = 5;
-  bool  root_or_child = 6; //if root: this network is root, bytes is string or else standard hex address
+  uint32 type = 6; //1:native, 2:erc20, 3:nft
 }
 
 message PosBridgeCleanMapTokenContract{
@@ -447,15 +448,15 @@ message PosBridgeCleanMapTokenContract{
     int64 root_chainid = 3;
     bytes child_token= 4;
     int64 child_chainid = 5;
-    bool  root_or_child = 6; //if root: this network is root, bytes is string or else standard hex address
+    uint32 type = 6; //1:native, 2:erc20, 3:nft
 }
 
 message PosBridgeDepositContract{
   bytes owner_address = 1;
-  int64 type = 2; // 1: native, 2: urc20, 3: nft
-  string root_token = 3; //if native : unw hardcoded
-  bytes child_address = 4;
-  int64 child_chainid = 5;
+  uint32 type = 2; //1:native, 2:erc20, 3:nft
+  string root_token = 3; //if native : UNW hardcoded
+  int64 child_chainid = 4;
+  bytes child_address = 5;
   int64 data = 6; //amount or token id
 }
 

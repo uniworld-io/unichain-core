@@ -22,10 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
-import org.unichain.common.utils.Base58;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -96,7 +94,7 @@ public class PosBridgeSetupActuator extends AbstractActuator {
             var config = configStore.get();
 
             //check permission
-            Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), Base58.decode(PosBridgeConfigCapsule.GENESIS_ADMIN_WALLET)), "unmatched owner");
+            Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), config.getOwner()), "unmatched owner");
 
             if(ctx.hasField(POSBRIDGE_NEW_OWNER)) {
                 Assert.isTrue(Wallet.addressValid(ctx.getOwnerAddress().toByteArray()), "Invalid new owner address");
@@ -129,6 +127,6 @@ public class PosBridgeSetupActuator extends AbstractActuator {
 
     @Override
     public long calcFee() {
-        return dbManager.getDynamicPropertiesStore().getNftIssueFee();//500 UNW default
+        return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
     }
 }

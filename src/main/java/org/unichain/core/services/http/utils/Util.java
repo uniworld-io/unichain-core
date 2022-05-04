@@ -151,7 +151,7 @@ public class Util {
     return Hash.sha3omit12(combined);
   }
 
-  //@todo move switchcase to mapping to prevent duplicated code
+  //@todo move switch-case to mapping to prevent duplicated code
   //@addon declare new tx
   public static JSONObject printTransactionToJSON(Transaction transaction, boolean selfType) {
     JSONObject jsonTransaction = JSONObject.parseObject(JsonFormat.printToString(transaction, selfType));

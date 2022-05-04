@@ -71,12 +71,9 @@ import static org.unichain.common.utils.ByteUtil.stripLeadingZeroes;
 
 @Slf4j(topic = "VM")
 public class Program {
-
   private static final int MAX_DEPTH = 64;
-  //Max size for stack checks
   private static final int MAX_STACK_SIZE = 1024;
-  private static final String VALIDATE_FOR_SMART_CONTRACT_FAILURE =
-      "validateForSmartContract failure:%s";
+  private static final String VALIDATE_FOR_SMART_CONTRACT_FAILURE = "validateForSmartContract failure:%s";
   private static final String INVALID_TOKEN_ID_MSG = "not valid token id";
 
   private BlockCapsule blockCap;
@@ -1222,9 +1219,7 @@ public class Program {
   public void createContract2(DataWord value, DataWord memStart, DataWord memSize, DataWord salt) {
     byte[] senderAddress = convertToUnichainAddress(this.getCallerAddress().getLast20Bytes());
     byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
-
-    byte[] contractAddress = Wallet
-        .generateContractAddress2(senderAddress, salt.getData(), programCode);
+    byte[] contractAddress = Wallet.generateContractAddress2(senderAddress, salt.getData(), programCode);
     createContractImpl(value, programCode, contractAddress, true);
   }
 

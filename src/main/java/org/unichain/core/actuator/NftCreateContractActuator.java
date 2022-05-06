@@ -21,16 +21,18 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
+import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
+import org.unichain.common.utils.AddressUtil;
 import org.unichain.common.utils.StringUtil;
-import org.unichain.core.capsule.NftTemplateCapsule;
-import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -49,9 +51,30 @@ public class NftCreateContractActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(CreateNftTemplateContract.class);
-      logger.info("CreateNftTemplateContract -->" + ctx.toString());
       var owner = ctx.getOwnerAddress().toByteArray();
-      dbManager.saveNftTemplate(new NftTemplateCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
+      var walletInfo = AddressUtil.generateAddress(dbManager);
+      Assert.notNull(walletInfo, "failed to generate wallet address!!!");
+      var tokenAddr = Hex.decodeHex(walletInfo.addressHex);
+
+      dbManager.saveNftTemplate(new NftTemplateCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0, tokenAddr));
+
+      //indexing contract addr
+      var symbol = ctx.getContract().toUpperCase();
+      var tokenKey = symbol.getBytes();
+      var index1Store = dbManager.getNftAddrSymbolIndexStore();
+      var index2Store = dbManager.getNftSymbolAddrIndexStore();
+      var index1 = new TokenAddressSymbolIndexCapsule(Protocol.TokenAddressSymbolIndex.newBuilder().build());
+      var index2 = new TokenSymbolAddressIndexCapsule(Protocol.TokenSymbolAddressIndex.newBuilder().build());
+      index1.setSymbol(symbol);
+      index1Store.put(tokenAddr, index1);
+      index2.setAddress(tokenAddr);
+      index2Store.put(tokenKey, index2);
+
+      //register new account with type assetissue
+      var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
+      var tokenAccount = new AccountCapsule(ByteString.copyFrom(tokenAddr), Protocol.AccountType.AssetIssue, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+      dbManager.getAccountStore().put(tokenAddr, tokenAccount);
+
       chargeFee(owner, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
@@ -111,7 +134,6 @@ public class NftCreateContractActuator extends AbstractActuator {
   public long calcFee() {
     return dbManager.getDynamicPropertiesStore().getNftIssueFee();//500 UNW default
   }
-
 }
 
 

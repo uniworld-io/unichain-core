@@ -19,9 +19,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
-import org.unichain.common.crypto.Hash;
-import org.unichain.common.utils.ByteUtil;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.NftTemplate;
 
@@ -43,7 +40,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
     this.template = template;
   }
 
-  public NftTemplateCapsule(CreateNftTemplateContract ctx, long lastOperation, long tokenIndex) {
+  public NftTemplateCapsule(CreateNftTemplateContract ctx, long lastOperation, long tokenIndex, byte[] address) {
     var builder = NftTemplate.newBuilder()
             .setContract(ctx.getContract().toUpperCase())
             .setName(ctx.getName())
@@ -51,7 +48,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
             .setTotalSupply(ctx.getTotalSupply())
             .setTokenIndex(tokenIndex)
             .setLastOperation(lastOperation)
-            .setContractAddress(generateNftContractAddress(ctx));
+            .setAddress(ByteString.copyFrom(address));
 
     if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER))
       builder.setMinter(ctx.getMinter());
@@ -187,6 +184,10 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
     template = template.toBuilder().setPrevOfMinter(ByteString.copyFrom(prev)).build();
   }
 
+  public void setAddress(byte[] address){
+    template = template.toBuilder().setAddress(ByteString.copyFrom(address)).build();
+  }
+
   public boolean hasNextOfMinter(){
     return this.template.hasField(NFT_TEMPLATE_FIELD_NEXT_OF_MINTER);
   }
@@ -201,12 +202,5 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
 
   public byte[] getPrevOfMinter(){
     return template.getPrevOfMinter().toByteArray();
-  }
-
-  private ByteString generateNftContractAddress(CreateNftTemplateContract ctx) {
-    byte[] addressByte = ctx.getOwnerAddress().toByteArray();
-    byte[] contractByte = Util.stringAsBytesUppercase(ctx.getContract());
-    byte[] mergedData = ByteUtil.merge(addressByte, Hash.sha3(contractByte));
-    return ByteString.copyFrom(Hash.sha3omit12(mergedData));
   }
 }

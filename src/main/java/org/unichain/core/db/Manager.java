@@ -131,6 +131,16 @@ public class Manager {
   private AssetIssueStore assetIssueStore;
   @Autowired
   private TokenPoolStore tokenPoolStore;
+
+  @Autowired
+  private TokenAddrSymbolIndexStore tokenAddrSymbolIndexStore;
+  @Autowired
+  private TokenSymbolAddrIndexStore tokenSymbolAddrIndexStore;
+  @Autowired
+  private NftAddrSymbolIndexStore nftAddrSymbolIndexStore;
+  @Autowired
+  private NftSymbolAddrIndexStore nftSymbolAddrIndexStore;
+
   @Autowired
   private FutureTokenStore futureTokenStore;
 
@@ -1804,6 +1814,12 @@ public class Manager {
     closeOneStore(tokenPoolStore);
     closeOneStore(futureTokenStore);
     closeOneStore(futureTransferStore);
+
+    closeOneStore(tokenAddrSymbolIndexStore);
+    closeOneStore(tokenSymbolAddrIndexStore);
+    closeOneStore(nftAddrSymbolIndexStore);
+    closeOneStore(nftSymbolAddrIndexStore);
+
     logger.info("******** end to close db ********");
   }
 

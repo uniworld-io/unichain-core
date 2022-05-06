@@ -490,12 +490,13 @@ message PosBridgeWithdrawContract{
 }
 
 /**
+  RLP encoded data
   calldata format:
   {
      digest: bytes32,
      signatures: bytes[]
      message: {
-       childAddr: 0x...,
+       childchainId: 0x...,
        childToken: 0x...,
        rootToken: 0x...,
        rootAddress: 0x...,
@@ -507,5 +508,7 @@ message PosBridgeWithdrawContract{
  */
 message PosBridgeWithdrawExecContract{
   bytes owner_address = 1;
-  bytes calldata= 2;
+  bytes digest= 2;
+  bytes signatures = 3;
+  bytes message = 4;
 }

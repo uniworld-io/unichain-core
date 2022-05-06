@@ -18,6 +18,7 @@ package org.unichain.core.capsule;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.protos.Contract;
@@ -204,14 +205,19 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
   }
 
   public void burnToken(long amount) throws ContractExeException {
-    if(amount <= 0)
-      throw  new ContractExeException("mined token amount must greater than ZERO");
+    Assert.isTrue(amount > 0, "mint token amount must be positive");
     setBurnedToken(Math.addExact(createTokenContract.getBurned(), amount));
     setTotalSupply(Math.subtractExact(createTokenContract.getTotalSupply(), amount));
   }
 
   public void setOriginFeePool(long originFeePool) {
     this.createTokenContract = this.createTokenContract.toBuilder().setFeePoolOrigin(originFeePool).build();
+  }
+
+  public void setAddress(byte[] address) {
+    this.createTokenContract = this.createTokenContract.toBuilder()
+            .setAddress(ByteString.copyFrom(address))
+            .build();
   }
 
   public void setLatestOperationTime(long timestamp) {
@@ -223,30 +229,23 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
   }
 
   public void setFeePool(long feePool) {
-    this.createTokenContract = this.createTokenContract.toBuilder()
-            .setFeePool(feePool).build();
+    this.createTokenContract = this.createTokenContract.toBuilder().setFeePool(feePool).build();
   }
 
   public void setUrl(String newUrl) {
-    this.createTokenContract = this.createTokenContract.toBuilder()
-        .setUrl(newUrl).build();
+    this.createTokenContract = this.createTokenContract.toBuilder().setUrl(newUrl).build();
   }
 
   public void setDescription(String description) {
-    this.createTokenContract = this.createTokenContract.toBuilder()
-        .setDescription(description).build();
+    this.createTokenContract = this.createTokenContract.toBuilder().setDescription(description).build();
   }
 
   public void setBurnedToken(long amount){
-    this.createTokenContract = this.createTokenContract.toBuilder()
-            .setBurned(amount).build();
+    this.createTokenContract = this.createTokenContract.toBuilder().setBurned(amount).build();
   }
 
   public void mineToken(long amount) throws ContractExeException{
-    if(amount <= 0)
-      throw  new ContractExeException("mined token amount must greater than ZERO");
-    if(getMaxSupply() - getBurnedToken() - getTotalSupply() < amount)
-      throw  new ContractExeException("mined token amount exceed amount available");
+    Assert.isTrue(amount > 0 && (getMaxSupply() - getBurnedToken() - getTotalSupply() >= amount), "mint token amount must be positive and do not exceed mint capacity");
     setTotalSupply(getTotalSupply() + amount);
   }
 
@@ -255,7 +254,6 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
   }
 
   public void setLot(long lot){
-    createTokenContract = createTokenContract.toBuilder()
-            .setLot(lot).build();
+    createTokenContract = createTokenContract.toBuilder().setLot(lot).build();
   }
 }

@@ -64,6 +64,10 @@ public class PosBridgeTokenMappingCapsule implements ProtoCapsule<Protocol.PosBr
             .build();
   }
 
+  public String getFirstToken(){
+     return (String)tokenMap.getTokensMap().keySet().toArray()[0];
+  }
+
   public boolean clearToken(String token){
     this.tokenMap = this.tokenMap.toBuilder()
             .removeTokens(token)

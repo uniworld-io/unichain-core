@@ -21,22 +21,29 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.ByteArray;
+import org.unichain.common.utils.SignExt;
 import org.unichain.core.Wallet;
+import org.unichain.core.capsule.PosBridgeConfigCapsule;
+import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.TransferNftTokenContract;
+import org.unichain.protos.Contract;
+import org.unichain.protos.Contract.PosBridgeWithdrawExecContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.rlp.RlpDecoder;
+import org.web3j.rlp.RlpString;
 
-import java.util.Arrays;
+import java.math.BigInteger;
+import java.util.HashMap;
 
-//@todo later
+import static org.unichain.core.capsule.PosBridgeTokenMappingCapsule.*;
+
 @Slf4j(topic = "actuator")
 public class PosBridgeWithdrawExecActuator extends AbstractActuator {
 
@@ -48,33 +55,87 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
     public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
         var fee = calcFee();
         try {
-            val ctx = this.contract.unpack(TransferNftTokenContract.class);
+            val ctx = this.contract.unpack(PosBridgeWithdrawExecContract.class);
             var accountStore = dbManager.getAccountStore();
-            var tokenStore = dbManager.getNftTokenStore();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
-            var toAddr = ctx.getToAddress();
-            var toAddrBytes = toAddr.toByteArray();
-            var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
+            var ownerAcc = accountStore.get(ownerAddr);
 
-            //create new acc if not exist
-            if (!accountStore.has(toAddrBytes)) {
-                fee = Math.addExact(fee, dbManager.createNewAccount(toAddr));
+            //uint childchain_id, address childToken, address receiver, uint256 value
+            var rlpMsg = RlpDecoder.decode(ctx.getMessage().toByteArray()).getValues();
+            var childChainId = (new BigInteger(((RlpString)rlpMsg.get(0)).getBytes())).longValue();
+            var childToken = ByteArray.toHexString(((RlpString)rlpMsg.get(1)).getBytes());
+
+            var receiverAddr = ((RlpString)rlpMsg.get(2)).getBytes();
+            var tokenData = (new BigInteger(((RlpString)rlpMsg.get(3)).getBytes())).longValue();
+
+            //make sure token mapped
+            var childKeyStr = (Long.toHexString(childChainId) + "_" + childToken);
+            var mapInfo = dbManager.getPosBridgeTokenMapChild2RootStore().get(childKeyStr.getBytes());
+            var rootToken = mapInfo.getFirstToken().split("_");
+            var assetType = (int)mapInfo.getType();
+
+            //transfer back
+            switch (assetType){
+                case ASSET_TYPE_NATIVE: {
+                    var predicateCtx = Contract.TransferContract.newBuilder()
+                            .setAmount(tokenData)
+                            .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
+                            .setToAddress(ByteString.copyFrom(receiverAddr))
+                            .build();
+                    var contract = new TransactionCapsule(predicateCtx, Protocol.Transaction.Contract.ContractType.TransferContract)
+                            .getInstance()
+                            .getRawData()
+                            .getContract(0)
+                            .getParameter();
+                    var predicateActuator = new TransferActuator(contract, dbManager);
+                    var predicateRet = new TransactionResultCapsule();
+                    predicateActuator.execute(predicateRet);
+                    ret.setFee(predicateRet.getFee());
+                    break;
+                }
+                case ASSET_TYPE_TOKEN: {
+                    var predicateCtx = Contract.TransferTokenContract.newBuilder()
+                            .setAmount(tokenData)
+                            .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
+                            .setToAddress(ByteString.copyFrom(receiverAddr))
+                            .setTokenName(rootToken[1])
+                            .setAvailableTime(0L)
+                            .build();
+                    var contract = new TransactionCapsule(predicateCtx, Protocol.Transaction.Contract.ContractType.TransferTokenContract)
+                            .getInstance()
+                            .getRawData()
+                            .getContract(0)
+                            .getParameter();
+                    var predicateActuator = new TokenTransferActuatorV4(contract, dbManager);
+                    var predicateRet = new TransactionResultCapsule();
+                    predicateActuator.execute(predicateRet);
+                    ret.setFee(predicateRet.getFee());
+                    break;
+                }
+                case ASSET_TYPE_NFT: {
+                    var predicateCtx = Contract.TransferNftTokenContract.newBuilder()
+                            .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
+                            .setToAddress(ByteString.copyFrom(receiverAddr))
+                            .setContract(rootToken[1])
+                            .setTokenId(tokenData)
+                            .build();
+                    var contract = new TransactionCapsule(predicateCtx, Protocol.Transaction.Contract.ContractType.TransferNftTokenContract)
+                            .getInstance()
+                            .getRawData()
+                            .getContract(0)
+                            .getParameter();
+                    var predicateActuator = new NftTransferTokenActuator(contract, dbManager);
+                    var predicateRet = new TransactionResultCapsule();
+                    predicateActuator.execute(predicateRet);
+                    ret.setFee(predicateRet.getFee());
+                    break;
+                }
+                default:
+                    throw new Exception("invalid asset type");
             }
 
-            var token = tokenStore.get(tokenId);
-            dbManager.removeNftToken(tokenId);
-
-            //then set new info and save
-            token.setOwner(toAddr);
-            token.setLastOperation(dbManager.getHeadBlockTimeStamp());
-            token.clearApproval();
-            token.clearNext();
-            token.clearPrev();
-            dbManager.saveNftToken(token);
-
-            chargeFee(ownerAddr, fee);
-            dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
+            logger.info("unlocked asset: " + ctx.toString());
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -88,34 +149,14 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
         try {
             Assert.notNull(contract, "No contract!");
             Assert.notNull(dbManager, "No dbManager!");
-            Assert.isTrue(contract.is(TransferNftTokenContract.class), "contract type error,expected type [TransferNftTokenContract],real type[" + contract.getClass() + "]");
+            Assert.isTrue(contract.is(PosBridgeWithdrawExecContract.class), "contract type error,expected type [PosBridgeWithdrawExecContract],real type[" + contract.getClass() + "]");
             var fee = calcFee();
-            val ctx = this.contract.unpack(TransferNftTokenContract.class);
+            val ctx = this.contract.unpack(PosBridgeWithdrawExecContract.class);
             var accountStore = dbManager.getAccountStore();
-            var tokenStore = dbManager.getNftTokenStore();
-            var relationStore = dbManager.getNftAccountTokenStore();
-            var ownerAddr = ctx.getOwnerAddress().toByteArray();
-            var toAddr = ctx.getToAddress().toByteArray();
-            var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
-
-            Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Owner address and to address must be not the same");
-            Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");
-            Assert.isTrue(accountStore.has(ownerAddr), "Owner, approval or approval-for-all not exist");
-            Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");
-            var nft = tokenStore.get(tokenId);
-            var nftOwner = nft.getOwner();
-            var relation = relationStore.get(nftOwner);
-
-            Assert.isTrue(Arrays.equals(ownerAddr, nftOwner)
-                    || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
-                    || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to transfer NFT token");
-
-            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough fee");
-
-            if (accountStore.has(toAddr)) {
-                fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
-            }
-            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
+            checkExecPermission(ctx);
+            checkPosSignatures(ctx);
+            checkWithdrawAsset(ctx);
+            Assert.isTrue(accountStore.get(getOwnerAddress().toByteArray()).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -123,9 +164,103 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
         }
     }
 
+    private void checkExecPermission(PosBridgeWithdrawExecContract ctx) throws Exception{
+        //now all address with balance enough can submit validation
+    }
+
+    private void checkPosSignatures(PosBridgeWithdrawExecContract ctx) throws Exception{
+        var config = dbManager.getPosBridgeConfigStore().get();
+        var whitelistValidators = config.getValidators();
+        var validSignedValidators = new HashMap<String, String>();
+        var msg = ctx.getMessage().toByteArray();
+        for(var rlpItem : RlpDecoder.decode(ctx.getSignatures().toByteArray()).getValues()){
+            var signature = ((RlpString)rlpItem).getBytes();
+            var signedAddr = ByteArray.toHexString(SignExt.recoverAddress(signature, msg));
+            if(whitelistValidators.containsKey(signedAddr))
+                validSignedValidators.put(signedAddr, signedAddr);
+        };
+        var rate = ((double)validSignedValidators.size())/whitelistValidators.size();
+        Assert.isTrue(rate >= config.getConsensusRate(), "not enough POS bridge's consensus rate");
+    }
+
+    private void checkWithdrawAsset(PosBridgeWithdrawExecContract ctx) throws Exception{
+        //uint childChainid, address childToken, address receiver, uint256 value
+        var msg = ctx.getMessage().toByteArray();
+        var rlpItems = RlpDecoder.decode(msg).getValues();
+        var childChainId = (new BigInteger(((RlpString)rlpItems.get(0)).getBytes())).longValue();
+        var childToken = ByteArray.toHexString(((RlpString)rlpItems.get(1)).getBytes());
+        //make sure token mapped
+        var child2RootStore = dbManager.getPosBridgeTokenMapChild2RootStore();
+        var childKeyStr = (Long.toHexString(childChainId) + "_" + childToken);
+        Assert.isTrue(child2RootStore.has(childKeyStr.getBytes()), "token un-mapped!");
+
+        //check receive addr
+        var receiverAddr = ((RlpString)rlpItems.get(2)).getBytes();
+        Assert.isTrue(Wallet.addressValid(receiverAddr), "invalid receiving address");
+
+        var mapInfo = child2RootStore.get(childKeyStr.getBytes());
+        var rootToken = mapInfo.getFirstToken().split("_");
+        var assetType = (int)mapInfo.getType();
+
+
+        var withdrawData = (new BigInteger(((RlpString)rlpItems.get(3)).getBytes())).longValue();
+        switch (assetType){
+            case ASSET_TYPE_NATIVE: {
+                var predicateCtx = Contract.TransferContract.newBuilder()
+                        .setAmount(withdrawData)
+                        .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
+                        .setToAddress(ByteString.copyFrom(receiverAddr))
+                        .build();
+                var contract = new TransactionCapsule(predicateCtx, Protocol.Transaction.Contract.ContractType.TransferContract)
+                        .getInstance()
+                        .getRawData()
+                        .getContract(0)
+                        .getParameter();
+                var predicateActuator = new TransferActuator(contract, dbManager);
+                predicateActuator.validate();
+                break;
+            }
+            case ASSET_TYPE_TOKEN: {
+                var predicateCtx = Contract.TransferTokenContract.newBuilder()
+                        .setAmount(withdrawData)
+                        .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
+                        .setToAddress(ByteString.copyFrom(receiverAddr))
+                        .setTokenName(rootToken[1])
+                        .setAvailableTime(0L)
+                        .build();
+                var contract = new TransactionCapsule(predicateCtx, Protocol.Transaction.Contract.ContractType.TransferTokenContract)
+                        .getInstance()
+                        .getRawData()
+                        .getContract(0)
+                        .getParameter();
+                var predicateActuator = new TokenTransferActuatorV4(contract, dbManager);
+                predicateActuator.validate();
+                break;
+            }
+            case ASSET_TYPE_NFT: {
+                var predicateCtx = Contract.TransferNftTokenContract.newBuilder()
+                        .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
+                        .setToAddress(ByteString.copyFrom(receiverAddr))
+                        .setContract(rootToken[1])
+                        .setTokenId(withdrawData)
+                        .build();
+                var contract = new TransactionCapsule(predicateCtx, Protocol.Transaction.Contract.ContractType.TransferNftTokenContract)
+                        .getInstance()
+                        .getRawData()
+                        .getContract(0)
+                        .getParameter();
+                var predicateActuator = new NftTransferTokenActuator(contract, dbManager);
+                predicateActuator.validate();
+                break;
+            }
+            default:
+                throw new Exception("invalid asset type");
+        }
+    }
+
     @Override
     public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-        return contract.unpack(TransferNftTokenContract.class).getOwnerAddress();
+        return contract.unpack(PosBridgeWithdrawExecContract.class).getOwnerAddress();
     }
 
     @Override

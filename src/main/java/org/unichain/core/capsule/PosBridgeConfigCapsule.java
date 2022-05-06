@@ -24,6 +24,7 @@ import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Protocol;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j(topic = "capsule")
 public class PosBridgeConfigCapsule implements ProtoCapsule<Protocol.PosBridgeConfig> {
@@ -81,6 +82,10 @@ public class PosBridgeConfigCapsule implements ProtoCapsule<Protocol.PosBridgeCo
     return this.config.getOwnerAddress().toByteArray();
   }
 
+  public Map<String, String> getValidators(){
+    return this.config.getValidatorsMap();
+  }
+
   public void setMinValidator(long minValidator){
     this.config = this.config.toBuilder().setMinValidator(minValidator).build();
   }
@@ -91,6 +96,10 @@ public class PosBridgeConfigCapsule implements ProtoCapsule<Protocol.PosBridgeCo
 
   public void setConsensusF2(long f2){
     this.config = this.config.toBuilder().setConsensusF1(f2).build();
+  }
+
+  public double getConsensusRate(){
+    return ((double)this.config.getConsensusF1()/this.config.getConsensusF2());
   }
 
   public void clearThenPutValidators(List<String> hexValidators){

@@ -14,6 +14,7 @@ enum AccountType {
   Normal = 0;
   AssetIssue = 1;
   Contract = 2;
+  System = 3;
 }
 
 // AccountId, (name, address) use name, (null, address) use address, (name, null) use name,
@@ -135,6 +136,17 @@ message FuturePack {
   int64 upper_time = 4;
   int64 total_balance = 5;
   repeated Future deals = 6;
+}
+
+/**
+used for both token urc30 & nft indexing
+ */
+message TokenAddressSymbolIndex{
+  string  symbol = 1;
+}
+
+message TokenSymbolAddressIndex{
+  bytes address = 1;
 }
 
 /* Account */
@@ -801,7 +813,7 @@ message NftTemplate{
   bytes prev = 9;
   bytes next_of_minter = 10;
   bytes prev_of_minter = 11;
-  bytes contract_address = 12;
+  bytes address = 12;
 }
 
 message NftToken{

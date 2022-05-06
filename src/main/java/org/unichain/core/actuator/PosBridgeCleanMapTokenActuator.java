@@ -50,9 +50,9 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
             var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
             var child2RootStore = dbManager.getPosBridgeTokenMapChild2RootStore();
 
-            var rootKeyStr = (Long.toHexString(ctx.getRootChainid()) + "_" + ctx.getRootToken().toStringUtf8());
+            var rootKeyStr = (Long.toHexString(ctx.getRootChainid()) + "_" + ctx.getRootToken());
             var rootKey = rootKeyStr.getBytes();
-            var childKeyStr = (Long.toHexString(ctx.getChildChainid()) + "_" + ctx.getChildToken().toStringUtf8());
+            var childKeyStr = (Long.toHexString(ctx.getChildChainid()) + "_" + ctx.getChildToken());
             var childKey = childKeyStr.getBytes();
 
             var rootCap = root2ChildStore.get(rootKey);
@@ -95,9 +95,9 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
             var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
             var child2RootStore = dbManager.getPosBridgeTokenMapChild2RootStore();
 
-            var rootKeyStr = (Long.toHexString(ctx.getRootChainid()) + "_" + ctx.getRootToken().toStringUtf8());
+            var rootKeyStr = (Long.toHexString(ctx.getRootChainid()) + "_" + ctx.getRootToken());
             var rootKey = rootKeyStr.getBytes();
-            var childKeyStr = (Long.toHexString(ctx.getChildChainid()) + "_" + ctx.getChildToken().toStringUtf8());
+            var childKeyStr = (Long.toHexString(ctx.getChildChainid()) + "_" + ctx.getChildToken());
             var childKey = childKeyStr.getBytes();
 
             Assert.isTrue(root2ChildStore.has(rootKey), "not found mapped token pair");

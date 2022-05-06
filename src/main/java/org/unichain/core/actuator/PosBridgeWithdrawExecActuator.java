@@ -21,13 +21,16 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
+import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
+import org.unichain.common.crypto.ECKey;
+import org.unichain.common.crypto.Hash;
 import org.unichain.common.utils.ByteArray;
-import org.unichain.common.utils.SignExt;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.utils.RLPList;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -173,9 +176,11 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
         var whitelistValidators = config.getValidators();
         var validSignedValidators = new HashMap<String, String>();
         var msg = ctx.getMessage().toByteArray();
-        for(var rlpItem : RlpDecoder.decode(ctx.getSignatures().toByteArray()).getValues()){
-            var signature = ((RlpString)rlpItem).getBytes();
-            var signedAddr = ByteArray.toHexString(SignExt.recoverAddress(signature, msg));
+        for(var rlpItem : (RLPList)RlpDecoder.decode(ctx.getSignatures().toByteArray()).getValues().get(0)){
+            var sig = ((RlpString)rlpItem).getBytes();
+            var hash = Hash.sha3(msg);
+            var signedAddr = Hex.encodeHexString(ECKey.signatureToAddress(hash, sig));
+            //make sure whitelist map is hex address without prefix 0x
             if(whitelistValidators.containsKey(signedAddr))
                 validSignedValidators.put(signedAddr, signedAddr);
         };

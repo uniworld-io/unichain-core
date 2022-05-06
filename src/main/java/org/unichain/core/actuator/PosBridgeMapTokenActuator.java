@@ -21,6 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
+import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.Wallet;
@@ -55,9 +56,9 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
             var child2RootStore = dbManager.getPosBridgeTokenMapChild2RootStore();
 
-            var rootKeyStr = (Long.toHexString(ctx.getRootChainid()) + "_" + ctx.getRootToken().toStringUtf8());
+            var rootKeyStr = (Long.toHexString(ctx.getRootChainid()) + "_" + ctx.getRootToken());
             var rootKey = rootKeyStr.getBytes();
-            var childKeyStr = (Long.toHexString(ctx.getChildChainid()) + "_" + ctx.getChildToken().toStringUtf8());
+            var childKeyStr = (Long.toHexString(ctx.getChildChainid()) + "_" + ctx.getChildToken());
             var childKey = childKeyStr.getBytes();
 
             var rootCap = root2ChildStore.has(rootKey)  ? root2ChildStore.get(rootKey): new PosBridgeTokenMappingCapsule(Protocol.PosBridgeTokenMapping.newBuilder().build());
@@ -98,21 +99,21 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             Assert.isTrue(ctx.getChildChainid() != ctx.getRootChainid(), "root chain id must be different from child chain id");
 
             if(isUniChain(ctx.getRootChainid()))
-                checkUniChainToken(ctx.getRootChainid(), ctx.getRootToken().toStringUtf8(), ctx.getType(), true);
+                checkUniChainToken(ctx.getRootChainid(), ctx.getRootToken(), ctx.getType(), true);
             else
-                checkOtherChainToken(ctx.getRootChainid(), ctx.getRootToken().toStringUtf8(), ctx.getType(), true);
+                checkOtherChainToken(ctx.getRootChainid(), ctx.getRootToken(), ctx.getType(), true);
 
             if(isUniChain(ctx.getChildChainid()))
-                checkUniChainToken(ctx.getChildChainid(), ctx.getChildToken().toStringUtf8(), ctx.getType(), false);
+                checkUniChainToken(ctx.getChildChainid(), ctx.getChildToken(), ctx.getType(), false);
             else
-                checkOtherChainToken(ctx.getChildChainid(), ctx.getChildToken().toStringUtf8(), ctx.getType(), false);
+                checkOtherChainToken(ctx.getChildChainid(), ctx.getChildToken(), ctx.getType(), false);
 
             var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
             var child2RootStore = dbManager.getPosBridgeTokenMapChild2RootStore();
 
-            var rootKeyStr = (Long.toHexString(ctx.getRootChainid()) + "_" + ctx.getRootToken().toStringUtf8());
+            var rootKeyStr = (Long.toHexString(ctx.getRootChainid()) + "_" + ctx.getRootToken());
             var rootKey = rootKeyStr.getBytes();
-            var childKeyStr = (Long.toHexString(ctx.getChildChainid()) + "_" + ctx.getChildToken().toStringUtf8());
+            var childKeyStr = (Long.toHexString(ctx.getChildChainid()) + "_" + ctx.getChildToken());
             var childKey = childKeyStr.getBytes();
 
             if(root2ChildStore.has(rootKey)){
@@ -139,13 +140,13 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                     Assert.isTrue("UNW".equalsIgnoreCase(token));
             case ASSET_TYPE_TOKEN:
                 //check token exist
-                var tokenStore = dbManager.getTokenPoolStore();
-                Assert.isTrue(tokenStore.has(token.toUpperCase().getBytes()), "token asset not found: " + token);
+                var tokenStore = dbManager.getTokenAddrSymbolIndexStore();
+                Assert.isTrue(tokenStore.has(Hex.decodeHex(token)), "token asset not found: " + token);
                 break;
             case ASSET_TYPE_NFT:
                 //check token exist
-                var nftStore = dbManager.getNftTemplateStore();
-                Assert.isTrue(nftStore.has(token.toUpperCase().getBytes()), "nft asset not found: " + token);
+                var nftStore = dbManager.getNftAddrSymbolIndexStore();
+                Assert.isTrue(nftStore.has(Hex.decodeHex(token)), "nft asset not found: " + token);
                 break;
             default:
                 throw new Exception("invalid asset type");

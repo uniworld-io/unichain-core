@@ -253,12 +253,8 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     return 0;
   }
 
-  public static long checkWeight(Permission permission, List<ByteString> sigs, byte[] hash, List<ByteString> approveList)
-      throws SignatureException, PermissionException, SignatureFormatException {
+  public static long checkWeight(Permission permission, List<ByteString> sigs, byte[] hash, List<ByteString> approveList) throws SignatureException, PermissionException, SignatureFormatException {
     long currentWeight = 0;
-    //    if (signature.size() % 65 != 0) {
-    //      throw new SignatureFormatException("Signature size is " + signature.size());
-    //    }
     if (sigs.size() > permission.getKeysCount()) {
       throw new PermissionException("Signature count is " + (sigs.size()) + " more than key counts of permission : " + permission.getKeysCount());
     }
@@ -271,8 +267,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       byte[] address = ECKey.signatureToAddress(hash, base64);
       long weight = getWeight(permission, address);
       if (weight == 0) {
-        throw new PermissionException(
-            ByteArray.toHexString(sig.toByteArray()) + " is signed by " + Wallet.encode58Check(address) + " but it is not contained of permission.");
+        throw new PermissionException(ByteArray.toHexString(sig.toByteArray()) + " is signed by " + Wallet.encode58Check(address) + " but it is not contained of permission.");
       }
       if (addMap.containsKey(base64)) {
         throw new PermissionException(Wallet.encode58Check(address) + " has signed twice!");
@@ -837,9 +832,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     return signature.toBase64();
   }
 
-  public static boolean validateSignature(Transaction transaction,
-      byte[] hash, Manager manager)
-      throws PermissionException, SignatureException, SignatureFormatException {
+  public static boolean validateSignature(Transaction transaction, byte[] hash, Manager manager) throws PermissionException, SignatureException, SignatureFormatException {
     AccountStore accountStore = manager.getAccountStore();
     Transaction.Contract contract = transaction.getRawData().getContractList().get(0);
     int permissionId = contract.getPermissionId();
@@ -851,8 +844,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         permission = AccountCapsule.getDefaultPermission(ByteString.copyFrom(owner));
       }
       if (permissionId == 2) {
-        permission = AccountCapsule
-            .createDefaultActivePermission(ByteString.copyFrom(owner), manager);
+        permission = AccountCapsule.createDefaultActivePermission(ByteString.copyFrom(owner), manager);
       }
     } else {
       permission = account.getPermissionById(permissionId);

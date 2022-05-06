@@ -435,18 +435,18 @@ message PosBridgeSetupContract{
 
 message PosBridgeMapTokenContract{
   bytes owner_address = 1;
-  bytes root_token= 2;
+  string root_token= 2; //hex address
   int64 root_chainid = 3;
-  bytes child_token= 4;
+  string child_token= 4; //hex address
   int64 child_chainid = 5;
   uint32 type = 6; //1:native, 2:erc20, 3:nft
 }
 
 message PosBridgeCleanMapTokenContract{
     bytes owner_address = 1;
-    bytes root_token= 2;
+    string root_token= 2;
     int64 root_chainid = 3;
-    bytes child_token= 4;
+    string child_token= 4;
     int64 child_chainid = 5;
     uint32 type = 6; //1:native, 2:erc20, 3:nft
 }
@@ -456,8 +456,29 @@ message PosBridgeDepositContract{
   uint32 type = 2; //1:native, 2:erc20, 3:nft
   string root_token = 3; //if native : UNW hardcoded
   int64 child_chainid = 4;
-  bytes child_address = 5;
+  string child_address = 5;
   int64 data = 6; //amount or token id
+}
+
+/**
+     digest: bytes32,
+     signatures: rlp encoded signatures
+     message: rlp encoded bytes of
+     {
+       childchainId: 0x...,
+       childToken: 0x...,
+       childFrom: 0x...
+       rootChainId: 0x...,
+       rootToken: 0x...,
+       rootTo: 0x...
+       data: 1000
+     }
+ */
+message PosBridgeWithdrawExecContract{
+  bytes owner_address = 1;
+  bytes digest= 2;
+  bytes signatures = 3;
+  bytes message = 4;
 }
 
 /**
@@ -487,28 +508,4 @@ message PosBridgeWithdrawContract{
   uint32 rootChainId = 4;
   bytes rootAddress = 5;
   int64 data = 6; //amount or tokenid
-}
-
-/**
-  RLP encoded data
-  calldata format:
-  {
-     digest: bytes32,
-     signatures: bytes[]
-     message: {
-       childchainId: 0x...,
-       childToken: 0x...,
-       rootToken: 0x...,
-       rootAddress: 0x...,
-       rootChainId: 0x...,
-       withdrawedAddr: 0x...
-       amount: 1000
-     }
-  }
- */
-message PosBridgeWithdrawExecContract{
-  bytes owner_address = 1;
-  bytes digest= 2;
-  bytes signatures = 3;
-  bytes message = 4;
 }

@@ -30,44 +30,36 @@ import static org.unichain.protos.Protocol.Transaction.Contract.ContractType.Tra
 public class TransactionLogTriggerCapsule extends TriggerCapsule {
   @Getter
   @Setter
-  TransactionLogTrigger transactionLogTrigger;
+  TransactionLogTrigger trigger;
 
-  public void setLatestSolidifiedBlockNumber(long latestSolidifiedBlockNumber) {
-    transactionLogTrigger.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
-  }
-
-  public TransactionLogTriggerCapsule(TransactionCapsule unwCasule, BlockCapsule blockCapsule) {
-    transactionLogTrigger = new TransactionLogTrigger();
+  public TransactionLogTriggerCapsule(TransactionCapsule txCap, BlockCapsule blockCapsule, long latestSolidifiedBlockNumber) {
+    trigger = new TransactionLogTrigger();
+    trigger.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
     if (Objects.nonNull(blockCapsule)) {
-      transactionLogTrigger.setBlockHash(blockCapsule.getBlockId().toString());
+      trigger.setBlockHash(blockCapsule.getBlockId().toString());
     }
-    transactionLogTrigger.setTransactionId(unwCasule.getTransactionId().toString());
-    transactionLogTrigger.setTimeStamp(blockCapsule.getTimeStamp());
-    transactionLogTrigger.setBlockNumber(unwCasule.getBlockNum());
+    trigger.setTransactionId(txCap.getTransactionId().toString());
+    trigger.setTimeStamp(blockCapsule.getTimeStamp());
+    trigger.setBlockNumber(txCap.getBlockNum());
 
-    TransactionTrace unwTrace = unwCasule.getUnxTrace();
+    TransactionTrace txTrace = txCap.getTxTrace();
 
-    //result
-    if (Objects.nonNull(unwCasule.getContractRet())) {
-      transactionLogTrigger.setResult(unwCasule.getContractRet().toString());
+    if (Objects.nonNull(txCap.getContractRet())) {
+      trigger.setResult(txCap.getContractRet().toString());
     }
 
-    if (Objects.nonNull(unwCasule.getInstance().getRawData())) {
-      // feelimit
-      transactionLogTrigger.setFeeLimit(unwCasule.getInstance().getRawData().getFeeLimit());
+    if (Objects.nonNull(txCap.getInstance().getRawData())) {
+      trigger.setFeeLimit(txCap.getInstance().getRawData().getFeeLimit());
 
-      Protocol.Transaction.Contract contract = unwCasule.getInstance().getRawData().getContract(0);
+      Protocol.Transaction.Contract contract = txCap.getInstance().getRawData().getContract(0);
       Any contractParameter = null;
-      // contract type
       if (Objects.nonNull(contract)) {
         Protocol.Transaction.Contract.ContractType contractType = contract.getType();
         if (Objects.nonNull(contractType)) {
-          transactionLogTrigger.setContractType(contractType.toString());
+          trigger.setContractType(contractType.toString());
         }
-
         contractParameter = contract.getParameter();
-
-        transactionLogTrigger.setContractCallValue(TransactionCapsule.getCallValue(contract));
+        trigger.setContractCallValue(TransactionCapsule.getCallValue(contract));
       }
 
       if (Objects.nonNull(contractParameter) && Objects.nonNull(contract)) {
@@ -76,39 +68,35 @@ public class TransactionLogTriggerCapsule extends TriggerCapsule {
             TransferContract contractTransfer = contractParameter.unpack(TransferContract.class);
 
             if (Objects.nonNull(contractTransfer)) {
-              transactionLogTrigger.setAssetName("unw");
+              trigger.setAssetName("unw");
 
               if (Objects.nonNull(contractTransfer.getOwnerAddress())) {
-                transactionLogTrigger.setFromAddress(
-                    Wallet.encode58Check(contractTransfer.getOwnerAddress().toByteArray()));
+                trigger.setFromAddress(Wallet.encode58Check(contractTransfer.getOwnerAddress().toByteArray()));
               }
 
               if (Objects.nonNull(contractTransfer.getToAddress())) {
-                transactionLogTrigger.setToAddress(
-                    Wallet.encode58Check(contractTransfer.getToAddress().toByteArray()));
+                trigger.setToAddress(Wallet.encode58Check(contractTransfer.getToAddress().toByteArray()));
               }
 
-              transactionLogTrigger.setAssetAmount(contractTransfer.getAmount());
+              trigger.setAssetAmount(contractTransfer.getAmount());
             }
-
           } else if (contract.getType() == TransferAssetContract) {
             TransferAssetContract contractTransfer = contractParameter.unpack(TransferAssetContract.class);
 
             if (Objects.nonNull(contractTransfer)) {
               if (Objects.nonNull(contractTransfer.getAssetName())) {
-                transactionLogTrigger.setAssetName(contractTransfer.getAssetName().toStringUtf8());
+                trigger.setAssetName(contractTransfer.getAssetName().toStringUtf8());
               }
 
               if (Objects.nonNull(contractTransfer.getOwnerAddress())) {
-                transactionLogTrigger.setFromAddress(
-                    Wallet.encode58Check(contractTransfer.getOwnerAddress().toByteArray()));
+                trigger.setFromAddress(Wallet.encode58Check(contractTransfer.getOwnerAddress().toByteArray()));
               }
 
               if (Objects.nonNull(contractTransfer.getToAddress())) {
-                transactionLogTrigger.setToAddress(
-                    Wallet.encode58Check(contractTransfer.getToAddress().toByteArray()));
+                trigger.setToAddress(Wallet.encode58Check(contractTransfer.getToAddress().toByteArray()));
               }
-              transactionLogTrigger.setAssetAmount(contractTransfer.getAmount());
+
+              trigger.setAssetAmount(contractTransfer.getAmount());
             }
           }
         } catch (Exception e) {
@@ -118,30 +106,30 @@ public class TransactionLogTriggerCapsule extends TriggerCapsule {
     }
 
     // receipt
-    if (Objects.nonNull(unwTrace) && Objects.nonNull(unwTrace.getReceipt())) {
-      transactionLogTrigger.setEnergyFee(unwTrace.getReceipt().getEnergyFee());
-      transactionLogTrigger.setOriginEnergyUsage(unwTrace.getReceipt().getOriginEnergyUsage());
-      transactionLogTrigger.setEnergyUsageTotal(unwTrace.getReceipt().getEnergyUsageTotal());
-      transactionLogTrigger.setNetUsage(unwTrace.getReceipt().getNetUsage());
-      transactionLogTrigger.setNetFee(unwTrace.getReceipt().getNetFee());
-      transactionLogTrigger.setEnergyUsage(unwTrace.getReceipt().getEnergyUsage());
+    if (Objects.nonNull(txTrace) && Objects.nonNull(txTrace.getReceipt())) {
+      trigger.setEnergyFee(txTrace.getReceipt().getEnergyFee());
+      trigger.setOriginEnergyUsage(txTrace.getReceipt().getOriginEnergyUsage());
+      trigger.setEnergyUsageTotal(txTrace.getReceipt().getEnergyUsageTotal());
+      trigger.setNetUsage(txTrace.getReceipt().getNetUsage());
+      trigger.setNetFee(txTrace.getReceipt().getNetFee());
+      trigger.setEnergyUsage(txTrace.getReceipt().getEnergyUsage());
     }
 
     //program result
-    if (Objects.nonNull(unwTrace) && Objects.nonNull(unwTrace.getRuntime()) &&  Objects.nonNull(unwTrace.getRuntime().getResult())) {
-      ProgramResult programResult = unwTrace.getRuntime().getResult();
+    if (Objects.nonNull(txTrace) && Objects.nonNull(txTrace.getRuntime()) &&  Objects.nonNull(txTrace.getRuntime().getResult())) {
+      ProgramResult programResult = txTrace.getRuntime().getResult();
       ByteString contractResult = ByteString.copyFrom(programResult.getHReturn());
       ByteString contractAddress = ByteString.copyFrom(programResult.getContractAddress());
 
       if (Objects.nonNull(contractResult) && contractResult.size() > 0) {
-        transactionLogTrigger.setContractResult(Hex.toHexString(contractResult.toByteArray()));
+        trigger.setContractResult(Hex.toHexString(contractResult.toByteArray()));
       }
 
       if (Objects.nonNull(contractAddress) && contractAddress.size() > 0) {
-        transactionLogTrigger.setContractAddress(Wallet.encode58Check((contractAddress.toByteArray())));
+        trigger.setContractAddress(Wallet.encode58Check((contractAddress.toByteArray())));
       }
 
-      transactionLogTrigger.setInternalTrananctionList(getInternalTransactionList(programResult.getInternalTransactions()));
+      trigger.setInternalTransactionList(getInternalTransactionList(programResult.getInternalTransactions()));
     }
   }
 
@@ -169,6 +157,6 @@ public class TransactionLogTriggerCapsule extends TriggerCapsule {
 
   @Override
   public void processTrigger() {
-    EventPluginLoader.getInstance().postTransactionTrigger(transactionLogTrigger);
+    EventPluginLoader.getInstance().postTransactionTrigger(trigger);
   }
 }

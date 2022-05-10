@@ -84,6 +84,7 @@ import static org.unichain.core.services.http.utils.Util.*;
 public class Wallet {
   private static String addressPreFixString = Constant.ADD_PRE_FIX_STRING_MAINNET;
   private static byte addressPreFixByte = Constant.ADD_PRE_FIX_BYTE_MAINNET;
+  private static Set<Long> posBridgeSupportedChainIds;
   private final int minEffectiveConnection = Args.getInstance().getMinEffectiveConnection();
 
   @Getter
@@ -136,6 +137,10 @@ public class Wallet {
     return addressPreFixString;
   }
 
+  public static Set<Long> getSupportedPosChainIds() {
+    return posBridgeSupportedChainIds;
+  }
+
   public static void setAddressPreFixString(String addressPreFixString) {
     Wallet.addressPreFixString = addressPreFixString;
   }
@@ -146,6 +151,10 @@ public class Wallet {
 
   public static void setAddressPreFixByte(byte addressPreFixByte) {
     Wallet.addressPreFixByte = addressPreFixByte;
+  }
+
+  public static void setPosBridgeSupportedChainIds(Set chainIds) {
+    Wallet.posBridgeSupportedChainIds = chainIds;
   }
 
   public static boolean addressValid(byte[] address) {

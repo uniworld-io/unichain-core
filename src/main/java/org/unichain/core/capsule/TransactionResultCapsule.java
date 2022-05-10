@@ -1,135 +1,147 @@
 package org.unichain.core.capsule;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.unichain.common.event.NativeContractEvent;
 import org.unichain.core.exception.BadItemException;
 import org.unichain.protos.Protocol.Transaction;
 import org.unichain.protos.Protocol.Transaction.Result;
 import org.unichain.protos.Protocol.Transaction.Result.contractResult;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Slf4j(topic = "capsule")
 public class TransactionResultCapsule implements ProtoCapsule<Transaction.Result> {
 
-  private Transaction.Result transactionResult;
+  private Transaction.Result txResult;
 
-  /**
-   * constructor TransactionCapsule.
-   */
+  @Getter
+  private List<NativeContractEvent> events;
+
   public TransactionResultCapsule(Transaction.Result unxRet) {
-    this.transactionResult = unxRet;
+    this.txResult = unxRet;
+    this.events = new ArrayList<>();
   }
 
   public TransactionResultCapsule(byte[] data) throws BadItemException {
     try {
-      this.transactionResult = Transaction.Result.parseFrom(data);
+      this.txResult = Transaction.Result.parseFrom(data);
+      this.events = new ArrayList<>();
     } catch (InvalidProtocolBufferException e) {
       throw new BadItemException("TransactionResult proto data parse exception");
     }
   }
 
   public TransactionResultCapsule() {
-    this.transactionResult = Transaction.Result.newBuilder().build();
+    this.txResult = Transaction.Result.newBuilder().build();
+    this.events = new ArrayList<>();
   }
 
   public TransactionResultCapsule(contractResult code) {
-    this.transactionResult = Transaction.Result.newBuilder().setContractRet(code).build();
+    this.txResult = Transaction.Result.newBuilder().setContractRet(code).build();
+    this.events = new ArrayList<>();
   }
 
   public TransactionResultCapsule(Transaction.Result.code code, long fee) {
-    this.transactionResult = Transaction.Result.newBuilder().setRet(code).setFee(fee).build();
+    this.txResult = Transaction.Result.newBuilder().setRet(code).setFee(fee).build();
+    this.events = new ArrayList<>();
+  }
+
+  public void addEvent(NativeContractEvent event){
+    this.events.add(event);
   }
 
   public void setStatus(long fee, Transaction.Result.code code) {
-    long oldValue = transactionResult.getFee();
-    this.transactionResult = this.transactionResult.toBuilder()
+    long oldValue = txResult.getFee();
+    this.txResult = this.txResult.toBuilder()
         .setFee(Math.addExact(oldValue, fee))
         .setRet(code).build();
   }
 
   public long getFee() {
-    return transactionResult.getFee();
+    return txResult.getFee();
   }
 
   public void setUnfreezeAmount(long amount) {
-    this.transactionResult = this.transactionResult.toBuilder().setUnfreezeAmount(amount).build();
+    this.txResult = this.txResult.toBuilder().setUnfreezeAmount(amount).build();
   }
 
   public long getUnfreezeAmount() {
-    return transactionResult.getUnfreezeAmount();
+    return txResult.getUnfreezeAmount();
   }
 
   public void setAssetIssueID(String id) {
-    this.transactionResult = this.transactionResult.toBuilder().setAssetIssueID(id).build();
+    this.txResult = this.txResult.toBuilder().setAssetIssueID(id).build();
   }
 
   public String getAssetIssueID() {
-    return transactionResult.getAssetIssueID();
+    return txResult.getAssetIssueID();
   }
 
   public void setWithdrawAmount(long amount) {
-    this.transactionResult = this.transactionResult.toBuilder().setWithdrawAmount(amount).build();
+    this.txResult = this.txResult.toBuilder().setWithdrawAmount(amount).build();
   }
 
   public long getWithdrawAmount() {
-    return transactionResult.getWithdrawAmount();
+    return txResult.getWithdrawAmount();
   }
 
   public void setExchangeReceivedAmount(long amount) {
-    this.transactionResult = this.transactionResult.toBuilder().setExchangeReceivedAmount(amount)
+    this.txResult = this.txResult.toBuilder().setExchangeReceivedAmount(amount)
         .build();
   }
 
   public long getExchangeReceivedAmount() {
-    return transactionResult.getExchangeReceivedAmount();
+    return txResult.getExchangeReceivedAmount();
   }
 
-
   public void setExchangeWithdrawAnotherAmount(long amount) {
-    this.transactionResult = this.transactionResult.toBuilder()
+    this.txResult = this.txResult.toBuilder()
         .setExchangeWithdrawAnotherAmount(amount)
         .build();
   }
 
   public long getExchangeWithdrawAnotherAmount() {
-    return transactionResult.getExchangeWithdrawAnotherAmount();
+    return txResult.getExchangeWithdrawAnotherAmount();
   }
 
-
   public void setExchangeInjectAnotherAmount(long amount) {
-    this.transactionResult = this.transactionResult.toBuilder()
+    this.txResult = this.txResult.toBuilder()
         .setExchangeInjectAnotherAmount(amount)
         .build();
   }
 
   public long getExchangeId() {
-    return transactionResult.getExchangeId();
+    return txResult.getExchangeId();
   }
 
   public void setExchangeId(long id) {
-    this.transactionResult = this.transactionResult.toBuilder()
+    this.txResult = this.txResult.toBuilder()
         .setExchangeId(id)
         .build();
   }
 
   public long getExchangeInjectAnotherAmount() {
-    return transactionResult.getExchangeInjectAnotherAmount();
+    return txResult.getExchangeInjectAnotherAmount();
   }
 
   public void setFee(long fee) {
-    this.transactionResult = this.transactionResult.toBuilder().setFee(fee).build();
+    this.txResult = this.txResult.toBuilder().setFee(fee).build();
   }
 
   public void setErrorCode(Transaction.Result.code code) {
-    this.transactionResult = this.transactionResult.toBuilder().setRet(code).build();
+    this.txResult = this.txResult.toBuilder().setRet(code).build();
   }
 
   @Override
   public byte[] getData() {
-    return this.transactionResult.toByteArray();
+    return this.txResult.toByteArray();
   }
 
   @Override
   public Result getInstance() {
-    return this.transactionResult;
+    return this.txResult;
   }
 }

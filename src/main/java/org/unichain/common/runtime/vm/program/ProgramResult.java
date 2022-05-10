@@ -1,5 +1,6 @@
 package org.unichain.common.runtime.vm.program;
 
+import lombok.Getter;
 import lombok.Setter;
 import org.unichain.common.logsfilter.trigger.ContractTrigger;
 import org.unichain.common.runtime.vm.CallCreate;
@@ -15,12 +16,20 @@ import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.unichain.common.utils.ByteUtil.EMPTY_BYTE_ARRAY;
 
 public class ProgramResult {
+  @Getter
   private long energyUsed = 0;
+  @Getter
   private long futureRefund = 0;
 
+  @Getter
+  @Setter
   private byte[] hReturn = EMPTY_BYTE_ARRAY;
   private byte[] contractAddress = EMPTY_BYTE_ARRAY;
+
+  @Getter
+  @Setter
   private RuntimeException exception;
+
   private boolean revert;
 
   private Set<DataWord> deleteAccounts;
@@ -28,6 +37,7 @@ public class ProgramResult {
   private List<InternalTransaction> internalTransactions;
   private List<LogInfo> logInfoList;
 
+  @Getter
   private TransactionResultCapsule ret = new TransactionResultCapsule();
 
   @Setter
@@ -64,37 +74,20 @@ public class ProgramResult {
     return Arrays.copyOf(contractAddress, contractAddress.length);
   }
 
-  public void setHReturn(byte[] hReturn) {
-    this.hReturn = hReturn;
-
-  }
-
-  public byte[] getHReturn() {
-    return hReturn;
-  }
-
   public List<ContractTrigger> getTriggerList() {
     return triggerList != null ? triggerList : new LinkedList<>();
-  }
-
-  public TransactionResultCapsule getRet() {
-    return ret;
-  }
-
-  public void setRet(TransactionResultCapsule ret) {
-    this.ret = ret;
   }
 
   public RuntimeException getException() {
     return exception;
   }
 
-  public long getEnergyUsed() {
-    return energyUsed;
-  }
-
   public void setException(RuntimeException exception) {
     this.exception = exception;
+  }
+
+  public long getEnergyUsed() {
+    return energyUsed;
   }
 
   public Set<DataWord> getDeleteAccounts() {
@@ -166,9 +159,8 @@ public class ProgramResult {
   public InternalTransaction addInternalTransaction(byte[] parentHash, int deep,
       byte[] senderAddress, byte[] transferAddress, long value, byte[] data, String note,
       long nonce, Map<String, Long> token) {
-    InternalTransaction transaction = new InternalTransaction(parentHash, deep,
-        size(internalTransactions), senderAddress, transferAddress, value, data, note, nonce,
-        token);
+    InternalTransaction transaction = new InternalTransaction(parentHash, deep, size(internalTransactions), senderAddress,
+            transferAddress, value, data, note, nonce, token);
     getInternalTransactions().add(transaction);
     return transaction;
   }
@@ -220,5 +212,4 @@ public class ProgramResult {
     result.setHReturn(EMPTY_BYTE_ARRAY);
     return result;
   }
-
 }

@@ -5,6 +5,7 @@ import org.unichain.common.logsfilter.IPluginEventListener;
 
 import java.util.Objects;
 
+//@todo review kafka listener
 @Slf4j
 public class KafkaEventListener implements IPluginEventListener {
     @Override
@@ -84,6 +85,14 @@ public class KafkaEventListener implements IPluginEventListener {
 
     @Override
     public void handleContractEventTrigger(Object data) {
+        if (Objects.isNull(data)){
+            return;
+        }
+        MessageSenderImpl.getInstance().getTriggerQueue().offer(data);
+    }
+
+    @Override
+    public void handleNativeEventTrigger(Object data) {
         if (Objects.isNull(data)){
             return;
         }

@@ -29,6 +29,7 @@ public class MongodbSenderImpl {
   private String transactionTopic = "";
   private String contractEventTopic = "";
   private String contractLogTopic = "";
+  private String nativeEventTopic = "";
   private String solidityTopic = "";
   private String solidityEventTopic = "";
   private String solidityLogTopic = "";
@@ -159,6 +160,9 @@ public class MongodbSenderImpl {
       indexOptions.put("contractAddress", false);
       mongoManager.createCollection(solidityLogTopic, indexOptions);
       mongoManager.createCollection(contractLogTopic, indexOptions);
+
+      indexOptions = new HashMap<>();
+      mongoManager.createCollection(nativeEventTopic, indexOptions);
     } else {
       mongoManager.createCollection(blockTopic);
       mongoManager.createCollection(transactionTopic);
@@ -167,6 +171,7 @@ public class MongodbSenderImpl {
       mongoManager.createCollection(solidityTopic);
       mongoManager.createCollection(solidityEventTopic);
       mongoManager.createCollection(solidityLogTopic);
+      mongoManager.createCollection(nativeEventTopic);
     }
 
     createMongoTemplate(blockTopic);
@@ -176,6 +181,7 @@ public class MongodbSenderImpl {
     createMongoTemplate(solidityTopic);
     createMongoTemplate(solidityEventTopic);
     createMongoTemplate(solidityLogTopic);
+    createMongoTemplate(nativeEventTopic);
   }
 
   private void loadMongoConfig() {
@@ -236,7 +242,6 @@ public class MongodbSenderImpl {
     return template;
   }
 
-
   public void setTopic(int triggerType, String topic) {
     if (triggerType == Trigger.BLOCK_TRIGGER) {
       blockTopic = topic;
@@ -252,6 +257,8 @@ public class MongodbSenderImpl {
       solidityEventTopic = topic;
     } else if (triggerType == Trigger.SOLIDITY_LOG_TRIGGER) {
       solidityLogTopic = topic;
+    } else if (triggerType == Trigger.NATIVE_EVENT_TRIGGER) {
+      nativeEventTopic = topic;
     } else {
       return;
     }
@@ -424,6 +431,17 @@ public class MongodbSenderImpl {
     }
   }
 
+  public void handleNativeEventTrigger(Object data) {
+    if (Objects.isNull(data) || Objects.isNull(nativeEventTopic)) {
+      return;
+    }
+
+    MongoTemplate template = mongoTemplateMap.get(nativeEventTopic);
+    if (Objects.nonNull(template)) {
+      service.execute(() -> handleInsertContractTrigger(template, data, "uniqueId"));
+    }
+  }
+
   private Runnable triggerProcessLoop =
       () -> {
         while (isRunTriggerProcessThread) {
@@ -448,7 +466,11 @@ public class MongodbSenderImpl {
               handleSolidityLogTrigger(triggerData);
             } else if (triggerData.contains(Trigger.SOLIDITY_EVENT_TRIGGER_NAME)) {
               handleSolidityEventTrigger(triggerData);
+            } else if (triggerData.contains(Trigger.NATIVE_EVENT_TRIGGER_NAME)) {
+              handleNativeEventTrigger(triggerData);
             }
+
+
           } catch (InterruptedException ex) {
             log.info(ex.getMessage());
             Thread.currentThread().interrupt();

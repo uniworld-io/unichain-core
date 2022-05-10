@@ -1,4 +1,4 @@
-package org.unichain.program;
+package org.unichain;
 
 import lombok.var;
 import org.apache.commons.codec.binary.Hex;

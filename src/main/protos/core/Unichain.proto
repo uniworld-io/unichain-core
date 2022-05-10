@@ -952,6 +952,6 @@ message PosBridgeConfig{
 }
 
 message PosBridgeTokenMapping{
-  map<string, string>  tokens = 1;//chainid_addr --> chainid_addr, addr: hex format, symbol: keep unchanged
+  map<string, string>  tokens = 1;//with rootchain: chainId --> token
   int64 type = 2; //1:native, 2: erc20 3: nft
 }

@@ -24,7 +24,6 @@ import org.unichain.common.logsfilter.EventPluginLoader;
 import org.unichain.common.logsfilter.FilterQuery;
 import org.unichain.common.logsfilter.capsule.*;
 import org.unichain.common.logsfilter.trigger.ContractEventTrigger;
-import org.unichain.common.logsfilter.trigger.ContractTrigger;
 import org.unichain.common.logsfilter.trigger.Trigger;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.common.overlay.message.Message;
@@ -392,7 +391,7 @@ public class Manager {
             Optional.ofNullable(triggerCapsuleQueue.poll(1, TimeUnit.SECONDS))
                     .ifPresent(triggerCapsule -> triggerCapsule.processTrigger());
           } catch (InterruptedException ex) {
-            logger.info(ex.getMessage());
+            logger.warn(ex.getMessage());
             Thread.currentThread().interrupt();
           } catch (Exception ex) {
             logger.error("Unknown exception happened in process capsule loop", ex);
@@ -1246,11 +1245,11 @@ public class Manager {
   /**
    * Process transaction.
    */
-    public TransactionInfo processTransaction(final TransactionCapsule txCap, final BlockCapsule block)
-          throws ValidateSignatureException, ContractValidateException, ContractExeException,
-                  AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException,
-                  TooBigTransactionResultException, DupTransactionException, TaposException, ReceiptCheckErrException,
-                  VMIllegalException {
+  public TransactionInfo processTransaction(final TransactionCapsule txCap, final BlockCapsule block)
+        throws ValidateSignatureException, ContractValidateException, ContractExeException,
+                AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException,
+                TooBigTransactionResultException, DupTransactionException, TaposException, ReceiptCheckErrException,
+                VMIllegalException {
     if (txCap == null) {
       return null;
     }
@@ -1270,7 +1269,7 @@ public class Manager {
     }
 
     TransactionTrace trace = new TransactionTrace(txCap, this);
-    txCap.setUnxTrace(trace);
+    txCap.setTxTrace(trace);
 
     consumeBandwidth(txCap, trace, block);
     consumeMultiSignFee(txCap, trace, block);
@@ -1304,31 +1303,31 @@ public class Manager {
         }
         trace.check();
       }
-    }
+  }
 
-    /*
-      - charge energy fee with smart contract call or deploy
-      - with token transfer, dont use energy so don't charge fee
-     */
-    trace.finalization(findBlockVersion(block));
+  /*
+    - charge energy fee with smart contract call or deploy
+    - with token transfer, dont use energy so don't charge fee
+   */
+  trace.finalization(findBlockVersion(block));
 
-    if (Objects.nonNull(block) && getDynamicPropertiesStore().supportVM()) {
-      txCap.setResult(trace.getRuntime());
-    }
-    transactionStore.put(txCap.getTransactionId().getBytes(), txCap);
+  if (Objects.nonNull(block) && getDynamicPropertiesStore().supportVM()) {
+    txCap.setResult(trace.getRuntime());
+  }
+  transactionStore.put(txCap.getTransactionId().getBytes(), txCap);
 
-    Optional.ofNullable(transactionCache)
-          .ifPresent(t -> t.put(txCap.getTransactionId().getBytes(), new BytesCapsule(ByteArray.fromLong(txCap.getBlockNum()))));
+  Optional.ofNullable(transactionCache)
+        .ifPresent(t -> t.put(txCap.getTransactionId().getBytes(), new BytesCapsule(ByteArray.fromLong(txCap.getBlockNum()))));
 
-    TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, block, trace);
+  TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, block, trace);
 
-    postContractTrigger(trace, false);
-    Contract contract = txCap.getInstance().getRawData().getContract(0);
-    if (isMultiSignTransaction(txCap.getInstance())) {
-      ownerAddressSet.add(ByteArray.toHexString(TransactionCapsule.getOwner(contract)));
-    }
+  postContractTrigger(trace, false);
+  Contract contract = txCap.getInstance().getRawData().getContract(0);
+  if (isMultiSignTransaction(txCap.getInstance())) {
+    ownerAddressSet.add(ByteArray.toHexString(TransactionCapsule.getOwner(contract)));
+  }
 
-    return transactionInfo.getInstance();
+  return transactionInfo.getInstance();
   }
 
 
@@ -1346,11 +1345,8 @@ public class Manager {
   /**
    * Generate a block.
    */
-  public synchronized BlockCapsule generateBlock(
-          final WitnessCapsule witnessCapsule, final long when, final byte[] privateKey,
-          Boolean lastHeadBlockIsMaintenanceBefore, Boolean needCheckWitnessPermission)
-      throws ValidateSignatureException, ContractValidateException, ContractExeException,
-      UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException {
+  public synchronized BlockCapsule generateBlock(final WitnessCapsule witnessCapsule, final long when, final byte[] privateKey, Boolean lastHeadBlockIsMaintenanceBefore, Boolean needCheckWitnessPermission)
+      throws ValidateSignatureException, ContractValidateException, ContractExeException, UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException {
 
     //check that the first block after the maintenance period has just been processed
     // if (lastHeadBlockIsMaintenanceBefore != lastHeadBlockIsMaintenance()) {
@@ -1434,7 +1430,6 @@ public class Manager {
         var result = processTransaction(tx, blockCapsule);
         accountStateCallBack.exeTransFinish();
         tmpSession.merge();
-        // push into block
         blockCapsule.addTransaction(tx);
 
         if (Objects.nonNull(result)) {
@@ -1580,13 +1575,13 @@ public class Manager {
 
     try {
       accountStateCallBack.preExecute(block);
-      for (TransactionCapsule transactionCapsule : block.getTransactions()) {
-        transactionCapsule.setBlockNum(block.getNum());
+      for (var txCap : block.getTransactions()) {
+        txCap.setBlockNum(block.getNum());
         if (block.generatedByMyself) {
-          transactionCapsule.setVerified(true);
+          txCap.setVerified(true);
         }
         accountStateCallBack.preExeTrans();
-        TransactionInfo result = processTransaction(transactionCapsule, block);
+        TransactionInfo result = processTransaction(txCap, block);
         accountStateCallBack.exeTransFinish();
         if (Objects.nonNull(result)) {
           transactionRetCapsule.addTransactionInfo(result);
@@ -2007,26 +2002,28 @@ public class Manager {
 
   private void postBlockTrigger(final BlockCapsule newBlock) {
     if (eventPluginLoaded && EventPluginLoader.getInstance().isBlockLogTriggerEnable()) {
-      BlockLogTriggerCapsule blockLogTriggerCapsule = new BlockLogTriggerCapsule(newBlock);
+      var blockLogTriggerCapsule = new BlockLogTriggerCapsule(newBlock);
       blockLogTriggerCapsule.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
       boolean result = triggerCapsuleQueue.offer(blockLogTriggerCapsule);
       if (!result) {
-        logger.info("too many trigger, lost block trigger: {}", newBlock.getBlockId());
+        logger.warn("too many trigger, lost block trigger: {}", newBlock.getBlockId());
       }
     }
 
-    for (TransactionCapsule e : newBlock.getTransactions()) {
-      postTransactionTrigger(e, newBlock);
-    }
+    newBlock.getTransactions().forEach(txCap -> postTransactionTrigger(txCap, newBlock));
   }
 
-  private void postTransactionTrigger(final TransactionCapsule unxCap, final BlockCapsule blockCap) {
-    if (eventPluginLoaded && EventPluginLoader.getInstance().isTransactionLogTriggerEnable()) {
-      TransactionLogTriggerCapsule unx = new TransactionLogTriggerCapsule(unxCap, blockCap);
-      unx.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
-      boolean result = triggerCapsuleQueue.offer(unx);
-      if (!result) {
-        logger.info("too many trigger, lost transaction trigger: {}", unxCap.getTransactionId());
+  private void postTransactionTrigger(final TransactionCapsule txCap, final BlockCapsule blockCap) {
+    if(eventPluginLoaded){
+      if(EventPluginLoader.getInstance().isTransactionLogTriggerEnable()){
+        if(!triggerCapsuleQueue.offer(new TransactionLogTriggerCapsule(txCap, blockCap, latestSolidifiedBlockNumber)))
+          logger.warn("too many trigger, lost transaction trigger: {}", txCap.getTransactionId());
+      }
+      if(EventPluginLoader.getInstance().isNativeEventTriggerEnable()){
+        for(var event : txCap.getTxTrace().getRuntime().getResult().getRet().getEvents()){
+          if(!triggerCapsuleQueue.offer(new NativeEventTriggerCapsule(txCap, blockCap, latestSolidifiedBlockNumber, event)))
+            logger.warn("too many trigger, lost transaction trigger: {}", txCap.getTransactionId());
+        }
       }
     }
   }
@@ -2037,7 +2034,7 @@ public class Manager {
       try {
         BlockCapsule oldHeadBlock = getBlockById(getDynamicPropertiesStore().getLatestBlockHeaderHash());
         for (TransactionCapsule unx : oldHeadBlock.getTransactions()) {
-          postContractTrigger(unx.getUnxTrace(), true);
+          postContractTrigger(unx.getTxTrace(), true);
         }
       } catch (BadItemException | ItemNotFoundException e) {
         logger.error("block header hash not exists or bad: {}", getDynamicPropertiesStore().getLatestBlockHeaderHash());
@@ -2048,16 +2045,15 @@ public class Manager {
   //@todo review
   private void postContractTrigger(final TransactionTrace trace, boolean remove) {
     if (eventPluginLoaded && (EventPluginLoader.getInstance().isContractEventTriggerEnable() || EventPluginLoader.getInstance().isContractLogTriggerEnable())) {
-      // be careful, trace.getRuntimeResult().getTriggerList() should never return null
-      for (ContractTrigger trigger : trace.getRuntimeResult().getTriggerList()) {
-        var contractEventTriggerCapsule = new ContractTriggerCapsule(trigger);
-        contractEventTriggerCapsule.getContractTrigger().setRemoved(remove);
-        contractEventTriggerCapsule.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
-        if (!triggerCapsuleQueue.offer(contractEventTriggerCapsule)) {
+      for (var trigger : trace.getRuntimeResult().getTriggerList()) {
+        var triggerCap = new ContractTriggerCapsule(trigger);
+        triggerCap.getContractTrigger().setRemoved(remove);
+        triggerCap.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
+        if (!triggerCapsuleQueue.offer(triggerCap)) {
           logger.warn("too many trigger, lost contract log trigger: {}", trigger.getTransactionId());
         }
         if (!remove) {
-          contractEventTriggerCapsule.processTrigger();
+          triggerCap.processTrigger();
         }
       }
     }

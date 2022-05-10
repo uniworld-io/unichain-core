@@ -575,9 +575,11 @@ public class Args {
     if (config.hasPath("net.type") && "testnet".equalsIgnoreCase(config.getString("net.type"))) {
       Wallet.setAddressPreFixByte(Constant.ADD_PRE_FIX_BYTE_TESTNET);
       Wallet.setAddressPreFixString(Constant.ADD_PRE_FIX_STRING_TESTNET);
+      Wallet.setPosBridgeSupportedChainIds(Constant.POSBRIDGE_TESTNET_SUPPORT);
     } else {
       Wallet.setAddressPreFixByte(Constant.ADD_PRE_FIX_BYTE_MAINNET);
       Wallet.setAddressPreFixString(Constant.ADD_PRE_FIX_STRING_MAINNET);
+      Wallet.setPosBridgeSupportedChainIds(Constant.POSBRIDGE_MAINNET_SUPPORT);
     }
 
     if (StringUtils.isNoneBlank(INSTANCE.privateKey)) {

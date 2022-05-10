@@ -21,8 +21,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
+import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.unichain.common.event.NativeContractEvent;
+import org.unichain.common.event.TokenCreateEvent;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -77,6 +80,19 @@ public class TokenCreateActuatorV4 extends AbstractActuator {
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
+
+      //emit event
+      var event = NativeContractEvent.builder()
+              .name("TokenCreate")
+              .rawData(
+                      TokenCreateEvent.builder()
+                              .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
+                              .name(ctx.getName())
+                              .max_supply(ctx.getMaxSupply())
+                              .total_supply(ctx.getTotalSupply())
+                              .build())
+              .build();
+      emitEvent(event, ret);
       return true;
     } catch (Exception e) {
       logger.error("Actuator error: {} --> ", e.getMessage(), e);

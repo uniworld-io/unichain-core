@@ -2,7 +2,7 @@ package org.unichain.common.logsfilter;
 
 import org.pf4j.ExtensionPoint;
 
-//@todo review plugin
+//@todo review new trigger
 public interface IPluginEventListener extends ExtensionPoint {
   void setServerAddress(String address);
 
@@ -10,7 +10,6 @@ public interface IPluginEventListener extends ExtensionPoint {
 
   void setDBConfig(String dbConfig);
 
-  // start should be called after setServerAddress, setTopic, setDBConfig
   void start();
 
   void stop();
@@ -23,7 +22,8 @@ public interface IPluginEventListener extends ExtensionPoint {
 
   void handleContractEventTrigger(Object trigger);
 
-  //@todo new handler
+  void handleNativeEventTrigger(Object trigger);
+
   void handleSolidityTrigger(Object trigger);
 
   void handleSolidityLogTrigger(Object trigger);

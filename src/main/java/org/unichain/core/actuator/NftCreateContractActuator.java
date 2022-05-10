@@ -23,6 +23,8 @@ import lombok.val;
 import lombok.var;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
+import org.unichain.common.event.NativeContractEvent;
+import org.unichain.common.event.NftCreateEvent;
 import org.unichain.common.utils.AddressUtil;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.capsule.*;
@@ -78,6 +80,19 @@ public class NftCreateContractActuator extends AbstractActuator {
       chargeFee(owner, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
+
+      //emit event
+      var event = NativeContractEvent.builder()
+              .name("NftCreate")
+              .rawData(
+                      NftCreateEvent.builder()
+                              .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
+                              .name(ctx.getContract())
+                              .total_supply(ctx.getTotalSupply())
+                              .minter(Hex.encodeHexString(ctx.getMinter().toByteArray()))
+                              .build())
+              .build();
+      emitEvent(event, ret);
       return true;
     } catch (Exception e) {
       logger.error("Actuator error: {} --> ", e.getMessage(), e);

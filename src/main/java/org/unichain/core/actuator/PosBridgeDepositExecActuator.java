@@ -21,22 +21,26 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
-import org.unichain.common.utils.ByteArray;
+import org.unichain.common.event.NativeContractEvent;
+import org.unichain.common.event.PosBridgeTokenDepositExecEvent;
+import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.Wallet;
+import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.TransferNftTokenContract;
+import org.unichain.protos.Contract;
+import org.unichain.protos.Contract.PosBridgeDepositExecContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.util.Arrays;
+import static org.unichain.core.capsule.PosBridgeTokenMappingCapsule.*;
 
-//@todo later
 @Slf4j(topic = "actuator")
 public class PosBridgeDepositExecActuator extends AbstractActuator {
 
@@ -48,33 +52,83 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
     public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
         var fee = calcFee();
         try {
-            val ctx = this.contract.unpack(TransferNftTokenContract.class);
-            var accountStore = dbManager.getAccountStore();
-            var tokenStore = dbManager.getNftTokenStore();
+            val ctx = this.contract.unpack(PosBridgeDepositExecContract.class);
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
-            var toAddr = ctx.getToAddress();
-            var toAddrBytes = toAddr.toByteArray();
-            var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
+            var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(ctx.getMessage().toByteArray());
 
-            //create new acc if not exist
-            if (!accountStore.has(toAddrBytes)) {
-                fee = Math.addExact(fee, dbManager.createNewAccount(toAddr));
+            switch ((int) decodedMsg.assetType){
+                case ASSET_TYPE_NATIVE:
+                case ASSET_TYPE_TOKEN: {
+                    //load token and transfer from token owner to ...
+                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(decodedMsg.childTokenAddr)).getSymbol();
+                    var tokenOwner = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(symbol));
+
+                    var wrapCtx = Contract.TransferTokenContract.newBuilder()
+                            .setOwnerAddress(tokenOwner.getOwnerAddress())
+                            .setToAddress(ByteString.copyFrom(Hex.decodeHex(decodedMsg.receiveAddr)))
+                            .setTokenName(symbol)
+                            .setAmount(decodedMsg.data)
+                            .build();
+                    var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferTokenContract)
+                            .getInstance()
+                            .getRawData()
+                            .getContract(0)
+                            .getParameter();
+                    var wrapActuator = new TokenTransferActuatorV4(contract, dbManager);
+                    var wrapRet = new TransactionResultCapsule();
+                    wrapActuator.execute(wrapRet);
+                    ret.setFee(wrapRet.getFee());
+                    break;
+                }
+                case ASSET_TYPE_NFT: {
+                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(decodedMsg.childTokenAddr)).getSymbol();
+                    var nftContractStore = dbManager.getNftTemplateStore();
+                    var contractKey =  Util.stringAsBytesUppercase(symbol);
+                    var nft = nftContractStore.get(contractKey);
+
+                    //@todo how to mint nft with token id & uri ?
+                    var wrapCtx = Contract.MintNftTokenContract.newBuilder()
+                            .setOwnerAddress(ByteString.copyFrom(nft.getOwner()))
+                            .setContract(symbol)
+                            .setToAddress(ByteString.copyFrom(Hex.decodeHex(decodedMsg.receiveAddr)))
+                            .setUri("missing!!!") //@todo how to set token id, uri from source ?
+                            .setMetadata(Long.toHexString(decodedMsg.data))
+                            .build();
+                    var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.MintNftTokenContract)
+                            .getInstance()
+                            .getRawData()
+                            .getContract(0)
+                            .getParameter();
+                    var wrapActuator = new NftMintTokenActuator(contract, dbManager);
+                    var wrapRet = new TransactionResultCapsule();
+                    wrapActuator.execute(wrapRet);
+                    ret.setFee(wrapRet.getFee());
+                    break;
+                }
+                default:
+                    break;
             }
-
-            var token = tokenStore.get(tokenId);
-            dbManager.removeNftToken(tokenId);
-
-            //then set new info and save
-            token.setOwner(toAddr);
-            token.setLastOperation(dbManager.getHeadBlockTimeStamp());
-            token.clearApproval();
-            token.clearNext();
-            token.clearPrev();
-            dbManager.saveNftToken(token);
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
+
+            var event = NativeContractEvent.builder()
+                    .name("PosBridgeDepositTokenExec")
+                    .rawData(
+                            PosBridgeTokenDepositExecEvent.builder()
+                                    .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
+                                    .root_chainid(decodedMsg.rootChainId)
+                                    .root_token(decodedMsg.rootTokenAddr)
+                                    .child_chainid(decodedMsg.childChainId)
+                                    .child_token(decodedMsg.childTokenAddr)
+                                    .receive_address(decodedMsg.receiveAddr)
+                                    .deposit_address(decodedMsg.depositAddr)
+                                    .data(decodedMsg.data)
+                                    .type((int) decodedMsg.assetType)
+                                    .build())
+                    .build();
+            emitEvent(event, ret);
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -88,34 +142,47 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
         try {
             Assert.notNull(contract, "No contract!");
             Assert.notNull(dbManager, "No dbManager!");
-            Assert.isTrue(contract.is(TransferNftTokenContract.class), "contract type error,expected type [TransferNftTokenContract],real type[" + contract.getClass() + "]");
+            Assert.isTrue(contract.is(PosBridgeDepositExecContract.class), "contract type error,expected type [PosBridgeDepositExecContract],real type[" + contract.getClass() + "]");
             var fee = calcFee();
-            val ctx = this.contract.unpack(TransferNftTokenContract.class);
+            val ctx = this.contract.unpack(PosBridgeDepositExecContract.class);
             var accountStore = dbManager.getAccountStore();
-            var tokenStore = dbManager.getNftTokenStore();
-            var relationStore = dbManager.getNftAccountTokenStore();
-            var ownerAddr = ctx.getOwnerAddress().toByteArray();
-            var toAddr = ctx.getToAddress().toByteArray();
-            var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
+            var posConfig = dbManager.getPosBridgeConfigStore().get();
+            var tokenMapRoot2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
 
-            Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Owner address and to address must be not the same");
-            Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");
-            Assert.isTrue(accountStore.has(ownerAddr), "Owner, approval or approval-for-all not exist");
-            Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");
-            var nft = tokenStore.get(tokenId);
-            var nftOwner = nft.getOwner();
-            var relation = relationStore.get(nftOwner);
+            //validate signatures
+            var msg = ctx.getMessage().toByteArray();
+            var sig = ctx.getSignatures().toByteArray();
+            PosBridgeUtil.validateSignatures(msg, sig, posConfig);
 
-            Assert.isTrue(Arrays.equals(ownerAddr, nftOwner)
-                    || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
-                    || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to transfer NFT token");
+            //token mapped ?
+            var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(msg);
+            var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr).getBytes();
 
-            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough fee");
+            Assert.isTrue(tokenMapRoot2ChildStore.has(rootKey)
+                    && tokenMapRoot2ChildStore.get(rootKey).hasChainId(decodedMsg.childChainId)
+                    && tokenMapRoot2ChildStore.get(rootKey).getTokenByChainId(decodedMsg.childChainId).equalsIgnoreCase(decodedMsg.childTokenAddr)
+                    && tokenMapRoot2ChildStore.get(rootKey).getAssetType() == decodedMsg.assetType
+                    , "token unmapped or unmatched asset type");
 
-            if (accountStore.has(toAddr)) {
-                fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+            //make sure this command belong to our chain ?
+            Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.childChainId), "unrecognized child chain id: " + decodedMsg.childChainId);
+
+            //make sure valid receiver
+            Assert.isTrue(Wallet.addressValid(Hex.decodeHex(decodedMsg.receiveAddr)), "invalid receive address");
+
+            //make sure asset exist
+            switch ((int) decodedMsg.assetType){
+                case ASSET_TYPE_NATIVE:
+                case ASSET_TYPE_TOKEN:
+                    Assert.isTrue(dbManager.getTokenAddrSymbolIndexStore().has(Hex.decodeHex(decodedMsg.childTokenAddr)), "token with address not found: " + decodedMsg.childTokenAddr);
+                    break;
+                case ASSET_TYPE_NFT:
+                    Assert.isTrue(dbManager.getNftAddrSymbolIndexStore().has(Hex.decodeHex(decodedMsg.childTokenAddr)), "nft with address not found: " + decodedMsg.childTokenAddr);
+                    break;
+                default:
+                    throw new ContractValidateException("invalid asset type");
             }
-            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
+            Assert.isTrue(accountStore.get(getOwnerAddress().toByteArray()).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -125,7 +192,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
 
     @Override
     public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-        return contract.unpack(TransferNftTokenContract.class).getOwnerAddress();
+        return contract.unpack(PosBridgeDepositExecContract.class).getOwnerAddress();
     }
 
     @Override

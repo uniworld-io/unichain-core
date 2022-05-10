@@ -63,7 +63,6 @@ import static org.unichain.protos.Contract.*;
 @Slf4j(topic = "capsule")
 public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
-  private Transaction transaction;
   @Setter
   private boolean isVerified = false;
 
@@ -73,7 +72,9 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
   @Getter
   @Setter
-  private TransactionTrace unxTrace;
+  private TransactionTrace txTrace;
+
+  private Transaction transaction;
 
   private static final ExecutorService executorService = Executors.newFixedThreadPool(Args.getInstance().getValidContractProtoThreadNum());
 
@@ -932,10 +933,8 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
   @Override
   public String toString() {
-
     toStringBuff.setLength(0);
     toStringBuff.append("TransactionCapsule \n[ ");
-
     toStringBuff.append("hash=").append(getTransactionId()).append("\n");
     AtomicInteger i = new AtomicInteger();
     if (!getInstance().getRawData().getContractList().isEmpty()) {
@@ -977,7 +976,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     } else {
       toStringBuff.append("contract list is empty\n");
     }
-
     toStringBuff.append("]");
     return toStringBuff.toString();
   }

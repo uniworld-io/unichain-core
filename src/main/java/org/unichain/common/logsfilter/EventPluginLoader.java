@@ -51,6 +51,9 @@ public class EventPluginLoader {
   private boolean solidityLogTriggerEnable = false;
 
   @Getter
+  private boolean nativeEventTriggerEnable = false;
+
+  @Getter
   private boolean solidityTriggerEnable = false;
 
   private FilterQuery filterQuery;
@@ -193,6 +196,16 @@ public class EventPluginLoader {
         setPluginTopic(Trigger.SOLIDITY_LOG_TRIGGER, triggerConfig.getTopic());
       }
     }
+    else if (EventPluginConfig.NATIVEEVENT_TRIGGER_NAME.equalsIgnoreCase(triggerConfig.getTriggerName())) {
+      if (triggerConfig.isEnabled()) {
+        nativeEventTriggerEnable = true;
+      } else {
+        nativeEventTriggerEnable = false;
+      }
+      if (!useNativeQueue) {
+        setPluginTopic(Trigger.NATIVE_EVENT_TRIGGER, triggerConfig.getTopic());
+      }
+    }
   }
 
   private void setPluginTopic(int eventType, String topic) {
@@ -237,6 +250,16 @@ public class EventPluginLoader {
       eventListeners.forEach(listener -> listener.handleTransactionTrigger(toJsonString(trigger)));
     }
   }
+
+  public void postTransactionTrigger(NativeEventTrigger trigger) {
+    if (useNativeQueue){
+      NativeMessageQueue.getInstance().publishTrigger(toJsonString(trigger), trigger.getTriggerName());
+    }
+    else {
+      eventListeners.forEach(listener -> listener.handleNativeEventTrigger(toJsonString(trigger)));
+    }
+  }
+
 
   public void postContractLogTrigger(ContractLogTrigger trigger) {
     if (useNativeQueue){

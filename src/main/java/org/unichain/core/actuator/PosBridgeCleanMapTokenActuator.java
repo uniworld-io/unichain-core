@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
+import org.unichain.common.event.NativeContractEvent;
+import org.unichain.common.event.PosBridgeTokenMappedEvent;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -56,7 +58,7 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
             var childKey = childKeyStr.getBytes();
 
             var rootCap = root2ChildStore.get(rootKey);
-            var empty = rootCap.clearToken(childKeyStr);
+            var empty = rootCap.clearToken(ctx.getChildChainid());
             if(empty)
                 root2ChildStore.delete(rootKey);
             else
@@ -67,6 +69,20 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
+
+            //emit event
+            var event = NativeContractEvent.builder()
+                    .name("PosBridgeUnmapToken")
+                    .rawData(
+                            PosBridgeTokenMappedEvent.builder()
+                                    .root_token(ctx.getRootToken())
+                                    .root_chainid(ctx.getRootChainid())
+                                    .child_token(ctx.getChildToken())
+                                    .child_chainid(ctx.getChildChainid())
+                                    .type(ctx.getType())
+                                    .build())
+                    .build();
+            emitEvent(event, ret);
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -87,8 +103,7 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
             var ownerAddr = getOwnerAddress().toByteArray();
 
             //check permission
-            var configStore = dbManager.getPosBridgeConfigStore();
-            var config = configStore.get();
+            var config = dbManager.getPosBridgeConfigStore().get();
             Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), config.getOwner()), "unmatched owner");
 
             //check mapped token pair
@@ -102,13 +117,13 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
 
             Assert.isTrue(root2ChildStore.has(rootKey), "not found mapped token pair");
             var rootValue = root2ChildStore.get(rootKey);
-            Assert.isTrue(rootValue.hasToken(childKeyStr), "not found mapped token pair");
-            Assert.isTrue(rootValue.getType() == ctx.getType(), "miss-matched asset type");
+            Assert.isTrue(rootValue.hasChainId(ctx.getChildChainid()), "not found mapped token pair");
+            Assert.isTrue(rootValue.getAssetType() == ctx.getType(), "miss-matched asset type");
 
             Assert.isTrue(child2RootStore.has(childKey), "not found mapped token pair");
             var childValue = child2RootStore.get(childKey);
-            Assert.isTrue(childValue.hasToken(rootKeyStr), "not found mapped token pair");
-            Assert.isTrue(childValue.getType() == ctx.getType(), "miss-matched asset type");
+            Assert.isTrue(childValue.hasChainId(ctx.getRootChainid()), "not found mapped token pair");
+            Assert.isTrue(childValue.getAssetType() == ctx.getType(), "miss-matched asset type");
 
             Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;

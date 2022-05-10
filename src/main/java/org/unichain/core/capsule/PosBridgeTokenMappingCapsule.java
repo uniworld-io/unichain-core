@@ -54,32 +54,29 @@ public class PosBridgeTokenMappingCapsule implements ProtoCapsule<Protocol.PosBr
     return this.tokenMap.toString();
   }
 
-  /**
-   * @param token: chainid_addrHex|symbol
-   */
-  public void putToken(String token, long type){
+  public void putToken(long chainId, String token, long type){
     this.tokenMap = this.tokenMap.toBuilder()
-            .putTokens(token, token)
+            .putTokens(Long.toHexString(chainId), token)
             .setType(type)
             .build();
   }
 
-  public String getFirstToken(){
-     return (String)tokenMap.getTokensMap().keySet().toArray()[0];
-  }
-
-  public boolean clearToken(String token){
+  public boolean clearToken(long chainId){
     this.tokenMap = this.tokenMap.toBuilder()
-            .removeTokens(token)
+            .removeTokens(Long.toHexString(chainId))
             .build();
     return this.tokenMap.getTokensMap().size() <= 0;
   }
 
-  public boolean hasToken(String token){
-    return (this.tokenMap.containsTokens(token));
+  public boolean hasChainId(long chainId){
+    return (this.tokenMap.containsTokens(Long.toHexString(chainId)));
   }
 
-  public long getType(){
+  public String getTokenByChainId(long chainId){
+    return this.tokenMap.getTokensMap().get(Long.toHexString(chainId));
+  }
+
+  public long getAssetType(){
     return this.tokenMap.getType();
   }
 }

@@ -13,9 +13,11 @@ import org.unichain.core.capsule.utils.RLPList;
 import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
+import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
-import java.util.HashMap;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j(topic = "PosBridge")
 public class PosBridgeUtil {
@@ -42,6 +44,34 @@ public class PosBridgeUtil {
         public String receiveAddr; //0x
         public long data;
         public long assetType;
+    }
+
+    /**
+     * @param msg hex string of abi encode event
+     * @param signatures array of hex string signed by validators
+     * @param config consensus config
+     */
+    public static void validateSignatures(final String msg, final String[] signatures, final PosBridgeConfigCapsule config){
+        try{
+            final String digest = Numeric.toHexString(Hash.sha3(Numeric.hexStringToByteArray(msg)));
+            final Set<String> unduplicatedSignatures = Arrays.stream(signatures).collect(Collectors.toSet());
+
+            //@TODO: set from config, confirm format hex: 0x...
+            final Set<String> validators = new HashSet<>();
+
+            int countVerify = 0;
+            for(String signature: unduplicatedSignatures){
+                String signer = SignExt.recoverAddress(digest, signature);//format hex: 0x...
+                if(validators.contains(signer))
+                    countVerify++;
+            }
+            var rate = ((double)countVerify)/validators.size();
+            Assert.isTrue(countVerify >= config.getMinValidator(), "LESS_THAN_MIN_VALIDATOR");
+            Assert.isTrue(rate >= config.getConsensusRate(), "LESS_THAN_CONSENSUS_RATE");
+        }catch (Exception e){
+            logger.error("validate signature failed -->", e);
+            throw e;
+        }
     }
 
     /**

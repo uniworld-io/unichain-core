@@ -90,6 +90,10 @@ public class PosBridgeConfigCapsule implements ProtoCapsule<Protocol.PosBridgeCo
     this.config = this.config.toBuilder().setMinValidator(minValidator).build();
   }
 
+  public long getMinValidator(){
+    return this.config.toBuilder().getMinValidator();
+  }
+
   public void setConsensusF1(long f1){
     this.config = this.config.toBuilder().setConsensusF1(f1).build();
   }

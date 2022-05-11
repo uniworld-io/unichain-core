@@ -54,28 +54,28 @@ public class TokenCreateActuatorV4 extends AbstractActuator {
     try {
       var ctx = contract.unpack(CreateTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var capsule = new TokenPoolCapsule(ctx);
+      var tokenCap = new TokenPoolCapsule(ctx);
 
       if(!ctx.hasField(TOKEN_CREATE_FIELD_START_TIME))
       {
-        capsule.setStartTime(dbManager.getHeadBlockTimeStamp());
+        tokenCap.setStartTime(dbManager.getHeadBlockTimeStamp());
       }
-      var startTime = capsule.getStartTime();
+      var startTime = tokenCap.getStartTime();
 
       if(!ctx.hasField(TOKEN_CREATE_FIELD_END_TIME))
       {
-        capsule.setEndTime(Math.addExact(startTime , URC30_DEFAULT_AGE_V3));
+        tokenCap.setEndTime(Math.addExact(startTime , URC30_DEFAULT_AGE_V3));
       }
 
-      capsule.setBurnedToken(0L);
-      capsule.setTokenName(capsule.getTokenName().toUpperCase());
-      capsule.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      capsule.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
-      capsule.setOriginFeePool(ctx.getFeePool());
-      dbManager.getTokenPoolStore().put(capsule.createDbKey(), capsule);
+      tokenCap.setBurnedToken(0L);
+      tokenCap.setTokenName(tokenCap.getTokenName().toUpperCase());
+      tokenCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+      tokenCap.setOriginFeePool(ctx.getFeePool());
+      dbManager.getTokenPoolStore().put(tokenCap.createDbKey(), tokenCap);
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      accountCapsule.addToken(capsule.createDbKey(), capsule.getTotalSupply());
+      accountCapsule.addToken(tokenCap.createDbKey(), tokenCap.getTotalSupply());
       accountCapsule.setBalance(Math.subtractExact(accountCapsule.getBalance(), Math.addExact(ctx.getFeePool(), fee)));
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
       dbManager.burnFee(fee);

@@ -1,10 +1,12 @@
 package org.unichain.core.services.http.fullnode.servlet;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.unichain.common.utils.AddressUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
@@ -35,6 +37,9 @@ public class CreateTokenServlet extends HttpServlet {
       var visible = Util.getVisiblePost(contract);
       var build = CreateTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
+
+      //generate address
+      build.setAddress(ByteString.copyFrom(AddressUtil.generateAddress()));
       var tokenCtx = build.build();
       var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.CreateTokenContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);

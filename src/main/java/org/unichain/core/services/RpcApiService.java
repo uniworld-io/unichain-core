@@ -23,10 +23,7 @@ import org.unichain.common.application.Service;
 import org.unichain.common.crypto.ECKey;
 import org.unichain.common.overlay.discover.node.NodeHandler;
 import org.unichain.common.overlay.discover.node.NodeManager;
-import org.unichain.common.utils.ByteArray;
-import org.unichain.common.utils.Sha256Hash;
-import org.unichain.common.utils.StringUtil;
-import org.unichain.common.utils.Utils;
+import org.unichain.common.utils.*;
 import org.unichain.core.Wallet;
 import org.unichain.core.WalletSolidity;
 import org.unichain.core.capsule.AccountCapsule;
@@ -1291,6 +1288,9 @@ public class RpcApiService implements Service {
     @Override
     public void createNftTemplate(Contract.CreateNftTemplateContract request, StreamObserver<Transaction> responseObserver) {
       try {
+        request = request.toBuilder()
+                .setAddress(ByteString.copyFrom(AddressUtil.generateAddress()))
+                .build();
         responseObserver.onNext(createTransactionCapsule(request, ContractType.CreateNftTemplateContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
@@ -1494,6 +1494,10 @@ public class RpcApiService implements Service {
     @Override
     public void createToken(Contract.CreateTokenContract request, StreamObserver<Transaction> responseObserver) {
       try {
+        //generate token address
+        request = request.toBuilder()
+                .setAddress(ByteString.copyFrom(AddressUtil.generateAddress()))
+                .build();
         responseObserver.onNext(createTransactionCapsule(request, ContractType.CreateTokenContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);

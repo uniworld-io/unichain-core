@@ -367,6 +367,7 @@ message CreateNftTemplateContract{
   int64 total_supply = 3;
   bytes minter = 4;
   bytes owner_address = 5;
+  bytes address = 6;
 }
 
 message MintNftTokenContract{
@@ -449,7 +450,7 @@ message PosBridgeCleanMapTokenContract{
     string root_token= 3; //hex address if token, symbol if native
     int64 child_chainid = 4;
     string child_token= 5;
-    uint32 type = 6; //1:native, 2:erc20, 3:nft
+    uint32 type = 6; //1:native, 2:erc20, 3:erc721
 }
 
 //call from user
@@ -481,7 +482,7 @@ message PosBridgeWithdrawContract{
        depositAddr:0x...
        receiveAddr: 0x...,
        data: 1000L //token amount or id
-       type: 1 //1: native 2: urc20, 3: nft
+       type: 1 //1: //1:native, 2:erc20, 3:erc721
      }
   }
  */
@@ -503,7 +504,7 @@ message PosBridgeDepositExecContract{
        withdrawAddr: 0x...
        receiveAddr: 0x...
        data: 1000
-       type: 1 //1: native 2: urc20, 3: nft
+       type: 1 //1:native, 2:erc20, 3:erc721
      }
  */
 message PosBridgeWithdrawExecContract{

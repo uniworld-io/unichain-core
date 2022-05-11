@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class Parameter {
   /**
-   * @note: all supported version add here
+   *  all supported version add here
    */
   public static final Set<Integer> BLOCK_VERSION_SUPPORTED = new HashSet<>(Arrays.asList(
           ChainConstant.BLOCK_VERSION_1,
@@ -46,7 +46,7 @@ public class Parameter {
     public static final int MAX_FROZEN_TIME_BY_DAY = 365 * 10; // 10 years
 
     /**
-     * Critical: all available block version must declare here
+     * critical: all available block version must declare here
      */
     public static final int BLOCK_VERSION_0 = 0;
     public static final int BLOCK_VERSION_1 = 1;

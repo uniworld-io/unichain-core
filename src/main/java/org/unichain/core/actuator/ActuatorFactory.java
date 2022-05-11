@@ -90,8 +90,10 @@ public class ActuatorFactory {
             return new TokenCreateActuator(contract.getParameter(), manager);
           case BLOCK_VERSION_3:
             return new TokenCreateActuatorV3(contract.getParameter(), manager);
-          default:
+          case BLOCK_VERSION_4:
             return new TokenCreateActuatorV4(contract.getParameter(), manager);
+          default:
+            return new TokenCreateActuatorV5(contract.getParameter(), manager);
         }
       case ExchangeTokenContract:
         return new TokenExchangeActuator(contract.getParameter(), manager);

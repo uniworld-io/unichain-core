@@ -40,7 +40,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
     this.template = template;
   }
 
-  public NftTemplateCapsule(CreateNftTemplateContract ctx, long lastOperation, long tokenIndex, byte[] address) {
+  public NftTemplateCapsule(CreateNftTemplateContract ctx, long lastOperation, long tokenIndex) {
     var builder = NftTemplate.newBuilder()
             .setContract(ctx.getContract().toUpperCase())
             .setName(ctx.getName())
@@ -48,7 +48,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
             .setTotalSupply(ctx.getTotalSupply())
             .setTokenIndex(tokenIndex)
             .setLastOperation(lastOperation)
-            .setAddress(ByteString.copyFrom(address));
+            .setAddress(ctx.getAddress());
 
     if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER))
       builder.setMinter(ctx.getMinter());

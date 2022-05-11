@@ -2,6 +2,8 @@ package org.unichain.common.utils;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.asn1.x9.X9IntegerConverter;
 import org.bouncycastle.crypto.ec.CustomNamedCurves;
@@ -10,15 +12,16 @@ import org.bouncycastle.math.ec.ECAlgorithms;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.math.ec.FixedPointCombMultiplier;
 import org.bouncycastle.math.ec.custom.sec.SecP256K1Curve;
-import org.web3j.crypto.ECDSASignature;
-import org.web3j.crypto.ECKeyPair;
-import org.web3j.crypto.Hash;
-import org.web3j.crypto.Keys;
+import org.web3j.crypto.*;
 import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.util.Arrays;
+import java.util.Base64;
 
 import static org.web3j.utils.Assertions.verifyPrecondition;
 
@@ -239,6 +242,43 @@ public class SignExt {
             privKey = privKey.mod(CURVE.getN());
         }
         return new FixedPointCombMultiplier().multiply(CURVE.getG(), privKey);
+    }
+
+    /**
+     * Returns address signer
+     * @param digest 0xb5cc20a0edcad234e6e440ff8396f994794cacafe679d46d43c33a809e981eea
+     * @param signature 0x8d13ac0c7c932aa9e64e4c0fd098214270591ae0c5ca18ec2dd54a25405179b361b13d69fb4d6bd590ff6d7bba440b08c668178549533726d4f61ea83dc7eae71c
+     * @before msg 0x... is string hex
+     * @after digest Numeric.toHexString(Hash.sha3(Numeric.hexStringToByteArray(msg)));
+     */
+    public static String recoverAddress(String digest, String signature) {
+        SignatureData signatureData = getSignatureData(signature);
+        int header = 0;
+        header = (signatureData.getV() & 0xFF);
+        if (header < 27 || header > 34) {
+            return null;
+        }
+        int recId = header - 27;
+        BigInteger key = recoverFromSignature(
+                recId,
+                new ECDSASignature(
+                        new BigInteger(1, signatureData.getR()), new BigInteger(1, signatureData.getS())),
+                Numeric.hexStringToByteArray(digest));
+        if (key == null) {
+            return null;
+        }
+        return ("0x" + Keys.getAddress(key)).trim();
+    }
+
+    private static SignatureData getSignatureData(String signature) {
+        byte[] signatureBytes = Numeric.hexStringToByteArray(signature);
+        byte v = signatureBytes[64];
+        if (v < 27) {
+            v += 27;
+        }
+        byte[] r = Arrays.copyOfRange(signatureBytes, 0, 32);
+        byte[] s = Arrays.copyOfRange(signatureBytes, 32, 64);
+        return new SignatureData(v, r, s);
     }
 
     public static class SignatureData {

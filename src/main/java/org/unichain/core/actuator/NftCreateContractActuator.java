@@ -81,7 +81,7 @@ public class NftCreateContractActuator extends AbstractActuator {
 
       //emit event
       var event = NativeContractEvent.builder()
-              .name("NftCreate")
+              .topic("NftCreate")
               .rawData(
                       NftCreateEvent.builder()
                               .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))

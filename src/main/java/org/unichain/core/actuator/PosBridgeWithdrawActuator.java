@@ -119,7 +119,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
 
             //emit event
             var event = NativeContractEvent.builder()
-                    .name("PosBridgeWithdrawToken")
+                    .topic("PosBridgeWithdrawToken")
                     .rawData(
                             PosBridgeTokenWithdrawEvent.builder()
                                     .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))

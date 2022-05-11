@@ -83,7 +83,7 @@ public class TokenCreateActuatorV4 extends AbstractActuator {
 
       //emit event
       var event = NativeContractEvent.builder()
-              .name("TokenCreate")
+              .topic("TokenCreate")
               .rawData(
                       TokenCreateEvent.builder()
                               .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))

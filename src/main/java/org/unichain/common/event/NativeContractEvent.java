@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public class NativeContractEvent {
-    public String name;
+    public String topic;
     public Object rawData;
     public long index; //sorted index of event in one transaction
 }

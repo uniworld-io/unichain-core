@@ -44,7 +44,11 @@ public class NativeEventTrigger extends Trigger {
 
   @Getter
   @Setter
-  private String eventName;
+  private String topic;
+
+  @Getter
+  @Setter
+  private String signature;
 
   @Getter
   @Setter

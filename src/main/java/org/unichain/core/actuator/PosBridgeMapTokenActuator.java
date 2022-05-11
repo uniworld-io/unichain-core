@@ -80,7 +80,7 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
 
             //emit event
             var event = NativeContractEvent.builder()
-                    .name("PosBridgeMapToken")
+                    .topic("PosBridgeMapToken")
                     .rawData(
                             PosBridgeTokenMappedEvent.builder()
                                 .root_token(ctx.getRootToken())

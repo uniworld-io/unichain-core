@@ -131,7 +131,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
 
             //emit event
             var event = NativeContractEvent.builder()
-                    .name("PosBridgeDepositToken")
+                    .topic("PosBridgeDepositToken")
                     .rawData(
                             PosBridgeTokenDepositEvent.builder()
                                     .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))

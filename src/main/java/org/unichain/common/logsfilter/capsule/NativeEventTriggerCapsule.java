@@ -20,8 +20,9 @@ public class NativeEventTriggerCapsule extends TriggerCapsule {
 
   public NativeEventTriggerCapsule(TransactionCapsule txCap, BlockCapsule blockCapsule, long latestSolidifiedBlockNumber, NativeContractEvent event) {
     trigger = new NativeEventTrigger();
-    trigger.setEventName(event.name);
+    trigger.setTopic(event.topic);
     trigger.setRawData(event.rawData);
+    trigger.setSignature("");//@todo later generate event signature
     trigger.setIndex(event.index);
     if (Objects.nonNull(blockCapsule)) {
       trigger.setBlockHash(blockCapsule.getBlockId().toString());

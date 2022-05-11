@@ -39,4 +39,9 @@ public abstract class AbstractActuator implements Actuator {
     event.index = this.eventIndex++;
     ret.addEvent(event);
   }
+
+  @Override
+  public void upgrade(){
+
+  }
 }

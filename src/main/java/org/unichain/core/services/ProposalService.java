@@ -2,6 +2,7 @@ package org.unichain.core.services;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
+import org.unichain.core.actuator.ActuatorFactory;
 import org.unichain.core.capsule.ProposalCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -513,8 +514,10 @@ public class ProposalService {
          * - the last proposal will win.
          */
         case HARD_FORK: {
-          logger.info("Saving hardfork proposal --> {}", entry.getValue());
+          logger.info("Saving upgrade proposal --> {}", entry.getValue());
           manager.getDynamicPropertiesStore().saveHardForkVersion(entry.getValue());
+          ActuatorFactory.createUpgradeActuator(manager, entry.getValue().intValue())
+                  .forEach(actuator -> actuator.upgrade());
           break;
         }
         case MAX_FUTURE_TRANSFER_TIME_RANGE_UNW: {
@@ -551,5 +554,4 @@ public class ProposalService {
     }
     return find;
   }
-
 }

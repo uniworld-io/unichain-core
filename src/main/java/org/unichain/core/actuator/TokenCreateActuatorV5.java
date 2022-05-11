@@ -83,4 +83,9 @@ public class TokenCreateActuatorV5 extends TokenCreateActuatorV4 {
       throw new ContractValidateException(e.getMessage());
     }
   }
+
+  @Override
+  public void upgrade(){
+    //generate all token address
+  }
 }

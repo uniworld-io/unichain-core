@@ -16,7 +16,7 @@ import java.io.IOException;
 
 @Component
 @Slf4j(topic = "API")
-public class NftGetListTokenApprovalServlet extends HttpServlet {
+public class NftListTokenApprovalServlet extends HttpServlet {
   @Autowired
   private NftService nftService;
 

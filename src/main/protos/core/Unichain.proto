@@ -865,13 +865,13 @@ message NftTemplateQueryResult{
 
 message NftTokenQuery{
   bytes owner_address = 1;
-  string contract = 2;
+  string contract = 2;//symbol or hex address
   int32 page_size = 3;
   int32 page_index = 4;
 }
 
 message NftTokenGet{
-  string contract = 1;
+  string contract = 1; //symbol or hex address
   int64 id = 2;
 }
 

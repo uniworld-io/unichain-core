@@ -1073,7 +1073,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case PosBridgeDepositExecContract:
       case PosBridgeWithdrawContract:
       case PosBridgeWithdrawExecContract:
-        return BLOCK_VERSION_6;
+        return BLOCK_VERSION_5;
       case TransferTokenOwnerContract:
       case ExchangeTokenContract:
         return BLOCK_VERSION_3;

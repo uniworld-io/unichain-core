@@ -152,6 +152,9 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             val ctx = this.contract.unpack(PosBridgeWithdrawContract.class);
             var accountStore = dbManager.getAccountStore();
 
+            var config = dbManager.getPosBridgeConfigStore().get();
+            Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
+
             //make sure receive address is valid
             Assert.isTrue(Wallet.addressValid(Hex.decodeHex(ctx.getReceiveAddress())), "invalid receive address");
 

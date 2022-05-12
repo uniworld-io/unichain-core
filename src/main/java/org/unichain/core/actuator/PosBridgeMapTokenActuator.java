@@ -110,8 +110,10 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             var accountStore = dbManager.getAccountStore();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
-            //check permission
             var config = dbManager.getPosBridgeConfigStore().get();
+            Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
+
+            //check permission
             Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), config.getOwner()), "unmatched owner");
 
             //check valid chain id

@@ -66,14 +66,14 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
 
             var assetType = (int)rootMap.getAssetType();
             var rootToken = rootMap.getTokenByChainId(decodedMsg.rootChainId);
-
+            var posConfig = dbManager.getPosBridgeConfigStore().get();
 
             //unlock asset
             switch (assetType){
                 case ASSET_TYPE_NATIVE: {
                     var wrapCtx = Contract.TransferContract.newBuilder()
                             .setAmount(decodedMsg.value)
-                            .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
+                            .setOwnerAddress(posConfig.getNativePredicate())
                             .setToAddress(ByteString.copyFrom(receiveAddr))
                             .build();
                     var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferContract)
@@ -91,7 +91,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                     var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
                     var wrapCtx = Contract.TransferTokenContract.newBuilder()
                             .setAmount(decodedMsg.value)
-                            .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_TOKEN_WALLET)))
+                            .setOwnerAddress(posConfig.getTokenPredicate())
                             .setToAddress(ByteString.copyFrom(receiveAddr))
                             .setTokenName(symbol)
                             .setAvailableTime(0L)
@@ -110,7 +110,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                 case ASSET_TYPE_NFT: {
                     var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
                     var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
-                            .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NFT_WALLET)))
+                            .setOwnerAddress(posConfig.getNftPredicate())
                             .setToAddress(ByteString.copyFrom(receiveAddr))
                             .setContract(symbol)
                             .setTokenId(decodedMsg.value)
@@ -169,6 +169,8 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             var accountStore = dbManager.getAccountStore();
             var posConfig = dbManager.getPosBridgeConfigStore().get();
 
+            Assert.isTrue(posConfig.isInitialized(), "POSBridge not initialized yet");
+
             //check permission
             checkExecPermission(ctx, posConfig);
 
@@ -213,11 +215,14 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
         var assetType = (int)rootMap.getAssetType();
         var rootToken = rootMap.getTokenByChainId(decodedMsg.rootChainId);
 
+        var posConfig = dbManager.getPosBridgeConfigStore().get();
+
+
         switch (assetType){
             case ASSET_TYPE_NATIVE: {
                 var wrapCtx = Contract.TransferContract.newBuilder()
                         .setAmount(decodedMsg.value)
-                        .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
+                        .setOwnerAddress(posConfig.getNativePredicate())
                         .setToAddress(ByteString.copyFrom(receiveAddr))
                         .build();
                 var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferContract)
@@ -233,7 +238,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                 var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
                 var wrapCtx = Contract.TransferTokenContract.newBuilder()
                         .setAmount(decodedMsg.value)
-                        .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_TOKEN_WALLET)))
+                        .setOwnerAddress(posConfig.getTokenPredicate())
                         .setToAddress(ByteString.copyFrom(receiveAddr))
                         .setTokenName(symbol)
                         .setAvailableTime(0L)
@@ -250,7 +255,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             case ASSET_TYPE_NFT: {
                 var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
                 var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
-                        .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NFT_WALLET)))
+                        .setOwnerAddress(posConfig.getNftPredicate())
                         .setToAddress(ByteString.copyFrom(receiveAddr))
                         .setContract(symbol)
                         .setTokenId(decodedMsg.value) //@todo review make sure nft tokenId is consistent along deposit/withdraw flow

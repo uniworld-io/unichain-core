@@ -19,12 +19,13 @@ public class PosBridgeConfigStore extends UnichainStoreWithRevoking<PosBridgeCon
     super(dbName);
     if(!has())
     {
-      //initialize default config
+      /**
+       * initialize default config
+       */
       var config = Protocol.PosBridgeConfig.newBuilder()
               .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_GENESIS_ADMIN_WALLET)))
-              .setMinValidator(3)
-              .setConsensusF1(2)
-              .setConsensusF2(3)
+              .setMinValidator(1)
+              .setConsensusRate(75)
               .setInitialized(false)
               .build();
       put(new PosBridgeConfigCapsule(config));

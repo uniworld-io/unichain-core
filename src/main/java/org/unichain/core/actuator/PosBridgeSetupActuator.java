@@ -21,6 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
+import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.Wallet;
@@ -53,12 +54,23 @@ public class PosBridgeSetupActuator extends AbstractActuator {
             var config = configStore.get();
             if(ctx.hasField(POSBRIDGE_NEW_OWNER))
                 config.setNewOwner(ctx.getNewOwner().toByteArray());
+
             if(ctx.hasField(POSBRIDGE_MIN_VALIDATOR))
                 config.setMinValidator(ctx.getMinValidator());
-            if(ctx.hasField(POSBRIDGE_VALIDATOR_F1))
-                config.setConsensusF1(ctx.getConsensusF1());
-            if(ctx.hasField(POSBRIDGE_VALIDATOR_F2))
-                config.setConsensusF2(ctx.getConsensusF2());
+
+            if(ctx.hasField(POSBRIDGE_CONSENSUS_RATE))
+                config.setConsensusRate(ctx.getConsensusRate());
+
+            //@todo temporary update predicate addr now. consider to lock predicate asset
+            if(ctx.hasField(POSBRIDGE_PREDICATE_NATIVE))
+                config.setPredicateNative(Hex.decodeHex(ctx.getPredicateNative()));
+
+            if(ctx.hasField(POSBRIDGE_PREDICATE_TOKEN))
+                config.setPredicateToken(Hex.decodeHex(ctx.getPredicateToken()));
+
+            if(ctx.hasField(POSBRIDGE_PREDICATE_NFT))
+                config.setPredicateNft(Hex.decodeHex(ctx.getPredicateNft()));
+
             if(ctx.hasField(POSBRIDGE_VALIDATORS))
             {
                 //clear then set all validators
@@ -99,13 +111,30 @@ public class PosBridgeSetupActuator extends AbstractActuator {
             if(ctx.hasField(POSBRIDGE_NEW_OWNER)) {
                 Assert.isTrue(Wallet.addressValid(ctx.getOwnerAddress().toByteArray()), "Invalid new owner address");
             }
+
             if(ctx.hasField(POSBRIDGE_MIN_VALIDATOR)) {
                 Assert.isTrue(ctx.getMinValidator() >= 1 && ctx.getMinValidator() <= 100, "Invalid new min validator");
             }
-            if(ctx.hasField(POSBRIDGE_VALIDATOR_F1)) {
-                Assert.isTrue(ctx.hasField(POSBRIDGE_VALIDATOR_F2), "Missing consensus F2");
-                Assert.isTrue(ctx.getConsensusF1() >= 1 &&  ctx.getConsensusF2() >= 1 && ctx.getConsensusF1() <= ctx.getConsensusF2(), "Invalid consensus rate F1/F2");
+
+            if(ctx.hasField(POSBRIDGE_CONSENSUS_RATE)) {
+                Assert.isTrue(ctx.getConsensusRate() >= 50 &&  ctx.getConsensusRate() <= 100, "Invalid consensus rate");
             }
+
+            if(ctx.hasField(POSBRIDGE_PREDICATE_NATIVE)) {
+                var predicateAddr = Hex.decodeHex(ctx.getPredicateNative());
+                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist native predicate addr");
+            }
+
+            if(ctx.hasField(POSBRIDGE_PREDICATE_TOKEN)) {
+                var predicateAddr = Hex.decodeHex(ctx.getPredicateToken());
+                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist token predicate addr");
+            }
+
+            if(ctx.hasField(POSBRIDGE_PREDICATE_NFT)) {
+                var predicateAddr = Hex.decodeHex(ctx.getPredicateNft());
+                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist NFT predicate addr");
+            }
+
             if(ctx.hasField(POSBRIDGE_MIN_VALIDATOR)) {
                 Assert.isTrue(ctx.getMinValidator() >= 1 && ctx.getMinValidator() <= 100, "Invalid new min validator");
             }

@@ -46,8 +46,7 @@ public class Test {
 
             var config = Protocol.PosBridgeConfig.newBuilder()
                     .setMinValidator(1)
-                    .setConsensusF1(1)
-                    .setConsensusF2(3)
+                    .setConsensusRate(70)
                     .putValidators(signer, signer)
                     .setInitialized(true)
                     .build();

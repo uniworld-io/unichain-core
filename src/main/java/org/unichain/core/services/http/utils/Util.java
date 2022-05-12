@@ -914,8 +914,10 @@ public class Util {
   public static Descriptors.FieldDescriptor POSBRIDGE_NEW_OWNER = PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.NEW_OWNER_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor POSBRIDGE_MIN_VALIDATOR = PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.MIN_VALIDATOR_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor POSBRIDGE_VALIDATORS= PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.VALIDATORS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor POSBRIDGE_VALIDATOR_F1= PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.CONSENSUS_F1_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor POSBRIDGE_VALIDATOR_F2= PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.CONSENSUS_F2_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor POSBRIDGE_CONSENSUS_RATE= PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.CONSENSUS_RATE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor POSBRIDGE_PREDICATE_NATIVE= PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.PREDICATE_NATIVE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor POSBRIDGE_PREDICATE_TOKEN= PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.PREDICATE_TOKEN_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor POSBRIDGE_PREDICATE_NFT= PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.PREDICATE_NFT_FIELD_NUMBER);
 
 
   public static int DEFAULT_PAGE_SIZE = 20;

@@ -151,11 +151,12 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             var fee = calcFee();
             val ctx = this.contract.unpack(PosBridgeDepositExecContract.class);
             var accountStore = dbManager.getAccountStore();
-            var posConfig = dbManager.getPosBridgeConfigStore().get();
+            var config = dbManager.getPosBridgeConfigStore().get();
 
+            Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
 
             //valid signatures ?
-            PosBridgeUtil.validateSignatures(ctx.getMessage(), ctx.getSignaturesList(), posConfig);
+            PosBridgeUtil.validateSignatures(ctx.getMessage(), ctx.getSignaturesList(), config);
 
             var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(ctx.getMessage());
             var tokenMapRoot2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();

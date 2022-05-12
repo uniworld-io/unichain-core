@@ -34,7 +34,6 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
-//@todo later
 @Slf4j(topic = "actuator")
 public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
 
@@ -104,6 +103,7 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
 
             //check permission
             var config = dbManager.getPosBridgeConfigStore().get();
+            Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
             Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), config.getOwner()), "unmatched owner");
 
             //check mapped token pair

@@ -943,13 +943,12 @@ message NftTokenApproveRelation{
 message PosBridgeConfig{
   bytes owner_address = 1;
   int64 min_validator = 2;
-  int64 consensus_f1 =3;
-  int64 consensus_f2 =4;
-  map<string, string> validators = 5;
-  bool initialized = 6;
-  bytes native_predicate_address = 7;
-  bytes token_predicate_address = 8;
-  bytes nft_predicate_address = 9;
+  uint32 consensus_rate =3;
+  map<string, string> validators = 4;
+  bool initialized = 5;
+  bytes native_predicate_address = 6;
+  bytes token_predicate_address = 7;
+  bytes nft_predicate_address = 8;
 }
 
 message PosBridgeTokenMapping{

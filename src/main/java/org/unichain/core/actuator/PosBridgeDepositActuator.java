@@ -27,7 +27,6 @@ import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.PosBridgeTokenDepositEvent;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -40,7 +39,6 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import static org.unichain.core.capsule.PosBridgeTokenMappingCapsule.*;
 
-//@todo later
 @Slf4j(topic = "actuator")
 public class PosBridgeDepositActuator extends AbstractActuator {
 
@@ -62,6 +60,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
             var childToken = root2ChildMap.get(root2ChildKey).getTokenByChainId(ctx.getChildChainid());
 
             var rootChainId = (long)Wallet.getAddressPreFixByte();
+            var config = dbManager.getPosBridgeConfigStore().get();
 
             //lock asset
             switch (assetType){
@@ -69,7 +68,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                     var wrapCtx = Contract.TransferContract.newBuilder()
                             .setAmount(ctx.getData())
                             .setOwnerAddress(ctx.getOwnerAddress())
-                            .setToAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
+                            .setToAddress(config.getNativePredicate())
                             .build();
                     var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferContract)
                             .getInstance()
@@ -87,7 +86,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                     var wrapCtx = Contract.TransferTokenContract.newBuilder()
                             .setAmount(ctx.getData())
                             .setOwnerAddress(ctx.getOwnerAddress())
-                            .setToAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_TOKEN_WALLET)))
+                            .setToAddress(config.getTokenPredicate())
                             .setTokenName(symbol)
                             .setAvailableTime(0L)
                             .build();
@@ -106,7 +105,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                     var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(ctx.getRootToken())).getSymbol();
                     var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                             .setOwnerAddress(ctx.getOwnerAddress())
-                            .setToAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NFT_WALLET)))
+                            .setToAddress(config.getNftPredicate())
                             .setContract(symbol)
                             .setTokenId(ctx.getData())
                             .build();
@@ -164,6 +163,9 @@ public class PosBridgeDepositActuator extends AbstractActuator {
             val ctx = this.contract.unpack(PosBridgeDepositContract.class);
             var ownerAddr = getOwnerAddress().toByteArray();
             var accountStore = dbManager.getAccountStore();
+            var config = dbManager.getPosBridgeConfigStore().get();
+
+            Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
 
             //check mapped token
             var root2ChildMap = dbManager.getPosBridgeTokenMapRoot2ChildStore();
@@ -177,13 +179,14 @@ public class PosBridgeDepositActuator extends AbstractActuator {
 
             var assetType = childTokens.getAssetType();
 
+
             //checking balance
             switch ((int)assetType){
                 case ASSET_TYPE_NATIVE: {
                     var wrapCtx = Contract.TransferContract.newBuilder()
                             .setAmount(ctx.getData())
                             .setOwnerAddress(ctx.getOwnerAddress())
-                            .setToAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
+                            .setToAddress(config.getNativePredicate())
                             .build();
                     var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferContract)
                             .getInstance()
@@ -199,7 +202,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                     var wrapCtx = Contract.TransferTokenContract.newBuilder()
                             .setAmount(ctx.getData())
                             .setOwnerAddress(ctx.getOwnerAddress())
-                            .setToAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_TOKEN_WALLET)))
+                            .setToAddress(config.getTokenPredicate())
                             .setTokenName(symbol)
                             .setAvailableTime(0L)
                             .build();
@@ -216,7 +219,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                     var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(ctx.getRootToken())).getSymbol();
                     var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                             .setOwnerAddress(ctx.getOwnerAddress())
-                            .setToAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NFT_WALLET)))
+                            .setToAddress(config.getNftPredicate())
                             .setContract(symbol)
                             .setTokenId(ctx.getData())
                             .build();

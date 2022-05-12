@@ -30,9 +30,6 @@ import java.util.Map;
 public class PosBridgeConfigCapsule implements ProtoCapsule<Protocol.PosBridgeConfig> {
   public static final byte[] DEFAULT_KEY = ArrayUtils.addAll(Util.stringAsBytesUppercase("PosBridgeConfig"));
   public static final String POSBRIDGE_GENESIS_ADMIN_WALLET = "UmKK513F4s81Lmp1xW3VLbjewVUPBDVm1k";
-  public static final String POSBRIDGE_PREDICATE_NATIVE_WALLET = "UeUDL12QJYvyFyQhreUnjvtV2yMoRMrecg";
-  public static final String POSBRIDGE_PREDICATE_TOKEN_WALLET = "UikVt2k4YfmkrDyp7cnJxKxVdz7sjsd5cN";
-  public static final String POSBRIDGE_PREDICATE_NFT_WALLET = "Uh7L9ekSh4ckGHmRWRY7mD8dRAmMHPo131";
 
   private Protocol.PosBridgeConfig config;
   private byte[] key;
@@ -94,16 +91,40 @@ public class PosBridgeConfigCapsule implements ProtoCapsule<Protocol.PosBridgeCo
     return this.config.toBuilder().getMinValidator();
   }
 
-  public void setConsensusF1(long f1){
-    this.config = this.config.toBuilder().setConsensusF1(f1).build();
+  public void setConsensusRate(int rate){
+    this.config = this.config.toBuilder().setConsensusRate(rate).build();
   }
 
-  public void setConsensusF2(long f2){
-    this.config = this.config.toBuilder().setConsensusF1(f2).build();
+  public void setPredicateNative(byte[] predicate){
+    this.config = this.config.toBuilder().setNativePredicateAddress(ByteString.copyFrom(predicate)).build();
+  }
+
+  public void setPredicateToken(byte[] predicate){
+    this.config = this.config.toBuilder().setTokenPredicateAddress(ByteString.copyFrom(predicate)).build();
+  }
+
+  public void setPredicateNft(byte[] predicate){
+    this.config = this.config.toBuilder().setNftPredicateAddress(ByteString.copyFrom(predicate)).build();
+  }
+
+  public ByteString getNativePredicate(){
+    return this.config.getNativePredicateAddress();
+  }
+
+  public ByteString getTokenPredicate(){
+    return this.config.getTokenPredicateAddress();
+  }
+
+  public ByteString getNftPredicate(){
+    return this.config.getNftPredicateAddress();
   }
 
   public double getConsensusRate(){
-    return ((double)this.config.getConsensusF1()/this.config.getConsensusF2());
+    return ((double) this.config.getConsensusRate()/100);
+  }
+
+  public boolean isInitialized(){
+    return config.isInitialized();
   }
 
   public void clearThenPutValidators(List<String> hexValidators){

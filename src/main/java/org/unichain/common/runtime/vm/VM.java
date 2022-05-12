@@ -262,8 +262,7 @@ public class VM {
         case LOG4:
           int nTopics = op.val() - OpCode.LOG0.val();
           BigInteger dataSize = stack.get(stack.size() - 2).value();
-          BigInteger dataCost = dataSize
-              .multiply(BigInteger.valueOf(energyCosts.getLOG_DATA_ENERGY()));
+          BigInteger dataCost = dataSize.multiply(BigInteger.valueOf(energyCosts.getLOG_DATA_ENERGY()));
           if (program.getEnergyLimitLeft().value().compareTo(dataCost) < 0) {
             throw new OutOfEnergyException(
                 "Not enough energy for '%s' operation executing: opEnergy[%d], programEnergy[%d]",

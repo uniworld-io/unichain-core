@@ -956,3 +956,37 @@ message PosBridgeTokenMapping{
   map<string, string>  tokens = 1;//with rootchain: chainId --> token
   int64 type = 2; //1:native, 2: erc20 3: nft
 }
+
+//@todo later
+message PosBridgeTokenMappedEvent{
+
+}
+
+//@todo later
+message PosBridgeTokenUnmappedEvent{
+
+}
+
+//@todo later
+message PosBridgeTokenDepositedEvent{
+/**
+ childChainId: 0x...
+       childTokenAddr: 0x...
+       rootChainId: 0x...
+       rootTokenAddr: 0x...
+       withdrawAddr: 0x...
+       receiveAddr: 0x...
+       data: 1000
+       type: 1 //1:native, 2:erc20, 3:erc721
+ */
+}
+
+//@todo later
+message PosBridgeTokenWithdrawEvent{
+
+}
+
+//@todo later
+message PosBridgeTokenSetupEvent{
+
+}

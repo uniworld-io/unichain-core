@@ -12,7 +12,6 @@ public class PosBridgeTokenDepositExecEvent implements Serializable {
     public long child_chainid;
     public String child_token;
     public int type;
-    public String deposit_address;
     public String receive_address;
     public long data;
 }

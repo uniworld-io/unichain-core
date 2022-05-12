@@ -12,7 +12,6 @@ public class PosBridgeTokenWithdrawExecEvent implements Serializable {
     public long child_chainid;
     public String child_token;
     public int type;
-    public String withdraw_address;
     public String receive_address;
     public long data;
 }

@@ -473,42 +473,34 @@ message PosBridgeWithdrawContract{
 /**
   calldata format:
   {
-     signatures: bytes[] //rlp encoded
-     message: bytes[] // rlp encoded of {
-       rootChainId: 0x...,
-       rootTokenAddr: 0x...,
-       childChainId: 0x...,
-       childTokenAddr: 0x...,
-       depositAddr:0x...
-       receiveAddr: 0x...,
-       data: 1000L //token amount or id
-       type: 1 //1: //1:native, 2:erc20, 3:erc721
+     signatures: string[]
+     message: bytes[] // abi encoded {
+       rootChainId: hex
+       rootTokenAddr: hex
+       childChainId: hex
+       receiveAddr: hex
+       value: hex, token amount or Id
      }
   }
  */
 message PosBridgeDepositExecContract{
   bytes owner_address = 1;
-  bytes signatures = 2;
-  bytes message = 3;
+  repeated string signatures = 2;
+  string message = 3;
 }
 
 /**
-     digest: bytes32,
-     signatures: rlp encoded signatures
-     message: rlp encoded bytes of
-     {
-       childChainId: 0x...
-       childTokenAddr: 0x...
-       rootChainId: 0x...
-       rootTokenAddr: 0x...
-       withdrawAddr: 0x...
-       receiveAddr: 0x...
-       data: 1000
-       type: 1 //1:native, 2:erc20, 3:erc721
+      signatures: string[]
+      message: bytes[] // abi encoded {
+       childChainId: hex
+       childTokenAddr: hex
+       rootChainId: hex
+       receiveAddr: hex
+       value: hex, token amount or Id
      }
  */
 message PosBridgeWithdrawExecContract{
   bytes owner_address = 1;
-  bytes signatures = 2;//rlp encoded
-  bytes message = 3; //rlp encoded
+  repeated string signatures = 2;
+  string message = 3;
 }

@@ -56,21 +56,23 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
             //decode msg
-            var decodedMsg = PosBridgeUtil.decodePosBridgeWithdrawExecMsg(ctx.getMessage().toByteArray());
+            var decodedMsg = PosBridgeUtil.decodePosBridgeWithdrawExecMsg(ctx.getMessage());
 
-            var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
-            var rootKeyStr = PosBridgeUtil.makeTokenMapKey(Long.toHexString(decodedMsg.rootChainId) , decodedMsg.rootTokenAddr);
-            var rootKey = rootKeyStr.getBytes();
-            var childMap = root2ChildStore.get(rootKey);
+            var child2rootStore = dbManager.getPosBridgeTokenMapChild2RootStore();
+            var childKeyStr = PosBridgeUtil.makeTokenMapKey(Long.toHexString(decodedMsg.childChainId) , decodedMsg.childTokenAddr);
+            var childKey = childKeyStr.getBytes();
+            var rootMap = child2rootStore.get(childKey);
             var receiveAddr = Hex.decodeHex(decodedMsg.receiveAddr);
 
-            var assetType = (int)childMap.getAssetType();
+            var assetType = (int)rootMap.getAssetType();
+            var rootToken = rootMap.getTokenByChainId(decodedMsg.rootChainId);
+
 
             //unlock asset
             switch (assetType){
                 case ASSET_TYPE_NATIVE: {
                     var wrapCtx = Contract.TransferContract.newBuilder()
-                            .setAmount(decodedMsg.data)
+                            .setAmount(decodedMsg.value)
                             .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
                             .setToAddress(ByteString.copyFrom(receiveAddr))
                             .build();
@@ -86,9 +88,9 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                     break;
                 }
                 case ASSET_TYPE_TOKEN: {
-                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(decodedMsg.rootTokenAddr.getBytes()).getSymbol();
+                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
                     var wrapCtx = Contract.TransferTokenContract.newBuilder()
-                            .setAmount(decodedMsg.data)
+                            .setAmount(decodedMsg.value)
                             .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_TOKEN_WALLET)))
                             .setToAddress(ByteString.copyFrom(receiveAddr))
                             .setTokenName(symbol)
@@ -106,12 +108,12 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                     break;
                 }
                 case ASSET_TYPE_NFT: {
-                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(decodedMsg.rootTokenAddr.getBytes()).getSymbol();
+                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
                     var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                             .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NFT_WALLET)))
                             .setToAddress(ByteString.copyFrom(receiveAddr))
                             .setContract(symbol)
-                            .setTokenId(decodedMsg.data)
+                            .setTokenId(decodedMsg.value)
                             .build();
                     var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferNftTokenContract)
                             .getInstance()
@@ -138,13 +140,12 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                             PosBridgeTokenWithdrawExecEvent.builder()
                                     .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
                                     .root_chainid(decodedMsg.rootChainId)
-                                    .root_token(decodedMsg.rootTokenAddr)
+                                    .root_token(rootToken)
                                     .child_chainid(decodedMsg.childChainId)
                                     .child_token(decodedMsg.childTokenAddr)
                                     .receive_address(decodedMsg.receiveAddr)
-                                    .withdraw_address(decodedMsg.withdrawAddr)
-                                    .data(decodedMsg.data)
-                                    .type((int) decodedMsg.assetType)
+                                    .data(decodedMsg.value)
+                                    .type(assetType)
                                     .build())
                     .build();
             emitEvent(event, ret);
@@ -166,18 +167,16 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             var fee = calcFee();
             val ctx = this.contract.unpack(PosBridgeWithdrawExecContract.class);
             var accountStore = dbManager.getAccountStore();
-            var msg = ctx.getMessage().toByteArray();
-            var signatures = ctx.getSignatures().toByteArray();
             var posConfig = dbManager.getPosBridgeConfigStore().get();
 
             //check permission
             checkExecPermission(ctx, posConfig);
 
             //check signatures
-            PosBridgeUtil.validateSignatures(msg, signatures, posConfig);
+            PosBridgeUtil.validateSignatures(ctx.getMessage(), ctx.getSignaturesList(), posConfig);
 
             //check mapped token
-            checkWithdrawAsset(msg);
+            checkWithdrawAsset(ctx.getMessage());
 
             Assert.isTrue(accountStore.get(getOwnerAddress().toByteArray()).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;
@@ -192,31 +191,32 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
         //now all address with balance enough can submit validation
     }
 
-    private void checkWithdrawAsset(byte[] msg) throws Exception{
-        var decodedMsg = PosBridgeUtil.decodePosBridgeWithdrawExecMsg(msg);
+    private void checkWithdrawAsset(String msgHex) throws Exception{
+        var decodedMsg = PosBridgeUtil.decodePosBridgeWithdrawExecMsg(msgHex);
 
         //token mapped ?
-        var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
-        var rootKeyStr = PosBridgeUtil.makeTokenMapKey(Long.toHexString(decodedMsg.rootChainId) , decodedMsg.rootTokenAddr);
-        var rootKey = rootKeyStr.getBytes();
-        Assert.isTrue(root2ChildStore.has(rootKey), "unmapped token: " + rootKeyStr);
-        var childMap = root2ChildStore.get(rootKey);
-        Assert.isTrue( childMap.hasChainId(decodedMsg.childChainId) && childMap.getTokenByChainId(decodedMsg.childChainId).equals(decodedMsg.childTokenAddr), "un-matched mapping token: " + decodedMsg.childChainId + ", token: " + decodedMsg.childTokenAddr);
+        var child2rootStore = dbManager.getPosBridgeTokenMapChild2RootStore();
+        var childKeyStr = PosBridgeUtil.makeTokenMapKey(Long.toHexString(decodedMsg.childChainId) , decodedMsg.childTokenAddr);
+        var childKey = childKeyStr.getBytes();
+        Assert.isTrue(child2rootStore.has(childKey), "unmapped token: " + childKeyStr);
+        var rootMap = child2rootStore.get(childKey);
+        Assert.isTrue(rootMap.hasChainId(decodedMsg.rootChainId), "un-matched mapping token : " + decodedMsg);
 
         //command is for unichain ?
-        Assert.isTrue( PosBridgeUtil.isUnichain(decodedMsg.rootChainId) , "unrecognized chainId: " + decodedMsg.rootChainId);
+        Assert.isTrue( PosBridgeUtil.isUnichain(decodedMsg.rootChainId) , "unrecognized rootChainId: " + decodedMsg);
 
         //check receive addr
         var receiveAddr = Hex.decodeHex(decodedMsg.receiveAddr);
         Assert.isTrue(Wallet.addressValid(receiveAddr), "invalid receiving address");
 
         //check asset
-        var assetType = (int)childMap.getAssetType();
+        var assetType = (int)rootMap.getAssetType();
+        var rootToken = rootMap.getTokenByChainId(decodedMsg.rootChainId);
 
         switch (assetType){
             case ASSET_TYPE_NATIVE: {
                 var wrapCtx = Contract.TransferContract.newBuilder()
-                        .setAmount(decodedMsg.data)
+                        .setAmount(decodedMsg.value)
                         .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NATIVE_WALLET)))
                         .setToAddress(ByteString.copyFrom(receiveAddr))
                         .build();
@@ -230,9 +230,9 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                 break;
             }
             case ASSET_TYPE_TOKEN: {
-                var symbol = dbManager.getTokenAddrSymbolIndexStore().get(decodedMsg.rootTokenAddr.getBytes()).getSymbol();
+                var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
                 var wrapCtx = Contract.TransferTokenContract.newBuilder()
-                        .setAmount(decodedMsg.data)
+                        .setAmount(decodedMsg.value)
                         .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_TOKEN_WALLET)))
                         .setToAddress(ByteString.copyFrom(receiveAddr))
                         .setTokenName(symbol)
@@ -248,12 +248,12 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                 break;
             }
             case ASSET_TYPE_NFT: {
-                var symbol = dbManager.getNftAddrSymbolIndexStore().get(decodedMsg.rootTokenAddr.getBytes()).getSymbol();
+                var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
                 var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                         .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_PREDICATE_NFT_WALLET)))
                         .setToAddress(ByteString.copyFrom(receiveAddr))
                         .setContract(symbol)
-                        .setTokenId(decodedMsg.data) //@todo review make sure nft tokenId is consistent along deposit/withdraw flow
+                        .setTokenId(decodedMsg.value) //@todo review make sure nft tokenId is consistent along deposit/withdraw flow
                         .build();
                 var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferNftTokenContract)
                         .getInstance()

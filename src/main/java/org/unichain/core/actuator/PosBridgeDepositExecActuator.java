@@ -54,20 +54,26 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
         try {
             val ctx = this.contract.unpack(PosBridgeDepositExecContract.class);
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
-            var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(ctx.getMessage().toByteArray());
+            var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(ctx.getMessage());
 
-            switch ((int) decodedMsg.assetType){
+            var tokenMapRoot2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
+            var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr).getBytes();
+            var childMap = tokenMapRoot2ChildStore.get(rootKey);
+            var assetType = (int)childMap.getAssetType();
+            var childTokenAddr = childMap.getTokenByChainId(decodedMsg.childChainId);
+
+            switch (assetType){
                 case ASSET_TYPE_NATIVE:
                 case ASSET_TYPE_TOKEN: {
                     //load token and transfer from token owner to ...
-                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(decodedMsg.childTokenAddr)).getSymbol();
+                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(childTokenAddr)).getSymbol();
                     var tokenOwner = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(symbol));
 
                     var wrapCtx = Contract.TransferTokenContract.newBuilder()
                             .setOwnerAddress(tokenOwner.getOwnerAddress())
                             .setToAddress(ByteString.copyFrom(Hex.decodeHex(decodedMsg.receiveAddr)))
                             .setTokenName(symbol)
-                            .setAmount(decodedMsg.data)
+                            .setAmount(decodedMsg.value)
                             .build();
                     var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferTokenContract)
                             .getInstance()
@@ -81,7 +87,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
                     break;
                 }
                 case ASSET_TYPE_NFT: {
-                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(decodedMsg.childTokenAddr)).getSymbol();
+                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(childTokenAddr)).getSymbol();
                     var nftContractStore = dbManager.getNftTemplateStore();
                     var contractKey =  Util.stringAsBytesUppercase(symbol);
                     var nft = nftContractStore.get(contractKey);
@@ -92,7 +98,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
                             .setContract(symbol)
                             .setToAddress(ByteString.copyFrom(Hex.decodeHex(decodedMsg.receiveAddr)))
                             .setUri("missing!!!") //@todo how to set token id, uri from source ?
-                            .setMetadata(Long.toHexString(decodedMsg.data))
+                            .setMetadata(Long.toHexString(decodedMsg.value))
                             .build();
                     var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.MintNftTokenContract)
                             .getInstance()
@@ -121,11 +127,10 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
                                     .root_chainid(decodedMsg.rootChainId)
                                     .root_token(decodedMsg.rootTokenAddr)
                                     .child_chainid(decodedMsg.childChainId)
-                                    .child_token(decodedMsg.childTokenAddr)
+                                    .child_token(childTokenAddr)
                                     .receive_address(decodedMsg.receiveAddr)
-                                    .deposit_address(decodedMsg.depositAddr)
-                                    .data(decodedMsg.data)
-                                    .type((int) decodedMsg.assetType)
+                                    .data(decodedMsg.value)
+                                    .type(assetType)
                                     .build())
                     .build();
             emitEvent(event, ret);
@@ -147,37 +152,37 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             val ctx = this.contract.unpack(PosBridgeDepositExecContract.class);
             var accountStore = dbManager.getAccountStore();
             var posConfig = dbManager.getPosBridgeConfigStore().get();
+
+
+            //valid signatures ?
+            PosBridgeUtil.validateSignatures(ctx.getMessage(), ctx.getSignaturesList(), posConfig);
+
+            var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(ctx.getMessage());
             var tokenMapRoot2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
 
-            //validate signatures
-            var msg = ctx.getMessage().toByteArray();
-            var sig = ctx.getSignatures().toByteArray();
-            PosBridgeUtil.validateSignatures(msg, sig, posConfig);
-
             //token mapped ?
-            var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(msg);
             var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr).getBytes();
-
-            Assert.isTrue(tokenMapRoot2ChildStore.has(rootKey)
-                    && tokenMapRoot2ChildStore.get(rootKey).hasChainId(decodedMsg.childChainId)
-                    && tokenMapRoot2ChildStore.get(rootKey).getTokenByChainId(decodedMsg.childChainId).equalsIgnoreCase(decodedMsg.childTokenAddr)
-                    && tokenMapRoot2ChildStore.get(rootKey).getAssetType() == decodedMsg.assetType
-                    , "token unmapped or unmatched asset type");
+            Assert.isTrue(tokenMapRoot2ChildStore.has(rootKey) && tokenMapRoot2ChildStore.get(rootKey).hasChainId(decodedMsg.childChainId),
+                    "token unmapped or unmatched asset type");
 
             //make sure this command belong to our chain ?
-            Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.childChainId), "unrecognized child chain id: " + decodedMsg.childChainId);
+            Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.childChainId), "unrecognized child chain id: " + decodedMsg);
 
             //make sure valid receiver
             Assert.isTrue(Wallet.addressValid(Hex.decodeHex(decodedMsg.receiveAddr)), "invalid receive address");
 
+            var childMap = tokenMapRoot2ChildStore.get(rootKey);
+            var assetType = (int)childMap.getAssetType();
+            var childTokenAddr = childMap.getTokenByChainId(decodedMsg.childChainId);
+
             //make sure asset exist
-            switch ((int) decodedMsg.assetType){
+            switch (assetType){
                 case ASSET_TYPE_NATIVE:
                 case ASSET_TYPE_TOKEN:
-                    Assert.isTrue(dbManager.getTokenAddrSymbolIndexStore().has(Hex.decodeHex(decodedMsg.childTokenAddr)), "token with address not found: " + decodedMsg.childTokenAddr);
+                    Assert.isTrue(dbManager.getTokenAddrSymbolIndexStore().has(Hex.decodeHex(childTokenAddr)), "token with address not found: " + decodedMsg);
                     break;
                 case ASSET_TYPE_NFT:
-                    Assert.isTrue(dbManager.getNftAddrSymbolIndexStore().has(Hex.decodeHex(decodedMsg.childTokenAddr)), "nft with address not found: " + decodedMsg.childTokenAddr);
+                    Assert.isTrue(dbManager.getNftAddrSymbolIndexStore().has(Hex.decodeHex(childTokenAddr)), "nft with address not found: " + decodedMsg);
                     break;
                 default:
                     throw new ContractValidateException("invalid asset type");

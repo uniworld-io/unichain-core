@@ -78,18 +78,6 @@ public class ProgramResult {
     return triggerList != null ? triggerList : new LinkedList<>();
   }
 
-  public RuntimeException getException() {
-    return exception;
-  }
-
-  public void setException(RuntimeException exception) {
-    this.exception = exception;
-  }
-
-  public long getEnergyUsed() {
-    return energyUsed;
-  }
-
   public Set<DataWord> getDeleteAccounts() {
     if (deleteAccounts == null) {
       deleteAccounts = new HashSet<>();
@@ -183,9 +171,6 @@ public class ProgramResult {
     futureRefund += energyValue;
   }
 
-  public long getFutureRefund() {
-    return futureRefund;
-  }
 
   public void resetFutureRefund() {
     futureRefund = 0;

@@ -1,6 +1,7 @@
 package org.unichain.common.utils;
 
 import lombok.Builder;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.apache.commons.codec.binary.Hex;
@@ -9,85 +10,54 @@ import org.unichain.common.crypto.ECKey;
 import org.unichain.common.crypto.Hash;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
-import org.unichain.core.capsule.utils.RLPList;
-import org.web3j.rlp.RlpDecoder;
-import org.web3j.rlp.RlpList;
-import org.web3j.rlp.RlpString;
-import org.web3j.utils.Numeric;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.DynamicBytes;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.abi.datatypes.generated.Uint32;
 
-import java.math.BigInteger;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 @Slf4j(topic = "PosBridge")
 public class PosBridgeUtil {
-
     @Builder
+    @ToString
     public static class PosBridgeDepositExecMsg {
         public long rootChainId;
-        public String rootTokenAddr; //0x..
+        public String rootTokenAddr;
         public long childChainId;
-        public String childTokenAddr; //0x..
-        public String depositAddr; //0x..
-        public String receiveAddr; //0x
-        public long data;
-        public long assetType;
+        public String receiveAddr;
+        public long value;
     }
 
     @Builder
+    @ToString
     public static class PosBridgeWithdrawExecMsg {
         public long childChainId;
-        public String childTokenAddr; //0x..
+        public String childTokenAddr;
         public long rootChainId;
-        public String rootTokenAddr; //0x..
-        public String withdrawAddr; //0x..
-        public String receiveAddr; //0x
-        public long data;
-        public long assetType;
+        public String receiveAddr;
+        public long value;
     }
 
     /**
-     * @param msg hex string of abi encode event
-     * @param signatures array of hex string signed by validators
-     * @param config consensus config
+     * make sure all hex is not prefixed with 0x
      */
-    public static void validateSignatures(final String msg, final String[] signatures, final PosBridgeConfigCapsule config){
+    public static void validateSignatures(final String msgHex, final List<String> hexSignatures, final PosBridgeConfigCapsule config) throws Exception{
         try{
-            final String digest = Numeric.toHexString(Hash.sha3(Numeric.hexStringToByteArray(msg)));
-            final Set<String> unduplicatedSignatures = Arrays.stream(signatures).collect(Collectors.toSet());
-
-            //@TODO: set from config, confirm format hex: 0x...
-            final Set<String> validators = new HashSet<>();
-
-            int countVerify = 0;
-            for(String signature: unduplicatedSignatures){
-                String signer = SignExt.recoverAddress(digest, signature);//format hex: 0x...
-                if(validators.contains(signer))
-                    countVerify++;
-            }
-            var rate = ((double)countVerify)/validators.size();
-            Assert.isTrue(countVerify >= config.getMinValidator(), "LESS_THAN_MIN_VALIDATOR");
-            Assert.isTrue(rate >= config.getConsensusRate(), "LESS_THAN_CONSENSUS_RATE");
-        }catch (Exception e){
-            logger.error("validate signature failed -->", e);
-            throw e;
-        }
-    }
-
-    /**
-     * @param msg msg that signed by validators
-     * @param signatures rlp encoded signatures list
-     * @param config consensus config
-     */
-    public static void validateSignatures(final byte[] msg, final byte[] signatures, final PosBridgeConfigCapsule config) throws Exception{
-        try{
+            var msg = Hex.decodeHex(msgHex);
             var whitelist = config.getValidators();
             var signedValidators = new HashMap<String, String>();
-            for(var rlpItem : (RLPList)RlpDecoder.decode(signatures).getValues().get(0)){
-                var sig = ((RlpString)rlpItem).getBytes();
+            for(var sigHex : hexSignatures){
+                var sig = Hex.decodeHex(sigHex);
                 var hash = Hash.sha3(msg);
-                var signedAddr = Hex.encodeHexString(ECKey.signatureToAddress(hash, sig));
-                //make sure whitelist map is hex address without prefix 0x
+                var signedAddr = Hex.encodeHexString(ECKey.signatureToAddress(hash, sig))
+                        .toLowerCase()
+                        .substring(2);
                 if(whitelist.containsKey(signedAddr))
                     signedValidators.put(signedAddr, signedAddr);
             };
@@ -101,50 +71,81 @@ public class PosBridgeUtil {
     }
 
     /**
-     *   rootChainId: 0x...,
-     *      rootTokenAddr: 0x...,
-     *      childChainId: 0x...,
-     *      childTokenAddr: 0x...,
-     *      depositAddr:0x...
-     *      receiveAddr: 0x...,
-     *      data: 1000L //token amount or id
-     *      type: 1 //1: native 2: urc20, 3: nft
+     calldata format:
+     {
+         message: bytes[] // abi encoded {
+             uint32 rootChainId,
+             uint32 childChainId,
+             address rootToken,
+             address receiverAddr,
+             bytes value
+         }
+     }
      */
-    public static PosBridgeDepositExecMsg decodePosBridgeDepositExecMsg(byte[] msg){
-        var msgItems = ((RlpList) RlpDecoder.decode(msg).getValues().get(0)).getValues();
+    public static PosBridgeDepositExecMsg decodePosBridgeDepositExecMsg(String msgHex) {
+        List<TypeReference<?>> types = new ArrayList<>();
+        TypeReference<Uint32> type1 = new TypeReference<Uint32>() {};
+        TypeReference<Uint32> type2 = new TypeReference<Uint32>() {};
+        TypeReference<Address> type3 = new TypeReference<Address>() {};
+        TypeReference<Address> type4 = new TypeReference<Address>() {};
+        TypeReference<DynamicBytes> type5 = new TypeReference<DynamicBytes>() {};
+        types.add(type1);
+        types.add(type2);
+        types.add(type3);
+        types.add(type4);
+        types.add(type5);
+        List<Type> out = FunctionReturnDecoder.decode(msgHex, org.web3j.abi.Utils.convert(types));
+
+        //decode value as unint256
+        List<TypeReference<?>> valueTypes = new ArrayList<>();
+        valueTypes.add(new TypeReference<Uint256>() {});
+        Uint256 value = (Uint256)FunctionReturnDecoder.decode(Hex.encodeHexString(((DynamicBytes)out.get(4)).getValue()), org.web3j.abi.Utils.convert(valueTypes))
+                .get(0);
+
         return  PosBridgeDepositExecMsg.builder()
-                .rootChainId((new BigInteger(((RlpString)msgItems.get(0)).getBytes())).longValue())
-                .rootTokenAddr(Hex.encodeHexString(((RlpString)msgItems.get(1)).getBytes()))
-                .childChainId((new BigInteger(((RlpString)msgItems.get(2)).getBytes())).longValue())
-                .childTokenAddr(Hex.encodeHexString(((RlpString)msgItems.get(3)).getBytes()))
-                .depositAddr(Hex.encodeHexString(((RlpString)msgItems.get(4)).getBytes()))
-                .receiveAddr(Hex.encodeHexString(((RlpString)msgItems.get(5)).getBytes()))
-                .data((new BigInteger(((RlpString)msgItems.get(6)).getBytes())).longValue())
-                .assetType((new BigInteger(((RlpString)msgItems.get(7)).getBytes())).longValue())
+                .rootChainId(((Uint32)out.get(0)).getValue().longValue())
+                .childChainId(((Uint32)out.get(1)).getValue().longValue())
+                .rootTokenAddr(((Address)out.get(2)).getValue())
+                .receiveAddr(((Address)out.get(3)).getValue())
+                .value(value.getValue().longValue())
                 .build();
     }
 
     /**
-     * childChainId: 0x...
-     *      childTokenAddr: 0x...
-     *      rootChainId: 0x...
-     *      rootTokenAddr: 0x...
-     *      withdrawAddr: 0x...
-     *      receiveAddr: 0x...
-     *      data: 1000
-     *      type: 1 //1: native 2: urc20, 3: nft
+     message: bytes[] // abi encoded {
+         uint32 childChainId,
+         uint32 rootChainId,
+         address childToken,
+         address receiveAddr,
+         bytes value
+     }
      */
-    public static PosBridgeWithdrawExecMsg decodePosBridgeWithdrawExecMsg(byte[] msg){
-        var rplItems = ((RlpList) RlpDecoder.decode(msg).getValues().get(0)).getValues();
+    public static PosBridgeWithdrawExecMsg decodePosBridgeWithdrawExecMsg(String msgHex) {
+        List<TypeReference<?>> types = new ArrayList<>();
+        TypeReference<Uint32> type1 = new TypeReference<Uint32>() {};
+        TypeReference<Uint32> type2 = new TypeReference<Uint32>() {};
+        TypeReference<Address> type3 = new TypeReference<Address>() {};
+        TypeReference<Address> type4 = new TypeReference<Address>() {};
+        TypeReference<DynamicBytes> type5 = new TypeReference<DynamicBytes>() {};
+        types.add(type1);
+        types.add(type2);
+        types.add(type3);
+        types.add(type4);
+        types.add(type5);
+        List<Type> out = FunctionReturnDecoder.decode(msgHex, org.web3j.abi.Utils.convert(types));
+
+        //decode value as unint256
+        List<TypeReference<?>> valueTypes = new ArrayList<>();
+        valueTypes.add(new TypeReference<Uint256>() {});
+        Uint256 value = (Uint256)FunctionReturnDecoder.decode(Hex.encodeHexString(((DynamicBytes)out.get(4)).getValue()), org.web3j.abi.Utils.convert(valueTypes))
+                .get(0);
+
         return  PosBridgeWithdrawExecMsg.builder()
-                .childChainId((new BigInteger(((RlpString)rplItems.get(0)).getBytes())).longValue())
-                .childTokenAddr(Hex.encodeHexString(((RlpString)rplItems.get(1)).getBytes()))
-                .rootChainId((new BigInteger(((RlpString)rplItems.get(2)).getBytes())).longValue())
-                .rootTokenAddr(Hex.encodeHexString(((RlpString)rplItems.get(3)).getBytes()))
-                .withdrawAddr(Hex.encodeHexString(((RlpString)rplItems.get(4)).getBytes()))
-                .receiveAddr(Hex.encodeHexString(((RlpString)rplItems.get(5)).getBytes()))
-                .data((new BigInteger(((RlpString)rplItems.get(6)).getBytes())).longValue())
-                .assetType((new BigInteger(((RlpString)rplItems.get(7)).getBytes())).longValue())
+                .childChainId(((Uint32)out.get(0)).getValue().longValue())
+                .rootChainId(((Uint32)out.get(1)).getValue().longValue())
+                .childTokenAddr(((Address)out.get(2)).getValue())
+                .receiveAddr(((Address)out.get(3)).getValue())
+                .value(value.getValue().longValue())
                 .build();
     }
 

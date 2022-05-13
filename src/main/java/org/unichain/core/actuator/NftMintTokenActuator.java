@@ -24,6 +24,7 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
+import org.unichain.core.capsule.NftTemplateCapsule;
 import org.unichain.core.capsule.NftTokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
@@ -38,7 +39,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static org.unichain.core.services.http.utils.Util.NFT_MINT_FIELD_METADATA;
+import static org.unichain.core.services.http.utils.Util.NFT_MINT_FIELD_TOKEN_ID;
 
 @Slf4j(topic = "actuator")
 public class NftMintTokenActuator extends AbstractActuator {
@@ -53,17 +54,9 @@ public class NftMintTokenActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(Contract.MintNftTokenContract.class);
       var accountStore = dbManager.getAccountStore();
-      var templateStore = dbManager.getNftTemplateStore();
-      var templateKey =  Util.stringAsBytesUppercase(ctx.getContract());
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
-      var template = templateStore.get(templateKey);
 
-      var tokenIndex = Math.incrementExact(template.getTokenIndex());
-
-      //update template index
-      template.setTokenIndex(tokenIndex);
-      templateStore.put(templateKey, template);
 
       //create new account
       if (!accountStore.has(toAddr)) {
@@ -72,17 +65,28 @@ public class NftMintTokenActuator extends AbstractActuator {
 
       //save token
       var nftTokenBuilder = Protocol.NftToken.newBuilder()
-              .setId(tokenIndex)
               .setContract(ctx.getContract().toUpperCase())
               .setUri(ctx.getUri())
               .clearApproval()
               .setOwnerAddress(ctx.getToAddress())
               .setLastOperation(dbManager.getHeadBlockTimeStamp());
 
-      if(ctx.hasField(NFT_MINT_FIELD_METADATA))
-        nftTokenBuilder.setMetadata(ctx.getMetadata());
+      if(ctx.hasField(NFT_MINT_FIELD_TOKEN_ID))
+      {
+        //use preset tokenId
+        nftTokenBuilder.setId(ctx.getTokenId());
+      }
       else
-        nftTokenBuilder.clearMetadata();
+      {
+        //allocate tokenId
+        val contractStore = dbManager.getNftTemplateStore();
+        val contractKey =  Util.stringAsBytesUppercase(ctx.getContract());
+        var nftContract = contractStore.get(contractKey);
+        var tokenIndex = allocateTokenId(nftContract);
+        nftContract.setTokenIndex(tokenIndex);
+        contractStore.put(contractKey, nftContract);
+        nftTokenBuilder.setId(tokenIndex);
+      }
 
       dbManager.saveNftToken(new NftTokenCapsule(nftTokenBuilder.build()));
 
@@ -97,12 +101,32 @@ public class NftMintTokenActuator extends AbstractActuator {
     }
   }
 
+  /**
+   * Safely allocate tokenId:
+   * - advance token index
+   * - make sure token index not allocated
+   */
+  private long allocateTokenId(final NftTemplateCapsule template) {
+    val tokenStore = dbManager.getNftTokenStore();
+    var nextId = Math.incrementExact(template.getTokenIndex());
+    while (true){
+      var key = NftTokenCapsule.genTokenKey(template.getContract(), nextId);
+      if(!tokenStore.has(key)){
+        return nextId;
+      }
+      else{
+        nextId++;
+        continue;
+      }
+    }
+  }
+
   @Override
   public boolean validate() throws ContractValidateException {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(Contract.MintNftTokenContract.class), "contract type error,expected type [CreateNftTemplateContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Contract.MintNftTokenContract.class), "contract type error,expected type [MintNftTokenContract],real type[" + contract.getClass() + "]");
       var fee = calcFee();
       val ctx = this.contract.unpack(Contract.MintNftTokenContract.class);
       var accountStore = dbManager.getAccountStore();
@@ -128,8 +152,12 @@ public class NftMintTokenActuator extends AbstractActuator {
       Assert.isTrue(templateCap.getTokenIndex() < templateCap.getTotalSupply(), "Over slot NFT token mint!");
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Not enough balance to cover transaction fee, require "+ fee + "ginza");
       Assert.isTrue(TransactionUtil.validHttpURI(ctx.getUri()), "Invalid uri");
-      Assert.isTrue(TransactionUtil.validJsonString(ByteString.copyFrom(ctx.getMetadata().getBytes()).toByteArray()), "invalid metadata, should be json format");
 
+      //make sure tokenId not allocated yet!
+      if(ctx.hasField(NFT_MINT_FIELD_TOKEN_ID)){
+        val tokenKey = NftTokenCapsule.genTokenKey(ctx.getContract(), ctx.getTokenId());
+        Assert.isTrue(!dbManager.getNftTokenStore().has(tokenKey), "TokenId allocated: " + ctx.getContract() + "_" + ctx.getTokenId());
+      }
       return true;
     }
     catch (Exception e){

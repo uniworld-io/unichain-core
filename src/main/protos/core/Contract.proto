@@ -375,7 +375,7 @@ message MintNftTokenContract{
   string contract = 2;
   bytes to_address = 3;
   string uri = 4;
-  string metadata = 5;
+  int64 token_id = 5;
 }
 
 message RemoveNftMinterContract{

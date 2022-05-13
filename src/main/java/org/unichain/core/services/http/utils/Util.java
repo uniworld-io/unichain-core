@@ -882,7 +882,7 @@ public class Util {
   public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_NEXT_OF_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.NEXT_OF_MINTER_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_PREV_OF_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.PREV_OF_MINTER_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor NFT_MINT_FIELD_METADATA = MintNftTokenContract.getDescriptor().findFieldByNumber(MintNftTokenContract.METADATA_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_MINT_FIELD_TOKEN_ID = MintNftTokenContract.getDescriptor().findFieldByNumber(MintNftTokenContract.TOKEN_ID_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.TAIL_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.APPROVED_FOR_ALL_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.APPROVE_TAIL_FIELD_NUMBER);

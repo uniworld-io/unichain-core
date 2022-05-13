@@ -41,7 +41,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
 
   public NftTokenCapsule(Protocol.NftToken token) {
     this.token = token;
-    this.key = ArrayUtils.addAll(Util.stringAsBytesUppercase(token.getContract()), ByteArray.fromLong(token.getId()));
+    this.key = genTokenKey(token.getContract(), token.getId());
   }
 
   public byte[] getData() {
@@ -125,4 +125,12 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   public String getContract() {
     return token.getContract();
   }
+
+  /**
+   * gen token key
+   */
+  public static byte[] genTokenKey(String contract, long tokenId){
+    return ArrayUtils.addAll(Util.stringAsBytesUppercase(contract), ByteArray.fromLong(tokenId));
+  }
+
 }

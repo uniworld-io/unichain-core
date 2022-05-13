@@ -92,13 +92,12 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
                     var contractKey =  Util.stringAsBytesUppercase(symbol);
                     var nft = nftContractStore.get(contractKey);
 
-                    //@todo how to mint nft with token id & uri ?
                     var wrapCtx = Contract.MintNftTokenContract.newBuilder()
                             .setOwnerAddress(ByteString.copyFrom(nft.getOwner()))
                             .setContract(symbol)
                             .setToAddress(ByteString.copyFrom(Hex.decodeHex(decodedMsg.receiveAddr)))
-                            .setUri("missing!!!") //@todo how to set token id, uri from source ?
-                            .setMetadata(Long.toHexString(decodedMsg.value))
+                            .setTokenId(decodedMsg.value)
+                            .setUri(PosBridgeUtil.abiDecodeFromToString(decodedMsg.extHex))
                             .build();
                     var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.MintNftTokenContract)
                             .getInstance()

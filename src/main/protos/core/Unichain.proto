@@ -823,10 +823,9 @@ message NftToken{
   bytes owner_address = 3;
   bytes approval = 4;
   string uri = 5;
-  string metadata = 6;
-  int64 last_operation = 7;
-  bytes next = 8;
-  bytes prev = 9;
+  int64 last_operation = 6;
+  bytes next = 7;
+  bytes prev = 8;
 }
 
 message NftAccountTokenRelation{

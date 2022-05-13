@@ -15,6 +15,7 @@ import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.DynamicBytes;
 import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint32;
 
@@ -24,6 +25,8 @@ import java.util.List;
 
 @Slf4j(topic = "PosBridge")
 public class PosBridgeUtil {
+    private static String BLIND_URI_HEX = "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020687474703a2f2f6a7573745f6175746f5f67656e2e6f72672f78782e6a736f6e";
+
     @Builder
     @ToString
     public static class PosBridgeDepositExecMsg {
@@ -32,6 +35,7 @@ public class PosBridgeUtil {
         public long childChainId;
         public String receiveAddr;
         public long value;
+        public String extHex;
     }
 
     @Builder
@@ -96,11 +100,7 @@ public class PosBridgeUtil {
         types.add(type5);
         List<Type> out = FunctionReturnDecoder.decode(msgHex, org.web3j.abi.Utils.convert(types));
 
-        //decode value as unint256
-        List<TypeReference<?>> valueTypes = new ArrayList<>();
-        valueTypes.add(new TypeReference<Uint256>() {});
-        Uint256 value = (Uint256)FunctionReturnDecoder.decode(Hex.encodeHexString(((DynamicBytes)out.get(4)).getValue()), org.web3j.abi.Utils.convert(valueTypes))
-                .get(0);
+        Uint256 value = abiDecodeToUint256((DynamicBytes)out.get(4));
 
         return  PosBridgeDepositExecMsg.builder()
                 .rootChainId(((Uint32)out.get(0)).getValue().longValue())
@@ -108,8 +108,25 @@ public class PosBridgeUtil {
                 .rootTokenAddr(((Address)out.get(2)).getValue())
                 .receiveAddr(((Address)out.get(3)).getValue())
                 .value(value.getValue().longValue())
+                .extHex(BLIND_URI_HEX) //@todo add uri msg in source msg
                 .build();
     }
+
+    public static Uint256 abiDecodeToUint256(DynamicBytes bytes){
+        List<TypeReference<?>> valueTypes = new ArrayList<>();
+        valueTypes.add(new TypeReference<Uint256>() {});
+        Uint256 value = (Uint256)FunctionReturnDecoder.decode(Hex.encodeHexString((bytes).getValue()), org.web3j.abi.Utils.convert(valueTypes))
+                .get(0);
+        return value;
+    }
+
+    public static String abiDecodeFromToString(String hex){
+        List<TypeReference<?>> types = new ArrayList<>();
+        types.add(new TypeReference<Utf8String>() {});
+        return ((Utf8String)FunctionReturnDecoder.decode(hex, org.web3j.abi.Utils.convert(types))
+                .get(0)).getValue();
+    }
+
 
     /**
      message: bytes[] // abi encoded {

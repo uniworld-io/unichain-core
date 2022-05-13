@@ -5,10 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.services.internal.NftService;
 import org.unichain.protos.Contract;
+import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -22,18 +24,18 @@ import java.util.stream.Collectors;
 public class PosBridgeMapTokenServlet extends HttpServlet {
 
   @Autowired
-  private NftService nftService;
+  private Wallet wallet;
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.TransferNftTokenContract.newBuilder();
+      var build = Contract.PosBridgeMapTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
 
-      var tx = nftService.transfer(tokenCtx);
+      var tx = wallet.createTransactionCapsule(tokenCtx, Protocol.Transaction.Contract.ContractType.PosBridgeMapTokenContract).getInstance();
 
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);

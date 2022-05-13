@@ -21,7 +21,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.PosBridgeTokenDepositExecEvent;
@@ -38,6 +37,7 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.PosBridgeDepositExecContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.utils.Numeric;
 
 import static org.unichain.core.capsule.PosBridgeTokenMappingCapsule.*;
 
@@ -66,12 +66,12 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
                 case ASSET_TYPE_NATIVE:
                 case ASSET_TYPE_TOKEN: {
                     //load token and transfer from token owner to ...
-                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(childTokenAddr)).getSymbol();
+                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(childTokenAddr)).getSymbol();
                     var tokenOwner = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(symbol));
 
                     var wrapCtx = Contract.TransferTokenContract.newBuilder()
                             .setOwnerAddress(tokenOwner.getOwnerAddress())
-                            .setToAddress(ByteString.copyFrom(Hex.decodeHex(decodedMsg.receiveAddr)))
+                            .setToAddress(ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr)))
                             .setTokenName(symbol)
                             .setAmount(decodedMsg.value)
                             .build();
@@ -87,7 +87,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
                     break;
                 }
                 case ASSET_TYPE_NFT: {
-                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(childTokenAddr)).getSymbol();
+                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(childTokenAddr)).getSymbol();
                     var nftContractStore = dbManager.getNftTemplateStore();
                     var contractKey =  Util.stringAsBytesUppercase(symbol);
                     var nft = nftContractStore.get(contractKey);
@@ -95,7 +95,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
                     var wrapCtx = Contract.MintNftTokenContract.newBuilder()
                             .setOwnerAddress(ByteString.copyFrom(nft.getOwner()))
                             .setContract(symbol)
-                            .setToAddress(ByteString.copyFrom(Hex.decodeHex(decodedMsg.receiveAddr)))
+                            .setToAddress(ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr)))
                             .setTokenId(decodedMsg.value)
                             .setUri(PosBridgeUtil.abiDecodeFromToString(decodedMsg.extHex))
                             .build();
@@ -122,7 +122,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
                     .topic("PosBridgeDepositTokenExec")
                     .rawData(
                             PosBridgeTokenDepositExecEvent.builder()
-                                    .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
+                                    .owner_address(Numeric.toHexString(ctx.getOwnerAddress().toByteArray()))
                                     .root_chainid(decodedMsg.rootChainId)
                                     .root_token(decodedMsg.rootTokenAddr)
                                     .child_chainid(decodedMsg.childChainId)
@@ -169,7 +169,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.childChainId), "unrecognized child chain id: " + decodedMsg);
 
             //make sure valid receiver
-            Assert.isTrue(Wallet.addressValid(Hex.decodeHex(decodedMsg.receiveAddr)), "invalid receive address");
+            Assert.isTrue(Wallet.addressValid(Numeric.hexStringToByteArray(decodedMsg.receiveAddr)), "invalid receive address");
 
             var childMap = tokenMapRoot2ChildStore.get(rootKey);
             var assetType = (int)childMap.getAssetType();
@@ -179,10 +179,10 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             switch (assetType){
                 case ASSET_TYPE_NATIVE:
                 case ASSET_TYPE_TOKEN:
-                    Assert.isTrue(dbManager.getTokenAddrSymbolIndexStore().has(Hex.decodeHex(childTokenAddr)), "token with address not found: " + decodedMsg);
+                    Assert.isTrue(dbManager.getTokenAddrSymbolIndexStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "token with address not found: " + decodedMsg);
                     break;
                 case ASSET_TYPE_NFT:
-                    Assert.isTrue(dbManager.getNftAddrSymbolIndexStore().has(Hex.decodeHex(childTokenAddr)), "nft with address not found: " + decodedMsg);
+                    Assert.isTrue(dbManager.getNftAddrSymbolIndexStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "nft with address not found: " + decodedMsg);
                     break;
                 default:
                     throw new ContractValidateException("invalid asset type");

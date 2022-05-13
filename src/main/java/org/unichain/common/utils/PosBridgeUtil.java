@@ -18,6 +18,7 @@ import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint32;
+import org.web3j.utils.Numeric;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,17 +50,18 @@ public class PosBridgeUtil {
     }
 
     /**
-     * make sure all hex is not prefixed with 0x
+     * Assume that validator address with prefix 0x
      */
     public static void validateSignatures(final String msgHex, final List<String> hexSignatures, final PosBridgeConfigCapsule config) throws Exception{
         try{
-            var msg = Hex.decodeHex(msgHex);
+            var msg = Numeric.hexStringToByteArray(msgHex);
             var whitelist = config.getValidators();
             var signedValidators = new HashMap<String, String>();
             for(var sigHex : hexSignatures){
-                var sig = Hex.decodeHex(sigHex);
+                var sig = Numeric.hexStringToByteArray(sigHex);
                 var hash = Hash.sha3(msg);
-                var signedAddr = Hex.encodeHexString(ECKey.signatureToAddress(hash, sig))
+                //recover addr with prefix 0x
+                var signedAddr = Numeric.toHexString(ECKey.signatureToAddress(hash, sig))
                         .toLowerCase()
                         .substring(2);
                 if(whitelist.containsKey(signedAddr))
@@ -87,6 +89,7 @@ public class PosBridgeUtil {
      }
      */
     public static PosBridgeDepositExecMsg decodePosBridgeDepositExecMsg(String msgHex) {
+        msgHex = Numeric.prependHexPrefix(msgHex);
         List<TypeReference<?>> types = new ArrayList<>();
         TypeReference<Uint32> type1 = new TypeReference<Uint32>() {};
         TypeReference<Uint32> type2 = new TypeReference<Uint32>() {};
@@ -105,8 +108,8 @@ public class PosBridgeUtil {
         return  PosBridgeDepositExecMsg.builder()
                 .rootChainId(((Uint32)out.get(0)).getValue().longValue())
                 .childChainId(((Uint32)out.get(1)).getValue().longValue())
-                .rootTokenAddr(((Address)out.get(2)).getValue())
-                .receiveAddr(((Address)out.get(3)).getValue())
+                .rootTokenAddr(Numeric.cleanHexPrefix(((Address)out.get(2)).getValue()))
+                .receiveAddr(Numeric.cleanHexPrefix(((Address)out.get(3)).getValue()))
                 .value(value.getValue().longValue())
                 .extHex(BLIND_URI_HEX) //@todo add uri msg in source msg
                 .build();
@@ -172,10 +175,6 @@ public class PosBridgeUtil {
 
     public static String makeTokenMapKey(String chainIdHex, String token){
         return (chainIdHex + "_" + token);
-    }
-
-    public static byte[] makeTokenMapKeyBytes(long chainId, String token) {
-        return makeTokenMapKey(chainId, token).getBytes();
     }
 
     public static boolean isUnichain(long chainId){

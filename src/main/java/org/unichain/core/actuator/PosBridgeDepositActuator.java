@@ -21,7 +21,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.PosBridgeTokenDepositEvent;
@@ -36,6 +35,7 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.PosBridgeDepositContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.utils.Numeric;
 
 import static org.unichain.core.capsule.PosBridgeTokenMappingCapsule.*;
 
@@ -50,7 +50,11 @@ public class PosBridgeDepositActuator extends AbstractActuator {
     public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
         var fee = calcFee();
         try {
-            val ctx = this.contract.unpack(PosBridgeDepositContract.class);
+            val ctx0 = this.contract.unpack(PosBridgeDepositContract.class);
+            var ctx = ctx0.toBuilder()
+                    .setRootToken(Numeric.cleanHexPrefix(ctx0.getRootToken()).toLowerCase())
+//                    .(Numeric.cleanHexPrefix(ctx0.getChildToken()).toLowerCase())
+                    .build();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
             //load token map
@@ -82,7 +86,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                     break;
                 }
                 case ASSET_TYPE_TOKEN: {
-                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(ctx.getRootToken())).getSymbol();
+                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getRootToken())).getSymbol();
                     var wrapCtx = Contract.TransferTokenContract.newBuilder()
                             .setAmount(ctx.getData())
                             .setOwnerAddress(ctx.getOwnerAddress())
@@ -102,7 +106,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                     break;
                 }
                 case ASSET_TYPE_NFT: {
-                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(ctx.getRootToken())).getSymbol();
+                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getRootToken())).getSymbol();
                     var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                             .setOwnerAddress(ctx.getOwnerAddress())
                             .setToAddress(config.getNftPredicate())
@@ -133,14 +137,14 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                     .topic("PosBridgeDepositToken")
                     .rawData(
                             PosBridgeTokenDepositEvent.builder()
-                                    .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
+                                    .owner_address(Numeric.toHexString(ctx.getOwnerAddress().toByteArray()))
                                     .root_token(ctx.getRootToken())
                                     .root_chainid(rootChainId)
                                     .child_token(childToken)
                                     .child_chainid(ctx.getChildChainid())
                                     .type(assetType)
                                     .data(ctx.getData())
-                                    .receive_address(ctx.getReceiveAddress())
+                                    .receive_address(Numeric.prependHexPrefix(ctx.getReceiveAddress()))
                                     .build())
                     .build();
             emitEvent(event, ret);
@@ -160,7 +164,10 @@ public class PosBridgeDepositActuator extends AbstractActuator {
             Assert.notNull(dbManager, "No dbManager!");
             Assert.isTrue(contract.is(PosBridgeDepositContract.class), "contract type error,expected type [PosBridgeDepositContract],real type[" + contract.getClass() + "]");
             var fee = calcFee();
-            val ctx = this.contract.unpack(PosBridgeDepositContract.class);
+            val ctx0 = this.contract.unpack(PosBridgeDepositContract.class);
+            var ctx = ctx0.toBuilder()
+                    .setRootToken(Numeric.cleanHexPrefix(ctx0.getRootToken()).toLowerCase())
+                    .build();
             var ownerAddr = getOwnerAddress().toByteArray();
             var accountStore = dbManager.getAccountStore();
             var config = dbManager.getPosBridgeConfigStore().get();
@@ -198,7 +205,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                     break;
                 }
                 case ASSET_TYPE_TOKEN: {
-                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(ctx.getRootToken())).getSymbol();
+                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getRootToken())).getSymbol();
                     var wrapCtx = Contract.TransferTokenContract.newBuilder()
                             .setAmount(ctx.getData())
                             .setOwnerAddress(ctx.getOwnerAddress())
@@ -216,7 +223,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                     break;
                 }
                 case ASSET_TYPE_NFT: {
-                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(ctx.getRootToken())).getSymbol();
+                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getRootToken())).getSymbol();
                     var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                             .setOwnerAddress(ctx.getOwnerAddress())
                             .setToAddress(config.getNftPredicate())

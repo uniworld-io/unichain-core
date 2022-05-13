@@ -2,6 +2,7 @@ package org.unichain;
 
 import lombok.var;
 import org.apache.commons.codec.binary.Hex;
+import org.springframework.util.Assert;
 import org.unichain.common.crypto.ECKey;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.PosBridgeUtil;
@@ -22,6 +23,7 @@ import org.web3j.crypto.Hash;
 import org.web3j.rlp.RlpDecoder;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
+import org.web3j.utils.Numeric;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,15 +35,24 @@ public class Test {
 //        testSignatureRecover();
 //        testAbiCodec();
 //        testValidatorCodec();
-//        testDecodeWithdrawMsg();
+        testDecodeWithdrawMsg();
 //        testValidatingSignatures();
-        testBase58Decode();
+//        testBase58Decode();
     }
+
 
     private static void testBase58Decode(){
         try {
+//            byte[] addr0 = Numeric.hexStringToByteArray("0x21Aa7b195bc748D506E07D678fbDCaE7dF579Cff");
+//            Assert.isTrue(Wallet.addressValid(addr0), "invalid address");
+            Assert.isTrue(org.web3j.crypto.WalletUtils.isValidAddress("0x21Aa7b195bc748D506E07D678fbDCaE7dF579Cff"), "invalid web3 address");
+            Assert.isTrue(org.web3j.crypto.WalletUtils.isValidAddress("0x44fff11519410945baae942b9b8da46eb1aecf7897"), "invalid web3  address");
+            Assert.isTrue(Wallet.addressValid(Numeric.hexStringToByteArray("0x44fff11519410945baae942b9b8da46eb1aecf7897")), "invalid tronx address");
+
+            //            System.out.println("+++ testBase58Decode hex: " + Hex.encodeHexString(addr));
+//
             byte[] addr = Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_GENESIS_ADMIN_WALLET);
-            System.out.println("+++ testBase58Decode hex: " + Hex.encodeHexString(addr));
+            System.out.println("+++ testBase58Decode hex: SUCCESS" + Numeric.toHexString(addr));
         }
         catch (Exception e){
             System.err.println("+++ testBase58Decode: FAILED --> " + e);

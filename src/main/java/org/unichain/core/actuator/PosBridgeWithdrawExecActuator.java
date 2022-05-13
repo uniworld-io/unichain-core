@@ -21,7 +21,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.PosBridgeTokenWithdrawExecEvent;
@@ -38,6 +37,7 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.PosBridgeWithdrawExecContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.utils.Numeric;
 
 import static org.unichain.core.capsule.PosBridgeTokenMappingCapsule.*;
 
@@ -62,7 +62,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             var childKeyStr = PosBridgeUtil.makeTokenMapKey(Long.toHexString(decodedMsg.childChainId) , decodedMsg.childTokenAddr);
             var childKey = childKeyStr.getBytes();
             var rootMap = child2rootStore.get(childKey);
-            var receiveAddr = Hex.decodeHex(decodedMsg.receiveAddr);
+            var receiveAddr = Numeric.hexStringToByteArray(decodedMsg.receiveAddr);
 
             var assetType = (int)rootMap.getAssetType();
             var rootToken = rootMap.getTokenByChainId(decodedMsg.rootChainId);
@@ -88,7 +88,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                     break;
                 }
                 case ASSET_TYPE_TOKEN: {
-                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
+                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(rootToken)).getSymbol();
                     var wrapCtx = Contract.TransferTokenContract.newBuilder()
                             .setAmount(decodedMsg.value)
                             .setOwnerAddress(posConfig.getTokenPredicate())
@@ -108,7 +108,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                     break;
                 }
                 case ASSET_TYPE_NFT: {
-                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
+                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(rootToken)).getSymbol();
                     var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                             .setOwnerAddress(posConfig.getNftPredicate())
                             .setToAddress(ByteString.copyFrom(receiveAddr))
@@ -138,7 +138,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                     .topic("PosBridgeWithdrawTokenExec")
                     .rawData(
                             PosBridgeTokenWithdrawExecEvent.builder()
-                                    .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
+                                    .owner_address(Numeric.toHexString(ctx.getOwnerAddress().toByteArray()))
                                     .root_chainid(decodedMsg.rootChainId)
                                     .root_token(rootToken)
                                     .child_chainid(decodedMsg.childChainId)
@@ -208,7 +208,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
         Assert.isTrue( PosBridgeUtil.isUnichain(decodedMsg.rootChainId) , "unrecognized rootChainId: " + decodedMsg);
 
         //check receive addr
-        var receiveAddr = Hex.decodeHex(decodedMsg.receiveAddr);
+        var receiveAddr = Numeric.hexStringToByteArray(decodedMsg.receiveAddr);
         Assert.isTrue(Wallet.addressValid(receiveAddr), "invalid receiving address");
 
         //check asset
@@ -235,7 +235,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                 break;
             }
             case ASSET_TYPE_TOKEN: {
-                var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
+                var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(rootToken)).getSymbol();
                 var wrapCtx = Contract.TransferTokenContract.newBuilder()
                         .setAmount(decodedMsg.value)
                         .setOwnerAddress(posConfig.getTokenPredicate())
@@ -253,7 +253,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                 break;
             }
             case ASSET_TYPE_NFT: {
-                var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(rootToken)).getSymbol();
+                var symbol = dbManager.getNftAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(rootToken)).getSymbol();
                 var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                         .setOwnerAddress(posConfig.getNftPredicate())
                         .setToAddress(ByteString.copyFrom(receiveAddr))

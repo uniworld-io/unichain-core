@@ -21,7 +21,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.Wallet;
@@ -71,7 +70,6 @@ public class PosBridgeSetupActuator extends AbstractActuator {
             if(ctx.hasField(POSBRIDGE_CONSENSUS_RATE))
                 config.setConsensusRate(ctx.getConsensusRate());
 
-            //@todo temporary update predicate addr now. consider to lock predicate asset
             if(ctx.hasField(POSBRIDGE_PREDICATE_NATIVE))
                 config.setPredicateNative(Numeric.hexStringToByteArray(ctx.getPredicateNative()));
 

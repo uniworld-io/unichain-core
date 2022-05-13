@@ -31,6 +31,7 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.PosBridgeCleanMapTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.utils.Numeric;
 
 import java.util.Arrays;
 
@@ -45,7 +46,11 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
     public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
         var fee = calcFee();
         try {
-            val ctx = this.contract.unpack(PosBridgeCleanMapTokenContract.class);
+            val ctx0 = this.contract.unpack(PosBridgeCleanMapTokenContract.class);
+            var ctx = ctx0.toBuilder()
+                    .setRootToken(Numeric.cleanHexPrefix(ctx0.getRootToken()).toLowerCase())
+                    .setChildToken(Numeric.cleanHexPrefix(ctx0.getChildToken()).toLowerCase())
+                    .build();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
             var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
@@ -97,7 +102,11 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
             Assert.notNull(dbManager, "No dbManager!");
             Assert.isTrue(contract.is(PosBridgeCleanMapTokenContract.class), "contract type error,expected type [PosBridgeCleanMapTokenContract],real type[" + contract.getClass() + "]");
             var fee = calcFee();
-            val ctx = this.contract.unpack(PosBridgeCleanMapTokenContract.class);
+            val ctx0 = this.contract.unpack(PosBridgeCleanMapTokenContract.class);
+            var ctx = ctx0.toBuilder()
+                    .setRootToken(Numeric.cleanHexPrefix(ctx0.getRootToken()).toLowerCase())
+                    .setChildToken(Numeric.cleanHexPrefix(ctx0.getChildToken()).toLowerCase())
+                    .build();
             var accountStore = dbManager.getAccountStore();
             var ownerAddr = getOwnerAddress().toByteArray();
 

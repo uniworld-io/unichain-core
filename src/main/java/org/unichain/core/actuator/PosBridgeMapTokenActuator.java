@@ -21,11 +21,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.PosBridgeTokenMappedEvent;
-import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.PosBridgeTokenMappingCapsule;
@@ -36,6 +34,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.PosBridgeMapTokenContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.utils.Numeric;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -55,7 +54,12 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
     public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
         var fee = calcFee();
         try {
-            val ctx = this.contract.unpack(PosBridgeMapTokenContract.class);
+            val ctx0 = this.contract.unpack(PosBridgeMapTokenContract.class);
+            var ctx = ctx0.toBuilder()
+                    .setRootToken(Numeric.cleanHexPrefix(ctx0.getRootToken()).toLowerCase())
+                    .setChildToken(Numeric.cleanHexPrefix(ctx0.getChildToken()).toLowerCase())
+                    .build();
+
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
             var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
@@ -106,7 +110,11 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             Assert.notNull(dbManager, "No dbManager!");
             Assert.isTrue(contract.is(PosBridgeMapTokenContract.class), "contract type error,expected type [PosBridgeMapTokenContract],real type[" + contract.getClass() + "]");
             var fee = calcFee();
-            val ctx = this.contract.unpack(PosBridgeMapTokenContract.class);
+            val ctx0 = this.contract.unpack(PosBridgeMapTokenContract.class);
+            var ctx = ctx0.toBuilder()
+                    .setRootToken(Numeric.cleanHexPrefix(ctx0.getRootToken()).toLowerCase())
+                    .setChildToken(Numeric.cleanHexPrefix(ctx0.getChildToken()).toLowerCase())
+                    .build();
             var accountStore = dbManager.getAccountStore();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
@@ -166,16 +174,16 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                 }
                 else {
                     var tokenIndex = dbManager.getTokenAddrSymbolIndexStore();
-                    Assert.isTrue(tokenIndex.has(Hex.decodeHex(token)), "token asset not found: " + token);
+                    Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "token asset not found: " + token);
                 }
                 break;
             case ASSET_TYPE_TOKEN:
                 var tokenIndex = dbManager.getTokenAddrSymbolIndexStore();
-                Assert.isTrue(tokenIndex.has(Hex.decodeHex(token)), "token asset not found: " + token);
+                Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "token asset not found: " + token);
                 break;
             case ASSET_TYPE_NFT:
                 var nftIndex = dbManager.getNftAddrSymbolIndexStore();
-                Assert.isTrue(nftIndex.has(Hex.decodeHex(token)), "nft asset not found: " + token);
+                Assert.isTrue(nftIndex.has(Numeric.hexStringToByteArray(token)), "nft asset not found: " + token);
                 break;
             default:
                 throw new Exception("invalid asset type");
@@ -183,7 +191,7 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
     }
 
     /**
-     * check EVM-compatible chain info
+     * check EVM-compatible chain info like bsc, eth ...
      */
     private void checkOtherChainToken(long _chainId, String token, int assetType, boolean isRoot) throws Exception{
         switch (assetType){
@@ -195,7 +203,7 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                 }
             case ASSET_TYPE_TOKEN:
             case ASSET_TYPE_NFT:
-                Assert.isTrue(Wallet.addressValid(ByteArray.fromHexString(token)), "invalid EVM-compatible token address, found: " + token);
+                Assert.isTrue(org.web3j.crypto.WalletUtils.isValidAddress(token), "invalid EVM-compatible token address, found: " + token);
                 break;
             default:
                 throw new Exception("invalid asset type");

@@ -21,7 +21,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.PosBridgeTokenWithdrawEvent;
@@ -37,6 +36,7 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.PosBridgeWithdrawContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 
@@ -54,7 +54,11 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
     public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
         var fee = calcFee();
         try {
-            val ctx = this.contract.unpack(PosBridgeWithdrawContract.class);
+            val ctx0 = this.contract.unpack(PosBridgeWithdrawContract.class);
+            var ctx = ctx0.toBuilder()
+                    .setChildToken(Numeric.cleanHexPrefix(ctx0.getChildToken()))
+                    .build();
+
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
             //load token map
@@ -71,7 +75,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             switch (assetType){
                 case ASSET_TYPE_NATIVE:
                 case ASSET_TYPE_TOKEN: {
-                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(ctx.getChildToken())).getSymbol();
+                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getChildToken())).getSymbol();
                     var tokenInfo = dbManager.getTokenPoolStore().get(symbol.toUpperCase().getBytes());
                     var wrapCtx = Contract.TransferTokenContract.newBuilder()
                             .setAmount(ctx.getData())
@@ -92,7 +96,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
                     break;
                 }
                 case ASSET_TYPE_NFT: {
-                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(ctx.getChildToken())).getSymbol();
+                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getChildToken())).getSymbol();
                     var wrapCtx = Contract.BurnNftTokenContract.newBuilder()
                             .setOwnerAddress(ctx.getOwnerAddress())
                             .setContract(symbol)
@@ -122,7 +126,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
                     .topic("PosBridgeWithdrawToken")
                     .rawData(
                             PosBridgeTokenWithdrawEvent.builder()
-                                    .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
+                                    .owner_address(Numeric.toHexString(ctx.getOwnerAddress().toByteArray()))
                                     .root_token(rootToken)
                                     .root_chainid(rootChainId)
                                     .child_token(ctx.getChildToken())
@@ -156,7 +160,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
 
             //make sure receive address is valid
-            Assert.isTrue(Wallet.addressValid(Hex.decodeHex(ctx.getReceiveAddress())), "invalid receive address");
+            Assert.isTrue(Wallet.addressValid(Numeric.hexStringToByteArray(ctx.getReceiveAddress())), "invalid receive address");
 
             //make sure token mapped
             var child2RootStr = PosBridgeUtil.makeTokenMapKey(Wallet.getAddressPreFixString(), ctx.getChildToken());
@@ -169,7 +173,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             switch (assetType){
                     case ASSET_TYPE_NATIVE:
                     case ASSET_TYPE_TOKEN: {
-                        var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Hex.decodeHex(ctx.getChildToken())).getSymbol();
+                        var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getChildToken())).getSymbol();
                         var tokenInfo = dbManager.getTokenPoolStore().get(symbol.toUpperCase().getBytes());
                         var wrapCtx = Contract.TransferTokenContract.newBuilder()
                                 .setAmount(ctx.getData())
@@ -188,7 +192,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
                         break;
                     }
                     case ASSET_TYPE_NFT: {
-                        var symbol = dbManager.getNftAddrSymbolIndexStore().get(Hex.decodeHex(ctx.getChildToken())).getSymbol();
+                        var symbol = dbManager.getNftAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getChildToken())).getSymbol();
                         var wrapCtx = Contract.BurnNftTokenContract.newBuilder()
                                 .setOwnerAddress(ctx.getOwnerAddress())
                                 .setContract(symbol)

@@ -154,7 +154,7 @@ public class Wallet {
     Wallet.addressPreFixByte = addressPreFixByte;
   }
 
-  public static void setPosBridgeSupportedChainIds(Set chainIds) {
+  public static void setPosBridgeSupportedChainIds(Set<Long> chainIds) {
     Wallet.posBridgeSupportedChainIds = chainIds;
   }
 

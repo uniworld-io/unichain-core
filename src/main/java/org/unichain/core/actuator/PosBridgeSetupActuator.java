@@ -31,6 +31,7 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.PosBridgeSetupContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.utils.Numeric;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -63,15 +64,15 @@ public class PosBridgeSetupActuator extends AbstractActuator {
 
             //@todo temporary update predicate addr now. consider to lock predicate asset
             if(ctx.hasField(POSBRIDGE_PREDICATE_NATIVE))
-                config.setPredicateNative(Hex.decodeHex(ctx.getPredicateNative()));
+                config.setPredicateNative(Numeric.hexStringToByteArray(ctx.getPredicateNative()));
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_TOKEN))
-                config.setPredicateToken(Hex.decodeHex(ctx.getPredicateToken()));
+                config.setPredicateToken(Numeric.hexStringToByteArray(ctx.getPredicateToken()));
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_NFT))
-                config.setPredicateNft(Hex.decodeHex(ctx.getPredicateNft()));
+                config.setPredicateNft(Numeric.hexStringToByteArray(ctx.getPredicateNft()));
 
-            if(ctx.hasField(POSBRIDGE_VALIDATORS))
+            if(!ctx.getValidatorsList().isEmpty())
             {
                 //clear then set all validators
                 var hexValidators= ctx.getValidatorsList()
@@ -121,24 +122,24 @@ public class PosBridgeSetupActuator extends AbstractActuator {
             }
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_NATIVE)) {
-                var predicateAddr = Hex.decodeHex(ctx.getPredicateNative());
+                var predicateAddr = Numeric.hexStringToByteArray(ctx.getPredicateNative());
                 Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist native predicate addr");
             }
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_TOKEN)) {
-                var predicateAddr = Hex.decodeHex(ctx.getPredicateToken());
+                var predicateAddr = Numeric.hexStringToByteArray(ctx.getPredicateToken());
                 Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist token predicate addr");
             }
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_NFT)) {
-                var predicateAddr = Hex.decodeHex(ctx.getPredicateNft());
+                var predicateAddr = Numeric.hexStringToByteArray(ctx.getPredicateNft());
                 Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist NFT predicate addr");
             }
 
             if(ctx.hasField(POSBRIDGE_MIN_VALIDATOR)) {
                 Assert.isTrue(ctx.getMinValidator() >= 1 && ctx.getMinValidator() <= 100, "Invalid new min validator");
             }
-            if(ctx.hasField(POSBRIDGE_VALIDATORS)){
+            if(!ctx.getValidatorsList().isEmpty()){
                 ctx.getValidatorsList().forEach(v -> Assert.isTrue(Wallet.addressValid(v.toByteArray()), "Invalid validator address -->" + v));
             }
             Assert.isTrue( ownerAcc.getBalance() >= fee, "Balance is not sufficient.");

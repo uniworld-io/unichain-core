@@ -54,10 +54,12 @@ public class PosBridgeTokenMappingCapsule implements ProtoCapsule<Protocol.PosBr
     return this.tokenMap.toString();
   }
 
-  public void putToken(long chainId, String token, long type){
+  public void putToken(long chainId, String token, long type, long keyChainId, String keyTokenAddr){
     this.tokenMap = this.tokenMap.toBuilder()
             .putTokens(Long.toHexString(chainId), token)
             .setType(type)
+            .setChainId(Long.toHexString(keyChainId))
+            .setTokenAddress(keyTokenAddr)
             .build();
   }
 

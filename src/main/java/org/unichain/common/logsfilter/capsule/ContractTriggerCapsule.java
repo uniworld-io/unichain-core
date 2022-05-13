@@ -5,7 +5,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.apache.commons.lang3.ArrayUtils;
-import org.pf4j.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 import org.unichain.common.crypto.Hash;
 import org.unichain.common.logsfilter.ContractEventParserAbi;
@@ -73,7 +73,7 @@ public class ContractTriggerCapsule extends TriggerCapsule {
           String name = param.getName();
           signBuilder.append(type);
           signFullBuilder.append(type);
-          if (StringUtils.isNotNullOrEmpty(name)) {
+          if (!StringUtils.isEmpty(name)) {
             signFullBuilder.append(" ").append(name);
           }
         }

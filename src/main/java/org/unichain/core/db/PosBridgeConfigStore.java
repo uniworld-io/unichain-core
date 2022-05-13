@@ -21,6 +21,7 @@ public class PosBridgeConfigStore extends UnichainStoreWithRevoking<PosBridgeCon
     {
       /**
        * initialize default config
+       * Admin address hex decode has prefix with 0x44
        */
       var config = Protocol.PosBridgeConfig.newBuilder()
               .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_GENESIS_ADMIN_WALLET)))

@@ -34,7 +34,18 @@ public class Test {
 //        testAbiCodec();
 //        testValidatorCodec();
 //        testDecodeWithdrawMsg();
-        testValidatingSignatures();
+//        testValidatingSignatures();
+        testBase58Decode();
+    }
+
+    private static void testBase58Decode(){
+        try {
+            byte[] addr = Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_GENESIS_ADMIN_WALLET);
+            System.out.println("+++ testBase58Decode hex: " + Hex.encodeHexString(addr));
+        }
+        catch (Exception e){
+            System.err.println("+++ testBase58Decode: FAILED --> " + e);
+        }
     }
 
     private static void testValidatingSignatures(){

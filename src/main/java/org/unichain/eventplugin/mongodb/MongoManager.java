@@ -8,7 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import lombok.extern.slf4j.Slf4j;
-import org.pf4j.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +38,7 @@ public class MongoManager {
     String password = config.getPassword();
     String databaseName = config.getDbName();
 
-    if (StringUtils.isNullOrEmpty(databaseName)) {
+    if (StringUtils.isEmpty(databaseName)) {
       return;
     }
 
@@ -51,7 +51,7 @@ public class MongoManager {
   }
 
   public void createCollection(String collectionName) {
-    if (db != null && StringUtils.isNotNullOrEmpty(collectionName)) {
+    if (db != null && !StringUtils.isEmpty(collectionName)) {
       if (Objects.isNull(db.getCollection(collectionName))){
         db.createCollection(collectionName);
       }
@@ -61,7 +61,7 @@ public class MongoManager {
   public void createCollection(String collectionName, Map<String, Boolean> indexOptions) {
     logger.info("[createCollection] collection={} start", collectionName);
 
-    if (db != null && StringUtils.isNotNullOrEmpty(collectionName)) {
+    if (db != null && !StringUtils.isEmpty(collectionName)) {
       List<String> collectionList = new ArrayList<>();
       db.listCollectionNames().into(collectionList);
 

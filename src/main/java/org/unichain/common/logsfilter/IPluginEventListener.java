@@ -1,9 +1,6 @@
 package org.unichain.common.logsfilter;
 
-import org.pf4j.ExtensionPoint;
-
-//@todo review new trigger
-public interface IPluginEventListener extends ExtensionPoint {
+public interface IPluginEventListener{
   void setServerAddress(String address);
 
   void setTopic(int eventType, String topic);

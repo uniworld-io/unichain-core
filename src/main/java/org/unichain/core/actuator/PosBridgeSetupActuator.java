@@ -37,6 +37,15 @@ import java.util.stream.Collectors;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
+/**
+ * @todo clean all address hex prefix for compatible
+ * @todo refine setup policy
+ * @todo limit predicate address as SYSTEM ADDRESS to prevent withdrawing by user if wallet leaked!!!
+ * @todo move to multi-sign wallet to :
+ *  + drop Relayer to prevent bottle neck attack
+ *  + all validator submit directly to all network
+ */
+
 @Slf4j(topic = "actuator")
 public class PosBridgeSetupActuator extends AbstractActuator {
 

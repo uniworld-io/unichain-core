@@ -67,11 +67,11 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             var childKey = childKeyStr.getBytes();
 
             var rootCap = root2ChildStore.has(rootKey)  ? root2ChildStore.get(rootKey): new PosBridgeTokenMappingCapsule(Protocol.PosBridgeTokenMapping.newBuilder().build());
-            rootCap.putToken(ctx.getChildChainid(), ctx.getChildToken(), ctx.getType());
+            rootCap.putToken(ctx.getChildChainid(), ctx.getChildToken(), ctx.getType(), ctx.getRootChainid(), ctx.getRootToken());
             root2ChildStore.put(rootKey, rootCap);
 
             var childCap = child2RootStore.has(childKey)  ? child2RootStore.get(childKey): new PosBridgeTokenMappingCapsule(Protocol.PosBridgeTokenMapping.newBuilder().build());
-            childCap.putToken(ctx.getRootChainid(), ctx.getRootToken(), ctx.getType());
+            childCap.putToken(ctx.getRootChainid(), ctx.getRootToken(), ctx.getType(), ctx.getChildChainid(), ctx.getChildToken());
             child2RootStore.put(childKey, childCap);
 
             chargeFee(ownerAddr, fee);

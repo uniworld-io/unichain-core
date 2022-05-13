@@ -74,6 +74,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.security.SignatureException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.unichain.core.config.Parameter.DatabaseConstants.EXCHANGE_COUNT_LIMIT_MAX;
 import static org.unichain.core.config.Parameter.DatabaseConstants.PROPOSAL_COUNT_LIMIT_MAX;
@@ -1147,6 +1148,33 @@ public class Wallet {
       return transactionCapsule.getInstance();
     }
     return null;
+  }
+
+  public PosBridgeConfig getPosBridgeConfig() {
+    try {
+      return dbManager.getPosBridgeConfigStore().get().getInstance();
+    } catch (Exception e) {
+      logger.error("error while loading POSConfig -->", e);
+      return null;
+    }
+  }
+
+  public PosBridgeTokenMappingPage getPosBridgeTokenMap() {
+    try {
+      var all= dbManager.getPosBridgeTokenMapRoot2ChildStore().getAll()
+              .stream()
+              .map(item -> item.getInstance())
+              .collect(Collectors.toList());
+      return  PosBridgeTokenMappingPage.newBuilder()
+              .setTotal(all.size())
+              .setPageIndex(0)
+              .setPageSize(all.size())
+              .addAllTokenMaps(all)
+              .build();
+    } catch (Exception e) {
+      logger.error("error while loading POSTokenMaps -->", e);
+      return null;
+    }
   }
 
   public TransactionInfo getTransactionInfoById(ByteString transactionId) {

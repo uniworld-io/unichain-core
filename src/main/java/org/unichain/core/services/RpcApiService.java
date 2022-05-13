@@ -360,6 +360,21 @@ public class RpcApiService implements Service {
       responseObserver.onCompleted();
     }
 
+    //POSBridge
+    @Override
+    public void getPosBridgeConfig(EmptyMessage req, StreamObserver<PosBridgeConfig> responseObserver) {
+      var reply = wallet.getPosBridgeConfig();
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getPosBridgeTokenMap(EmptyMessage req, StreamObserver<PosBridgeTokenMappingPage> responseObserver) {
+      var reply = wallet.getPosBridgeTokenMap();
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
     @Override
     public void getAccountById(Account request, StreamObserver<Account> responseObserver) {
       ByteString id = request.getAccountId();
@@ -799,6 +814,21 @@ public class RpcApiService implements Service {
       } else {
         responseObserver.onNext(null);
       }
+      responseObserver.onCompleted();
+    }
+
+    //POSBridge
+    @Override
+    public void getPosBridgeConfig(EmptyMessage req, StreamObserver<PosBridgeConfig> responseObserver) {
+      var reply = wallet.getPosBridgeConfig();
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getPosBridgeTokenMap(EmptyMessage req, StreamObserver<PosBridgeTokenMappingPage> responseObserver) {
+      var reply = wallet.getPosBridgeTokenMap();
+      responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 

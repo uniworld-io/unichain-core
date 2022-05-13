@@ -104,6 +104,11 @@ public class FullNodeHttpApiService implements Service {
   private GetTokenPoolServlet getTokenPoolServlet;
 
   @Autowired
+  private GetPosBridgeConfigServlet getPosBridgeConfigServlet;
+  @Autowired
+  private GetPosBridgeTokenMapServlet getPosBridgeTokenMapServlet;
+
+  @Autowired
   private NftListContractServlet nftListContractServlet;
   @Autowired
   private NftListTokenApprovalServlet listNftTokenApproveServlet;
@@ -342,6 +347,8 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(posBridgeDepositExecServlet), "/posbridgedepositexec");
       context.addServlet(new ServletHolder(posBridgeWithdrawServlet), "/posbridgewithdraw");
       context.addServlet(new ServletHolder(posBridgeWithdrawExecServlet), "/posbridgewithdrawexec");
+      context.addServlet(new ServletHolder(getPosBridgeConfigServlet), "/getposbridgeconfig");
+      context.addServlet(new ServletHolder(getPosBridgeTokenMapServlet), "/getposbridgetokenmap");
 
       context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
       context.addServlet(new ServletHolder(transferTokenOwnerServlet), "/transfertokenowner");

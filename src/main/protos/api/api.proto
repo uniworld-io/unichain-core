@@ -714,6 +714,26 @@ service Wallet {
     };
   }
 
+  rpc GetPosBridgeConfig (EmptyMessage) returns (PosBridgeConfig) {
+    option (google.api.http) = {
+      post: "/wallet/getposbridgeconfig"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/getposbridgeconfig"
+      }
+    };
+  }
+
+  rpc GetPosBridgeTokenMap (EmptyMessage) returns (PosBridgeTokenMappingPage) {
+    option (google.api.http) = {
+      post: "/wallet/getposbridgetokenmap"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/getposbridgetokenmap"
+      }
+    };
+  }
+
   rpc GetAssetIssueListByName (BytesMessage) returns (AssetIssueList) {
   }
   rpc GetAssetIssueById (BytesMessage) returns (AssetIssueContract) {
@@ -1148,6 +1168,27 @@ service WalletSolidity {
       }
     };
   };
+
+  //POSBridge
+  rpc GetPosBridgeConfig (EmptyMessage) returns (PosBridgeConfig) {
+    option (google.api.http) = {
+      post: "/walletsolidity/getposbridgeconfig"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/getposbridgeconfig"
+      }
+    };
+  }
+
+  rpc GetPosBridgeTokenMap (EmptyMessage) returns (PosBridgeTokenMappingPage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/getposbridgetokenmap"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/getposbridgetokenmap"
+      }
+    };
+  }
 
   rpc GetAccount (Account) returns (Account) {
     option (google.api.http) = {

@@ -35,6 +35,11 @@ public class SolidityNodeHttpApiService implements Service {
   private GetTokenPoolServlet getTokenPoolServlet;
 
   @Autowired
+  private GetPosBridgeConfigServlet getPosBridgeConfigServlet;
+  @Autowired
+  private GetPosBridgeTokenMapServlet getPosBridgeTokenMapServlet;
+
+  @Autowired
   private NftListContractServlet nftListContractServlet;
   @Autowired
   private NftListTokenApprovalServlet listNftTokenApproveServlet;
@@ -140,6 +145,10 @@ public class SolidityNodeHttpApiService implements Service {
       // same as FullNode
       context.addServlet(new ServletHolder(getAccountServlet), "/walletsolidity/getaccount");
       context.addServlet(new ServletHolder(getTokenPoolServlet), "/walletsolidity/gettokenpool");
+
+      //posbridge
+      context.addServlet(new ServletHolder(getPosBridgeConfigServlet), "/walletsolidity/getposbridgeconfig");
+      context.addServlet(new ServletHolder(getPosBridgeTokenMapServlet), "/walletsolidity/getposbridgetokenmap");
 
       context.addServlet(new ServletHolder(nftListContractServlet), "/walletsolidity/listnftcontract");
       context.addServlet(new ServletHolder(listNftTokenApproveServlet), "/walletsolidity/listnfttokenapprove");

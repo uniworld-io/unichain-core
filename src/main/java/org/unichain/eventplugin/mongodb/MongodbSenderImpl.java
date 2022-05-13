@@ -3,7 +3,7 @@ package org.unichain.eventplugin.mongodb;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import org.pf4j.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unichain.common.logsfilter.trigger.Trigger;
@@ -60,7 +60,7 @@ public class MongodbSenderImpl {
   }
 
   public void setDBConfig(String dbConfig) {
-    if (StringUtils.isNullOrEmpty(dbConfig)) {
+    if (StringUtils.isEmpty(dbConfig)) {
       return;
     }
 
@@ -82,7 +82,7 @@ public class MongodbSenderImpl {
   }
 
   public void setServerAddress(final String serverAddress) {
-    if (StringUtils.isNullOrEmpty(serverAddress)) {
+    if (StringUtils.isEmpty(serverAddress)) {
       return;
     }
 
@@ -189,7 +189,7 @@ public class MongodbSenderImpl {
       mongoConfig = new MongoConfig();
     }
 
-    if (StringUtils.isNullOrEmpty(dbName)) {
+    if (StringUtils.isEmpty(dbName)) {
       return;
     }
 

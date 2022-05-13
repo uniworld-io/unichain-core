@@ -10,7 +10,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.eclipse.jetty.util.StringUtil;
-import org.pf4j.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 import org.unichain.api.GrpcAPI.*;
 import org.unichain.common.crypto.Hash;
@@ -1011,12 +1011,13 @@ public class Util {
   public static String parseMethod(String methodSign, String input) {
     byte[] selector = new byte[4];
     System.arraycopy(Hash.sha3(methodSign.getBytes()), 0, selector, 0, 4);
-    //System.out.println(methodSign + ":" + Hex.toHexString(selector));
-    if (StringUtils.isNullOrEmpty(input)) {
+    if (StringUtils.isEmpty(input)) {
       return Hex.toHexString(selector);
     }
-
-    return Hex.toHexString(selector) + input;
+    else
+    {
+      return Hex.toHexString(selector) + input;
+    }
   }
 
   public static long getJsonLongValue(final JSONObject jsonObject, final String key) {

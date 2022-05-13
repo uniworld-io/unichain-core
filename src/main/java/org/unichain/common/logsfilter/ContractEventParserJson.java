@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.pf4j.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.HashMap;
@@ -45,7 +45,7 @@ public class ContractEventParserJson extends ContractEventParser {
               break;
             }
             String str = parseTopic(topicList.get(index++), param.getString("type"));
-            if (StringUtils.isNotNullOrEmpty(param.getString("name"))) {
+            if (!StringUtils.isEmpty(param.getString("name"))) {
               map.put(param.getString("name"), str);
             }
             map.put("" + i, str);
@@ -98,7 +98,7 @@ public class ContractEventParserJson extends ContractEventParser {
             }
 
             String str = parseDataBytes(data, param.getString("type"), index++);
-            if (StringUtils.isNotNullOrEmpty(param.getString("name"))) {
+            if (!StringUtils.isEmpty(param.getString("name"))) {
               map.put(param.getString("name"), str);
             }
             map.put("" + i, str);

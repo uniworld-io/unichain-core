@@ -2,7 +2,7 @@ package org.unichain.common.logsfilter;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.pf4j.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.crypto.OutputLengthException;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
@@ -102,7 +102,7 @@ public class ContractEventParser {
    * dynamic length types, such as bytes and string.
    */
   protected static String parseTopic(byte[] bytes, String typeStr) {
-    if (ArrayUtils.isEmpty(bytes) || StringUtils.isNullOrEmpty(typeStr)) {
+    if (ArrayUtils.isEmpty(bytes) || StringUtils.isEmpty(typeStr)) {
       return "";
     }
     Type type = basicType(typeStr);

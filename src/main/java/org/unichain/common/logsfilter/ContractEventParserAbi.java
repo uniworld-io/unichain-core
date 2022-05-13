@@ -2,7 +2,7 @@ package org.unichain.common.logsfilter;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.pf4j.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 import org.unichain.protos.Protocol.SmartContract.ABI;
 
@@ -36,7 +36,7 @@ public class ContractEventParserAbi extends ContractEventParser {
             break;
           }
           String str = parseTopic(topicList.get(index++), param.getType());
-          if (StringUtils.isNotNullOrEmpty(param.getName())) {
+          if (!StringUtils.isEmpty(param.getName())) {
             map.put(param.getName(), str);
           }
           map.put("" + i, str);
@@ -83,7 +83,7 @@ public class ContractEventParserAbi extends ContractEventParser {
         }
 
         String str = parseDataBytes(data, param.getType(), index++);
-        if (StringUtils.isNotNullOrEmpty(param.getName())) {
+        if (!StringUtils.isEmpty(param.getName())) {
           map.put(param.getName(), str);
         }
         map.put("" + i, str);

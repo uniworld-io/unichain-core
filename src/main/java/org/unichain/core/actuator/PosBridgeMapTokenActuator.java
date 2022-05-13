@@ -119,7 +119,7 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             //check valid chain id
             Assert.isTrue(ctx.getChildChainid() != ctx.getRootChainid(), "root chain id must be different from child chain id");
             Assert.isTrue(Wallet.getSupportedPosChainIds().contains(ctx.getChildChainid()) && Wallet.getSupportedPosChainIds().contains(ctx.getRootChainid()),
-                    "not supported chainId, found rootChainId" + ctx.getRootChainid() + ", childChainId: " + ctx.getChildChainid());
+                    "not supported chainId, found rootChainId: " + ctx.getRootChainid() + ", childChainId: " + ctx.getChildChainid());
 
             //check valid token address
             if(isUniChain(ctx.getRootChainid()))

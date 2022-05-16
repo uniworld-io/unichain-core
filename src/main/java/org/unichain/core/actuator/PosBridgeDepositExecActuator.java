@@ -78,7 +78,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             }
             var childToken = ByteString.copyFrom(Numeric.hexStringToByteArray(tokenMap.getChildToken()));
             var receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));
-            childTokenService.deposit(receiver, childToken, Hex.encodeHexString(decodedMsg.value.getValue()));
+            childTokenService.deposit(receiver, childToken, Hex.encodeHexString(decodedMsg.depositData.getValue()));
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
@@ -107,11 +107,12 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             PosBridgeUtil.validateSignatures(ctx.getMessage(), ctx.getSignaturesList(), config);
 
             var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(ctx.getMessage());
+            logger.info("Capture decode deposit exec: {}", decodedMsg);
             var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
 
             //token mapped ?
-            var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr).getBytes();
-            Assert.isTrue(tokenMapStore.has(rootKey), "TOKEN_NOT_MAPPED");
+            var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr);
+            Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "TOKEN_NOT_MAPPED_" + rootKey);
 
             //make sure this command belong to our chain ?
             Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.childChainId), "CHILD_CHAIN_INVALID");
@@ -119,7 +120,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             //make sure valid receiver
             Assert.isTrue(Wallet.addressValid(decodedMsg.receiveAddr), "RECEIVER_INVALID");
 
-            var tokenMap = tokenMapStore.get(rootKey);
+            var tokenMap = tokenMapStore.get(rootKey.getBytes());
             var assetType = tokenMap.getAssetType();
             var childTokenAddr = tokenMap.getChildToken();
 

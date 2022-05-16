@@ -118,7 +118,6 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             //make sure token mapped
             var childKey = PosBridgeUtil.makeTokenMapKey(Wallet.getAddressPreFixString(), ctx.getChildToken());
             var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
-            var tokenMap = tokenMapStore.get(childKey.getBytes());
             Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "TOKEN_NOT_MAPPED_" + childKey);
 
             Assert.isTrue(accountStore.get(getOwnerAddress().toByteArray()).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");

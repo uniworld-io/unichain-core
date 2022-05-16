@@ -87,7 +87,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             }
             ByteString rootToken = ByteString.copyFrom(Numeric.hexStringToByteArray(tokenMap.getRootToken()));
             ByteString receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));
-            predicateService.unlockTokens(receiver, rootToken, Hex.encodeHexString(decodedMsg.value.getValue()));
+            predicateService.unlockTokens(receiver, rootToken, Hex.encodeHexString(decodedMsg.withdrawData.getValue()));
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
@@ -120,7 +120,18 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             PosBridgeUtil.validateSignatures(ctx.getMessage(), ctx.getSignaturesList(), posConfig);
 
             //check mapped token
-            checkWithdrawAsset(ctx.getMessage());
+            var decodedMsg = PosBridgeUtil.decodePosBridgeWithdrawExecMsg(ctx.getMessage());
+            //token mapped ?
+            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
+            var childKey = PosBridgeUtil.makeTokenMapKey(Long.toHexString(decodedMsg.childChainId) , decodedMsg.childTokenAddr);
+            Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "TOKEN_NOT_MAPPED_" + childKey);
+
+            //command is for unichain ?
+            Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.rootChainId) , "ROOT_CHAIN_INVALID");
+
+            //check receive addr
+            byte[] receiverAddress = Numeric.hexStringToByteArray(decodedMsg.receiveAddr);
+            Assert.isTrue(Wallet.addressValid(receiverAddress), "INVALID_RECEIVER");
 
             Assert.isTrue(accountStore.get(getOwnerAddress().toByteArray()).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;
@@ -133,23 +144,6 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
     //@todo limit this transaction to limited address
     private void checkExecPermission(PosBridgeWithdrawExecContract ctx, final PosBridgeConfigCapsule posConfig) throws Exception{
         //now all address with balance enough can submit validation
-    }
-
-    private void checkWithdrawAsset(String msgHex) throws Exception{
-        var decodedMsg = PosBridgeUtil.decodePosBridgeWithdrawExecMsg(msgHex);
-        //token mapped ?
-        var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
-        var childKey = PosBridgeUtil.makeTokenMapKey(Long.toHexString(decodedMsg.childChainId) , decodedMsg.childTokenAddr);
-        Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "TOKEN_NOT_MAPPED_" + childKey);
-        var tokenMap = tokenMapStore.get(childKey.getBytes());
-
-        //command is for unichain ?
-        Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.rootChainId) , "ROOT_CHAIN_INVALID");
-
-        //check receive addr
-        byte[] receiverAddress = Numeric.hexStringToByteArray(decodedMsg.receiveAddr);
-        Assert.isTrue(Wallet.addressValid(receiverAddress), "INVALID_RECEIVER");
-
     }
 
     @Override

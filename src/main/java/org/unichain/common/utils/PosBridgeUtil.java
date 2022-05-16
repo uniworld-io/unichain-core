@@ -39,7 +39,7 @@ public class PosBridgeUtil {
         public String rootTokenAddr;
         public long childChainId;
         public String receiveAddr;
-        public DynamicBytes value;
+        public DynamicBytes depositData;
         public String extHex;
     }
 
@@ -50,7 +50,7 @@ public class PosBridgeUtil {
         public String childTokenAddr;
         public long rootChainId;
         public String receiveAddr;
-        public DynamicBytes value;
+        public DynamicBytes withdrawData;
     }
 
     /**
@@ -76,6 +76,8 @@ public class PosBridgeUtil {
             Assert.isTrue(rate >= config.getConsensusRate(), "LESS_THAN_CONSENSUS_RATE");
             return true;
         } catch (Exception e) {
+            logger.warn("validate signature: msg: {}", msgHex);
+            logger.warn("validate signature: signatures: {}", hexSignatures);
             logger.error("validate signature failed -->", e);
             throw e;
         }
@@ -118,9 +120,9 @@ public class PosBridgeUtil {
         return PosBridgeDepositExecMsg.builder()
                 .rootChainId(((Uint32) out.get(0)).getValue().longValue())
                 .childChainId(((Uint32) out.get(1)).getValue().longValue())
-                .rootTokenAddr(cleanUniPrefix(((Address) out.get(2)).getValue()))
+                .rootTokenAddr(((Address) out.get(2)).getValue())
                 .receiveAddr(toUniAddress(((Address) out.get(3)).getValue()))
-                .value((DynamicBytes) out.get(4))
+                .depositData((DynamicBytes) out.get(4))
                 .extHex(BLIND_URI_HEX) //@todo add uri msg in source msg
                 .build();
     }
@@ -180,9 +182,9 @@ public class PosBridgeUtil {
         return PosBridgeWithdrawExecMsg.builder()
                 .childChainId(((Uint32) out.get(0)).getValue().longValue())
                 .rootChainId(((Uint32) out.get(1)).getValue().longValue())
-                .childTokenAddr(cleanUniPrefix(((Address) out.get(2)).getValue()))
+                .childTokenAddr(((Address) out.get(2)).getValue())
                 .receiveAddr(toUniAddress(((Address) out.get(3)).getValue()))
-                .value((DynamicBytes) out.get(4))
+                .withdrawData((DynamicBytes) out.get(4))
                 .build();
     }
 

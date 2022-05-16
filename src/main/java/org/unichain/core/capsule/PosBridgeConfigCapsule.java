@@ -33,6 +33,13 @@ public class PosBridgeConfigCapsule implements ProtoCapsule<Protocol.PosBridgeCo
     public static final byte[] DEFAULT_KEY = ArrayUtils.addAll(Util.stringAsBytesUppercase("PosBridgeConfig"));
     public static final String POS_BRIDGE_GENESIS_ADMIN_WALLET = "UmKK513F4s81Lmp1xW3VLbjewVUPBDVm1k";
 
+    /**
+     * null address
+     */
+    public static final String POS_BRIDGE_BNB_NULL_ADDRESS = "0x000000000000000000000000000000000000dEaD";
+    public static final String POS_BRIDGE_ETHER_NULL_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+    public static final String POS_BRIDGE_UNI_NULL_ADDRESS = "UQ2kTPSBVQhC47gXcKfTDVKMi4SQXRbmdf";
+
     private Protocol.PosBridgeConfig config;
     private byte[] key;
 

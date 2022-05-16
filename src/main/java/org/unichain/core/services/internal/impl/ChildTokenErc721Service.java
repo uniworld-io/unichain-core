@@ -9,6 +9,7 @@ import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
+import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.services.internal.ChildTokenService;
 import org.unichain.protos.Contract;
@@ -25,7 +26,7 @@ public class ChildTokenErc721Service implements ChildTokenService {
     }
 
     @Override
-    public void deposit(ByteString user, ByteString childToken, String depositData) throws ContractExeException {
+    public void deposit(ByteString user, ByteString childToken, String depositData) throws ContractExeException, ContractValidateException {
         var symbol = dbManager.getNftAddrSymbolIndexStore().get(childToken.toByteArray()).getSymbol();
         var nftContractStore = dbManager.getNftTemplateStore();
         var contractKey =  Util.stringAsBytesUppercase(symbol);
@@ -45,12 +46,13 @@ public class ChildTokenErc721Service implements ChildTokenService {
                 .getParameter();
         var wrapActuator = new NftMintTokenActuator(contract, dbManager);
         var wrapRet = new TransactionResultCapsule();
+        wrapActuator.validate();
         wrapActuator.execute(wrapRet);
         ret.setFee(wrapRet.getFee());
     }
 
     @Override
-    public void withdraw(ByteString user, ByteString childToken, String withdrawData) throws ContractExeException {
+    public void withdraw(ByteString user, ByteString childToken, String withdrawData) throws ContractExeException, ContractValidateException {
         var symbol = dbManager.getNftAddrSymbolIndexStore().get(childToken.toByteArray()).getSymbol();
         var wrapCtx = Contract.BurnNftTokenContract.newBuilder()
                 .setOwnerAddress(user)
@@ -64,6 +66,8 @@ public class ChildTokenErc721Service implements ChildTokenService {
                 .getParameter();
         var wrapActuator = new NftBurnTokenActuator(wrapCap, dbManager);
         var wrapRet = new TransactionResultCapsule();
+
+        wrapActuator.validate();
         wrapActuator.execute(wrapRet);
         ret.setFee(wrapRet.getFee());
     }

@@ -26,7 +26,6 @@ import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.PosBridgeTokenDepositEvent;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -35,10 +34,9 @@ import org.unichain.core.services.internal.PredicateService;
 import org.unichain.core.services.internal.impl.PredicateErc20Service;
 import org.unichain.core.services.internal.impl.PredicateErc721Service;
 import org.unichain.core.services.internal.impl.PredicateNativeService;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.PosBridgeDepositContract;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.crypto.WalletUtils;
 import org.web3j.utils.Numeric;
 
 import static org.unichain.common.utils.PosBridgeUtil.*;
@@ -90,23 +88,10 @@ public class PosBridgeDepositActuator extends AbstractActuator {
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
 
-            //emit event
-            var event = NativeContractEvent.builder()
-                    .topic("PosBridgeDepositToken")
-                    .rawData(
-                            PosBridgeTokenDepositEvent.builder()
-                                    .owner_address(Numeric.toHexString(ctx.getOwnerAddress().toByteArray()))
-                                    .root_token(ctx.getRootToken())
-                                    .root_chainid(tokenMapCap.getRootChainId())
-                                    .child_token(tokenMapCap.getChildToken())
-                                    .child_chainid(tokenMapCap.getChildChainId())
-                                    .type(tokenMapCap.getAssetType())
-                                    .data(PosBridgeUtil.abiDecodeToUint256(ctx.getData()).getValue().longValue())
-                                    .receive_address(Numeric.prependHexPrefix(ctx.getReceiveAddress()))
-                                    .build())
-                    .build();
-            emitEvent(event, ret);
-            logger.info("locked asset: " + event);
+            this.emitDepositExecuted(ret, tokenMapCap.getRootChainId(),
+                    ctx.getChildChainid(), ctx.getRootToken(),
+                    Numeric.toHexString(ctx.getOwnerAddress().toByteArray()),
+                    ctx.getReceiveAddress(), ctx.getData());
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -130,74 +115,16 @@ public class PosBridgeDepositActuator extends AbstractActuator {
             logger.info("Found config -------> {}", config.getInstance());
 
             Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
+            Assert.isTrue(Wallet.addressValid(ctx.getRootToken()), "ROOT_TOKEN_INVALID");
+            Assert.isTrue(WalletUtils.isValidAddress(ctx.getReceiveAddress()), "RECEIVER_INVALID");
 
             //check mapped token
             var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
             var rootKey = PosBridgeUtil.makeTokenMapKey(Wallet.getAddressPreFixString(), ctx.getRootToken());
 
-
             Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "unmapped token: " + rootKey);
             var tokenMap = tokenMapStore.get(rootKey.getBytes());
             Assert.isTrue(tokenMap.getChildChainId() == ctx.getChildChainid(), "unmapped ChainId: " + ctx.getChildChainid());
-
-            var assetType = tokenMap.getAssetType();
-
-
-            //checking balance
-            switch (assetType){
-                case ASSET_TYPE_NATIVE: {
-                    var wrapCtx = Contract.TransferContract.newBuilder()
-                            .setAmount(PosBridgeUtil.abiDecodeToUint256(ctx.getData()).getValue().longValue())
-                            .setOwnerAddress(ctx.getOwnerAddress())
-                            .setToAddress(config.getPredicateNative())
-                            .build();
-                    var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferContract)
-                            .getInstance()
-                            .getRawData()
-                            .getContract(0)
-                            .getParameter();
-                    var wrapActuator = new TransferActuator(contract, dbManager);
-                    wrapActuator.validate();
-                    break;
-                }
-                case ASSET_TYPE_TOKEN: {
-                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getRootToken())).getSymbol();
-                    var wrapCtx = Contract.TransferTokenContract.newBuilder()
-                            .setAmount(PosBridgeUtil.abiDecodeToUint256(ctx.getData()).getValue().longValue())
-                            .setOwnerAddress(ctx.getOwnerAddress())
-                            .setToAddress(config.getPredicateErc20())
-                            .setTokenName(symbol)
-                            .setAvailableTime(0L)
-                            .build();
-                    var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferTokenContract)
-                            .getInstance()
-                            .getRawData()
-                            .getContract(0)
-                            .getParameter();
-                    var predicateActuator = new TokenTransferActuatorV4(contract, dbManager);
-                    predicateActuator.validate();
-                    break;
-                }
-                case ASSET_TYPE_NFT: {
-                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getRootToken())).getSymbol();
-                    var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
-                            .setOwnerAddress(ctx.getOwnerAddress())
-                            .setToAddress(config.getPredicateErc721())
-                            .setContract(symbol)
-                            .setTokenId(PosBridgeUtil.abiDecodeToUint256(ctx.getData()).getValue().longValue())
-                            .build();
-                    var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferNftTokenContract)
-                            .getInstance()
-                            .getRawData()
-                            .getContract(0)
-                            .getParameter();
-                    var wrapActuator = new NftTransferTokenActuator(contract, dbManager);
-                    wrapActuator.validate();
-                    break;
-                }
-                default:
-                    throw new Exception("invalid asset type");
-            }
 
             Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;
@@ -215,6 +142,27 @@ public class PosBridgeDepositActuator extends AbstractActuator {
     @Override
     public long calcFee() {
         return 0L;
+    }
+
+    private void emitDepositExecuted(TransactionResultCapsule ret,
+                                     long rootChainId, long childChainId,
+                                     String rootToken, String depositor,
+                                     String receiver, String depositData){
+        //emit event
+        var event = NativeContractEvent.builder()
+                .topic("PosBridgeDepositExecuted")
+                .rawData(
+                        PosBridgeTokenDepositEvent.builder()
+                                .root_chainid(rootChainId)
+                                .child_chainid(childChainId)
+                                .root_token(cleanUniPrefix(rootToken))
+                                .depositor(depositor)
+                                .receiver(receiver)
+                                .depositData(depositData)
+                                .build())
+                .build();
+        emitEvent(event, ret);
+        logger.info("locked asset: " + event);
     }
 
 }

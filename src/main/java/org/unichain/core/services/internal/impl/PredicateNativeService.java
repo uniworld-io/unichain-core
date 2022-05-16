@@ -9,6 +9,7 @@ import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
+import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.internal.PredicateService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
@@ -28,7 +29,7 @@ public class PredicateNativeService implements PredicateService {
     }
 
     @Override
-    public void lockTokens(ByteString depositor, ByteString rootToken, String depositData) throws ContractExeException {
+    public void lockTokens(ByteString depositor, ByteString rootToken, String depositData) throws ContractExeException, ContractValidateException {
         var wrapCtx = Contract.TransferContract.newBuilder()
                 .setAmount(PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue())
                 .setOwnerAddress(depositor)
@@ -38,7 +39,7 @@ public class PredicateNativeService implements PredicateService {
     }
 
     @Override
-    public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException {
+    public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException, ContractValidateException {
         var wrapCtx = Contract.TransferContract.newBuilder()
                 .setAmount(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
                 .setOwnerAddress(config.getPredicateNative())
@@ -47,7 +48,7 @@ public class PredicateNativeService implements PredicateService {
         buildThenExecContract(wrapCtx);
     }
 
-    private void buildThenExecContract(Contract.TransferContract wrapCtx) throws ContractExeException {
+    private void buildThenExecContract(Contract.TransferContract wrapCtx) throws ContractExeException, ContractValidateException {
         var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferContract)
                 .getInstance()
                 .getRawData()
@@ -55,6 +56,7 @@ public class PredicateNativeService implements PredicateService {
                 .getParameter();
         var wrapActuator = new TransferActuator(contract, dbManager);
         var wrapRet = new TransactionResultCapsule();
+        wrapActuator.validate();
         wrapActuator.execute(wrapRet);
         ret.setFee(wrapRet.getFee());
     }

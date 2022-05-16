@@ -23,8 +23,6 @@ import lombok.val;
 import lombok.var;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
-import org.unichain.common.event.NativeContractEvent;
-import org.unichain.common.event.PosBridgeTokenDepositExecEvent;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -59,10 +57,9 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             //load token map
 
             var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
-            var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr).getBytes();
-            var tokenMap = tokenMapStore.get(rootKey);
+            var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr);
+            var tokenMap = tokenMapStore.get(rootKey.getBytes());
             var assetType = tokenMap.getAssetType();
-            var childTokenAddr = tokenMap.getChildToken();
 
 
             ChildTokenService childTokenService;
@@ -79,28 +76,13 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
                 default:
                     throw new Exception("invalid asset type");
             }
-            var childToken = ByteString.copyFrom(Numeric.hexStringToByteArray(childTokenAddr));
-            childTokenService.deposit(ctx.getOwnerAddress(), childToken, Hex.encodeHexString(decodedMsg.value.getValue()));
+            var childToken = ByteString.copyFrom(Numeric.hexStringToByteArray(tokenMap.getChildToken()));
+            var receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));
+            childTokenService.deposit(receiver, childToken, Hex.encodeHexString(decodedMsg.value.getValue()));
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
-
-            var event = NativeContractEvent.builder()
-                    .topic("PosBridgeDepositTokenExec")
-                    .rawData(
-                            PosBridgeTokenDepositExecEvent.builder()
-                                    .owner_address(Numeric.toHexString(ctx.getOwnerAddress().toByteArray()))
-                                    .root_chainid(decodedMsg.rootChainId)
-                                    .root_token(decodedMsg.rootTokenAddr)
-                                    .child_chainid(decodedMsg.childChainId)
-                                    .child_token(childTokenAddr)
-                                    .receive_address(decodedMsg.receiveAddr)
-                                    .data(PosBridgeUtil.abiDecodeToUint256(decodedMsg.value).getValue().longValue())
-                                    .type(assetType)
-                                    .build())
-                    .build();
-            emitEvent(event, ret);
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -120,26 +102,22 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             var accountStore = dbManager.getAccountStore();
             var config = dbManager.getPosBridgeConfigStore().get();
 
-            Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
-
+            Assert.isTrue(config.isInitialized(), "POS_BRIDGE_CONFIG_UNSET");
             //valid signatures ?
             PosBridgeUtil.validateSignatures(ctx.getMessage(), ctx.getSignaturesList(), config);
 
             var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(ctx.getMessage());
-
             var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
 
             //token mapped ?
             var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr).getBytes();
-            Assert.isTrue(tokenMapStore.has(rootKey)
-                            && tokenMapStore.get(rootKey).getChildChainId() == decodedMsg.childChainId,
-                    "token unmapped or unmatched asset type");
+            Assert.isTrue(tokenMapStore.has(rootKey), "TOKEN_NOT_MAPPED");
 
             //make sure this command belong to our chain ?
-            Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.childChainId), "unrecognized child chain id: " + decodedMsg);
+            Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.childChainId), "CHILD_CHAIN_INVALID");
 
             //make sure valid receiver
-            Assert.isTrue(Wallet.addressValid(Numeric.hexStringToByteArray(decodedMsg.receiveAddr)), "invalid receive address");
+            Assert.isTrue(Wallet.addressValid(decodedMsg.receiveAddr), "RECEIVER_INVALID");
 
             var tokenMap = tokenMapStore.get(rootKey);
             var assetType = tokenMap.getAssetType();

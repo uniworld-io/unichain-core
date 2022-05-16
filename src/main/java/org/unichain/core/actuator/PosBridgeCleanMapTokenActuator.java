@@ -24,6 +24,8 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.PosBridgeTokenMappedEvent;
+import org.unichain.common.utils.PosBridgeUtil;
+import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -31,6 +33,7 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.PosBridgeCleanMapTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.crypto.WalletUtils;
 
 import java.util.Arrays;
 
@@ -87,6 +90,15 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
 
             var accountStore = dbManager.getAccountStore();
             var ownerAddr = getOwnerAddress().toByteArray();
+
+            if(PosBridgeUtil.isUnichain(ctx.getRootChainid())){
+                Assert.isTrue(Wallet.addressValid(ctx.getRootToken()), "ROOT_TOKEN_INVALID");
+                Assert.isTrue(WalletUtils.isValidAddress(ctx.getChildToken()), "CHILD_TOKEN_INVALID");
+            }
+            if(PosBridgeUtil.isUnichain(ctx.getChildChainid())){
+                Assert.isTrue(Wallet.addressValid(ctx.getChildToken()), "ROOT_TOKEN_INVALID");
+                Assert.isTrue(WalletUtils.isValidAddress(ctx.getRootToken()), "CHILD_TOKEN_INVALID");
+            }
 
             //check permission
             var config = dbManager.getPosBridgeConfigStore().get();

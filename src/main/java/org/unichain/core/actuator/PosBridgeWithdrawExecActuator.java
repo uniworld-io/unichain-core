@@ -23,12 +23,9 @@ import lombok.val;
 import lombok.var;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
-import org.unichain.common.event.NativeContractEvent;
-import org.unichain.common.event.PosBridgeTokenWithdrawExecEvent;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
-import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -38,9 +35,7 @@ import org.unichain.core.services.internal.PredicateService;
 import org.unichain.core.services.internal.impl.PredicateErc20Service;
 import org.unichain.core.services.internal.impl.PredicateErc721Service;
 import org.unichain.core.services.internal.impl.PredicateNativeService;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.PosBridgeWithdrawExecContract;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.utils.Numeric;
 
@@ -69,7 +64,6 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             var tokenMap = tokenMapStore.get(childKey.getBytes());
 
             var assetType = tokenMap.getAssetType();
-            var rootToken = tokenMap.getRootToken();
             var posConfig = dbManager.getPosBridgeConfigStore().get();
 
 
@@ -91,29 +85,13 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
                 default:
                     throw new Exception("invalid asset type");
             }
-            ByteString rootTokenBytes = ByteString.copyFrom(Numeric.hexStringToByteArray(rootToken));
-            predicateService.unlockTokens(ctx.getOwnerAddress(), rootTokenBytes, Hex.encodeHexString(decodedMsg.value.getValue()));
+            ByteString rootToken = ByteString.copyFrom(Numeric.hexStringToByteArray(tokenMap.getRootToken()));
+            ByteString receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));
+            predicateService.unlockTokens(receiver, rootToken, Hex.encodeHexString(decodedMsg.value.getValue()));
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
-
-            var event = NativeContractEvent.builder()
-                    .topic("PosBridgeWithdrawTokenExec")
-                    .rawData(
-                            PosBridgeTokenWithdrawExecEvent.builder()
-                                    .owner_address(Numeric.toHexString(ctx.getOwnerAddress().toByteArray()))
-                                    .root_chainid(decodedMsg.rootChainId)
-                                    .root_token(rootToken)
-                                    .child_chainid(decodedMsg.childChainId)
-                                    .child_token(decodedMsg.childTokenAddr)
-                                    .receive_address(decodedMsg.receiveAddr)
-                                    .data(PosBridgeUtil.abiDecodeToUint256(decodedMsg.value).getValue().longValue())
-                                    .type(assetType)
-                                    .build())
-                    .build();
-            emitEvent(event, ret);
-
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -162,79 +140,16 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
         //token mapped ?
         var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
         var childKey = PosBridgeUtil.makeTokenMapKey(Long.toHexString(decodedMsg.childChainId) , decodedMsg.childTokenAddr);
-        Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "unmapped token: " + childKey);
+        Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "TOKEN_NOT_MAPPED_" + childKey);
         var tokenMap = tokenMapStore.get(childKey.getBytes());
 
-        Assert.isTrue(tokenMap.getRootChainId() == decodedMsg.rootChainId, "un-matched mapping token : " + decodedMsg);
-
         //command is for unichain ?
-        Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.rootChainId) , "unrecognized rootChainId: " + decodedMsg);
+        Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.rootChainId) , "ROOT_CHAIN_INVALID");
 
         //check receive addr
-        var receiveAddr = Numeric.hexStringToByteArray(decodedMsg.receiveAddr);
-        Assert.isTrue(Wallet.addressValid(receiveAddr), "invalid receiving address");
+        byte[] receiverAddress = Numeric.hexStringToByteArray(decodedMsg.receiveAddr);
+        Assert.isTrue(Wallet.addressValid(receiverAddress), "INVALID_RECEIVER");
 
-        //check asset
-        var assetType = tokenMap.getAssetType();
-        var rootToken = tokenMap.getRootToken();
-
-        var posConfig = dbManager.getPosBridgeConfigStore().get();
-
-
-        switch (assetType){
-            case ASSET_TYPE_NATIVE: {
-                var wrapCtx = Contract.TransferContract.newBuilder()
-                        .setAmount(PosBridgeUtil.abiDecodeToUint256(decodedMsg.value).getValue().longValue())
-                        .setOwnerAddress(posConfig.getPredicateNative())
-                        .setToAddress(ByteString.copyFrom(receiveAddr))
-                        .build();
-                var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferContract)
-                        .getInstance()
-                        .getRawData()
-                        .getContract(0)
-                        .getParameter();
-                var wrapActuator = new TransferActuator(contract, dbManager);
-                wrapActuator.validate();
-                break;
-            }
-            case ASSET_TYPE_TOKEN: {
-                var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(rootToken)).getSymbol();
-                var wrapCtx = Contract.TransferTokenContract.newBuilder()
-                        .setAmount(PosBridgeUtil.abiDecodeToUint256(decodedMsg.value).getValue().longValue())
-                        .setOwnerAddress(posConfig.getPredicateErc20())
-                        .setToAddress(ByteString.copyFrom(receiveAddr))
-                        .setTokenName(symbol)
-                        .setAvailableTime(0L)
-                        .build();
-                var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferTokenContract)
-                        .getInstance()
-                        .getRawData()
-                        .getContract(0)
-                        .getParameter();
-                var wrapActuator = new TokenTransferActuatorV4(contract, dbManager);
-                wrapActuator.validate();
-                break;
-            }
-            case ASSET_TYPE_NFT: {
-                var symbol = dbManager.getNftAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(rootToken)).getSymbol();
-                var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
-                        .setOwnerAddress(posConfig.getPredicateErc721())
-                        .setToAddress(ByteString.copyFrom(receiveAddr))
-                        .setContract(symbol)
-                        .setTokenId(PosBridgeUtil.abiDecodeToUint256(decodedMsg.value).getValue().longValue()) //@todo review make sure nft tokenId is consistent along deposit/withdraw flow
-                        .build();
-                var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferNftTokenContract)
-                        .getInstance()
-                        .getRawData()
-                        .getContract(0)
-                        .getParameter();
-                var wrapActuator = new NftTransferTokenActuator(contract, dbManager);
-                wrapActuator.validate();
-                break;
-            }
-            default:
-                throw new Exception("invalid asset type");
-        }
     }
 
     @Override

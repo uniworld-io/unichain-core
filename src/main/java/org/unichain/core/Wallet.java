@@ -71,6 +71,7 @@ import org.unichain.protos.Protocol.SmartContract.ABI.Entry.StateMutabilityType;
 import org.unichain.protos.Protocol.Transaction.Contract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.utils.Numeric;
 
 import java.security.SignatureException;
 import java.util.*;
@@ -156,6 +157,10 @@ public class Wallet {
 
   public static void setPosBridgeSupportedChainIds(Set<Long> chainIds) {
     Wallet.posBridgeSupportedChainIds = chainIds;
+  }
+
+  public static boolean addressValid(String address){
+    return addressValid(Numeric.hexStringToByteArray(address));
   }
 
   public static boolean addressValid(byte[] address) {

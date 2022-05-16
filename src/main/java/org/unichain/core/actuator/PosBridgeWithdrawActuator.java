@@ -26,7 +26,6 @@ import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.PosBridgeTokenWithdrawEvent;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -35,13 +34,10 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.internal.ChildTokenService;
 import org.unichain.core.services.internal.impl.ChildTokenErc20Service;
 import org.unichain.core.services.internal.impl.ChildTokenErc721Service;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.PosBridgeWithdrawContract;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.utils.Numeric;
-
 
 import static org.unichain.common.utils.PosBridgeUtil.*;
 
@@ -66,10 +62,6 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             var childChainId = Wallet.getAddressPreFixByte();
             var childKey = PosBridgeUtil.makeTokenMapKey(childChainId, ctx.getChildToken());
             var tokenMap = tokenMapStore.get(childKey.getBytes());
-            var rootToken = tokenMap.getRootToken();
-            var rootChainId = tokenMap.getRootChainId();
-            var assetType = tokenMap.getAssetType();
-
 
             //transfer back token
             ChildTokenService childTokenService;
@@ -93,23 +85,11 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
 
-            //emit event
-            var event = NativeContractEvent.builder()
-                    .topic("PosBridgeWithdrawToken")
-                    .rawData(
-                            PosBridgeTokenWithdrawEvent.builder()
-                                    .owner_address(Numeric.toHexString(ctx.getOwnerAddress().toByteArray()))
-                                    .root_token(rootToken)
-                                    .root_chainid(rootChainId)
-                                    .child_token(ctx.getChildToken())
-                                    .child_chainid(childChainId)
-                                    .type(assetType)
-                                    .data(PosBridgeUtil.abiDecodeToUint256(ctx.getData()).getValue().longValue())
-                                    .receive_address(ctx.getReceiveAddress())
-                                    .build())
-                    .build();
-            emitEvent(event, ret);
-            logger.info("withdraw asset: " + event);
+
+            this.emitWithdrawExecuted(ret, tokenMap.getChildChainId(),
+                    tokenMap.getRootChainId(), ctx.getChildToken(),
+                    Numeric.toHexString(ctx.getOwnerAddress().toByteArray()),
+                    ctx.getReceiveAddress(), ctx.getData());
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -131,57 +111,15 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             var config = dbManager.getPosBridgeConfigStore().get();
             Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
 
+            Assert.isTrue(Wallet.addressValid(ctx.getChildToken()), "INVALID_CHILD_TOKEN");
             //make sure receive address is valid
-            Assert.isTrue(WalletUtils.isValidAddress(ctx.getReceiveAddress()), "invalid receive address " + ctx.getReceiveAddress());
+            Assert.isTrue(WalletUtils.isValidAddress(ctx.getReceiveAddress()), "INVALID_RECEIVER");
 
             //make sure token mapped
             var childKey = PosBridgeUtil.makeTokenMapKey(Wallet.getAddressPreFixString(), ctx.getChildToken());
             var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
             var tokenMap = tokenMapStore.get(childKey.getBytes());
-            Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "unmapped token: " + childKey);
-            var assetType = tokenMap.getAssetType();
-
-            //make sure asset exist
-            switch (assetType){
-                    case ASSET_TYPE_NATIVE:
-                    case ASSET_TYPE_TOKEN: {
-                        var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getChildToken())).getSymbol();
-                        var tokenInfo = dbManager.getTokenPoolStore().get(symbol.toUpperCase().getBytes());
-                        var wrapCtx = Contract.TransferTokenContract.newBuilder()
-                                .setAmount(PosBridgeUtil.abiDecodeToUint256(ctx.getData()).getValue().longValue())
-                                .setOwnerAddress(ctx.getOwnerAddress())
-                                .setToAddress(tokenInfo.getAddress())
-                                .setTokenName(symbol)
-                                .setAvailableTime(0L)
-                                .build();
-                        var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferTokenContract)
-                                .getInstance()
-                                .getRawData()
-                                .getContract(0)
-                                .getParameter();
-                        var wrapActuator = new TokenTransferActuatorV4(wrapCap, dbManager);
-                        wrapActuator.validate();
-                        break;
-                    }
-                    case ASSET_TYPE_NFT: {
-                        var symbol = dbManager.getNftAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getChildToken())).getSymbol();
-                        var wrapCtx = Contract.BurnNftTokenContract.newBuilder()
-                                .setOwnerAddress(ctx.getOwnerAddress())
-                                .setContract(symbol)
-                                .setTokenId(PosBridgeUtil.abiDecodeToUint256(ctx.getData()).getValue().longValue())
-                                .build();
-                        var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.BurnNftTokenContract)
-                                .getInstance()
-                                .getRawData()
-                                .getContract(0)
-                                .getParameter();
-                        var wrapActuator = new NftBurnTokenActuator(wrapCap, dbManager);
-                        wrapActuator.validate();
-                        break;
-                    }
-                    default:
-                        throw new Exception("invalid asset type");
-            }
+            Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "TOKEN_NOT_MAPPED_" + childKey);
 
             Assert.isTrue(accountStore.get(getOwnerAddress().toByteArray()).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;
@@ -199,5 +137,26 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
     @Override
     public long calcFee() {
         return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
+    }
+
+    private void emitWithdrawExecuted(TransactionResultCapsule ret, long childChainId,
+                                      long rootChainId, String childToken,
+                                      String burner, String withdrawer,
+                                      String withdrawData){
+        //emit event
+        var event = NativeContractEvent.builder()
+                .topic("PosBridgeWithdrawExecuted")
+                .rawData(
+                        PosBridgeTokenWithdrawEvent.builder()
+                                .child_chainid(childChainId)
+                                .root_chainid(rootChainId)
+                                .child_token(childToken)
+                                .burner(burner)
+                                .withdrawer(withdrawer)
+                                .withdrawData(withdrawData)
+                                .build())
+                .build();
+        emitEvent(event, ret);
+        logger.info("withdraw asset: " + event);
     }
 }

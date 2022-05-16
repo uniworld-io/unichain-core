@@ -9,6 +9,7 @@ import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
+import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.services.internal.ChildTokenService;
 import org.unichain.protos.Contract;
@@ -25,7 +26,7 @@ public class ChildTokenErc20Service implements ChildTokenService {
     }
 
     @Override
-    public void deposit(ByteString user,ByteString childToken, String depositData) throws ContractExeException {
+    public void deposit(ByteString user,ByteString childToken, String depositData) throws ContractExeException, ContractValidateException {
         //load token and transfer from token owner to ...
         var symbol = dbManager.getTokenAddrSymbolIndexStore().get(childToken.toByteArray()).getSymbol();
         var tokenOwner = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(symbol));
@@ -40,7 +41,7 @@ public class ChildTokenErc20Service implements ChildTokenService {
     }
 
     @Override
-    public void withdraw(ByteString user, ByteString childToken, String withdrawData) throws ContractExeException {
+    public void withdraw(ByteString user, ByteString childToken, String withdrawData) throws ContractExeException, ContractValidateException {
         var symbol = dbManager.getTokenAddrSymbolIndexStore().get(childToken.toByteArray()).getSymbol();
         var tokenInfo = dbManager.getTokenPoolStore().get(symbol.toUpperCase().getBytes());
         var wrapCtx = Contract.TransferTokenContract.newBuilder()
@@ -54,7 +55,7 @@ public class ChildTokenErc20Service implements ChildTokenService {
     }
 
 
-    private void buildThenExecContract(Contract.TransferTokenContract wrapCtx) throws ContractExeException {
+    private void buildThenExecContract(Contract.TransferTokenContract wrapCtx) throws ContractExeException, ContractValidateException {
         var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferTokenContract)
                 .getInstance()
                 .getRawData()
@@ -62,6 +63,7 @@ public class ChildTokenErc20Service implements ChildTokenService {
                 .getParameter();
         var wrapActuator = new TokenTransferActuatorV4(wrapCap, dbManager);
         var wrapRet = new TransactionResultCapsule();
+        wrapActuator.validate();
         wrapActuator.execute(wrapRet);
         ret.setFee(wrapRet.getFee());
     }

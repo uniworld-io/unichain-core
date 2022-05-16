@@ -6,13 +6,10 @@ import java.io.Serializable;
 
 @Builder
 public class PosBridgeTokenWithdrawEvent implements Serializable {
-    public String owner_address;
     public long child_chainid;
-    public String child_token;
     public long root_chainid;
-    public String root_token;
-    public int type;
-
-    public String receive_address;
-    public long data;
+    public String child_token;
+    public String burner;
+    public String withdrawer;
+    public String withdrawData;
 }

@@ -118,8 +118,8 @@ public class PosBridgeUtil {
         return PosBridgeDepositExecMsg.builder()
                 .rootChainId(((Uint32) out.get(0)).getValue().longValue())
                 .childChainId(((Uint32) out.get(1)).getValue().longValue())
-                .rootTokenAddr(Numeric.cleanHexPrefix(((Address) out.get(2)).getValue()))
-                .receiveAddr(Numeric.cleanHexPrefix(((Address) out.get(3)).getValue()))
+                .rootTokenAddr(cleanUniPrefix(((Address) out.get(2)).getValue()))
+                .receiveAddr(toUniAddress(((Address) out.get(3)).getValue()))
                 .value((DynamicBytes) out.get(4))
                 .extHex(BLIND_URI_HEX) //@todo add uri msg in source msg
                 .build();
@@ -180,8 +180,8 @@ public class PosBridgeUtil {
         return PosBridgeWithdrawExecMsg.builder()
                 .childChainId(((Uint32) out.get(0)).getValue().longValue())
                 .rootChainId(((Uint32) out.get(1)).getValue().longValue())
-                .childTokenAddr(((Address) out.get(2)).getValue())
-                .receiveAddr(((Address) out.get(3)).getValue())
+                .childTokenAddr(cleanUniPrefix(((Address) out.get(2)).getValue()))
+                .receiveAddr(toUniAddress(((Address) out.get(3)).getValue()))
                 .value((DynamicBytes) out.get(4))
                 .build();
     }

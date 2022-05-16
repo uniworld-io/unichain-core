@@ -9,6 +9,7 @@ import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
+import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.internal.PredicateService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
@@ -27,7 +28,7 @@ public class PredicateErc721Service implements PredicateService {
     }
 
     @Override
-    public void lockTokens(ByteString depositor, ByteString rootToken,String depositData) throws ContractExeException {
+    public void lockTokens(ByteString depositor, ByteString rootToken,String depositData) throws ContractExeException, ContractValidateException {
         var symbol = dbManager.getNftAddrSymbolIndexStore().get(rootToken.toByteArray()).getSymbol();
         var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                 .setOwnerAddress(depositor)
@@ -38,7 +39,7 @@ public class PredicateErc721Service implements PredicateService {
         buildThenExecContract(wrapCtx);
     }
 
-    private void buildThenExecContract(Contract.TransferNftTokenContract wrapCtx) throws ContractExeException {
+    private void buildThenExecContract(Contract.TransferNftTokenContract wrapCtx) throws ContractExeException, ContractValidateException {
         var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferNftTokenContract)
                 .getInstance()
                 .getRawData()
@@ -46,12 +47,13 @@ public class PredicateErc721Service implements PredicateService {
                 .getParameter();
         var wrapActuator = new NftTransferTokenActuator(contract, dbManager);
         var wrapRet = new TransactionResultCapsule();
+        wrapActuator.validate();
         wrapActuator.execute(wrapRet);
         ret.setFee(wrapRet.getFee());
     }
 
     @Override
-    public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException {
+    public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException, ContractValidateException {
         var symbol = dbManager.getNftAddrSymbolIndexStore().get(rootToken.toByteArray()).getSymbol();
         var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                 .setOwnerAddress(config.getPredicateErc721())

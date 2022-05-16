@@ -10,6 +10,7 @@ import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
+import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.internal.PredicateService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
@@ -29,7 +30,7 @@ public class PredicateErc20Service implements PredicateService {
     }
 
     @Override
-    public void lockTokens(ByteString depositor, ByteString rootToken, String depositData) throws ContractExeException {
+    public void lockTokens(ByteString depositor, ByteString rootToken, String depositData) throws ContractExeException, ContractValidateException {
         var symbol = dbManager.getTokenAddrSymbolIndexStore().get(rootToken.toByteArray()).getSymbol();
         var wrapCtx = Contract.TransferTokenContract.newBuilder()
                 .setAmount(PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue())
@@ -42,7 +43,7 @@ public class PredicateErc20Service implements PredicateService {
     }
 
     @Override
-    public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException {
+    public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException, ContractValidateException {
         var symbol = dbManager.getTokenAddrSymbolIndexStore().get(rootToken.toByteArray()).getSymbol();
         var wrapCtx = Contract.TransferTokenContract.newBuilder()
                 .setAmount(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
@@ -54,7 +55,7 @@ public class PredicateErc20Service implements PredicateService {
         buildThenExecContract(wrapCtx);
     }
 
-    private void buildThenExecContract(Contract.TransferTokenContract wrapCtx) throws ContractExeException {
+    private void buildThenExecContract(Contract.TransferTokenContract wrapCtx) throws ContractExeException, ContractValidateException {
         var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferTokenContract)
                 .getInstance()
                 .getRawData()
@@ -62,6 +63,7 @@ public class PredicateErc20Service implements PredicateService {
                 .getParameter();
         var wrapAct = new TokenTransferActuatorV4(contract, dbManager);
         var wrapRet = new TransactionResultCapsule();
+        wrapAct.validate();
         wrapAct.execute(wrapRet);
         ret.setFee(wrapRet.getFee());
     }

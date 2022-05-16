@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TestWallet {
+public class TestPOSBridge {
 
     @org.junit.Test
     public void testEtherFamilyAddress(){

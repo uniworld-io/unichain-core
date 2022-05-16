@@ -38,6 +38,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.unichain.common.utils.PosBridgeUtil.*;
+import static org.unichain.core.capsule.PosBridgeConfigCapsule.*;
 
 @Slf4j(topic = "actuator")
 public class PosBridgeMapTokenActuator extends AbstractActuator {
@@ -57,25 +58,14 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
 
             tokenMapStore.mapRoot2Child(ctx.getRootChainid(), ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken(), ctx.getType());
-            tokenMapStore.mapChild2Root(ctx.getChildChainid(), ctx.getChildToken(), ctx.getRootChainid(), ctx.getRootToken(),  ctx.getType());
+            tokenMapStore.mapChild2Root(ctx.getChildChainid(), ctx.getChildToken(), ctx.getRootChainid(), ctx.getRootToken(), ctx.getType());
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
 
             //emit event
-            var event = NativeContractEvent.builder()
-                    .topic("PosBridgeMapToken")
-                    .rawData(
-                            PosBridgeTokenMappedEvent.builder()
-                                    .root_token(ctx.getRootToken())
-                                    .root_chainid(ctx.getRootChainid())
-                                    .child_token(ctx.getChildToken())
-                                    .child_chainid(ctx.getChildChainid())
-                                    .type(ctx.getType())
-                                    .build())
-                    .build();
-            emitEvent(event, ret);
+           emitTokenMapped(ret, ctx.getRootChainid(), ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken(), ctx.getType());
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -125,7 +115,7 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             Assert.isTrue(
                     tokenMapStore.ensureNotMapped(ctx.getRootChainid(), ctx.getRootToken())
                             && tokenMapStore.ensureNotMapped(ctx.getChildChainid(), ctx.getChildToken()),
-                    "already mapped"
+                    "ALREADY_MAPPED"
             );
 
             Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough fee");
@@ -140,19 +130,19 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
         switch (assetType) {
             case ASSET_TYPE_NATIVE:
                 if (isRoot) {
-                    Assert.isTrue("UNW".equalsIgnoreCase(token), "token must be UNW");
+                    Assert.isTrue(NativeToken.UNI.equalsIgnoreCase(token), "TOKEN_NATIVE_INVALID");
                 } else {
                     var tokenIndex = dbManager.getTokenAddrSymbolIndexStore();
-                    Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "token asset not found: " + token);
+                    Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND_" + token);
                 }
                 break;
             case ASSET_TYPE_TOKEN:
                 var tokenIndex = dbManager.getTokenAddrSymbolIndexStore();
-                Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "token asset not found: " + token);
+                Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND_" + token);
                 break;
             case ASSET_TYPE_NFT:
                 var nftIndex = dbManager.getNftAddrSymbolIndexStore();
-                Assert.isTrue(nftIndex.has(Numeric.hexStringToByteArray(token)), "nft asset not found: " + token);
+                Assert.isTrue(nftIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND_" + token);
                 break;
             default:
                 throw new Exception("invalid asset type");
@@ -166,7 +156,10 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
         switch (assetType) {
             case ASSET_TYPE_NATIVE:
                 if (isRoot) {
-                    Assert.isTrue(NATIVE_COIN_SYMBOL.contains(token.toUpperCase()), "native coin not in white list: " + token);
+                    Assert.isTrue(
+                            NativeToken.BNB.equalsIgnoreCase(token)
+                                    || NativeToken.ETH.equalsIgnoreCase(token),
+                            "TOKEN_NATIVE_INVALID");
                 }
                 break;
             case ASSET_TYPE_TOKEN:
@@ -190,7 +183,26 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
 
     @Override
     public long calcFee() {
-        return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
+        return 0L;
     }
 
+
+    private void emitTokenMapped(TransactionResultCapsule ret, long rootChainId,
+                                 String rootToken, long childChainId,
+                                 String childToken, int type){
+        //emit event
+        var event = NativeContractEvent.builder()
+                .topic("PosBridgeMapToken")
+                .rawData(
+                        PosBridgeTokenMappedEvent.builder()
+                                .root_token(rootToken)
+                                .root_chainid(rootChainId)
+                                .child_token(childToken)
+                                .child_chainid(childChainId)
+                                .type(type)
+                                .build())
+                .build();
+        logger.info("=============> Token Mapping: {}", event);
+        emitEvent(event, ret);
+    }
 }

@@ -155,7 +155,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
                                 .withdrawData(withdrawData)
                                 .build())
                 .build();
+        logger.info("===============> WithdrawExecuted: " + event);
         emitEvent(event, ret);
-        logger.info("withdraw asset: " + event);
     }
 }

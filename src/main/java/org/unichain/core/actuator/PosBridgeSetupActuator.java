@@ -80,7 +80,6 @@ public class PosBridgeSetupActuator extends AbstractActuator {
                 config.setPredicateErc721(ctx.getPredicateNft());
 
             if(!ctx.getValidatorsList().isEmpty()) {
-                //clear then set all validators
                 config.clearThenPutValidators(ctx.getValidatorsList());
             }
             config.setInitialized(true);
@@ -160,6 +159,6 @@ public class PosBridgeSetupActuator extends AbstractActuator {
 
     @Override
     public long calcFee() {
-        return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
+        return 0L;
     }
 }

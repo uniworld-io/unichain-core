@@ -120,6 +120,6 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
 
     @Override
     public long calcFee() {
-        return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
+        return 0L;
     }
 }

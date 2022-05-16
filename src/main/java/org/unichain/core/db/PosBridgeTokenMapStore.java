@@ -36,6 +36,7 @@ public class PosBridgeTokenMapStore extends UnichainStoreWithRevoking<PosBridgeT
                 .build();
         String key = PosBridgeUtil.makeTokenMapKey(rootChainId, rootToken);
         put(key.getBytes(), new PosBridgeTokenMapCapsule(tokenMap));
+        logger.info("Mapped token: key: {}, value: {}", key, tokenMap);
     }
 
     public void mapChild2Root(long childChainId, String childToken, long rootChainId, String rootToken, int type){
@@ -48,6 +49,7 @@ public class PosBridgeTokenMapStore extends UnichainStoreWithRevoking<PosBridgeT
                 .build();
         String key = PosBridgeUtil.makeTokenMapKey(childChainId, childToken);
         put(key.getBytes(), new PosBridgeTokenMapCapsule(tokenMap));
+        logger.info("Mapped token: key: {}, value: {}", key, tokenMap);
     }
 
     public boolean ensureNotMapped(long chainId, String token){

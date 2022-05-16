@@ -36,9 +36,12 @@ public class PosBridgeConfigCapsule implements ProtoCapsule<Protocol.PosBridgeCo
     /**
      * null address
      */
-    public static final String POS_BRIDGE_BNB_NULL_ADDRESS = "0x000000000000000000000000000000000000dEaD";
-    public static final String POS_BRIDGE_ETHER_NULL_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-    public static final String POS_BRIDGE_UNI_NULL_ADDRESS = "UQ2kTPSBVQhC47gXcKfTDVKMi4SQXRbmdf";
+    public static class NativeToken{
+        public static final String BNB = "0x000000000000000000000000000000000000dEaD";
+        public static final String ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+        public static final String UNI = "0x4416748f8d05163e917388fa79050bafe5a30faa2f";
+
+    }
 
     private Protocol.PosBridgeConfig config;
     private byte[] key;

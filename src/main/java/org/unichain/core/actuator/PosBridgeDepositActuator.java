@@ -161,8 +161,8 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                                 .depositData(depositData)
                                 .build())
                 .build();
+        logger.info("===============> DepositExecuted: " + event);
         emitEvent(event, ret);
-        logger.info("locked asset: " + event);
     }
 
 }

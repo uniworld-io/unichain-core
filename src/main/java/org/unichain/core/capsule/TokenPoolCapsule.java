@@ -256,4 +256,8 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
   public void setLot(long lot){
     createTokenContract = createTokenContract.toBuilder().setLot(lot).build();
   }
+
+  public ByteString getAddress() {
+      return createTokenContract.getAddress();
+  }
 }

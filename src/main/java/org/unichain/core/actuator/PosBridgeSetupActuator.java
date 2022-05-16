@@ -71,25 +71,21 @@ public class PosBridgeSetupActuator extends AbstractActuator {
                 config.setConsensusRate(ctx.getConsensusRate());
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_NATIVE))
-                config.setPredicateNative(Numeric.hexStringToByteArray(ctx.getPredicateNative()));
+                config.setPredicateNative(ctx.getPredicateNative());
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_TOKEN))
-                config.setPredicateToken(Numeric.hexStringToByteArray(ctx.getPredicateToken()));
+                config.setPredicateErc20(ctx.getPredicateToken());
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_NFT))
-                config.setPredicateNft(Numeric.hexStringToByteArray(ctx.getPredicateNft()));
+                config.setPredicateErc721(ctx.getPredicateNft());
 
-            if(!ctx.getValidatorsList().isEmpty())
-            {
+            if(!ctx.getValidatorsList().isEmpty()) {
                 //clear then set all validators
-                var hexValidators= ctx.getValidatorsList()
-                        .stream()
-                        .map(v -> ByteArray.toHexString(v.toByteArray()))
-                        .collect(Collectors.toList());
-                config.clearThenPutValidators(hexValidators);
+                config.clearThenPutValidators(ctx.getValidatorsList());
             }
             config.setInitialized(true);
             configStore.put(config);
+
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
@@ -147,7 +143,7 @@ public class PosBridgeSetupActuator extends AbstractActuator {
                 Assert.isTrue(ctx.getMinValidator() >= 1 && ctx.getMinValidator() <= 100, "Invalid new min validator");
             }
             if(!ctx.getValidatorsList().isEmpty()){
-                ctx.getValidatorsList().forEach(v -> Assert.isTrue(Wallet.addressValid(v.toByteArray()), "Invalid validator address -->" + v));
+                ctx.getValidatorsList().forEach(v -> Assert.isTrue(Wallet.addressValid(Numeric.hexStringToByteArray(v)) , "Invalid validator address -->" + v));
             }
             Assert.isTrue( ownerAcc.getBalance() >= fee, "Balance is not sufficient.");
             return true;

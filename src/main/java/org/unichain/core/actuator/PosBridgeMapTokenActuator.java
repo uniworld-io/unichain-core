@@ -24,15 +24,12 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.PosBridgeTokenMappedEvent;
-import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.PosBridgeTokenMappingCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.PosBridgeMapTokenContract;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.utils.Numeric;
 
@@ -40,11 +37,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.unichain.core.capsule.PosBridgeTokenMappingCapsule.*;
+import static org.unichain.common.utils.PosBridgeUtil.*;
 
 @Slf4j(topic = "actuator")
 public class PosBridgeMapTokenActuator extends AbstractActuator {
-    private static Set<String> NATIVE_COIN_SYMBOL = new HashSet<>(Arrays.asList("BNB", "ETH", "MATIC", "UNW"));
+    private static final Set<String> NATIVE_COIN_SYMBOL = new HashSet<>(Arrays.asList("BNB", "ETH", "MATIC", "UNW"));
 
     PosBridgeMapTokenActuator(Any contract, Manager dbManager) {
         super(contract, dbManager);
@@ -54,29 +51,13 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
     public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
         var fee = calcFee();
         try {
-            val ctx0 = this.contract.unpack(PosBridgeMapTokenContract.class);
-            var ctx = ctx0.toBuilder()
-                    .setRootToken(Numeric.cleanHexPrefix(ctx0.getRootToken()).toLowerCase())
-                    .setChildToken(Numeric.cleanHexPrefix(ctx0.getChildToken()).toLowerCase())
-                    .build();
+            val ctx = this.contract.unpack(PosBridgeMapTokenContract.class);
 
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
+            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
 
-            var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
-            var child2RootStore = dbManager.getPosBridgeTokenMapChild2RootStore();
-
-            var rootKeyStr = PosBridgeUtil.makeTokenMapKey(ctx.getRootChainid(), ctx.getRootToken());
-            var rootKey = rootKeyStr.getBytes();
-            var childKeyStr = PosBridgeUtil.makeTokenMapKey(ctx.getChildChainid(), ctx.getChildToken());
-            var childKey = childKeyStr.getBytes();
-
-            var rootCap = root2ChildStore.has(rootKey)  ? root2ChildStore.get(rootKey): new PosBridgeTokenMappingCapsule(Protocol.PosBridgeTokenMapping.newBuilder().build());
-            rootCap.putToken(ctx.getChildChainid(), ctx.getChildToken(), ctx.getType(), ctx.getRootChainid(), ctx.getRootToken());
-            root2ChildStore.put(rootKey, rootCap);
-
-            var childCap = child2RootStore.has(childKey)  ? child2RootStore.get(childKey): new PosBridgeTokenMappingCapsule(Protocol.PosBridgeTokenMapping.newBuilder().build());
-            childCap.putToken(ctx.getRootChainid(), ctx.getRootToken(), ctx.getType(), ctx.getChildChainid(), ctx.getChildToken());
-            child2RootStore.put(childKey, childCap);
+            tokenMapStore.mapRoot2Child(ctx.getRootChainid(), ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken(), ctx.getType());
+            tokenMapStore.mapChild2Root(ctx.getChildChainid(), ctx.getChildToken(), ctx.getRootChainid(), ctx.getRootToken(),  ctx.getType());
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
@@ -87,12 +68,12 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                     .topic("PosBridgeMapToken")
                     .rawData(
                             PosBridgeTokenMappedEvent.builder()
-                                .root_token(ctx.getRootToken())
-                                .root_chainid(ctx.getRootChainid())
-                                .child_token(ctx.getChildToken())
-                                .child_chainid(ctx.getChildChainid())
-                                .type(ctx.getType())
-                                .build())
+                                    .root_token(ctx.getRootToken())
+                                    .root_chainid(ctx.getRootChainid())
+                                    .child_token(ctx.getChildToken())
+                                    .child_chainid(ctx.getChildChainid())
+                                    .type(ctx.getType())
+                                    .build())
                     .build();
             emitEvent(event, ret);
             return true;
@@ -110,11 +91,7 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             Assert.notNull(dbManager, "No dbManager!");
             Assert.isTrue(contract.is(PosBridgeMapTokenContract.class), "contract type error,expected type [PosBridgeMapTokenContract],real type[" + contract.getClass() + "]");
             var fee = calcFee();
-            val ctx0 = this.contract.unpack(PosBridgeMapTokenContract.class);
-            var ctx = ctx0.toBuilder()
-                    .setRootToken(Numeric.cleanHexPrefix(ctx0.getRootToken()).toLowerCase())
-                    .setChildToken(Numeric.cleanHexPrefix(ctx0.getChildToken()).toLowerCase())
-                    .build();
+            val ctx = this.contract.unpack(PosBridgeMapTokenContract.class);
             var accountStore = dbManager.getAccountStore();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
@@ -126,36 +103,30 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
 
             //check valid chain id
             Assert.isTrue(ctx.getChildChainid() != ctx.getRootChainid(), "root chain id must be different from child chain id");
-            Assert.isTrue(Wallet.getSupportedPosChainIds().contains(ctx.getChildChainid()) && Wallet.getSupportedPosChainIds().contains(ctx.getRootChainid()),
-                    "not supported chainId, found rootChainId: " + ctx.getRootChainid() + ", childChainId: " + ctx.getChildChainid());
+            Assert.isTrue(
+                    Wallet.getSupportedPosChainIds().contains(ctx.getChildChainid())
+                            && Wallet.getSupportedPosChainIds().contains(ctx.getRootChainid()),
+                    "not supported chainId, found rootChainId: " + ctx.getRootChainid() + ", childChainId: " + ctx.getChildChainid()
+            );
 
             //check valid token address
-            if(isUniChain(ctx.getRootChainid()))
+            if (isUniChain(ctx.getRootChainid()))
                 checkUniChainToken(ctx.getRootChainid(), ctx.getRootToken(), ctx.getType(), true);
             else
                 checkOtherChainToken(ctx.getRootChainid(), ctx.getRootToken(), ctx.getType(), true);
 
-            if(isUniChain(ctx.getChildChainid()))
+            if (isUniChain(ctx.getChildChainid()))
                 checkUniChainToken(ctx.getChildChainid(), ctx.getChildToken(), ctx.getType(), false);
             else
                 checkOtherChainToken(ctx.getChildChainid(), ctx.getChildToken(), ctx.getType(), false);
 
             //make sure un-mapped token
-            var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
-            var child2RootStore = dbManager.getPosBridgeTokenMapChild2RootStore();
-
-            var rootKeyStr = PosBridgeUtil.makeTokenMapKey(ctx.getRootChainid(), ctx.getRootToken());
-            var rootKey = rootKeyStr.getBytes();
-            var childKeyStr = PosBridgeUtil.makeTokenMapKey(ctx.getChildChainid(), ctx.getChildToken());
-            var childKey = childKeyStr.getBytes();
-
-            if(root2ChildStore.has(rootKey)){
-                var childMap = root2ChildStore.get(rootKey);
-                Assert.isTrue(!childMap.hasChainId(ctx.getChildChainid()), "already mapped child token: " + childKeyStr);
-                Assert.isTrue(childMap.getAssetType() == ctx.getType(), "miss-matched asset type");
-            }
-
-            Assert.isTrue(!child2RootStore.has(childKey), "already mapped child token: " + childKeyStr);
+            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
+            Assert.isTrue(
+                    tokenMapStore.ensureNotMapped(ctx.getRootChainid(), ctx.getRootToken())
+                            && tokenMapStore.ensureNotMapped(ctx.getChildChainid(), ctx.getChildToken()),
+                    "already mapped"
+            );
 
             Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough fee");
             return true;
@@ -165,14 +136,12 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
         }
     }
 
-    private void checkUniChainToken(long _chainId, String token, int assetType, boolean isRoot) throws Exception{
-        switch (assetType){
+    private void checkUniChainToken(long _chainId, String token, int assetType, boolean isRoot) throws Exception {
+        switch (assetType) {
             case ASSET_TYPE_NATIVE:
-                if(isRoot)
-                {
+                if (isRoot) {
                     Assert.isTrue("UNW".equalsIgnoreCase(token), "token must be UNW");
-                }
-                else {
+                } else {
                     var tokenIndex = dbManager.getTokenAddrSymbolIndexStore();
                     Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "token asset not found: " + token);
                 }
@@ -193,14 +162,13 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
     /**
      * check EVM-compatible chain info like bsc, eth ...
      */
-    private void checkOtherChainToken(long _chainId, String token, int assetType, boolean isRoot) throws Exception{
-        switch (assetType){
+    private void checkOtherChainToken(long _chainId, String token, int assetType, boolean isRoot) throws Exception {
+        switch (assetType) {
             case ASSET_TYPE_NATIVE:
-                if(isRoot)
-                {
+                if (isRoot) {
                     Assert.isTrue(NATIVE_COIN_SYMBOL.contains(token.toUpperCase()), "native coin not in white list: " + token);
-                    break;
                 }
+                break;
             case ASSET_TYPE_TOKEN:
             case ASSET_TYPE_NFT:
                 Assert.isTrue(org.web3j.crypto.WalletUtils.isValidAddress(token), "invalid EVM-compatible token address, found: " + token);
@@ -210,9 +178,10 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
         }
     }
 
-    private boolean isUniChain(long chainId){
-        return  Wallet.getAddressPreFixByte() == chainId;
+    private boolean isUniChain(long chainId) {
+        return Wallet.getAddressPreFixByte() == chainId;
     }
+
 
     @Override
     public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
@@ -223,4 +192,5 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
     public long calcFee() {
         return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
     }
+
 }

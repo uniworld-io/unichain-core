@@ -32,15 +32,18 @@ import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.internal.ChildTokenService;
+import org.unichain.core.services.internal.impl.ChildTokenErc20Service;
+import org.unichain.core.services.internal.impl.ChildTokenErc721Service;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.PosBridgeWithdrawContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.crypto.WalletUtils;
 import org.web3j.utils.Numeric;
 
-import java.math.BigInteger;
 
-import static org.unichain.core.capsule.PosBridgeTokenMappingCapsule.*;
+import static org.unichain.common.utils.PosBridgeUtil.*;
 
 //@todo later
 @Slf4j(topic = "actuator")
@@ -54,68 +57,37 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
     public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
         var fee = calcFee();
         try {
-            val ctx0 = this.contract.unpack(PosBridgeWithdrawContract.class);
-            var ctx = ctx0.toBuilder()
-                    .setChildToken(Numeric.cleanHexPrefix(ctx0.getChildToken()))
-                    .build();
-
+            val ctx = this.contract.unpack(PosBridgeWithdrawContract.class);
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
             //load token map
-            var child2RootKey = PosBridgeUtil.makeTokenMapKey(Wallet.getAddressPreFixString(), ctx.getChildToken());
-            var childChainId = Wallet.getAddressPreFixByte();
 
-            var rootTokenMap = dbManager.getPosBridgeTokenMapChild2RootStore().get(child2RootKey.getBytes());
-            var assetType = (int)rootTokenMap.getAssetType();
-            var rootChainIdHex = rootTokenMap.getInstance().getTokensMap().keySet().stream().findFirst().get();
-            var rootChainId = (new BigInteger(rootChainIdHex, 16)).longValue();
-            var rootToken = rootTokenMap.getTokenByChainId(rootChainId);
+            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
+            var childChainId = Wallet.getAddressPreFixByte();
+            var childKey = PosBridgeUtil.makeTokenMapKey(childChainId, ctx.getChildToken());
+            var tokenMap = tokenMapStore.get(childKey.getBytes());
+            var rootToken = tokenMap.getRootToken();
+            var rootChainId = tokenMap.getRootChainId();
+            var assetType = tokenMap.getAssetType();
+
 
             //transfer back token
-            switch (assetType){
+            ChildTokenService childTokenService;
+            switch (tokenMap.getAssetType()){
                 case ASSET_TYPE_NATIVE:
                 case ASSET_TYPE_TOKEN: {
-                    var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getChildToken())).getSymbol();
-                    var tokenInfo = dbManager.getTokenPoolStore().get(symbol.toUpperCase().getBytes());
-                    var wrapCtx = Contract.TransferTokenContract.newBuilder()
-                            .setAmount(ctx.getData())
-                            .setOwnerAddress(ctx.getOwnerAddress())
-                            .setToAddress(tokenInfo.getOwnerAddress())
-                            .setTokenName(symbol)
-                            .setAvailableTime(0L)
-                            .build();
-                    var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferTokenContract)
-                            .getInstance()
-                            .getRawData()
-                            .getContract(0)
-                            .getParameter();
-                    var wrapActuator = new TokenTransferActuatorV4(wrapCap, dbManager);
-                    var wrapRet = new TransactionResultCapsule();
-                    wrapActuator.execute(wrapRet);
-                    ret.setFee(wrapRet.getFee());
+                    childTokenService = new ChildTokenErc20Service(dbManager, ret);
                     break;
                 }
                 case ASSET_TYPE_NFT: {
-                    var symbol = dbManager.getNftAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getChildToken())).getSymbol();
-                    var wrapCtx = Contract.BurnNftTokenContract.newBuilder()
-                            .setOwnerAddress(ctx.getOwnerAddress())
-                            .setContract(symbol)
-                            .setTokenId(ctx.getData())
-                            .build();
-                    var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.BurnNftTokenContract)
-                            .getInstance()
-                            .getRawData()
-                            .getContract(0)
-                            .getParameter();
-                    var wrapActuator = new NftBurnTokenActuator(wrapCap, dbManager);
-                    var wrapRet = new TransactionResultCapsule();
-                    wrapActuator.execute(wrapRet);
-                    ret.setFee(wrapRet.getFee());
+                    childTokenService = new ChildTokenErc721Service(dbManager, ret);
                     break;
                 }
                 default:
                     throw new Exception("invalid asset type");
             }
+            var childToken = ByteString.copyFrom(Numeric.hexStringToByteArray(ctx.getChildToken()));
+            childTokenService.withdraw(ctx.getOwnerAddress(), childToken, ctx.getData());
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
@@ -132,7 +104,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
                                     .child_token(ctx.getChildToken())
                                     .child_chainid(childChainId)
                                     .type(assetType)
-                                    .data(ctx.getData())
+                                    .data(PosBridgeUtil.abiDecodeToUint256(ctx.getData()).getValue().longValue())
                                     .receive_address(ctx.getReceiveAddress())
                                     .build())
                     .build();
@@ -160,14 +132,14 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
 
             //make sure receive address is valid
-            Assert.isTrue(Wallet.addressValid(Numeric.hexStringToByteArray(ctx.getReceiveAddress())), "invalid receive address");
+            Assert.isTrue(WalletUtils.isValidAddress(ctx.getReceiveAddress()), "invalid receive address " + ctx.getReceiveAddress());
 
             //make sure token mapped
-            var child2RootStr = PosBridgeUtil.makeTokenMapKey(Wallet.getAddressPreFixString(), ctx.getChildToken());
-            var child2RootKey = child2RootStr.getBytes();
-            Assert.isTrue(dbManager.getPosBridgeTokenMapChild2RootStore().has(child2RootKey), "unmapped token: " + child2RootStr);
-
-            var assetType = (int)dbManager.getPosBridgeTokenMapChild2RootStore().get(child2RootKey).getAssetType();
+            var childKey = PosBridgeUtil.makeTokenMapKey(Wallet.getAddressPreFixString(), ctx.getChildToken());
+            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
+            var tokenMap = tokenMapStore.get(childKey.getBytes());
+            Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "unmapped token: " + childKey);
+            var assetType = tokenMap.getAssetType();
 
             //make sure asset exist
             switch (assetType){
@@ -176,9 +148,9 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
                         var symbol = dbManager.getTokenAddrSymbolIndexStore().get(Numeric.hexStringToByteArray(ctx.getChildToken())).getSymbol();
                         var tokenInfo = dbManager.getTokenPoolStore().get(symbol.toUpperCase().getBytes());
                         var wrapCtx = Contract.TransferTokenContract.newBuilder()
-                                .setAmount(ctx.getData())
+                                .setAmount(PosBridgeUtil.abiDecodeToUint256(ctx.getData()).getValue().longValue())
                                 .setOwnerAddress(ctx.getOwnerAddress())
-                                .setToAddress(tokenInfo.getOwnerAddress())
+                                .setToAddress(tokenInfo.getAddress())
                                 .setTokenName(symbol)
                                 .setAvailableTime(0L)
                                 .build();
@@ -196,7 +168,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
                         var wrapCtx = Contract.BurnNftTokenContract.newBuilder()
                                 .setOwnerAddress(ctx.getOwnerAddress())
                                 .setContract(symbol)
-                                .setTokenId(ctx.getData())
+                                .setTokenId(PosBridgeUtil.abiDecodeToUint256(ctx.getData()).getValue().longValue())
                                 .build();
                         var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.BurnNftTokenContract)
                                 .getInstance()

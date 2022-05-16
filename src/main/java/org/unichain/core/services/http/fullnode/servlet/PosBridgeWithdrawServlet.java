@@ -31,12 +31,12 @@ public class PosBridgeWithdrawServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.PosBridgeWithdrawExecContract.newBuilder();
+      var build = Contract.PosBridgeWithdrawContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
 
       var tx = wallet.createTransactionCapsule(tokenCtx,
-              Protocol.Transaction.Contract.ContractType.PosBridgeWithdrawExecContract).getInstance();
+              Protocol.Transaction.Contract.ContractType.PosBridgeWithdrawContract).getInstance();
 
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);

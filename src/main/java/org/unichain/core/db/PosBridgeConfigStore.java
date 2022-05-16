@@ -10,6 +10,8 @@ import org.unichain.core.Wallet;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.protos.Protocol;
 
+import java.util.Objects;
+
 @Slf4j(topic = "DB")
 @Component
 public class PosBridgeConfigStore extends UnichainStoreWithRevoking<PosBridgeConfigCapsule> {
@@ -24,7 +26,9 @@ public class PosBridgeConfigStore extends UnichainStoreWithRevoking<PosBridgeCon
        * Admin address hex decode has prefix with 0x44
        */
       var config = Protocol.PosBridgeConfig.newBuilder()
-              .setOwnerAddress(ByteString.copyFrom(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POSBRIDGE_GENESIS_ADMIN_WALLET)))
+              .setOwnerAddress(ByteString.copyFrom(
+                      Objects.requireNonNull(Wallet.decodeFromBase58Check(PosBridgeConfigCapsule.POS_BRIDGE_GENESIS_ADMIN_WALLET)))
+              )
               .setMinValidator(1)
               .setConsensusRate(75)
               .setInitialized(false)

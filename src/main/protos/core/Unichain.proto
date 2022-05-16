@@ -945,23 +945,29 @@ message PosBridgeConfig{
   uint32 consensus_rate =3;
   map<string, string> validators = 4;
   bool initialized = 5;
-  bytes native_predicate_address = 6;
-  bytes token_predicate_address = 7;
-  bytes nft_predicate_address = 8;
+  PosBridgePredicate predicates = 6;
 }
 
-message PosBridgeTokenMapping{
-  map<string, string>  tokens = 1;//with rootchain: chainId --> token
-  int64 type = 2; //1:native, 2: erc20 3: nft
-  string chain_id = 3;
-  string token_address = 4;
+message PosBridgePredicate{
+  bytes predicate_native = 1;
+  bytes predicate_erc20 = 2;
+  bytes predicate_erc721 = 3;
 }
+
+message PostBridgeTokenMap{
+  int64 rootChainId = 1;
+  string rootToken = 2;
+  int64 childChainId = 3;
+  string childToken = 4;
+  int32 assetType = 5;
+}
+
 
 message PosBridgeTokenMappingPage {
   int64  page_size = 1;
   int64 page_index = 2;
   int64 total = 3;
-  repeated PosBridgeTokenMapping token_maps = 4;
+  repeated PostBridgeTokenMap token_maps = 4;
 }
 
 //@todo later

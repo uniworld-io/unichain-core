@@ -37,7 +37,7 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class NftBurnTokenActuator extends AbstractActuator {
 
-  NftBurnTokenActuator(Any contract, Manager dbManager) {
+  public NftBurnTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

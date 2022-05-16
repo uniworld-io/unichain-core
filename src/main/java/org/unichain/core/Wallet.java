@@ -1161,7 +1161,7 @@ public class Wallet {
 
   public PosBridgeTokenMappingPage getPosBridgeTokenMap() {
     try {
-      var all= dbManager.getPosBridgeTokenMapRoot2ChildStore().getAll()
+      var all= dbManager.getPosBridgeTokenMapStore().getAll()
               .stream()
               .map(item -> item.getInstance())
               .collect(Collectors.toList());

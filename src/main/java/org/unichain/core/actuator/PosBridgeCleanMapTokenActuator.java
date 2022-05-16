@@ -31,7 +31,6 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.PosBridgeCleanMapTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
-import org.web3j.utils.Numeric;
 
 import java.util.Arrays;
 
@@ -46,29 +45,11 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
     public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
         var fee = calcFee();
         try {
-            val ctx0 = this.contract.unpack(PosBridgeCleanMapTokenContract.class);
-            var ctx = ctx0.toBuilder()
-                    .setRootToken(Numeric.cleanHexPrefix(ctx0.getRootToken()).toLowerCase())
-                    .setChildToken(Numeric.cleanHexPrefix(ctx0.getChildToken()).toLowerCase())
-                    .build();
+            val ctx = this.contract.unpack(PosBridgeCleanMapTokenContract.class);
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
-            var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
-            var child2RootStore = dbManager.getPosBridgeTokenMapChild2RootStore();
-
-            var rootKeyStr = (Long.toHexString(ctx.getRootChainid()) + "_" + ctx.getRootToken());
-            var rootKey = rootKeyStr.getBytes();
-            var childKeyStr = (Long.toHexString(ctx.getChildChainid()) + "_" + ctx.getChildToken());
-            var childKey = childKeyStr.getBytes();
-
-            var rootCap = root2ChildStore.get(rootKey);
-            var empty = rootCap.clearToken(ctx.getChildChainid());
-            if(empty)
-                root2ChildStore.delete(rootKey);
-            else
-                root2ChildStore.put(rootKey, rootCap);
-
-            child2RootStore.delete(childKey);
+            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
+            tokenMapStore.unmap(ctx.getRootChainid(), ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken());
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
@@ -102,11 +83,8 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
             Assert.notNull(dbManager, "No dbManager!");
             Assert.isTrue(contract.is(PosBridgeCleanMapTokenContract.class), "contract type error,expected type [PosBridgeCleanMapTokenContract],real type[" + contract.getClass() + "]");
             var fee = calcFee();
-            val ctx0 = this.contract.unpack(PosBridgeCleanMapTokenContract.class);
-            var ctx = ctx0.toBuilder()
-                    .setRootToken(Numeric.cleanHexPrefix(ctx0.getRootToken()).toLowerCase())
-                    .setChildToken(Numeric.cleanHexPrefix(ctx0.getChildToken()).toLowerCase())
-                    .build();
+            val ctx = this.contract.unpack(PosBridgeCleanMapTokenContract.class);
+
             var accountStore = dbManager.getAccountStore();
             var ownerAddr = getOwnerAddress().toByteArray();
 
@@ -114,25 +92,6 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
             var config = dbManager.getPosBridgeConfigStore().get();
             Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
             Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), config.getOwner()), "unmatched owner");
-
-            //check mapped token pair
-            var root2ChildStore = dbManager.getPosBridgeTokenMapRoot2ChildStore();
-            var child2RootStore = dbManager.getPosBridgeTokenMapChild2RootStore();
-
-            var rootKeyStr = (Long.toHexString(ctx.getRootChainid()) + "_" + ctx.getRootToken());
-            var rootKey = rootKeyStr.getBytes();
-            var childKeyStr = (Long.toHexString(ctx.getChildChainid()) + "_" + ctx.getChildToken());
-            var childKey = childKeyStr.getBytes();
-
-            Assert.isTrue(root2ChildStore.has(rootKey), "not found mapped token pair");
-            var rootValue = root2ChildStore.get(rootKey);
-            Assert.isTrue(rootValue.hasChainId(ctx.getChildChainid()), "not found mapped token pair");
-            Assert.isTrue(rootValue.getAssetType() == ctx.getType(), "miss-matched asset type");
-
-            Assert.isTrue(child2RootStore.has(childKey), "not found mapped token pair");
-            var childValue = child2RootStore.get(childKey);
-            Assert.isTrue(childValue.hasChainId(ctx.getRootChainid()), "not found mapped token pair");
-            Assert.isTrue(childValue.getAssetType() == ctx.getType(), "miss-matched asset type");
 
             Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;

@@ -428,7 +428,7 @@ message PosBridgeSetupContract{
   bytes owner_address = 1;
   bytes new_owner= 2;
   int64 min_validator = 3;
-  repeated bytes validators = 4;
+  repeated string validators = 4;
   uint32 consensus_rate = 5; //percent 0 to 100
   string predicate_native = 6; //hex
   string predicate_token = 7; //hex
@@ -461,7 +461,7 @@ message PosBridgeDepositContract{
   string root_token = 2; //hex address if token, unw if native
   int64 child_chainid = 3;
   string receive_address = 4;
-  int64 data = 5; //amount or token id
+  string data = 5; //amount or token id, hex
 }
 
 //call from user
@@ -469,7 +469,7 @@ message PosBridgeWithdrawContract{
   bytes owner_address = 1;
   string child_token = 2; //hex address
   string receive_address = 3; //hex address
-  int64 data = 4; //amount or tokenid
+  string data = 4; //amount or tokenid, hex
 }
 
 /**

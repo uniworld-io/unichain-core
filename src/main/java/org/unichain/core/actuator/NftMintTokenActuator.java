@@ -44,7 +44,7 @@ import static org.unichain.core.services.http.utils.Util.NFT_MINT_FIELD_TOKEN_ID
 @Slf4j(topic = "actuator")
 public class NftMintTokenActuator extends AbstractActuator {
 
-  NftMintTokenActuator(Any contract, Manager dbManager) {
+  public NftMintTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

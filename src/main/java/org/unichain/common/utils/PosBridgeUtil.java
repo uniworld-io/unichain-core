@@ -10,7 +10,6 @@ import org.unichain.common.crypto.ECKey;
 import org.unichain.common.crypto.Hash;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
-import org.unichain.protos.Protocol;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
@@ -57,7 +56,7 @@ public class PosBridgeUtil {
     /**
      * Assume that validator address with prefix 0x
      */
-    public static void validateSignatures(final String msgHex, final List<String> hexSignatures, final PosBridgeConfigCapsule config) throws Exception {
+    public static boolean validateSignatures(final String msgHex, final List<String> hexSignatures, final PosBridgeConfigCapsule config) throws Exception {
         try {
             var msg = Numeric.hexStringToByteArray(msgHex);
             var whitelist = config.getValidators();
@@ -75,6 +74,7 @@ public class PosBridgeUtil {
             var rate = ((double) countVerify) / whitelist.size();
             Assert.isTrue(countVerify >= config.getMinValidator(), "LESS_THAN_MIN_VALIDATOR");
             Assert.isTrue(rate >= config.getConsensusRate(), "LESS_THAN_CONSENSUS_RATE");
+            return true;
         } catch (Exception e) {
             logger.error("validate signature failed -->", e);
             throw e;

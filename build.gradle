@@ -102,6 +102,7 @@ dependencies {
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.13.0'
     testCompile group: 'org.hamcrest', name: 'hamcrest-junit', version: '1.0.0.1'
     testCompile group: 'org.testng', name: 'testng', version: '6.14.3'
+
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
     compile group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.25'
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
@@ -171,7 +172,6 @@ dependencies {
     compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.5'
     compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.8.5'
     compileOnly group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
-    testCompile group: 'junit', name: 'junit', version: '4.+'
 
     compile ("org.apache.kafka:kafka_2.10:0.10.2.2"){
         exclude group: "org.slf4j"
@@ -260,16 +260,17 @@ shadowJar {
     version = null
 }
 
-// test {
-//     testLogging {
-//         exceptionFormat = 'full'
-//     }
-//     jacoco {
-//         append = true
-//         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
-//         classDumpDir = file("$buildDir/jacoco/classpathdumps")
-//     }
-// }
+ test {
+     testLogging {
+         exceptionFormat = 'full'
+     }
+
+     jacoco {
+         append = true
+         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
+         classDumpDir = file("$buildDir/jacoco/classpathdumps")
+     }
+ }
 
 // task stest(type: Test) {
 

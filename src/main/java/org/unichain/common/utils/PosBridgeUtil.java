@@ -1,6 +1,7 @@
 package org.unichain.common.utils;
 
 import lombok.Builder;
+import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
@@ -10,6 +11,11 @@ import org.unichain.common.crypto.ECKey;
 import org.unichain.common.crypto.Hash;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
+import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.db.Manager;
+import org.unichain.core.services.internal.ChildTokenService;
+import org.unichain.core.services.internal.PredicateService;
+import org.unichain.core.services.internal.impl.*;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
@@ -24,13 +30,76 @@ import java.util.*;
 
 @Slf4j(topic = "PosBridge")
 public class PosBridgeUtil {
-
-    public static final int ASSET_TYPE_NATIVE = 1;//native
-    public static final int ASSET_TYPE_TOKEN = 2;//erc20
-    public static final int ASSET_TYPE_NFT = 3;//erc721
-
-
     private static String BLIND_URI_HEX = "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020687474703a2f2f6a7573745f6175746f5f67656e2e6f72672f78782e6a736f6e";
+
+    /**
+     * null address
+     */
+    public static class NativeToken{
+        public static final String BNB = "0x000000000000000000000000000000000000dEaD";
+        public static final String ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+        public static final String UNI = "0x4416748f8d05163e917388fa79050bafe5a30faa2f";
+    }
+
+    @Getter
+    public enum AssetType{
+        NATIVE(1, "NATIVE"),
+        TOKEN(2, "ERC20"),
+        NFT(3, "ERC721");
+
+
+        private final int number;
+        private final String type;
+
+        AssetType(int number, String type){
+            this.number = number;
+            this.type = type;
+        }
+        public static AssetType valueOfNumber(int number) throws IllegalAccessException {
+            switch (number){
+                case 1:
+                    return NATIVE;
+                case 2:
+                    return TOKEN;
+                case 3:
+                    return NFT;
+                default:
+                    throw new IllegalAccessException("Not mapped asset type");
+            }
+        }
+    }
+
+    public static PredicateService lookupPredicate(int numberType, Manager dbManager, TransactionResultCapsule ret, PosBridgeConfigCapsule config) throws Exception {
+        AssetType assetType = AssetType.valueOfNumber(numberType);
+        switch (assetType){
+            case NATIVE: {
+                return  new PredicateNativeService(dbManager, ret, config);
+            }
+            case TOKEN: {
+                return new PredicateErc20Service(dbManager, ret, config);
+            }
+            case NFT: {
+                return new PredicateErc721Service(dbManager, ret, config);
+            }
+            default:
+                throw new Exception("invalid asset type");
+        }
+    }
+
+    public static ChildTokenService lookupChildToken(int numberType, Manager dbManager, TransactionResultCapsule ret) throws Exception {
+        AssetType assetType = AssetType.valueOfNumber(numberType);
+        switch (assetType){
+            case NATIVE:
+            case TOKEN: {
+                return new ChildTokenErc20Service(dbManager, ret);
+            }
+            case NFT: {
+                return new ChildTokenErc721Service(dbManager, ret);
+            }
+            default:
+                throw new Exception("invalid asset type");
+        }
+    }
 
     @Builder
     @ToString

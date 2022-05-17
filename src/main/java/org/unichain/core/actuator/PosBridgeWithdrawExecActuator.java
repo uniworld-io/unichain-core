@@ -32,14 +32,11 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.internal.PredicateService;
-import org.unichain.core.services.internal.impl.PredicateErc20Service;
-import org.unichain.core.services.internal.impl.PredicateErc721Service;
-import org.unichain.core.services.internal.impl.PredicateNativeService;
 import org.unichain.protos.Contract.PosBridgeWithdrawExecContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.utils.Numeric;
 
-import static org.unichain.common.utils.PosBridgeUtil.*;
+import static org.unichain.common.utils.PosBridgeUtil.lookupPredicate;
 
 @Slf4j(topic = "actuator")
 public class PosBridgeWithdrawExecActuator extends AbstractActuator {
@@ -57,34 +54,12 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
 
             //decode msg
             var decodedMsg = PosBridgeUtil.decodePosBridgeWithdrawExecMsg(ctx.getMessage());
-
             var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
-
             var childKey = PosBridgeUtil.makeTokenMapKey(Long.toHexString(decodedMsg.childChainId) , decodedMsg.childTokenAddr);
             var tokenMap = tokenMapStore.get(childKey.getBytes());
+            var config = dbManager.getPosBridgeConfigStore().get();
 
-            var assetType = tokenMap.getAssetType();
-            var posConfig = dbManager.getPosBridgeConfigStore().get();
-
-
-            //unlock asset
-            PredicateService predicateService;
-            switch (assetType){
-                case ASSET_TYPE_NATIVE: {
-                    predicateService = new PredicateNativeService(dbManager, ret, posConfig);
-                    break;
-                }
-                case ASSET_TYPE_TOKEN: {
-                    predicateService = new PredicateErc20Service(dbManager, ret, posConfig);
-                    break;
-                }
-                case ASSET_TYPE_NFT: {
-                    predicateService = new PredicateErc721Service(dbManager, ret, posConfig);
-                    break;
-                }
-                default:
-                    throw new Exception("invalid asset type");
-            }
+            PredicateService predicateService = lookupPredicate(tokenMap.getAssetType(), dbManager, ret, config);
             ByteString rootToken = ByteString.copyFrom(Numeric.hexStringToByteArray(tokenMap.getRootToken()));
             ByteString receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));
             predicateService.unlockTokens(receiver, rootToken, Hex.encodeHexString(decodedMsg.withdrawData.getValue()));

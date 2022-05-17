@@ -37,8 +37,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.unichain.common.utils.PosBridgeUtil.*;
-import static org.unichain.core.capsule.PosBridgeConfigCapsule.*;
+import static org.unichain.common.utils.PosBridgeUtil.AssetType;
+import static org.unichain.common.utils.PosBridgeUtil.NativeToken;
 
 @Slf4j(topic = "actuator")
 public class PosBridgeMapTokenActuator extends AbstractActuator {
@@ -126,9 +126,10 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
         }
     }
 
-    private void checkUniChainToken(long _chainId, String token, int assetType, boolean isRoot) throws Exception {
+    private void checkUniChainToken(long _chainId, String token, int numberType, boolean isRoot) throws Exception {
+        AssetType assetType = AssetType.valueOfNumber(numberType);
         switch (assetType) {
-            case ASSET_TYPE_NATIVE:
+            case NATIVE:
                 if (isRoot) {
                     Assert.isTrue(NativeToken.UNI.equalsIgnoreCase(token), "TOKEN_NATIVE_INVALID");
                 } else {
@@ -136,11 +137,11 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                     Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND_" + token);
                 }
                 break;
-            case ASSET_TYPE_TOKEN:
+            case TOKEN:
                 var tokenIndex = dbManager.getTokenAddrSymbolIndexStore();
                 Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND_" + token);
                 break;
-            case ASSET_TYPE_NFT:
+            case NFT:
                 var nftIndex = dbManager.getNftAddrSymbolIndexStore();
                 Assert.isTrue(nftIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND_" + token);
                 break;
@@ -152,9 +153,10 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
     /**
      * check EVM-compatible chain info like bsc, eth ...
      */
-    private void checkOtherChainToken(long _chainId, String token, int assetType, boolean isRoot) throws Exception {
+    private void checkOtherChainToken(long _chainId, String token, int numberType, boolean isRoot) throws Exception {
+        AssetType assetType = AssetType.valueOfNumber(numberType);
         switch (assetType) {
-            case ASSET_TYPE_NATIVE:
+            case NATIVE:
                 if (isRoot) {
                     Assert.isTrue(
                             NativeToken.BNB.equalsIgnoreCase(token)
@@ -162,8 +164,8 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                             "TOKEN_NATIVE_INVALID");
                 }
                 break;
-            case ASSET_TYPE_TOKEN:
-            case ASSET_TYPE_NFT:
+            case TOKEN:
+            case NFT:
                 Assert.isTrue(org.web3j.crypto.WalletUtils.isValidAddress(token), "invalid EVM-compatible token address, found: " + token);
                 break;
             default:

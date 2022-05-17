@@ -31,13 +31,12 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.internal.ChildTokenService;
-import org.unichain.core.services.internal.impl.ChildTokenErc20Service;
-import org.unichain.core.services.internal.impl.ChildTokenErc721Service;
 import org.unichain.protos.Contract.PosBridgeDepositExecContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.utils.Numeric;
 
-import static org.unichain.common.utils.PosBridgeUtil.*;
+import static org.unichain.common.utils.PosBridgeUtil.AssetType;
+import static org.unichain.common.utils.PosBridgeUtil.lookupChildToken;
 
 @Slf4j(topic = "actuator")
 public class PosBridgeDepositExecActuator extends AbstractActuator {
@@ -55,27 +54,11 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(ctx.getMessage());
 
             //load token map
-
             var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
             var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr);
             var tokenMap = tokenMapStore.get(rootKey.getBytes());
-            var assetType = tokenMap.getAssetType();
 
-
-            ChildTokenService childTokenService;
-            switch (assetType){
-                case ASSET_TYPE_NATIVE:
-                case ASSET_TYPE_TOKEN: {
-                    childTokenService = new ChildTokenErc20Service(dbManager, ret);
-                    break;
-                }
-                case ASSET_TYPE_NFT: {
-                    childTokenService = new ChildTokenErc721Service(dbManager, ret);
-                    break;
-                }
-                default:
-                    throw new Exception("invalid asset type");
-            }
+            ChildTokenService childTokenService = lookupChildToken(tokenMap.getAssetType(), dbManager, ret);
             var childToken = ByteString.copyFrom(Numeric.hexStringToByteArray(tokenMap.getChildToken()));
             var receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));
             childTokenService.deposit(receiver, childToken, Hex.encodeHexString(decodedMsg.depositData.getValue()));
@@ -121,16 +104,16 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             Assert.isTrue(Wallet.addressValid(decodedMsg.receiveAddr), "RECEIVER_INVALID");
 
             var tokenMap = tokenMapStore.get(rootKey.getBytes());
-            var assetType = tokenMap.getAssetType();
             var childTokenAddr = tokenMap.getChildToken();
 
             //make sure asset exist
+            AssetType assetType = AssetType.valueOfNumber(tokenMap.getAssetType());
             switch (assetType){
-                case ASSET_TYPE_NATIVE:
-                case ASSET_TYPE_TOKEN:
+                case NATIVE:
+                case TOKEN:
                     Assert.isTrue(dbManager.getTokenAddrSymbolIndexStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "token with address not found: " + decodedMsg);
                     break;
-                case ASSET_TYPE_NFT:
+                case NFT:
                     Assert.isTrue(dbManager.getNftAddrSymbolIndexStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "nft with address not found: " + decodedMsg);
                     break;
                 default:

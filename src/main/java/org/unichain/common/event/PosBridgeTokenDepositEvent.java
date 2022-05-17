@@ -1,15 +1,17 @@
 package org.unichain.common.event;
 
 import lombok.Builder;
+import lombok.ToString;
 
 import java.io.Serializable;
 
 @Builder
+@ToString
 public class PosBridgeTokenDepositEvent implements Serializable {
-    public long root_chainid;
-    public long child_chainid;
+    public long rootChainId;
+    public long childChainId;
     public String depositor;
     public String receiver;
-    public String root_token;
+    public String rootToken;
     public String depositData;
 }

@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
-import org.unichain.common.utils.ByteArray;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -33,7 +32,6 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.utils.Numeric;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import static org.unichain.core.services.http.utils.Util.*;
 

@@ -32,14 +32,12 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.internal.ChildTokenService;
-import org.unichain.core.services.internal.impl.ChildTokenErc20Service;
-import org.unichain.core.services.internal.impl.ChildTokenErc721Service;
 import org.unichain.protos.Contract.PosBridgeWithdrawContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.utils.Numeric;
 
-import static org.unichain.common.utils.PosBridgeUtil.*;
+import static org.unichain.common.utils.PosBridgeUtil.lookupChildToken;
 
 //@todo later
 @Slf4j(topic = "actuator")
@@ -64,20 +62,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             var tokenMap = tokenMapStore.get(childKey.getBytes());
 
             //transfer back token
-            ChildTokenService childTokenService;
-            switch (tokenMap.getAssetType()){
-                case ASSET_TYPE_NATIVE:
-                case ASSET_TYPE_TOKEN: {
-                    childTokenService = new ChildTokenErc20Service(dbManager, ret);
-                    break;
-                }
-                case ASSET_TYPE_NFT: {
-                    childTokenService = new ChildTokenErc721Service(dbManager, ret);
-                    break;
-                }
-                default:
-                    throw new Exception("invalid asset type");
-            }
+            ChildTokenService childTokenService = lookupChildToken(tokenMap.getAssetType(), dbManager, ret);
             var childToken = ByteString.copyFrom(Numeric.hexStringToByteArray(ctx.getChildToken()));
             childTokenService.withdraw(ctx.getOwnerAddress(), childToken, ctx.getData());
 
@@ -144,12 +129,12 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
                                       String withdrawData){
         //emit event
         var event = NativeContractEvent.builder()
-                .topic("PosBridgeWithdrawExecuted")
+                .topic("WithdrawExecuted")
                 .rawData(
                         PosBridgeTokenWithdrawEvent.builder()
-                                .child_chainid(childChainId)
-                                .root_chainid(rootChainId)
-                                .child_token(childToken)
+                                .childChainId(childChainId)
+                                .rootChainId(rootChainId)
+                                .childToken(childToken)
                                 .burner(burner)
                                 .withdrawer(withdrawer)
                                 .withdrawData(withdrawData)

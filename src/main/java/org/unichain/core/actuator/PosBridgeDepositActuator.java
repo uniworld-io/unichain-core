@@ -31,15 +31,13 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.internal.PredicateService;
-import org.unichain.core.services.internal.impl.PredicateErc20Service;
-import org.unichain.core.services.internal.impl.PredicateErc721Service;
-import org.unichain.core.services.internal.impl.PredicateNativeService;
 import org.unichain.protos.Contract.PosBridgeDepositContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.utils.Numeric;
 
-import static org.unichain.common.utils.PosBridgeUtil.*;
+import static org.unichain.common.utils.PosBridgeUtil.cleanUniPrefix;
+import static org.unichain.common.utils.PosBridgeUtil.lookupPredicate;
 
 @Slf4j(topic = "actuator")
 public class PosBridgeDepositActuator extends AbstractActuator {
@@ -61,26 +59,8 @@ public class PosBridgeDepositActuator extends AbstractActuator {
             var keyRoot = PosBridgeUtil.makeTokenMapKey(Wallet.getAddressPreFixString(), ctx.getRootToken()).getBytes();
             var tokenMapCap = tokenMapStore.get(keyRoot);
 
-
             //lock asset
-            PredicateService predicateService;
-            switch (tokenMapCap.getAssetType()){
-                case ASSET_TYPE_NATIVE: {
-                    predicateService = new PredicateNativeService(dbManager, ret, config);
-                    break;
-                }
-                case ASSET_TYPE_TOKEN: {
-                    predicateService = new PredicateErc20Service(dbManager, ret, config);
-                    break;
-                }
-                case ASSET_TYPE_NFT: {
-                    predicateService = new PredicateErc721Service(dbManager, ret, config);
-                    break;
-                }
-                default:
-                    throw new Exception("invalid asset type");
-            }
-
+            PredicateService predicateService = lookupPredicate(tokenMapCap.getAssetType(), dbManager, ret, config);
             ByteString rootToken = ByteString.copyFrom(Numeric.hexStringToByteArray(ctx.getRootToken()));
             predicateService.lockTokens(ctx.getOwnerAddress(), rootToken, ctx.getData());
 
@@ -150,12 +130,12 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                                      String receiver, String depositData){
         //emit event
         var event = NativeContractEvent.builder()
-                .topic("PosBridgeDepositExecuted")
+                .topic("DepositExecuted")
                 .rawData(
                         PosBridgeTokenDepositEvent.builder()
-                                .root_chainid(rootChainId)
-                                .child_chainid(childChainId)
-                                .root_token(cleanUniPrefix(rootToken))
+                                .rootChainId(rootChainId)
+                                .childChainId(childChainId)
+                                .rootToken(cleanUniPrefix(rootToken))
                                 .depositor(depositor)
                                 .receiver(receiver)
                                 .depositData(depositData)

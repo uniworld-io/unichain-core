@@ -34,15 +34,12 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.utils.Numeric;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import static org.unichain.common.utils.PosBridgeUtil.AssetType;
 import static org.unichain.common.utils.PosBridgeUtil.NativeToken;
 
 @Slf4j(topic = "actuator")
 public class PosBridgeMapTokenActuator extends AbstractActuator {
-    private static final Set<String> NATIVE_COIN_SYMBOL = new HashSet<>(Arrays.asList("BNB", "ETH", "MATIC", "UNW"));
 
     PosBridgeMapTokenActuator(Any contract, Manager dbManager) {
         super(contract, dbManager);
@@ -65,7 +62,7 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             ret.setStatus(fee, code.SUCESS);
 
             //emit event
-           emitTokenMapped(ret, ctx.getRootChainid(), ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken(), ctx.getType());
+            emitTokenMapped(ret, ctx.getRootChainid(), ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken(), ctx.getType());
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -142,7 +139,7 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                 Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND_" + token);
                 break;
             case NFT:
-                var nftIndex = dbManager.getNftAddrSymbolIndexStore();
+                var nftIndex = dbManager.getNftTemplateStore();
                 Assert.isTrue(nftIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND_" + token);
                 break;
             default:

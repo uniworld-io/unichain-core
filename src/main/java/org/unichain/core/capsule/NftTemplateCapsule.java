@@ -42,7 +42,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
 
   public NftTemplateCapsule(CreateNftTemplateContract ctx, long lastOperation, long tokenIndex) {
     var builder = NftTemplate.newBuilder()
-            .setContract(ctx.getContract().toUpperCase())
+            .setSymbol(ctx.getSymbol().toUpperCase())
             .setName(ctx.getName())
             .setOwner(ctx.getOwnerAddress())
             .setTotalSupply(ctx.getTotalSupply())
@@ -72,12 +72,20 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
     return this.template.toString();
   }
 
-  public String getContract() {
-    return this.template.getContract();
+  public String getSymbol() {
+    return this.template.getSymbol();
   }
 
-  public void setContract(String contract) {
-    this.template = this.template.toBuilder().setContract(contract).build();
+  public void setSymbol(String symbol) {
+    this.template = this.template.toBuilder().setSymbol(symbol).build();
+  }
+
+  public byte[] getAddress() {
+    return this.template.getAddress().toByteArray();
+  }
+
+  public void setAddress(byte[] address) {
+    this.template = this.template.toBuilder().setAddress(ByteString.copyFrom(address)).build();
   }
 
   public String getName() {
@@ -133,7 +141,7 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   }
 
   public byte[] getKey(){
-    return this.template.getContract().getBytes();
+    return this.template.getAddress().toByteArray();
   }
 
   public void clearMinter(){
@@ -182,10 +190,6 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
 
   public void setPrevOfMinter(byte[] prev){
     template = template.toBuilder().setPrevOfMinter(ByteString.copyFrom(prev)).build();
-  }
-
-  public void setAddress(byte[] address){
-    template = template.toBuilder().setAddress(ByteString.copyFrom(address)).build();
   }
 
   public boolean hasNextOfMinter(){

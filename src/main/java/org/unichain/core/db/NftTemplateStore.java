@@ -31,7 +31,7 @@ public class NftTemplateStore extends UnichainStoreWithRevoking<NftTemplateCapsu
         .collect(Collectors.toList());
   }
 
-  public void deleteMinter(byte[] key) {
+  public void clearMinterOf(byte[] key) {
     NftTemplateCapsule capsule = get(key);
     capsule.clearMinter();
     put(key, capsule);

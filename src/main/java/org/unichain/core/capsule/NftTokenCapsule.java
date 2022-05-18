@@ -20,7 +20,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.unichain.common.utils.ByteArray;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Protocol;
 
 import static org.unichain.core.services.http.utils.Util.*;
@@ -33,7 +32,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   public NftTokenCapsule(byte[] data) {
     try {
       this.token = Protocol.NftToken.parseFrom(data);
-      this.key = ArrayUtils.addAll(Util.stringAsBytesUppercase(token.getContract()), ByteArray.fromLong(token.getId()));
+      this.key =  genTokenKey(token.getAddress().toByteArray(), token.getId());
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
@@ -41,7 +40,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
 
   public NftTokenCapsule(Protocol.NftToken token) {
     this.token = token;
-    this.key = genTokenKey(token.getContract(), token.getId());
+    this.key = genTokenKey(token.getAddress().toByteArray(), token.getId());
   }
 
   public byte[] getData() {
@@ -122,15 +121,16 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
     return token.hasField(NFT_TOKEN_FIELD_NEXT);
   }
 
-  public String getContract() {
-    return token.getContract();
+  public String getSymbol() {
+    return token.getSymbol();
   }
 
-  /**
-   * gen token key
-   */
-  public static byte[] genTokenKey(String contract, long tokenId){
-    return ArrayUtils.addAll(Util.stringAsBytesUppercase(contract), ByteArray.fromLong(tokenId));
+  public byte[] getAddr() {
+    return token.getAddress().toByteArray();
+  }
+
+  public static byte[] genTokenKey(byte[] contractAddr, long tokenId){
+    return ArrayUtils.addAll(contractAddr, ByteArray.fromLong(tokenId));
   }
 
 }

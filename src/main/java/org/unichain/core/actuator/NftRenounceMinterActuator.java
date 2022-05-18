@@ -26,7 +26,6 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.RenounceNftMinterContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -45,9 +44,9 @@ public class NftRenounceMinterActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(RenounceNftMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var contract = Util.stringAsBytesUppercase(ctx.getContract());
+      var contractKey = ctx.getAddress().toByteArray();
       //update template
-      dbManager.removeMinterContract(ownerAddr, contract);
+      dbManager.removeMinterContract(ownerAddr, contractKey);
 
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
@@ -69,13 +68,13 @@ public class NftRenounceMinterActuator extends AbstractActuator {
 
       val ctx = this.contract.unpack(RenounceNftMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var contract = Util.stringAsBytesUppercase(ctx.getContract());
+      var contractKey = ctx.getAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
       var templateStore = dbManager.getNftTemplateStore();
 
       Assert.isTrue(accountStore.has(ownerAddr), "Not found owner account");
-      Assert.isTrue(templateStore.has(contract), "Not found template");
-      var template = templateStore.get(contract);
+      Assert.isTrue(templateStore.has(contractKey), "Not found template");
+      var template = templateStore.get(contractKey);
       Assert.isTrue(template.hasMinter() && Arrays.equals(ownerAddr, template.getMinter()), "Minter not exist or un-matched");
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "Not enough balance to cover fee");
       return true;

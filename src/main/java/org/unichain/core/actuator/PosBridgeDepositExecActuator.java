@@ -114,7 +114,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
                     Assert.isTrue(dbManager.getTokenAddrSymbolIndexStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "token with address not found: " + decodedMsg);
                     break;
                 case NFT:
-                    Assert.isTrue(dbManager.getNftAddrSymbolIndexStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "nft with address not found: " + decodedMsg);
+                    Assert.isTrue(dbManager.getNftTemplateStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "nft with address not found: " + decodedMsg);
                     break;
                 default:
                     throw new ContractValidateException("invalid asset type");

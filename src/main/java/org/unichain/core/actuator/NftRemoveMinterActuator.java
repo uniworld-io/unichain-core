@@ -26,7 +26,6 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.RemoveNftMinterContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -45,10 +44,10 @@ public class NftRemoveMinterActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(RemoveNftMinterContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var contract = Util.stringAsBytesUppercase(ctx.getContract());
-      var templateCap = dbManager.getNftTemplateStore().get(contract);
+      var contractKey = ctx.getAddress().toByteArray();
+      var templateCap = dbManager.getNftTemplateStore().get(contractKey);
 
-      dbManager.removeMinterContract(templateCap.getMinter(), contract);
+      dbManager.removeMinterContract(templateCap.getMinter(), contractKey);
 
       chargeFee(ownerAddress, fee);
       dbManager.burnFee(fee);
@@ -70,12 +69,12 @@ public class NftRemoveMinterActuator extends AbstractActuator {
 
       val ctx = this.contract.unpack(RemoveNftMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var contract = Util.stringAsBytesUppercase(ctx.getContract());
+      var contractKey = ctx.getAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
 
-      var templateCap = dbManager.getNftTemplateStore().get(contract);
+      var templateCap = dbManager.getNftTemplateStore().get(contractKey);
       Assert.notNull(templateCap, "Contract not found");
       Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()), "Not owner of NFT template");
       Assert.isTrue(templateCap.hasMinter(), "Minter not set");

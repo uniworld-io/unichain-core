@@ -8,6 +8,7 @@ import org.unichain.core.capsule.TokenAddressSymbolIndexCapsule;
 
 @Slf4j(topic = "DB")
 @Component
+@Deprecated
 public class NftAddrSymbolIndexStore extends UnichainStoreWithRevoking<TokenAddressSymbolIndexCapsule> {
 
   @Autowired

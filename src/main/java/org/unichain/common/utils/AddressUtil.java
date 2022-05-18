@@ -4,6 +4,8 @@ import org.apache.commons.codec.binary.Hex;
 import org.unichain.common.crypto.ECKey;
 import org.unichain.core.Wallet;
 
+import java.nio.charset.StandardCharsets;
+
 public class AddressUtil {
     public static class WalletInfo{
         public WalletInfo(String addressHex, String addressBase58, String privateKeyHex, byte[] address) {
@@ -28,7 +30,11 @@ public class AddressUtil {
         return new WalletInfo(addressHex, addressBase58, priKeyHex, address);
     }
 
-    public static byte[] generateAddress(){
+    public static byte[] generateRandomAddress(){
         return (new ECKey(Utils.getRandom())).getAddress();
+    }
+
+    public static byte[] genAssetAddrBySeed(String seed){
+        return ECKey.computeAddress(seed.toUpperCase().getBytes(StandardCharsets.UTF_8));
     }
 }

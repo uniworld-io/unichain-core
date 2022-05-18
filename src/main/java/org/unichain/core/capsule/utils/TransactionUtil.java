@@ -131,7 +131,8 @@ public class TransactionUtil {
     return true;
   }
 
-  public static boolean validNftName(byte[] chars) {
+  public static boolean validNftName(String name) {
+    byte[] chars = name.getBytes();
     if (ArrayUtils.isEmpty(chars) || chars.length > 32)
       return false;
 
@@ -257,7 +258,7 @@ public class TransactionUtil {
     return ECKey.computeAddress(pubKey);
   } */
 
-  public static boolean validGenericsAddress(byte[] address) {
+  public static boolean isGenesisAddress(byte[] address) {
     var genericsBlock = Args.getInstance().getGenesisBlock();
 
     for (Account acc : genericsBlock.getAssets()){
@@ -266,9 +267,5 @@ public class TransactionUtil {
     }
 
     return false;
-  }
-
-  public static boolean validNftTemplateName(byte[] name) {
-    return validAccountName(name);
   }
 }

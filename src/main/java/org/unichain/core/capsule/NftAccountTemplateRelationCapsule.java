@@ -16,7 +16,6 @@
 package org.unichain.core.capsule;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.protos.Protocol.NftAccountTemplateRelation;
 
@@ -26,15 +25,6 @@ import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FI
 public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccountTemplateRelation> {
   private NftAccountTemplateRelation relation;
   private byte[] key;
-
-  public NftAccountTemplateRelationCapsule(byte[] data) {
-    try {
-      this.relation = NftAccountTemplateRelation.parseFrom(data);
-      this.key = this.relation.getOwnerAddress().toByteArray();
-    } catch (InvalidProtocolBufferException e) {
-      logger.debug(e.getMessage());
-    }
-  }
 
   public NftAccountTemplateRelationCapsule(byte[] key, NftAccountTemplateRelation relation) {
     this.key = key;

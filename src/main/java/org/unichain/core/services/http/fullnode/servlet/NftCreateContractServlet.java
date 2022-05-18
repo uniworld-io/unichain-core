@@ -32,7 +32,7 @@ public class NftCreateContractServlet extends HttpServlet {
       var visible = Util.getVisiblePost(contract);
       var build = Contract.CreateNftTemplateContract.newBuilder();
       //generate address
-      build.setAddress(ByteString.copyFrom(AddressUtil.generateAddress()));
+      build.setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()));
       JsonFormat.merge(contract, build, visible);
       var tx = nftService.createContract(build.build());
       var jsonObject = JSONObject.parseObject(contract);

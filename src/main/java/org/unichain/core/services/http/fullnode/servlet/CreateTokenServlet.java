@@ -12,14 +12,11 @@ import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.CreateTokenContract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
-import org.web3j.crypto.WalletUtils;
-import org.web3j.utils.Numeric;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 
@@ -42,7 +39,7 @@ public class CreateTokenServlet extends HttpServlet {
       JsonFormat.merge(contract, build, visible);
 
       //generate address
-      build.setAddress(ByteString.copyFrom(AddressUtil.generateAddress()));
+      build.setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()));
       var tokenCtx = build.build();
       var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.CreateTokenContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);

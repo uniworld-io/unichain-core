@@ -10,7 +10,6 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.services.internal.ChildTokenService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
@@ -27,17 +26,16 @@ public class ChildTokenErc721Service implements ChildTokenService {
 
     @Override
     public void deposit(ByteString user, ByteString childToken, String depositData) throws ContractExeException, ContractValidateException {
-        var symbol = dbManager.getNftAddrSymbolIndexStore().get(childToken.toByteArray()).getSymbol();
         var nftContractStore = dbManager.getNftTemplateStore();
-        var contractKey =  Util.stringAsBytesUppercase(symbol);
+        var contractKey =   childToken.toByteArray();
         var nft = nftContractStore.get(contractKey);
 
         var wrapCtx = Contract.MintNftTokenContract.newBuilder()
                 .setOwnerAddress(ByteString.copyFrom(nft.getOwner()))
-                .setContract(symbol)
+                .setAddress(childToken)
                 .setToAddress(user)
                 .setTokenId(PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue())
-//                .setUri(PosBridgeUtil.abiDecodeFromToString(decodedMsg.extHex))//@TODO
+                .setUri("http://blind.uri")//@TODO
                 .build();
         var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.MintNftTokenContract)
                 .getInstance()
@@ -53,10 +51,9 @@ public class ChildTokenErc721Service implements ChildTokenService {
 
     @Override
     public void withdraw(ByteString user, ByteString childToken, String withdrawData) throws ContractExeException, ContractValidateException {
-        var symbol = dbManager.getNftAddrSymbolIndexStore().get(childToken.toByteArray()).getSymbol();
         var wrapCtx = Contract.BurnNftTokenContract.newBuilder()
                 .setOwnerAddress(user)
-                .setContract(symbol)
+                .setAddress(childToken)
                 .setTokenId(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
                 .build();
         var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.BurnNftTokenContract)

@@ -21,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
+import org.unichain.common.utils.AddressUtil;
+import org.unichain.core.Wallet;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TokenAddressSymbolIndexCapsule;
 import org.unichain.core.capsule.TokenSymbolAddressIndexCapsule;
@@ -30,6 +32,8 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
+
+import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_ADDRESS;
 
 @Slf4j(topic = "actuator")
 public class TokenCreateActuatorV5 extends TokenCreateActuatorV4 {
@@ -86,6 +90,42 @@ public class TokenCreateActuatorV5 extends TokenCreateActuatorV4 {
 
   @Override
   public void upgrade(){
-    //generate all token address
+    try {
+      val tokenPoolStore = dbManager.getTokenPoolStore();
+      //indexing token address vs symbol
+      var index1 = dbManager.getTokenAddrSymbolIndexStore();
+      var index2 = dbManager.getTokenSymbolAddrIndexStore();
+        for(var token : tokenPoolStore.getAll()){
+          if(!token.getInstance().hasField(TOKEN_CREATE_FIELD_ADDRESS)){
+            try {
+              //gen addr
+              var symbol = token.getTokenName().toUpperCase();
+              var tokenAddr = AddressUtil.genAssetAddrBySeed(symbol);
+              Assert.isTrue(!dbManager.getAccountStore().has(tokenAddr), "token address already occupied -->" + Wallet.encode58Check(tokenAddr));
+              //update
+              token.setAddress(tokenAddr);
+              tokenPoolStore.put(token.createDbKey(), token);
+              //index
+              index1.put(tokenAddr, new TokenAddressSymbolIndexCapsule(Protocol.TokenAddressSymbolIndex.newBuilder()
+                      .setSymbol(symbol)
+                      .build()));
+              index2.put(symbol.getBytes(), new TokenSymbolAddressIndexCapsule(Protocol.TokenSymbolAddressIndex.newBuilder()
+                      .setAddress(ByteString.copyFrom(tokenAddr))
+                      .build()));
+              //register account
+              var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
+              var tokenAccount = new AccountCapsule(ByteString.copyFrom(tokenAddr), Protocol.AccountType.AssetIssue, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+              dbManager.getAccountStore().put(tokenAddr, tokenAccount);
+              logger.info("upgraded token address:  {} --> {}", token.getName(), Wallet.encode58Check(tokenAddr));
+            }
+            catch (Exception e){
+              logger.error("failed to upgrade token: ", e);
+            }
+          }
+        }
+    }
+    catch (Exception e){
+      logger.error("error while upgrading all tokens -->", e);
+    }
   }
 }

@@ -28,7 +28,6 @@ import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.AddNftMinterContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -49,7 +48,7 @@ public class NftAddMinterActuator extends AbstractActuator {
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
       var accStore = dbManager.getAccountStore();
-      var contract = Util.stringAsBytesUppercase(ctx.getContract());
+      var contractAddr = ctx.getAddress().toByteArray();
 
       //create new account
       if (!accStore.has(minterAddr)) {
@@ -58,12 +57,12 @@ public class NftAddMinterActuator extends AbstractActuator {
 
       //save relation
       var templateStore = dbManager.getNftTemplateStore();
-      var template = templateStore.get(contract);
-      var currMinter = template.getMinter();
-      dbManager.removeMinterContract(currMinter, contract);
+      var template = templateStore.get(contractAddr);
+      var currentMinter = template.getMinter();
+      dbManager.removeMinterContract(currentMinter, contractAddr);
 
       template.setMinter(ctx.getMinter());
-      templateStore.put(contract, template);
+      templateStore.put(contractAddr, template);
       dbManager.addMinterContractRelation(template);
 
       //charge fee
@@ -88,18 +87,17 @@ public class NftAddMinterActuator extends AbstractActuator {
       val ctx = this.contract.unpack(AddNftMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
-      var contract = Util.stringAsBytesUppercase(ctx.getContract());
+      var contractAddr = ctx.getAddress().toByteArray();
       var accStore = dbManager.getAccountStore();
       var templateStore = dbManager.getNftTemplateStore();
 
       Assert.isTrue(accStore.has(ownerAddr), "Owner account not exist");
       Assert.isTrue(Wallet.addressValid(minterAddr), "Minter address not active or not exists");
       Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
-      Assert.isTrue(templateStore.has(contract), "Contract symbol not exist");
-      var template = templateStore.get(contract);
+      Assert.isTrue(templateStore.has(contractAddr), "Contract symbol not exist");
+      var template = templateStore.get(contractAddr);
       Assert.isTrue(Arrays.equals(template.getOwner(), ownerAddr), "Not owner of NFT template");
 
-      //check fee
       var fee = calcFee();
       if(!accStore.has(minterAddr))
       {
@@ -107,7 +105,7 @@ public class NftAddMinterActuator extends AbstractActuator {
       }
       Assert.isTrue(accStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
       Assert.isTrue(!template.hasMinter() || (!Arrays.equals(template.getMinter(), ctx.getMinter().toByteArray())), "Already minter");
-      Assert.isTrue(!TransactionUtil.validGenericsAddress(minterAddr), "Minter is generics address");
+      Assert.isTrue(!TransactionUtil.isGenesisAddress(minterAddr), "Minter is genesis address");
 
       return true;
     }

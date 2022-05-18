@@ -21,16 +21,14 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
-import org.unichain.common.utils.ByteArray;
 import org.unichain.core.Wallet;
+import org.unichain.core.capsule.NftTokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.TransferNftTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -53,8 +51,7 @@ public class NftTransferTokenActuator extends AbstractActuator {
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
             var toAddr = ctx.getToAddress();
             var toAddrBytes = toAddr.toByteArray();
-            var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
-
+            var tokenId = NftTokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
             //create new acc if not exist
             if (!accountStore.has(toAddrBytes)) {
                 fee = Math.addExact(fee, dbManager.createNewAccount(toAddr));
@@ -95,7 +92,7 @@ public class NftTransferTokenActuator extends AbstractActuator {
             var relationStore = dbManager.getNftAccountTokenStore();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
             var toAddr = ctx.getToAddress().toByteArray();
-            var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
+            var tokenId = NftTokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
 
             Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Owner address and to address must be not the same");
             Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");

@@ -52,17 +52,22 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             val ctx = this.contract.unpack(PosBridgeMapTokenContract.class);
 
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
-            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
 
-            tokenMapStore.mapRoot2Child(ctx.getRootChainid(), ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken(), ctx.getType());
-            tokenMapStore.mapChild2Root(ctx.getChildChainid(), ctx.getChildToken(), ctx.getRootChainid(), ctx.getRootToken(), ctx.getType());
+            if(isUniChain(ctx.getRootChainid())){
+                var tokenMapStore = dbManager.getRootTokenMapStore();
+                tokenMapStore.mapToken(ctx.getType(), ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken());
+            }
+            if(isUniChain(ctx.getChildChainid())){
+                var tokenMapStore = dbManager.getChildTokenMapStore();
+                tokenMapStore.mapToken(ctx.getType(), ctx.getChildToken(), ctx.getRootChainid(), ctx.getRootToken());
+            }
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
 
             //emit event
-            emitTokenMapped(ret, ctx.getRootChainid(), ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken(), ctx.getType());
+           emitTokenMapped(ret, ctx.getRootChainid(), ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken(), ctx.getType());
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -108,7 +113,7 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                 checkOtherChainToken(ctx.getChildChainid(), ctx.getChildToken(), ctx.getType(), false);
 
             //make sure un-mapped token
-            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
+            var tokenMapStore = dbManager.getRootTokenMapStore();
             Assert.isTrue(
                     tokenMapStore.ensureNotMapped(ctx.getRootChainid(), ctx.getRootToken())
                             && tokenMapStore.ensureNotMapped(ctx.getChildChainid(), ctx.getChildToken()),
@@ -131,16 +136,16 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                     Assert.isTrue(NativeToken.UNI.equalsIgnoreCase(token), "TOKEN_NATIVE_INVALID");
                 } else {
                     var tokenIndex = dbManager.getTokenAddrSymbolIndexStore();
-                    Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND_" + token);
+                    Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
                 }
                 break;
             case TOKEN:
                 var tokenIndex = dbManager.getTokenAddrSymbolIndexStore();
-                Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND_" + token);
+                Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
                 break;
             case NFT:
                 var nftIndex = dbManager.getNftTemplateStore();
-                Assert.isTrue(nftIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND_" + token);
+                Assert.isTrue(nftIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
                 break;
             default:
                 throw new Exception("invalid asset type");

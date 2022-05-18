@@ -139,6 +139,10 @@ public class Wallet {
     return addressPreFixString;
   }
 
+  public static long getChainId() {
+    return addressPreFixByte;
+  }
+
   public static Set<Long> getSupportedPosChainIds() {
     return posBridgeSupportedChainIds;
   }
@@ -1166,21 +1170,28 @@ public class Wallet {
 
   public PosBridgeTokenMappingPage getPosBridgeTokenMap() {
     try {
-      var all= dbManager.getPosBridgeTokenMapStore().getAll()
+      var allRoot= dbManager.getRootTokenMapStore().getAll()
               .stream()
-              .map(item -> item.getInstance())
+              .map(PosBridgeRootTokenMapCapsule::getInstance)
+              .collect(Collectors.toList());
+
+      var allChild= dbManager.getChildTokenMapStore().getAll()
+              .stream()
+              .map(PosBridgeChildTokenMapCapsule::getInstance)
               .collect(Collectors.toList());
       return  PosBridgeTokenMappingPage.newBuilder()
-              .setTotal(all.size())
+              .setTotal(allRoot.size() + allChild.size())
               .setPageIndex(0)
-              .setPageSize(all.size())
-              .addAllTokenMaps(all)
+              .setPageSize(allRoot.size())
+              .addAllRootTokenMaps(allRoot)
+              .addAllChildTokenMaps(allChild)
               .build();
     } catch (Exception e) {
       logger.error("error while loading POSTokenMaps -->", e);
       return null;
     }
   }
+
 
   public TransactionInfo getTransactionInfoById(ByteString transactionId) {
     if (Objects.isNull(transactionId)) {

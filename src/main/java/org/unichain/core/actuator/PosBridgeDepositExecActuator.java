@@ -54,13 +54,15 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(ctx.getMessage());
 
             //load token map
-            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
+            var tokenMapStore = dbManager.getChildTokenMapStore();
             var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr);
             var tokenMap = tokenMapStore.get(rootKey.getBytes());
 
-            ChildTokenService childTokenService = lookupChildToken(tokenMap.getAssetType(), dbManager, ret);
+
             var childToken = ByteString.copyFrom(Numeric.hexStringToByteArray(tokenMap.getChildToken()));
             var receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));
+
+            var childTokenService = lookupChildToken(tokenMap.getTokenType(), dbManager, ret);
             childTokenService.deposit(receiver, childToken, Hex.encodeHexString(decodedMsg.depositData.getValue()));
 
             chargeFee(ownerAddr, fee);
@@ -91,11 +93,8 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
 
             var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(ctx.getMessage());
             logger.info("Capture decode deposit exec: {}", decodedMsg);
-            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
 
-            //token mapped ?
-            var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr);
-            Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "TOKEN_NOT_MAPPED_" + rootKey);
+
 
             //make sure this command belong to our chain ?
             Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.childChainId), "CHILD_CHAIN_INVALID");
@@ -103,11 +102,17 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             //make sure valid receiver
             Assert.isTrue(Wallet.addressValid(decodedMsg.receiveAddr), "RECEIVER_INVALID");
 
+
+            //token mapped ?
+            var tokenMapStore = dbManager.getChildTokenMapStore();
+            var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr);
+            Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "TOKEN_NOT_MAPPED: " + rootKey);
+
             var tokenMap = tokenMapStore.get(rootKey.getBytes());
             var childTokenAddr = tokenMap.getChildToken();
 
             //make sure asset exist
-            AssetType assetType = AssetType.valueOfNumber(tokenMap.getAssetType());
+            AssetType assetType = AssetType.valueOfNumber(tokenMap.getTokenType());
             switch (assetType){
                 case NATIVE:
                 case TOKEN:

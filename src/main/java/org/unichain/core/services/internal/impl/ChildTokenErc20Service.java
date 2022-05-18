@@ -4,7 +4,6 @@ import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.actuator.TokenTransferActuatorV4;
-import org.unichain.core.actuator.TransferActuator;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -26,7 +25,7 @@ public class ChildTokenErc20Service implements ChildTokenService {
     }
 
     @Override
-    public void deposit(ByteString user,ByteString childToken, String depositData) throws ContractExeException, ContractValidateException {
+    public void deposit(ByteString user, ByteString childToken, String depositData) throws ContractExeException, ContractValidateException {
         //load token and transfer from token owner to ...
         var symbol = dbManager.getTokenAddrSymbolIndexStore().get(childToken.toByteArray()).getSymbol();
         var tokenOwner = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(symbol));

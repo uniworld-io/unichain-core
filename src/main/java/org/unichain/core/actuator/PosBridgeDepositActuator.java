@@ -53,22 +53,25 @@ public class PosBridgeDepositActuator extends AbstractActuator {
             val ctx = this.contract.unpack(PosBridgeDepositContract.class);
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
+            var rootChainId = Wallet.getChainId();
+
             //load token map
-            var config = dbManager.getPosBridgeConfigStore().get();
-            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
-            var keyRoot = PosBridgeUtil.makeTokenMapKey(Wallet.getAddressPreFixString(), ctx.getRootToken()).getBytes();
-            var tokenMapCap = tokenMapStore.get(keyRoot);
+            var tokenMapStore = dbManager.getRootTokenMapStore();
+            var keyRoot = PosBridgeUtil.makeTokenMapKey(rootChainId, ctx.getRootToken());
+            var tokenMapCap = tokenMapStore.get(keyRoot.getBytes());
+            int tokenType = tokenMapCap.getTokenType();
 
             //lock asset
-            PredicateService predicateService = lookupPredicate(tokenMapCap.getAssetType(), dbManager, ret, config);
-            ByteString rootToken = ByteString.copyFrom(Numeric.hexStringToByteArray(ctx.getRootToken()));
+            var config = dbManager.getPosBridgeConfigStore().get();
+            var predicateService = lookupPredicate(tokenType, dbManager, ret, config);
+            var rootToken = ByteString.copyFrom(Numeric.hexStringToByteArray(ctx.getRootToken()));
             predicateService.lockTokens(ctx.getOwnerAddress(), rootToken, ctx.getData());
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
 
-            this.emitDepositExecuted(ret, tokenMapCap.getRootChainId(),
+            this.emitDepositExecuted(ret, rootChainId,
                     ctx.getChildChainid(), ctx.getRootToken(),
                     Numeric.toHexString(ctx.getOwnerAddress().toByteArray()),
                     ctx.getReceiveAddress(), ctx.getData());
@@ -98,13 +101,15 @@ public class PosBridgeDepositActuator extends AbstractActuator {
             Assert.isTrue(Wallet.addressValid(ctx.getRootToken()), "ROOT_TOKEN_INVALID");
             Assert.isTrue(WalletUtils.isValidAddress(ctx.getReceiveAddress()), "RECEIVER_INVALID");
 
-            //check mapped token
-            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
-            var rootKey = PosBridgeUtil.makeTokenMapKey(Wallet.getAddressPreFixString(), ctx.getRootToken());
+            if(!PosBridgeUtil.NativeToken.UNI.equalsIgnoreCase(ctx.getRootToken())){
+                var tokenMapStore = dbManager.getRootTokenMapStore();
+                var rootKey = PosBridgeUtil.makeTokenMapKey(Wallet.getChainId(), ctx.getRootToken());
 
-            Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "unmapped token: " + rootKey);
-            var tokenMap = tokenMapStore.get(rootKey.getBytes());
-            Assert.isTrue(tokenMap.getChildChainId() == ctx.getChildChainid(), "unmapped ChainId: " + ctx.getChildChainid());
+                Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "TOKEN_NOT_MAPPED: " + rootKey);
+                var tokenMap = tokenMapStore.get(rootKey.getBytes());
+                Assert.isTrue(tokenMap.getChildChainId() == ctx.getChildChainid(), "CHILD_CHAIN_INVALID: " + ctx.getChildChainid());
+            }
+            //check mapped token
 
             Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;
@@ -136,8 +141,8 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                                 .rootChainId(rootChainId)
                                 .childChainId(childChainId)
                                 .rootToken(cleanUniPrefix(rootToken))
-                                .depositor(depositor)
-                                .receiver(receiver)
+                                .depositor(cleanUniPrefix(depositor))
+                                .receiver(cleanUniPrefix(receiver))
                                 .depositData(depositData)
                                 .build())
                 .build();

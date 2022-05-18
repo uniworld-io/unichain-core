@@ -30,15 +30,24 @@ import java.util.*;
 
 @Slf4j(topic = "PosBridge")
 public class PosBridgeUtil {
-    private static String BLIND_URI_HEX = "00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020687474703a2f2f6a7573745f6175746f5f67656e2e6f72672f78782e6a736f6e";
+    private static final String BLIND_URI_HEX = "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020687474703a2f2f6a7573745f6175746f5f67656e2e6f72672f78782e6a736f6e";
 
     /**
      * null address
      */
     public static class NativeToken{
+        private NativeToken(){}
+
         public static final String BNB = "0x000000000000000000000000000000000000dEaD";
         public static final String ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
         public static final String UNI = "0x4416748f8d05163e917388fa79050bafe5a30faa2f";
+
+        public static boolean contains(final String address){
+            if(BNB.equalsIgnoreCase(address) || ETH.equalsIgnoreCase(address) || UNI.equalsIgnoreCase(address)){
+                return true;
+            }
+            return false;
+        }
     }
 
     @Getter
@@ -73,7 +82,7 @@ public class PosBridgeUtil {
         AssetType assetType = AssetType.valueOfNumber(numberType);
         switch (assetType){
             case NATIVE: {
-                return  new PredicateNativeService(dbManager, ret, config);
+                return new PredicateNativeService(dbManager, ret, config);
             }
             case TOKEN: {
                 return new PredicateErc20Service(dbManager, ret, config);

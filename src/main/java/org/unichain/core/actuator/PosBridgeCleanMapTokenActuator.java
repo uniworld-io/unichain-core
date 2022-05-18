@@ -27,7 +27,6 @@ import org.unichain.common.event.PosBridgeTokenMappedEvent;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -51,8 +50,16 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
             val ctx = this.contract.unpack(PosBridgeCleanMapTokenContract.class);
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
-            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
-            tokenMapStore.unmap(ctx.getRootChainid(), ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken());
+            if(PosBridgeUtil.isUnichain(ctx.getRootChainid())){
+                var tokenMapStore = dbManager.getRootTokenMapStore();
+                tokenMapStore.unmap(ctx.getRootToken(), ctx.getChildChainid(), ctx.getChildToken());
+            }
+
+            if(PosBridgeUtil.isUnichain(ctx.getChildChainid())){
+                var tokenMapStore = dbManager.getChildTokenMapStore();
+                tokenMapStore.unmap(ctx.getChildToken(), ctx.getRootChainid(), ctx.getRootToken());
+            }
+
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);

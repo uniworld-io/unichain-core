@@ -54,12 +54,14 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
 
             //decode msg
             var decodedMsg = PosBridgeUtil.decodePosBridgeWithdrawExecMsg(ctx.getMessage());
-            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
-            var childKey = PosBridgeUtil.makeTokenMapKey(Long.toHexString(decodedMsg.childChainId) , decodedMsg.childTokenAddr);
+
+            var tokenMapStore = dbManager.getRootTokenMapStore();
+            var childKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.childChainId , decodedMsg.childTokenAddr);
             var tokenMap = tokenMapStore.get(childKey.getBytes());
             var config = dbManager.getPosBridgeConfigStore().get();
 
-            PredicateService predicateService = lookupPredicate(tokenMap.getAssetType(), dbManager, ret, config);
+            PredicateService predicateService = lookupPredicate(tokenMap.getTokenType(), dbManager, ret, config);
+
             ByteString rootToken = ByteString.copyFrom(Numeric.hexStringToByteArray(tokenMap.getRootToken()));
             ByteString receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));
             predicateService.unlockTokens(receiver, rootToken, Hex.encodeHexString(decodedMsg.withdrawData.getValue()));
@@ -96,13 +98,14 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
 
             //check mapped token
             var decodedMsg = PosBridgeUtil.decodePosBridgeWithdrawExecMsg(ctx.getMessage());
-            //token mapped ?
-            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
-            var childKey = PosBridgeUtil.makeTokenMapKey(Long.toHexString(decodedMsg.childChainId) , decodedMsg.childTokenAddr);
-            Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "TOKEN_NOT_MAPPED_" + childKey);
 
             //command is for unichain ?
             Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.rootChainId) , "ROOT_CHAIN_INVALID");
+
+            //token mapped ?
+            var tokenMapStore = dbManager.getRootTokenMapStore();
+            var childKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.childChainId , decodedMsg.childTokenAddr);
+            Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "TOKEN_NOT_MAPPED: " + childKey);
 
             //check receive addr
             byte[] receiverAddress = Numeric.hexStringToByteArray(decodedMsg.receiveAddr);

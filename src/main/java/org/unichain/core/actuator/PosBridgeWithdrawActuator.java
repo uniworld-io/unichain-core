@@ -37,6 +37,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.utils.Numeric;
 
+import static org.unichain.common.utils.PosBridgeUtil.cleanUniPrefix;
 import static org.unichain.common.utils.PosBridgeUtil.lookupChildToken;
 
 //@todo later
@@ -56,14 +57,15 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
 
             //load token map
 
-            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
-            var childChainId = Wallet.getAddressPreFixByte();
+            var tokenMapStore = dbManager.getChildTokenMapStore();
+            var childChainId = Wallet.getChainId();
             var childKey = PosBridgeUtil.makeTokenMapKey(childChainId, ctx.getChildToken());
             var tokenMap = tokenMapStore.get(childKey.getBytes());
 
             //transfer back token
-            ChildTokenService childTokenService = lookupChildToken(tokenMap.getAssetType(), dbManager, ret);
             var childToken = ByteString.copyFrom(Numeric.hexStringToByteArray(ctx.getChildToken()));
+
+            var childTokenService = lookupChildToken(tokenMap.getTokenType(), dbManager, ret);
             childTokenService.withdraw(ctx.getOwnerAddress(), childToken, ctx.getData());
 
             chargeFee(ownerAddr, fee);
@@ -71,7 +73,7 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             ret.setStatus(fee, code.SUCESS);
 
 
-            this.emitWithdrawExecuted(ret, tokenMap.getChildChainId(),
+            this.emitWithdrawExecuted(ret, childChainId,
                     tokenMap.getRootChainId(), ctx.getChildToken(),
                     Numeric.toHexString(ctx.getOwnerAddress().toByteArray()),
                     ctx.getReceiveAddress(), ctx.getData());
@@ -101,9 +103,9 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             Assert.isTrue(WalletUtils.isValidAddress(ctx.getReceiveAddress()), "INVALID_RECEIVER");
 
             //make sure token mapped
-            var childKey = PosBridgeUtil.makeTokenMapKey(Wallet.getAddressPreFixString(), ctx.getChildToken());
-            var tokenMapStore = dbManager.getPosBridgeTokenMapStore();
-            Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "TOKEN_NOT_MAPPED_" + childKey);
+            var childKey = PosBridgeUtil.makeTokenMapKey(Wallet.getChainId(), ctx.getChildToken());
+            var tokenMapStore = dbManager.getChildTokenMapStore();
+            Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "TOKEN_NOT_MAPPED: " + childKey);
 
             Assert.isTrue(accountStore.get(getOwnerAddress().toByteArray()).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;
@@ -134,9 +136,9 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
                         PosBridgeTokenWithdrawEvent.builder()
                                 .childChainId(childChainId)
                                 .rootChainId(rootChainId)
-                                .childToken(childToken)
-                                .burner(burner)
-                                .withdrawer(withdrawer)
+                                .childToken(cleanUniPrefix(childToken))
+                                .burner(cleanUniPrefix(burner))
+                                .withdrawer(cleanUniPrefix(withdrawer))
                                 .withdrawData(withdrawData)
                                 .build())
                 .build();

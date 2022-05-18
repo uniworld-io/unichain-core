@@ -13,5 +13,5 @@ public class PosBridgeTokenDepositEvent implements Serializable {
     public String depositor;
     public String receiver;
     public String rootToken;
-    public String depositData;
+    public String depositData;//hex data
 }

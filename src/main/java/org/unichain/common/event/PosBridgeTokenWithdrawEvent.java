@@ -13,5 +13,5 @@ public class PosBridgeTokenWithdrawEvent implements Serializable {
     public String childToken;
     public String burner;
     public String withdrawer;
-    public String withdrawData;
+    public String withdrawData;//hex data
 }

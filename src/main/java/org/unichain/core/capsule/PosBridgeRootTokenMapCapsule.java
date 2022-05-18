@@ -1,25 +1,23 @@
 package org.unichain.core.capsule;
 
-
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.protos.Protocol;
 
-
 @Slf4j(topic = "capsule")
-public class PosBridgeTokenMapCapsule implements ProtoCapsule<Protocol.PostBridgeTokenMap>{
+public class PosBridgeRootTokenMapCapsule implements ProtoCapsule<Protocol.PostBridgeRootTokenMap>{
 
-    private Protocol.PostBridgeTokenMap tokenMap;
+    private Protocol.PostBridgeRootTokenMap tokenMap;
 
-    public PosBridgeTokenMapCapsule(byte[] data) {
+    public PosBridgeRootTokenMapCapsule(byte[] data) {
         try {
-            this.tokenMap = Protocol.PostBridgeTokenMap.parseFrom(data);
+            this.tokenMap = Protocol.PostBridgeRootTokenMap.parseFrom(data);
         } catch (InvalidProtocolBufferException e) {
             logger.debug(e.getMessage());
         }
     }
 
-    public PosBridgeTokenMapCapsule(Protocol.PostBridgeTokenMap tokenMap) {
+    public PosBridgeRootTokenMapCapsule(Protocol.PostBridgeRootTokenMap tokenMap) {
         this.tokenMap = tokenMap;
     }
 
@@ -29,7 +27,7 @@ public class PosBridgeTokenMapCapsule implements ProtoCapsule<Protocol.PostBridg
     }
 
     @Override
-    public Protocol.PostBridgeTokenMap getInstance() {
+    public Protocol.PostBridgeRootTokenMap getInstance() {
         return tokenMap;
     }
 
@@ -45,11 +43,7 @@ public class PosBridgeTokenMapCapsule implements ProtoCapsule<Protocol.PostBridg
         return tokenMap.getChildChainId();
     }
 
-    public long getRootChainId(){
-        return tokenMap.getRootChainId();
-    }
-
-    public int getAssetType() {
-        return tokenMap.getAssetType();
+    public int getTokenType() {
+        return tokenMap.getTokenType();
     }
 }

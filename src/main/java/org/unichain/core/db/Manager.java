@@ -112,7 +112,11 @@ public class Manager {
 
   @Autowired
   @Getter
-  private PosBridgeTokenMapStore posBridgeTokenMapStore;
+  private PosBridgeRootTokenMapStore rootTokenMapStore;
+
+  @Autowired
+  @Getter
+  private PosBridgeChildTokenMapStore childTokenMapStore;
 
   @Autowired
   private TransactionStore transactionStore;
@@ -1777,7 +1781,8 @@ public class Manager {
     closeOneStore(nftAccountTokenStore);
     closeOneStore(accountStore);
     closeOneStore(posBridgeConfigStore);
-    closeOneStore(posBridgeTokenMapStore);
+    closeOneStore(rootTokenMapStore);
+    closeOneStore(childTokenMapStore);
     closeOneStore(blockStore);
     closeOneStore(blockIndexStore);
     closeOneStore(accountIdIndexStore);

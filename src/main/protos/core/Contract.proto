@@ -113,6 +113,9 @@ message WitnessUpdateContract {
   bytes update_url = 12;
 }
 
+/**
+  token contracts
+ */
 message CreateTokenContract {
   bytes owner_address = 1;
   string name = 2;
@@ -176,7 +179,6 @@ message MineTokenContract {
   int64 amount = 3;
 }
 
-
 message BurnTokenContract {
   bytes owner_address = 1;
   string token_name = 2;
@@ -194,6 +196,108 @@ message TransferTokenContract {
 message WithdrawFutureTokenContract {
   bytes owner_address = 1;
   string token_name = 2;
+}
+
+/**
+  urc30 token
+ */
+message Urc30CreateContract {
+  bytes owner_address = 1;
+  string symbol = 2;
+  string name = 3;
+  int64 decimals = 4;
+  int64 max_supply = 5;
+  int64 total_supply = 6;
+  int64 start_time = 7;
+  int64 end_time = 8;
+  string description = 9;
+  string url = 10;
+  int64 fee = 11;
+  int64 extra_fee_rate = 12;
+  int64 fee_pool = 13;
+  int64 burned = 14;
+  int64 latest_operation_time = 15;
+  int64 lot = 16;
+  int64 fee_pool_origin = 17;
+  int64 exch_unx_num = 18; //#unw
+  int64 exch_num = 19; //exchange to #token
+  bool  exch_enable = 20;
+  int64 critical_update_time = 21;//critical update time, ex: fee, ownership...
+  int64 create_acc_fee = 22; //create new account fee
+  bytes address = 23;
+}
+
+message Urc30TransferContract {
+  bytes owner_address = 1;
+  bytes to_address = 2;
+  bytes address = 3;
+  int64 amount = 4;
+  int64 available_time = 5;
+}
+
+message Urc30ApproveContract{
+  bytes owner_address = 1;
+  bytes address = 2;
+  bytes spender = 3;
+  int64 amount = 4;
+}
+
+message Urc30TransferFromContract{
+  bytes owner_address = 1;
+  bytes address = 2;
+  bytes from = 3;
+  bytes to = 4;
+  int64 amount = 5;
+}
+
+message Urc30MineContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  int64 amount = 3;
+}
+
+message Urc30BurnContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  int64 amount = 3;
+}
+
+message Urc30TransferOwnerContract {
+  bytes owner_address = 1;
+  bytes to_address = 2;
+  bytes address = 3;
+}
+
+message Urc30ExchangeContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  int64 amount = 3;
+}
+
+message Urc30ContributePoolFeeContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  int64 amount = 3;
+}
+
+message Urc30UpdateParamsContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  int64 amount = 3;
+  int64 extra_fee_rate = 4;
+  int64 lot = 5;
+  string url = 6;
+  string description = 7;
+  int64 total_supply = 8;
+  int64 fee_pool = 9;
+  int64 exch_unx_num = 10; //exchange by unw
+  int64 exch_num = 11; //exchange to by token
+  int64 create_acc_fee = 12; //create account fee by token
+}
+
+message Urc30WithdrawFutureContract {
+  bytes owner_address = 1;
+  bytes address = 2;
 }
 
 message AssetIssueContract {
@@ -229,7 +333,6 @@ message ParticipateAssetIssueContract {
   bytes asset_name = 3; // this field is token name before the proposal ALLOW_SAME_TOKEN_NAME is active, otherwise it is token id and token is should be in string format.
   int64 amount = 4; // the amount of ginzas
 }
-
 
 enum ResourceCode {
   BANDWIDTH = 0x00;

@@ -131,6 +131,13 @@ public class PosBridgeUtil {
         public DynamicBytes withdrawData;
     }
 
+    @Builder
+    @ToString
+    public static class ERC721Decode {
+        public long tokenId;
+        public String uri;
+    }
+
     /**
      * Assume that validator address with prefix 0x
      */
@@ -213,17 +220,27 @@ public class PosBridgeUtil {
         List<TypeReference<?>> valueTypes = new ArrayList<>();
         valueTypes.add(new TypeReference<Uint256>() {
         });
-        return (Uint256) FunctionReturnDecoder.decode(
-                        hex,
-                        org.web3j.abi.Utils.convert(valueTypes))
-                .get(0);
+        return (Uint256) FunctionReturnDecoder.decode(hex, org.web3j.abi.Utils.convert(valueTypes)).get(0);
     }
 
+    public static ERC721Decode abiDecodeToErc721(String hex){
+        List<TypeReference<?>> valueTypes = new ArrayList<>();
+        valueTypes.add(new TypeReference<Uint256>() {});
+        valueTypes.add(new TypeReference<Utf8String>() {});
+        List<Type> types = FunctionReturnDecoder.decode(hex, org.web3j.abi.Utils.convert(valueTypes));
+        return ERC721Decode.builder()
+                .tokenId(((Uint256) types.get(0)).getValue().longValue())
+                .uri(((Utf8String) types.get(1)).getValue())
+                .build();
+    }
+
+    public static void main(String[] args) {
+        System.out.println(abiDecodeToErc721("0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000a74657374737472696e6700000000000000000000000000000000000000000000"));
+    }
 
     public static String abiDecodeFromToString(String hex) {
         List<TypeReference<?>> types = new ArrayList<>();
-        types.add(new TypeReference<Utf8String>() {
-        });
+        types.add(new TypeReference<Utf8String>() {});
         return ((Utf8String) FunctionReturnDecoder.decode(hex, org.web3j.abi.Utils.convert(types))
                 .get(0)).getValue();
     }

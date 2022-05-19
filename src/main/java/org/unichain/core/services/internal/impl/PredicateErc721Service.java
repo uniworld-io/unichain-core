@@ -30,11 +30,14 @@ public class PredicateErc721Service implements PredicateService {
     @Override
     public void lockTokens(ByteString depositor, ByteString rootToken,String depositData) throws ContractExeException, ContractValidateException {
         var symbol = dbManager.getNftAddrSymbolIndexStore().get(rootToken.toByteArray()).getSymbol();
+
+        PosBridgeUtil.ERC721Decode erc721Decode = PosBridgeUtil.abiDecodeToErc721(depositData);
+
         var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                 .setOwnerAddress(depositor)
                 .setToAddress(config.getPredicateErc721())
                 .setContract(symbol)
-                .setTokenId(PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue())
+                .setTokenId(erc721Decode.tokenId)
                 .build();
         buildThenExecContract(wrapCtx);
     }

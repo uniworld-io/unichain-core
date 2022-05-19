@@ -49,7 +49,17 @@ public class PosBridgeRootTokenMapStore extends UnichainStoreWithRevoking<PosBri
     public void unmap(String rootToken, long childChainId, String childToken){
         var keyRoot = PosBridgeUtil.makeTokenMapKey(Wallet.getChainId(), rootToken);
         var keyChild = PosBridgeUtil.makeTokenMapKey(childChainId, childToken);
-        delete(keyRoot.getBytes());
-        delete(keyChild.getBytes());
+
+        if(has(keyRoot.getBytes())){
+            var capsule = get(keyRoot.getBytes());
+            delete(PosBridgeUtil.makeTokenMapKey(capsule.getChildChainId(), capsule.getChildToken()).getBytes());
+            delete(PosBridgeUtil.makeTokenMapKey(Wallet.getChainId(), capsule.getRootToken()).getBytes());
+        }
+
+        if(has(keyChild.getBytes())){
+            var capsule = get(keyChild.getBytes());
+            delete(PosBridgeUtil.makeTokenMapKey(capsule.getChildChainId(), capsule.getChildToken()).getBytes());
+            delete(PosBridgeUtil.makeTokenMapKey(Wallet.getChainId(), capsule.getRootToken()).getBytes());
+        }
     }
 }

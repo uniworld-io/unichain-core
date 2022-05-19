@@ -144,7 +144,7 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                 Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
                 break;
             case NFT:
-                var nftIndex = dbManager.getNftAddrSymbolIndexStore();
+                var nftIndex = dbManager.getNftTemplateStore();
                 Assert.isTrue(nftIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
                 break;
             default:

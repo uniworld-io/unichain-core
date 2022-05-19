@@ -26,12 +26,12 @@ import org.springframework.util.Assert;
 import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.NftCreateEvent;
 import org.unichain.common.utils.StringUtil;
+import org.unichain.core.Wallet;
 import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
@@ -57,19 +57,6 @@ public class NftCreateContractActuator extends AbstractActuator {
 
       dbManager.saveNftTemplate(new NftTemplateCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
 
-      //indexing contract addr
-      var symbol = ctx.getContract().toUpperCase();
-      var index1Store = dbManager.getNftAddrSymbolIndexStore();
-      var index2Store = dbManager.getNftSymbolAddrIndexStore();
-      index1Store.put(tokenAddr, new TokenAddressSymbolIndexCapsule(Protocol.TokenAddressSymbolIndex
-              .newBuilder()
-              .setSymbol(symbol)
-              .build()));
-      index2Store.put(symbol.getBytes(), new TokenSymbolAddressIndexCapsule(Protocol.TokenSymbolAddressIndex
-              .newBuilder()
-              .setAddress(ctx.getAddress())
-              .build()));
-
       //register new account with type assetissue
       var defaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
       var tokenAccount = new AccountCapsule(ByteString.copyFrom(tokenAddr), Protocol.AccountType.AssetIssue, dbManager.getHeadBlockTimeStamp(), defaultPermission, dbManager);
@@ -85,7 +72,9 @@ public class NftCreateContractActuator extends AbstractActuator {
               .rawData(
                       NftCreateEvent.builder()
                               .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
-                              .name(ctx.getContract())
+                              .address(Hex.encodeHexString(ctx.getAddress().toByteArray()))
+                              .symbol(ctx.getSymbol())
+                              .name(ctx.getName())
                               .total_supply(ctx.getTotalSupply())
                               .minter(Hex.encodeHexString(ctx.getMinter().toByteArray()))
                               .build())
@@ -104,28 +93,31 @@ public class NftCreateContractActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(CreateNftTemplateContract.class), "contract type error,expected type [CreateNftTemplateContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(CreateNftTemplateContract.class), "contract type error, expected type [CreateNftTemplateContract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(CreateNftTemplateContract.class);
       var accountStore = dbManager.getAccountStore();
 
-      var contract = Util.stringAsBytesUppercase(ctx.getContract());
-      var name = ctx.getName().getBytes();
+      var addr = ctx.getAddress().toByteArray();
+      var symbol = ctx.getSymbol();
+      var name = ctx.getName();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = accountStore.get(ownerAddr);
 
-      Assert.isTrue(TransactionUtil.validContract(contract), "Invalid template contract");
-      Assert.isTrue(TransactionUtil.validNftName(name), "Invalid template name");
-      Assert.isTrue(!dbManager.getNftTemplateStore().has(contract), "Contract has existed");
+      Assert.isTrue(Wallet.addressValid(addr), "Invalid contract address");
+      Assert.isTrue(TransactionUtil.validNftName(symbol), "Invalid contract symbol");
+      Assert.isTrue(TransactionUtil.validNftName(name), "Invalid contract name");
+
+      Assert.isTrue(!dbManager.getNftTemplateStore().has(addr), "Contract address has existed");
+
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
-      Assert.isTrue(!TransactionUtil.validGenericsAddress(ownerAddr), "Owner is generics address");
+      Assert.isTrue(!TransactionUtil.isGenesisAddress(ownerAddr), "Owner is genesis address");
 
       if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER)){
         var minterAddr = ctx.getMinter().toByteArray();
         Assert.notNull(accountStore.get(minterAddr), "Minter account[" + StringUtil.createReadableString(minterAddr) + "] not exists or not active");
         Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
-        Assert.isTrue(!TransactionUtil.validGenericsAddress(minterAddr), "Minter is generics address");
-
+        Assert.isTrue(!TransactionUtil.isGenesisAddress(minterAddr), "Minter is genesis address");
       }
       Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");
       Assert.isTrue(ownerAccountCap.getBalance() >= calcFee(), "Not enough balance, require 500 UNW");

@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
-import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.NftTemplateCapsule;
 import org.unichain.core.capsule.NftTokenCapsule;
@@ -31,7 +30,6 @@ import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
@@ -54,9 +52,10 @@ public class NftMintTokenActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(Contract.MintNftTokenContract.class);
       var accountStore = dbManager.getAccountStore();
+      var contractStore = dbManager.getNftTemplateStore();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
-
+      val contractKey =  ctx.getAddress().toByteArray();
 
       //create new account
       if (!accountStore.has(toAddr)) {
@@ -65,7 +64,8 @@ public class NftMintTokenActuator extends AbstractActuator {
 
       //save token
       var nftTokenBuilder = Protocol.NftToken.newBuilder()
-              .setContract(ctx.getContract().toUpperCase())
+              .setAddress(ctx.getAddress())
+              .setSymbol(contractStore.get(contractKey).getSymbol())
               .setUri(ctx.getUri())
               .clearApproval()
               .setOwnerAddress(ctx.getToAddress())
@@ -79,8 +79,6 @@ public class NftMintTokenActuator extends AbstractActuator {
       else
       {
         //allocate tokenId
-        val contractStore = dbManager.getNftTemplateStore();
-        val contractKey =  Util.stringAsBytesUppercase(ctx.getContract());
         var nftContract = contractStore.get(contractKey);
         var tokenIndex = allocateTokenId(nftContract);
         nftContract.setTokenIndex(tokenIndex);
@@ -110,7 +108,7 @@ public class NftMintTokenActuator extends AbstractActuator {
     val tokenStore = dbManager.getNftTokenStore();
     var nextId = Math.incrementExact(template.getTokenIndex());
     while (true){
-      var key = NftTokenCapsule.genTokenKey(template.getContract(), nextId);
+      var key = NftTokenCapsule.genTokenKey(template.getAddress(), nextId);
       if(!tokenStore.has(key)){
         return nextId;
       }
@@ -133,7 +131,7 @@ public class NftMintTokenActuator extends AbstractActuator {
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = accountStore.get(ownerAddr);
-      Assert.notNull(ownerAccountCap, "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
+      Assert.notNull(ownerAccountCap, "Owner account[" + Wallet.encode58Check(ownerAddr) + "] not exists");
 
       var toAddr = ctx.getToAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(toAddr), "Invalid toAddress");
@@ -144,19 +142,19 @@ public class NftMintTokenActuator extends AbstractActuator {
          Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Mint to itself not allowed!");
       }
 
-      var contract = Util.stringAsBytesUppercase(ctx.getContract());
-      Assert.isTrue(dbManager.getNftTemplateStore().has(contract), "Contract symbol not existed!");
-      var templateCap = dbManager.getNftTemplateStore().get(contract);
-      Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()) || (templateCap.hasMinter() && Arrays.equals(ownerAddr, templateCap.getMinter())), "Only owner or minter allowed to mint NFT token");
-      Assert.isTrue(!(Arrays.equals(toAddr, templateCap.getOwner()) || Arrays.equals(toAddr, templateCap.getMinter())), "Can not create token for minter or owner!");
-      Assert.isTrue(templateCap.getTokenIndex() < templateCap.getTotalSupply(), "Over slot NFT token mint!");
+      var contractAddr = ctx.getAddress().toByteArray();
+      Assert.isTrue(dbManager.getNftTemplateStore().has(contractAddr), "Contract symbol not existed!");
+      var contractCap = dbManager.getNftTemplateStore().get(contractAddr);
+      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwner()) || (contractCap.hasMinter() && Arrays.equals(ownerAddr, contractCap.getMinter())), "Only owner or minter allowed to mint NFT token");
+      Assert.isTrue(!(Arrays.equals(toAddr, contractCap.getOwner()) || Arrays.equals(toAddr, contractCap.getMinter())), "Can not create token for minter or owner!");
+      Assert.isTrue(contractCap.getTokenIndex() < contractCap.getTotalSupply(), "Over slot NFT token mint!");
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Not enough balance to cover transaction fee, require "+ fee + "ginza");
       Assert.isTrue(TransactionUtil.validHttpURI(ctx.getUri()), "Invalid uri");
 
       //make sure tokenId not allocated yet!
       if(ctx.hasField(NFT_MINT_FIELD_TOKEN_ID)){
-        val tokenKey = NftTokenCapsule.genTokenKey(ctx.getContract(), ctx.getTokenId());
-        Assert.isTrue(!dbManager.getNftTokenStore().has(tokenKey), "TokenId allocated: " + ctx.getContract() + "_" + ctx.getTokenId());
+        val tokenKey = NftTokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
+        Assert.isTrue(!dbManager.getNftTokenStore().has(tokenKey), "TokenId allocated: " + tokenKey);
       }
       return true;
     }

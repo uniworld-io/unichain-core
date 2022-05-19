@@ -1,9 +1,9 @@
 package org.unichain.core.services.internal.impl;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -13,7 +13,6 @@ import org.unichain.core.Wallet;
 import org.unichain.core.capsule.NftTokenCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.services.internal.NftService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
@@ -23,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
@@ -41,16 +41,12 @@ public class NftServiceImpl implements NftService {
         return wallet.createTransactionCapsule(contract, ContractType.CreateNftTemplateContract).getInstance();
     }
 
+    private static Descriptors.FieldDescriptor CONTRACT_ADDR = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.ADDRESS_FIELD_NUMBER);
+
     @Override
     public Protocol.NftTemplate getContract(Protocol.NftTemplate query) {
-        Assert.notNull(query.getContract(), "Template contract empty");
-        byte[] symbol = Util.stringAsBytesUppercase(query.getContract());
-        if(dbManager.getNftTemplateStore().has(symbol))
-        {
-            return dbManager.getNftTemplateStore().get(symbol).getInstance();
-        }
-        else
-            return Protocol.NftTemplate.newBuilder().clear().build();
+        Assert.isTrue(query.hasField(CONTRACT_ADDR), "Contract address missing");
+        return dbManager.getNftTemplateStore().get(query.getAddress().toByteArray()).getInstance();
     }
 
     @Override
@@ -60,19 +56,26 @@ public class NftServiceImpl implements NftService {
 
     @Override
     public Protocol.NftTokenGetResult getToken(Protocol.NftTokenGet query) {
-        Assert.notNull(query.getContract(), "Token contract empty");
-        var id = ArrayUtils.addAll(Util.stringAsBytesUppercase(query.getContract()), ByteArray.fromLong(query.getId()));
+        Assert.notNull(query.getAddress(), "Token address empty");
+        var id = NftTokenCapsule.genTokenKey(query.getAddress().toByteArray(), query.getId());
+
         if(!dbManager.getNftTokenStore().has(id))
-            return Protocol.NftTokenGetResult.newBuilder().build();
-        var token = dbManager.getNftTokenStore().get(id).getInstance();
-        return  Protocol.NftTokenGetResult.newBuilder()
-                .setId(token.getId())
-                .setContract(query.getContract())
-                .setUri(token.getUri())
-                .setApproval(token.getApproval())
-                .setLastOperation(token.getLastOperation())
-                .setOwnerAddress(token.getOwnerAddress())
-                .build();
+        {
+            return Protocol.NftTokenGetResult.newBuilder()
+                    .build();
+        }
+        else {
+            var token = dbManager.getNftTokenStore().get(id).getInstance();
+            return  Protocol.NftTokenGetResult.newBuilder()
+                    .setId(token.getId())
+                    .setAddress(token.getAddress())
+                    .setSymbol(token.getSymbol())
+                    .setUri(token.getUri())
+                    .setApproval(token.getApproval())
+                    .setLastOperation(token.getLastOperation())
+                    .setOwnerAddress(token.getOwnerAddress())
+                    .build();
+        }
     }
 
     @Override
@@ -253,6 +256,13 @@ public class NftServiceImpl implements NftService {
             }
         }
 
+        unsorted = unsorted.stream()
+                .map(item -> item.toBuilder()
+                        .clearNext()
+                        .clearPrev()
+                        .build())
+                .collect(Collectors.toList());
+
         return  Protocol.NftTemplateQueryResult.newBuilder()
                 .setPageIndex(pageIndex)
                 .setPageSize(pageSize)
@@ -270,10 +280,10 @@ public class NftServiceImpl implements NftService {
         Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
         var ownerAddr = query.getOwnerAddress().toByteArray();
-        var contract = query.getContract();
-        var hasFieldContract = query.hasField(NFT_TOKEN_QUERY_FIELD_CONTRACT);
+        var addr = query.getAddress();
+        var hasFieldAddr = query.hasField(NFT_TOKEN_QUERY_FIELD_ADDR);
 
-        List<Protocol.NftToken> unsorted = listTokenByOwner(ownerAddr, cap -> !hasFieldContract || cap.getContract().equalsIgnoreCase(contract));
+        List<Protocol.NftToken> unsorted = listTokenByOwner(ownerAddr, cap -> !hasFieldAddr || Arrays.equals(cap.getAddr(), addr.toByteArray()));
 
         return  Protocol.NftTokenQueryResult.newBuilder()
                 .setPageSize(pageSize)

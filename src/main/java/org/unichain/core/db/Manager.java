@@ -135,10 +135,6 @@ public class Manager {
   private TokenAddrSymbolIndexStore tokenAddrSymbolIndexStore;
   @Autowired
   private TokenSymbolAddrIndexStore tokenSymbolAddrIndexStore;
-  @Autowired
-  private NftAddrSymbolIndexStore nftAddrSymbolIndexStore;
-  @Autowired
-  private NftSymbolAddrIndexStore nftSymbolAddrIndexStore;
 
   @Autowired
   private FutureTokenStore futureTokenStore;
@@ -607,7 +603,7 @@ public class Manager {
   }
 
   public long createNewAccount(ByteString accAddr){
-    Assert.isTrue(!getAccountStore().has(accAddr.toByteArray()),"Account exist");
+    Assert.isTrue(!getAccountStore().has(accAddr.toByteArray()), "Account exist");
     var withDefaultPermission = getDynamicPropertiesStore().getAllowMultiSign() == 1;
     var toAccountCap = new AccountCapsule(accAddr, Protocol.AccountType.Normal, getHeadBlockTimeStamp(), withDefaultPermission, this);
     getAccountStore().put(accAddr.toByteArray(), toAccountCap);
@@ -1812,8 +1808,6 @@ public class Manager {
 
     closeOneStore(tokenAddrSymbolIndexStore);
     closeOneStore(tokenSymbolAddrIndexStore);
-    closeOneStore(nftAddrSymbolIndexStore);
-    closeOneStore(nftSymbolAddrIndexStore);
 
     logger.info("******** end to close db ********");
   }
@@ -2104,46 +2098,46 @@ public class Manager {
     }
   }
 
-  public void saveNftTemplate(NftTemplateCapsule templateCap){
-    var templateStore = getNftTemplateStore();
-    var relationStore = getNftAccountTemplateStore();
+  public void saveNftTemplate(NftTemplateCapsule contractCap){
+    var contractStore = getNftTemplateStore();
+    var accCtxRelStore = getNftAccountTemplateStore();
 
-    var relationKey = templateCap.getOwner();
+    var relKey = contractCap.getOwner();
 
-    if(!relationStore.has(relationKey)){
-      var templateKey = templateCap.getKey();
-      templateCap.clearNext();
-      templateCap.clearPrev();
-      templateStore.put(templateKey, templateCap);
+    if(!accCtxRelStore.has(relKey)){
+      var templateKey = contractCap.getKey();
+      contractCap.clearNext();
+      contractCap.clearPrev();
+      contractStore.put(templateKey, contractCap);
 
-      var relation = new NftAccountTemplateRelationCapsule(relationKey,
+      var relation = new NftAccountTemplateRelationCapsule(relKey,
               Protocol.NftAccountTemplateRelation.newBuilder()
-                      .setOwnerAddress(ByteString.copyFrom(relationKey))
+                      .setOwnerAddress(ByteString.copyFrom(relKey))
                       .setHead(ByteString.copyFrom(templateKey))
                       .setTail(ByteString.copyFrom(templateKey))
                       .setTotal(1L)
                       .build());
-      relationStore.put(relation.getKey(), relation);
+      accCtxRelStore.put(relation.getKey(), relation);
     }
     else {
-      var relation = relationStore.get(relationKey);
+      var relation = accCtxRelStore.get(relKey);
       var tailKey = relation.getTail().toByteArray();
-      var tailCap = templateStore.get(tailKey);
+      var tailCap = contractStore.get(tailKey);
 
-      var templateKey = templateCap.getKey();
+      var templateKey = contractCap.getKey();
       relation.setTotal(Math.incrementExact(relation.getTotal()));
       relation.setTail(ByteString.copyFrom(templateKey));
-      relationStore.put(relationKey, relation);
+      accCtxRelStore.put(relKey, relation);
 
-      templateCap.clearNext();
-      templateCap.setPrev(tailKey);
-      templateStore.put(templateKey, templateCap);
+      contractCap.clearNext();
+      contractCap.setPrev(tailKey);
+      contractStore.put(templateKey, contractCap);
 
       tailCap.setNext(templateKey);
-      templateStore.put(tailKey, tailCap);
+      contractStore.put(tailKey, tailCap);
     }
-    if(templateCap.hasMinter()){
-      addMinterContractRelation(templateCap);
+    if(contractCap.hasMinter()){
+      addMinterContractRelation(contractCap);
     }
   }
 
@@ -2439,9 +2433,9 @@ public class Manager {
     }
   }
 
-  public void removeMinterContract(byte[] minterAddress, byte[] contract){
-    nftTemplateStore.deleteMinter(contract);
-    var contractCap = nftTemplateStore.get(contract);
+  public void removeMinterContract(byte[] minterAddress, byte[] contractAddr){
+    nftTemplateStore.clearMinterOf(contractAddr);
+    var contractCap = nftTemplateStore.get(contractAddr);
 
     if(!nftMinterContractStore.has(minterAddress))
       return;

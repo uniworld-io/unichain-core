@@ -23,11 +23,11 @@ public class NftGetTokenServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       boolean visible = Util.getVisible(request);
-      String contract = request.getParameter("contract");
+      String address = request.getParameter("address");
       Integer tokenId = Integer.valueOf(request.getParameter("id"));
       Protocol.NftTokenGet.Builder build = Protocol.NftTokenGet.newBuilder();
       JSONObject jsonObject = new JSONObject();
-      jsonObject.put("contract", contract);
+      jsonObject.put("address", address);
       jsonObject.put("id", tokenId);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 

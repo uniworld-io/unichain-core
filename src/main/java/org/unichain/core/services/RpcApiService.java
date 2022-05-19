@@ -1319,7 +1319,7 @@ public class RpcApiService implements Service {
     public void createNftTemplate(Contract.CreateNftTemplateContract request, StreamObserver<Transaction> responseObserver) {
       try {
         request = request.toBuilder()
-                .setAddress(ByteString.copyFrom(AddressUtil.generateAddress()))
+                .setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()))
                 .build();
         responseObserver.onNext(createTransactionCapsule(request, ContractType.CreateNftTemplateContract).getInstance());
       } catch (ContractValidateException e) {
@@ -1526,7 +1526,7 @@ public class RpcApiService implements Service {
       try {
         //generate token address
         request = request.toBuilder()
-                .setAddress(ByteString.copyFrom(AddressUtil.generateAddress()))
+                .setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()))
                 .build();
         responseObserver.onNext(createTransactionCapsule(request, ContractType.CreateTokenContract).getInstance());
       } catch (ContractValidateException e) {

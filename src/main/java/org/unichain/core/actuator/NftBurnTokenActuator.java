@@ -28,7 +28,6 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.BurnNftTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -47,7 +46,7 @@ public class NftBurnTokenActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(BurnNftTokenContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
+      var tokenId = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
 
       dbManager.removeNftToken(tokenId);
 
@@ -74,7 +73,7 @@ public class NftBurnTokenActuator extends AbstractActuator {
       var tokenStore = dbManager.getNftTokenStore();
       var relationStore = dbManager.getNftAccountTokenStore();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
+      var tokenId = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner address not exist");
       Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");

@@ -29,7 +29,6 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.ApproveNftTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -50,8 +49,8 @@ public class NftApproveTokenActuator extends AbstractActuator {
       var owner = ctx.getOwnerAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
       var nftTokenStore = dbManager.getNftTokenStore();
-      var templateId = Util.stringAsBytesUppercase(ctx.getContract());
-      var tokenId = ArrayUtils.addAll(templateId, ByteArray.fromLong(ctx.getTokenId()));
+      var contractAddr = ctx.getAddress().toByteArray();
+      var tokenId = ArrayUtils.addAll(contractAddr, ByteArray.fromLong(ctx.getTokenId()));
       var nftToken = nftTokenStore.get(tokenId);
 
       if(ctx.getApprove()){
@@ -103,7 +102,7 @@ public class NftApproveTokenActuator extends AbstractActuator {
       }
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee,"Not enough Balance to cover transaction fee, require " + fee + "ginza");
 
-      var tokenId = ArrayUtils.addAll(Util.stringAsBytesUppercase(ctx.getContract()), ByteArray.fromLong(ctx.getTokenId()));
+      var tokenId = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
       Assert.isTrue(nftTokenStore.has(tokenId), "Not found NFT token");
 
       var nftToken = nftTokenStore.get(tokenId);

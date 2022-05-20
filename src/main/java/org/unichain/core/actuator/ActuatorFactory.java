@@ -6,6 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
+import org.unichain.core.actuator.urc30.*;
+import org.unichain.core.actuator.urc40.*;
+import org.unichain.core.actuator.urc721.*;
 import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.db.Manager;
@@ -189,17 +192,11 @@ public class ActuatorFactory {
         return new AccountPermissionUpdateActuator(contract.getParameter(), manager);
       case UpdateBrokerageContract:
         return new UpdateBrokerageActuator(contract.getParameter(), manager);
+      /**
+       * NFT
+       */
       case CreateNftTemplateContract:
-        switch (blockVersion) {
-          case BLOCK_VERSION_0:
-          case BLOCK_VERSION_1:
-          case BLOCK_VERSION_2:
-          case BLOCK_VERSION_3:
-          case BLOCK_VERSION_4:
-            break;
-          default:
-            return new NftCreateContractActuator(contract.getParameter(), manager);
-        }
+          return new NftCreateContractActuator(contract.getParameter(), manager);
       case MintNftTokenContract:
         return new NftMintTokenActuator(contract.getParameter(), manager);
       case AddNftMinterContract:
@@ -234,6 +231,33 @@ public class ActuatorFactory {
         return new PosBridgeWithdrawActuator(contract.getParameter(), manager);
       case PosBridgeWithdrawExecContract:
         return new PosBridgeWithdrawExecActuator(contract.getParameter(), manager);
+
+      /**
+       * Urc40
+       */
+      case Urc40CreateTokenContract:
+          return new Urc40CreateTokenActuator(contract.getParameter(), manager);
+      case Urc40ContributeTokenPoolFeeContract:
+        return new Urc40ContributeTokenPoolFeeActuator(contract.getParameter(), manager);
+      case Urc40UpdateTokenParamsContract:
+        return new Urc40UpdateTokenParamsActuator(contract.getParameter(), manager);
+      case Urc40MineTokenContract:
+        return new Urc40MineTokenActuator(contract.getParameter(), manager);
+      case Urc40BurnTokenContract:
+        return new Urc40BurnTokenActuator(contract.getParameter(), manager);
+      case Urc40TransferTokenContract:
+        return new Urc40TransferTokenActuator(contract.getParameter(), manager);
+      case Urc40WithdrawFutureTokenContract:
+        return new Urc40WithdrawFutureTokenActuator(contract.getParameter(), manager);
+      case Urc40TransferTokenOwnerContract:
+        return new Urc40TransferTokenOwnerActuator(contract.getParameter(), manager);
+      case Urc40ExchangeTokenContract:
+        return new Urc40ExchangeTokenActuator(contract.getParameter(), manager);
+      case Urc40ApproveContract:
+        return new Urc40ApproveActuator(contract.getParameter(), manager);
+      case Urc40TransferFromContract:
+        return new Urc40TransferFromActuator(contract.getParameter(), manager);
+
       default:
         logger.warn("un-supported contract type {}!", contract.getType().name());
         return null;

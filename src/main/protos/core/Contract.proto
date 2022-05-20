@@ -30,6 +30,13 @@ message TokenPage {
   repeated CreateTokenContract tokens = 4;
 }
 
+message Urc40TokenPage {
+  int64  page_size = 1;
+  int64 page_index = 2;
+  int64 total = 3;
+  repeated Urc40CreateTokenContract tokens = 4;
+}
+
 message AccountCreateContract {
   bytes owner_address = 1;
   bytes account_address = 2;
@@ -114,7 +121,7 @@ message WitnessUpdateContract {
 }
 
 /**
-  token contracts
+  urc30 contracts
  */
 message CreateTokenContract {
   bytes owner_address = 1;
@@ -199,9 +206,9 @@ message WithdrawFutureTokenContract {
 }
 
 /**
-  urc30 token
+  urc40 token
  */
-message Urc30CreateContract {
+message Urc40CreateTokenContract {
   bytes owner_address = 1;
   string symbol = 2;
   string name = 3;
@@ -227,7 +234,7 @@ message Urc30CreateContract {
   bytes address = 23;
 }
 
-message Urc30TransferContract {
+message Urc40TransferTokenContract {
   bytes owner_address = 1;
   bytes to_address = 2;
   bytes address = 3;
@@ -235,14 +242,14 @@ message Urc30TransferContract {
   int64 available_time = 5;
 }
 
-message Urc30ApproveContract{
+message Urc40ApproveContract{
   bytes owner_address = 1;
   bytes address = 2;
   bytes spender = 3;
   int64 amount = 4;
 }
 
-message Urc30TransferFromContract{
+message Urc40TransferFromContract{
   bytes owner_address = 1;
   bytes address = 2;
   bytes from = 3;
@@ -250,37 +257,37 @@ message Urc30TransferFromContract{
   int64 amount = 5;
 }
 
-message Urc30MineContract {
+message Urc40MineTokenContract {
   bytes owner_address = 1;
   bytes address = 2;
   int64 amount = 3;
 }
 
-message Urc30BurnContract {
+message Urc40BurnTokenContract {
   bytes owner_address = 1;
   bytes address = 2;
   int64 amount = 3;
 }
 
-message Urc30TransferOwnerContract {
+message Urc40TransferTokenOwnerContract {
   bytes owner_address = 1;
   bytes to_address = 2;
   bytes address = 3;
 }
 
-message Urc30ExchangeContract {
+message Urc40ExchangeTokenContract {
   bytes owner_address = 1;
   bytes address = 2;
   int64 amount = 3;
 }
 
-message Urc30ContributePoolFeeContract {
+message Urc40ContributeTokenPoolFeeContract {
   bytes owner_address = 1;
   bytes address = 2;
   int64 amount = 3;
 }
 
-message Urc30UpdateParamsContract {
+message Urc40UpdateTokenParamsContract {
   bytes owner_address = 1;
   bytes address = 2;
   int64 amount = 3;
@@ -295,7 +302,7 @@ message Urc30UpdateParamsContract {
   int64 create_acc_fee = 12; //create account fee by token
 }
 
-message Urc30WithdrawFutureContract {
+message Urc40WithdrawFutureTokenContract {
   bytes owner_address = 1;
   bytes address = 2;
 }

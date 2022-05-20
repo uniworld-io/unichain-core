@@ -449,6 +449,73 @@ public class Util {
             break;
           }
 
+          //urc40
+          case Urc40CreateTokenContract:{
+            var parsedContract = contractParameter.unpack(Urc40CreateTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
+          case Urc40ContributeTokenPoolFeeContract:{
+            var parsedContract = contractParameter.unpack(Urc40ContributeTokenPoolFeeContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
+          case Urc40UpdateTokenParamsContract:{
+            var parsedContract = contractParameter.unpack(Urc40UpdateTokenParamsContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
+          case Urc40MineTokenContract:{
+            var parsedContract = contractParameter.unpack(Urc40MineTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
+          case Urc40BurnTokenContract:{
+            var parsedContract = contractParameter.unpack(Urc40BurnTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
+          case Urc40TransferTokenContract:{
+            var parsedContract = contractParameter.unpack(Urc40TransferTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
+          case Urc40WithdrawFutureTokenContract:{
+            var parsedContract = contractParameter.unpack(Urc40WithdrawFutureTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
+          case Urc40TransferTokenOwnerContract:{
+            var parsedContract = contractParameter.unpack(Urc40TransferTokenOwnerContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
+          case Urc40ExchangeTokenContract:{
+            var parsedContract = contractParameter.unpack(Urc40ExchangeTokenContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
+          case Urc40ApproveContract:{
+            var parsedContract = contractParameter.unpack(Urc40ApproveContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
+          case Urc40TransferFromContract:{
+            var parsedContract = contractParameter.unpack(Urc40TransferFromContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
           default:
         }
         JSONObject parameter = new JSONObject();
@@ -795,6 +862,73 @@ public class Util {
           }
           case "PosBridgeWithdrawExecContract":{
             var builder = PosBridgeWithdrawExecContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          //Urc40
+          case "Urc40CreateTokenContract":{
+            var builder = Urc40CreateTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          case "Urc40ContributeTokenPoolFeeContract":{
+            var builder = Urc40ContributeTokenPoolFeeContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          case "Urc40UpdateTokenParamsContract":{
+            var builder = Urc40UpdateTokenParamsContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          case "Urc40MineTokenContract":{
+            var builder = Urc40MineTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          case "Urc40BurnTokenContract":{
+            var builder = Urc40BurnTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          case "Urc40TransferTokenContract":{
+            var builder = Urc40TransferTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          case "Urc40WithdrawFutureTokenContract":{
+            var builder = Urc40WithdrawFutureTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          case "Urc40TransferTokenOwnerContract":{
+            var builder = Urc40TransferTokenOwnerContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          case "Urc40ExchangeTokenContract":{
+            var builder = Urc40ExchangeTokenContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          case "Urc40ApproveContract":{
+            var builder = Urc40ApproveContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          case "Urc40TransferFromContract":{
+            var builder = Urc40TransferFromContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;

@@ -140,7 +140,65 @@ message FuturePack {
 }
 
 /**
-used for both token urc30 & nft indexing
+  urc40
+ */
+message Urc40FutureTokenPack {
+  bytes address = 1;
+  string token_symbol = 2;
+  bytes  owner_address = 3;
+  int64  total_deal = 4;
+  int64 lower_bound_time = 5;
+  int64 upper_bound_time = 6;
+  int64 total_value = 7;
+  repeated Urc40FutureToken deals = 8;
+}
+
+message Urc40TokenPoolQuery {
+  bytes address = 1;
+  int32  page_size = 2;
+  int32 page_index = 3;
+  string token_addr = 4;
+}
+
+message Urc40FutureTokenQuery {
+  bytes address = 1;
+  string token_symbol = 2;
+  bytes  owner_address = 3;
+  int32  page_size = 4;
+  int32 page_index = 5;
+}
+
+message Urc40BalanceOfQuery {
+  bytes address = 1;
+  bytes owner_address = 2;
+}
+
+message Urc40AllowanceQuery {
+  bytes address = 1;
+  bytes owner_address = 2;
+  bytes spender_address = 3;
+}
+
+message Urc40FutureTokenSummary {
+  bytes address = 1;
+  string token_symbol = 2;
+  int64  total_deal = 3;
+  int64 lower_bound_time = 4;
+  int64 upper_bound_time = 5;
+  int64 total_value = 6;
+  bytes lower_tick = 7;
+  bytes upper_tick = 8;
+}
+
+message Urc40FutureToken {
+  int64 future_balance = 1;
+  int64 expire_time = 2;
+  bytes prev_tick = 3;
+  bytes next_tick = 4;
+}
+
+/**
+  used for both token urc40 & nft indexing
  */
 message TokenAddressSymbolIndex{
   string  symbol = 1;
@@ -179,6 +237,12 @@ message Account {
   //token future
   map<string, FutureTokenSummaryV2> token_future = 61;
 
+  //token map, including all type
+  map<string, int64> urc40 = 62;
+
+  //token future
+  map<string, Urc40FutureTokenSummary> urc40_future = 63;
+
   // the frozen balance for bandwidth
   repeated Frozen frozen = 7;
   // bandwidth, get from frozen
@@ -190,7 +254,7 @@ message Account {
 
   // this account create time
   int64 create_time = 0x09;
-  // this last operation time, including transfer, voting and so on. //FIXME fix grammar
+  // this last operation time, including transfer, voting and so on
   int64 latest_opration_time = 10;
   // witness block producing allowance
   int64 allowance = 0x0B;
@@ -371,6 +435,8 @@ message Transaction {
 
       FutureTransferContract = 50;
       FutureWithdrawContract = 52;
+
+      //urc30 token
       CreateTokenContract = 53;
       ContributeTokenPoolFeeContract = 54;
       UpdateTokenParamsContract = 55;
@@ -381,6 +447,7 @@ message Transaction {
       TransferTokenOwnerContract = 61;
       ExchangeTokenContract = 62;
 
+      //nft
       CreateNftTemplateContract = 63;
       MintNftTokenContract = 64;
       RemoveNftMinterContract = 65;
@@ -391,6 +458,7 @@ message Transaction {
       ApproveForAllNftTokenContract = 70;
       TransferNftTokenContract = 71;
 
+      //PosBridge
       PosBridgeSetupContract = 90;
       PosBridgeMapTokenContract = 91;
       PosBridgeCleanMapTokenContract =92;
@@ -398,6 +466,19 @@ message Transaction {
       PosBridgeDepositExecContract = 94;
       PosBridgeWithdrawContract =95;
       PosBridgeWithdrawExecContract = 96;
+
+      //token urc40
+      Urc40CreateTokenContract = 110;
+      Urc40ContributeTokenPoolFeeContract = 111;
+      Urc40UpdateTokenParamsContract = 112;
+      Urc40MineTokenContract = 113;
+      Urc40BurnTokenContract = 114;
+      Urc40TransferTokenContract = 115;
+      Urc40WithdrawFutureTokenContract = 116;
+      Urc40TransferTokenOwnerContract = 117;
+      Urc40ExchangeTokenContract = 118;
+      Urc40ApproveContract = 119;
+      Urc40TransferFromContract =120;
     }
 
     ContractType type = 1;

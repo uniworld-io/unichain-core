@@ -3,8 +3,7 @@ package org.unichain.core.services.internal.impl;
 import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
-import org.unichain.core.actuator.NftTransferTokenActuator;
-import org.unichain.core.actuator.TokenTransferActuatorV4;
+import org.unichain.core.actuator.urc30.TokenTransferActuatorV4;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -14,7 +13,6 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.internal.PredicateService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
-import org.web3j.abi.datatypes.DynamicBytes;
 
 public class PredicateErc20Service implements PredicateService {
     private final Manager dbManager;

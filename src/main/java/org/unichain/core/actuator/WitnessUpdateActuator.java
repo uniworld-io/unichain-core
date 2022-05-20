@@ -20,7 +20,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 @Slf4j(topic = "actuator")
 public class WitnessUpdateActuator extends AbstractActuator {
 
-  WitnessUpdateActuator(final Any contract, final Manager dbManager) {
+  public WitnessUpdateActuator(final Any contract, final Manager dbManager) {
     super(contract, dbManager);
   }
 

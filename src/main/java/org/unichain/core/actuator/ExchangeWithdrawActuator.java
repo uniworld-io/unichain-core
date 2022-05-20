@@ -28,7 +28,7 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class ExchangeWithdrawActuator extends AbstractActuator {
 
-  ExchangeWithdrawActuator(final Any contract, final Manager dbManager) {
+  public ExchangeWithdrawActuator(final Any contract, final Manager dbManager) {
     super(contract, dbManager);
   }
 

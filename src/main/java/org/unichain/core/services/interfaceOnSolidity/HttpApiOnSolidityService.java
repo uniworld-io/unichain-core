@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.unichain.common.application.Service;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.services.http.fullnode.servlet.GetFutureTransferServlet;
-import org.unichain.core.services.http.fullnode.servlet.GetTokenFutureServlet;
+import org.unichain.core.services.http.fullnode.servlet.urc30.Urc30GetFutureTokenServlet;
 import org.unichain.core.services.interfaceOnSolidity.http.*;
 
 import javax.servlet.DispatcherType;
@@ -27,23 +27,23 @@ public class HttpApiOnSolidityService implements Service {
   @Autowired
   private GetAccountOnSolidityServlet accountOnSolidityServlet;
   @Autowired
-  private GetTokenPoolOnSolidityServlet tokenPoolOnSolidityServlet;
+  private Urc30GetTokenPoolOnSolidityServlet tokenPoolOnSolidityServlet;
 
   @Autowired
-  private NftListContractOnSolidityServlet listNftTemplateOnSolidityServlet;
+  private Urc721ListContractOnSolidityServlet listNftTemplateOnSolidityServlet;
   @Autowired
-  private NftListTokenOnSolidityServlet nftListTokenOnSolidityServlet;
+  private Urc721ListTokenOnSolidityServlet nftListTokenOnSolidityServlet;
   @Autowired
-  private NftGetOnSolidityContractServlet getNftTemplateOnSolidityServlet;
+  private Urc721GetOnSolidityContractServlet getNftTemplateOnSolidityServlet;
   @Autowired
-  private NftGetTokenOnSolidityServlet getNftTokenOnSolidityServlet;
+  private Urc721GetTokenOnSolidityServlet getNftTokenOnSolidityServlet;
   @Autowired
-  private NftGetBalanceOfOnSolidityServlet getNftBalanceOfOnSolidityServlet;
+  private Urc721GetBalanceOfOnSolidityServlet getNftBalanceOfOnSolidityServlet;
   @Autowired
-  private NftGetApprovalOnSolidityServlet getNftApprovedForAllOnSolidityServlet;
+  private Urc721GetApprovalOnSolidityServlet getNftApprovedForAllOnSolidityServlet;
 
   @Autowired
-  private GetTokenFutureServlet getTokenFutureServlet;
+  private Urc30GetFutureTokenServlet urc30GetFutureTokenServlet;
   @Autowired
   private GetFutureTransferServlet getFutureTransferServlet;
 
@@ -135,7 +135,7 @@ public class HttpApiOnSolidityService implements Service {
       context.addServlet(new ServletHolder(getNftBalanceOfOnSolidityServlet), "/walletsolidity/getnftbalanceOf");
       context.addServlet(new ServletHolder(getNftApprovedForAllOnSolidityServlet), "/walletsolidity/getnftapprovedforall");
 
-      context.addServlet(new ServletHolder(getTokenFutureServlet), "/walletsolidity/getfuturetoken");
+      context.addServlet(new ServletHolder(urc30GetFutureTokenServlet), "/walletsolidity/getfuturetoken");
       context.addServlet(new ServletHolder(getFutureTransferServlet), "/walletsolidity/getfuturetransfer");
       context.addServlet(new ServletHolder(listWitnessesOnSolidityServlet), "/walletsolidity/listwitnesses");
       context.addServlet(new ServletHolder(getAssetIssueListOnSolidityServlet), "/walletsolidity/getassetissuelist");

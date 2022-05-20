@@ -348,6 +348,74 @@ public class RpcApiService implements Service {
       responseObserver.onCompleted();
     }
 
+    /**
+     * urc40
+     */
+
+    @Override
+    public void urc40GetFutureToken(Urc40FutureTokenQuery request, StreamObserver<Urc40FutureTokenPack> responseObserver) {
+      var reply = wallet.urc40getFutureToken(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40GetTokenPool(Urc40TokenPoolQuery request, io.grpc.stub.StreamObserver<Urc40TokenPage> responseObserver) {
+      var reply = wallet.urc40GetTokenPool(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40GetName(BytesMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = wallet.urc40GetName(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40GetSymbol(BytesMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = wallet.urc40GetSymbol(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40Decimals(BytesMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = wallet.urc40Decimals(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+
+    @Override
+    public void urc40TotalSupply(BytesMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = wallet.urc40TotalSupply(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40BalanceOf(Urc40BalanceOfQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = wallet.urc40BalanceOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40GetOwner(BytesMessage request, io.grpc.stub.StreamObserver<BytesMessage> responseObserver) {
+      var reply = wallet.urc40GetOwner(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40Allowance(Urc40AllowanceQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = wallet.urc40Allowance(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
     @Override
     public void getAccount(Account request, StreamObserver<Account> responseObserver) {
       ByteString addressBs = request.getAddress();
@@ -1662,6 +1730,131 @@ public class RpcApiService implements Service {
     public void withdrawFutureTransaction(org.unichain.protos.Contract.FutureWithdrawContract request, io.grpc.stub.StreamObserver<org.unichain.protos.Protocol.Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.FutureWithdrawContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     * Urc40
+     */
+
+    @Override
+    public void urc40CreateToken(Contract.Urc40CreateTokenContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40CreateTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40ContributeTokenPoolFee(Contract.Urc40ContributeTokenPoolFeeContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40ContributeTokenPoolFeeContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40UpdateTokenParams(Contract.Urc40UpdateTokenParamsContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40UpdateTokenParamsContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40MineToken(Contract.Urc40MineTokenContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40MineTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40BurnToken(Contract.Urc40BurnTokenContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40BurnTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40TransferToken(Contract.Urc40TransferTokenContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40TransferTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40WithdrawFutureToken(Contract.Urc40WithdrawFutureTokenContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40WithdrawFutureTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40TransferTokenOwner(Contract.Urc40TransferTokenOwnerContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40TransferTokenOwnerContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40ExchangeToken(Contract.Urc40ExchangeTokenContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40ExchangeTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40Approve(Contract.Urc40ApproveContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40ApproveContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc40TransferFrom(Contract.Urc40TransferFromContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40TransferFromContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());

@@ -27,7 +27,7 @@ import static org.unichain.core.actuator.ActuatorConstant.ACCOUNT_EXCEPTION_STR;
 @Slf4j(topic = "actuator")
 public class WithdrawFutureActuator extends AbstractActuator {
 
-    WithdrawFutureActuator(Any contract, Manager dbManager) {
+    public WithdrawFutureActuator(Any contract, Manager dbManager) {
         super(contract, dbManager);
     }
 

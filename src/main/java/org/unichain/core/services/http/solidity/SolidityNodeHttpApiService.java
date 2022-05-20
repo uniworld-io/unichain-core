@@ -12,6 +12,12 @@ import org.springframework.stereotype.Component;
 import org.unichain.common.application.Service;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.services.http.fullnode.servlet.*;
+import org.unichain.core.services.http.fullnode.servlet.posbridge.PosBridgeGetConfigServlet;
+import org.unichain.core.services.http.fullnode.servlet.posbridge.PosBridgeGetTokenMapServlet;
+import org.unichain.core.services.http.fullnode.servlet.urc30.Urc30GetFutureTokenServlet;
+import org.unichain.core.services.http.fullnode.servlet.urc30.Urc30GetTokenPoolServlet;
+import org.unichain.core.services.http.fullnode.servlet.urc40.*;
+import org.unichain.core.services.http.fullnode.servlet.urc721.*;
 import org.unichain.core.services.http.solidity.servlet.GetTransactionByIdSolidityServlet;
 import org.unichain.core.services.http.solidity.servlet.GetTransactionInfoByIdSolidityServlet;
 import org.unichain.core.services.http.solidity.servlet.GetTransactionsFromThisServlet;
@@ -32,34 +38,53 @@ public class SolidityNodeHttpApiService implements Service {
   @Autowired
   private GetAccountServlet getAccountServlet;
   @Autowired
-  private GetTokenPoolServlet getTokenPoolServlet;
+  private Urc30GetTokenPoolServlet urc30GetTokenPoolServlet;
 
   @Autowired
-  private GetPosBridgeConfigServlet getPosBridgeConfigServlet;
+  private PosBridgeGetConfigServlet posBridgeGetConfigServlet;
   @Autowired
-  private GetPosBridgeTokenMapServlet getPosBridgeTokenMapServlet;
+  private PosBridgeGetTokenMapServlet posBridgeGetTokenMapServlet;
 
   @Autowired
-  private NftListContractServlet nftListContractServlet;
+  private Urc721ListContractServlet urc721ListContractServlet;
   @Autowired
-  private NftListTokenApprovalServlet listNftTokenApproveServlet;
+  private Urc721ListTokenApprovalServlet listNftTokenApproveServlet;
   @Autowired
-  private NftGetApprovalForAllServlet listNftTokenApproveAllServlet;
+  private Urc721GetApprovalForAllServlet listNftTokenApproveAllServlet;
   @Autowired
-  private NftListTokenServlet nftListTokenServlet;
+  private Urc721ListTokenServlet urc721ListTokenServlet;
   @Autowired
-  private NftGetContractServlet nftGetContractServlet;
+  private Urc721GetContractServlet urc721GetContractServlet;
   @Autowired
-  private NftGetTokenServlet nftGetTokenServlet;
+  private Urc721GetTokenServlet urc721GetTokenServlet;
   @Autowired
-  private NftGetBalanceOfServlet nftGetBalanceOfServlet;
+  private Urc721GetBalanceOfServlet urc721GetBalanceOfServlet;
   @Autowired
-  private NftGetApprovalServlet nftGetApprovalServlet;
+  private Urc721GetApprovalServlet urc721GetApprovalServlet;
 
   @Autowired
-  private GetTokenFutureServlet getTokenFutureServlet;
+  private Urc30GetFutureTokenServlet urc30GetFutureTokenServlet;
   @Autowired
   private GetFutureTransferServlet getFutureTransferServlet;
+
+  @Autowired
+  private Urc40GetFutureTokenServlet urc40GetFutureTokenServlet;
+  @Autowired
+  private Urc40GetTokenPoolServlet urc40GetTokenPoolServlet;
+  @Autowired
+  private Urc40GetNameServlet urc40GetNameServlet;
+  @Autowired
+  private Urc40GetSymbolServlet urc40GetSymbolServlet;
+  @Autowired
+  private Urc40DecimalsServlet urc40DecimalsServlet;
+  @Autowired
+  private Urc40TotalSupplyServlet urc40TotalSupplyServlet;
+  @Autowired
+  private Urc40BalanceOfServlet urc40BalanceOfServlet;
+  @Autowired
+  private Urc40GetOwnerServlet urc40GetOwnerServlet;
+  @Autowired
+  private Urc40AllowanceServlet urc40AllowanceServlet;
 
   @Autowired
   private GetTransactionByIdSolidityServlet getTransactionByIdServlet;
@@ -142,24 +167,36 @@ public class SolidityNodeHttpApiService implements Service {
       context.setContextPath("/");
       server.setHandler(context);
 
-      // same as FullNode
+      //@fixme remove duplicate of /walletsolidity
+      //same as FullNode
       context.addServlet(new ServletHolder(getAccountServlet), "/walletsolidity/getaccount");
-      context.addServlet(new ServletHolder(getTokenPoolServlet), "/walletsolidity/gettokenpool");
+      context.addServlet(new ServletHolder(urc30GetTokenPoolServlet), "/walletsolidity/gettokenpool");
 
       //posbridge
-      context.addServlet(new ServletHolder(getPosBridgeConfigServlet), "/walletsolidity/getposbridgeconfig");
-      context.addServlet(new ServletHolder(getPosBridgeTokenMapServlet), "/walletsolidity/getposbridgetokenmap");
+      context.addServlet(new ServletHolder(posBridgeGetConfigServlet), "/walletsolidity/getposbridgeconfig");
+      context.addServlet(new ServletHolder(posBridgeGetTokenMapServlet), "/walletsolidity/getposbridgetokenmap");
 
-      context.addServlet(new ServletHolder(nftListContractServlet), "/walletsolidity/listnftcontract");
+      context.addServlet(new ServletHolder(urc721ListContractServlet), "/walletsolidity/listnftcontract");
       context.addServlet(new ServletHolder(listNftTokenApproveServlet), "/walletsolidity/listnfttokenapprove");
       context.addServlet(new ServletHolder(listNftTokenApproveAllServlet), "/walletsolidity/listnfttokenapproveall");
-      context.addServlet(new ServletHolder(nftListTokenServlet), "/walletsolidity/listnfttoken");
-      context.addServlet(new ServletHolder(nftGetContractServlet), "/walletsolidity/getnftcontract");
-      context.addServlet(new ServletHolder(nftGetTokenServlet), "/walletsolidity/getnfttoken");
-      context.addServlet(new ServletHolder(nftGetBalanceOfServlet), "/walletsolidity/getnftbalanceOf");
-      context.addServlet(new ServletHolder(nftGetApprovalServlet), "/walletsolidity/getnftapprovedforall");
+      context.addServlet(new ServletHolder(urc721ListTokenServlet), "/walletsolidity/listnfttoken");
+      context.addServlet(new ServletHolder(urc721GetContractServlet), "/walletsolidity/getnftcontract");
+      context.addServlet(new ServletHolder(urc721GetTokenServlet), "/walletsolidity/getnfttoken");
+      context.addServlet(new ServletHolder(urc721GetBalanceOfServlet), "/walletsolidity/getnftbalanceOf");
+      context.addServlet(new ServletHolder(urc721GetApprovalServlet), "/walletsolidity/getnftapprovedforall");
 
-      context.addServlet(new ServletHolder(getTokenFutureServlet), "/walletsolidity/getfuturetoken");
+      //urc40
+      context.addServlet(new ServletHolder(urc40GetFutureTokenServlet), "/walletsolidity/urc40getfuturetoken");
+      context.addServlet(new ServletHolder(urc40GetTokenPoolServlet), "/walletsolidity/urc40gettokenpool");
+      context.addServlet(new ServletHolder(urc40GetSymbolServlet), "/walletsolidity/urc40getsymbol");
+      context.addServlet(new ServletHolder(urc40DecimalsServlet), "/walletsolidity/urc40decimals");
+      context.addServlet(new ServletHolder(urc40TotalSupplyServlet), "/walletsolidity/urc40totalsupply");
+      context.addServlet(new ServletHolder(urc40BalanceOfServlet), "/walletsolidity/urc40balanceof");
+      context.addServlet(new ServletHolder(urc40GetOwnerServlet), "/walletsolidity/urc40getowner");
+      context.addServlet(new ServletHolder(urc40BalanceOfServlet), "/walletsolidity/urc40balanceof");
+      context.addServlet(new ServletHolder(urc40AllowanceServlet), "/walletsolidity/urc40allowance");
+
+      context.addServlet(new ServletHolder(urc30GetFutureTokenServlet), "/walletsolidity/getfuturetoken");
       context.addServlet(new ServletHolder(getFutureTransferServlet), "/walletsolidity/getfuturetransfer");
       context.addServlet(new ServletHolder(listWitnessesServlet), "/walletsolidity/listwitnesses");
       context.addServlet(new ServletHolder(getAssetIssueListServlet), "/walletsolidity/getassetissuelist");

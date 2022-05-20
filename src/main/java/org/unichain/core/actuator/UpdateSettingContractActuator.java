@@ -23,7 +23,7 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class UpdateSettingContractActuator extends AbstractActuator {
 
-  UpdateSettingContractActuator(Any contract, Manager dbManager) {
+  public UpdateSettingContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

@@ -3,7 +3,7 @@ package org.unichain.core.services.internal.impl;
 import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
-import org.unichain.core.actuator.TokenTransferActuatorV4;
+import org.unichain.core.actuator.urc30.Urc30TokenTransferActuatorV4;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -60,7 +60,7 @@ public class ChildTokenErc20Service implements ChildTokenService {
                 .getRawData()
                 .getContract(0)
                 .getParameter();
-        var wrapActuator = new TokenTransferActuatorV4(wrapCap, dbManager);
+        var wrapActuator = new Urc30TokenTransferActuatorV4(wrapCap, dbManager);
         var wrapRet = new TransactionResultCapsule();
         wrapActuator.validate();
         wrapActuator.execute(wrapRet);

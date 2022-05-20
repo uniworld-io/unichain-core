@@ -294,6 +294,139 @@ public class Wallet {
     return dbManager.getTokenPoolStore().query(query);
   }
 
+  //@fixme urc40
+  public Urc40FutureTokenPack urc40getFutureToken(Urc40FutureTokenQuery query) {
+//    Assert.isTrue(query.hasField(TOKEN_QR_FIELD_NAME), "Missing token name");
+//    Assert.isTrue(query.hasField(TOKEN_QR_FIELD_OWNER_ADDR), "Missing owner address");
+//
+//    if(!query.hasField(TOKEN_QR_FIELD_PAGE_SIZE))
+//    {
+//      query = query.toBuilder()
+//              .setPageSize(DEFAULT_PAGE_SIZE)
+//              .build();
+//    }
+//
+//    if(!query.hasField(TOKEN_QR_FIELD_PAGE_INDEX))
+//    {
+//      query = query.toBuilder()
+//              .setPageIndex(DEFAULT_PAGE_INDEX)
+//              .build();
+//    }
+//
+//    query = query.toBuilder()
+//            .setTokenName(query.getTokenName().toUpperCase())
+//            .build();
+//
+//    Assert.isTrue(query.getPageSize() > 0 &&  query.getPageIndex() >=0 && query.getPageSize() <= MAX_PAGE_SIZE, "invalid paging info");
+//
+//    var acc = dbManager.getAccountStore().get(query.getOwnerAddress().toByteArray());
+//    Assert.notNull(acc, "Owner address not found: " + Wallet.encode58Check(query.getOwnerAddress().toByteArray()));
+//    var summary = acc.getFutureTokenSummary(query.getTokenName());
+//
+//    //no deals
+//    if(Objects.isNull(summary) || (summary.getTotalDeal() <= 0)){
+//      return FutureTokenPack.newBuilder()
+//              .setTokenName(query.getTokenName())
+//              .setOwnerAddress(query.getOwnerAddress())
+//              .setTotalDeal(0)
+//              .setTotalValue(0)
+//              .clearLowerBoundTime()
+//              .clearUpperBoundTime()
+//              .clearDeals()
+//              .build();
+//    }
+//
+//    //validate query
+//    List<FutureTokenV2> deals = new ArrayList<>();
+//
+//    int pageSize = query.getPageSize();
+//    int pageIndex = query.getPageIndex();
+//    long start = (long) pageIndex * pageSize;
+//    long end = start + pageSize;
+//    if(start >= summary.getTotalDeal()){
+//      //empty deals
+//    }
+//    else {
+//      if(end >= summary.getTotalDeal())
+//        end = summary.getTotalDeal();
+//
+//      //load sublist from [start -> end)
+//      var tokenStore = dbManager.getFutureTokenStore();
+//      var tmpTickKeyBs = summary.getLowerTick();
+//      int index = 0;
+//      while (true){
+//        var tmpTick = tokenStore.get(tmpTickKeyBs.toByteArray());
+//        if(index >= start && index < end)
+//        {
+//          deals.add(tmpTick.getInstance());
+//        }
+//        if(index >= end)
+//          break;
+//        tmpTickKeyBs = tmpTick.getNextTick();
+//        index ++;
+//      }
+//    }
+//
+//    return FutureTokenPack.newBuilder()
+//            .setTokenName(query.getTokenName())
+//            .setOwnerAddress(query.getOwnerAddress())
+//            .setTotalDeal(summary.getTotalDeal())
+//            .setTotalValue(summary.getTotalValue())
+//            .setLowerBoundTime(summary.getLowerBoundTime())
+//            .setUpperBoundTime(summary.getUpperBoundTime())
+//            .addAllDeals(deals)
+//            .build();
+    return null;
+  }
+
+  //@fixme urc40
+  public Urc40TokenPage urc40GetTokenPool(Urc40TokenPoolQuery query) {
+//    return dbManager.getTokenPoolStore().query(query);
+    return null;
+  }
+
+  //@fixme urc40
+  public StringMessage urc40GetName(BytesMessage query) {
+//    return dbManager.getTokenPoolStore().query(query);
+    return null;
+  }
+
+  //@fixme urc40
+  public StringMessage urc40GetSymbol(BytesMessage query) {
+//    return dbManager.getTokenPoolStore().query(query);
+    return null;
+  }
+
+  //@fixme urc40
+  public NumberMessage urc40Decimals(BytesMessage query) {
+//    return dbManager.getTokenPoolStore().query(query);
+    return null;
+  }
+
+  //@fixme urc40
+  public NumberMessage urc40TotalSupply(BytesMessage query) {
+//    return dbManager.getTokenPoolStore().query(query);
+    return null;
+  }
+
+  //@fixme urc40
+  public NumberMessage urc40BalanceOf(Urc40BalanceOfQuery query) {
+//    return dbManager.getTokenPoolStore().query(query);
+    return null;
+  }
+
+  //@fixme urc40
+  public BytesMessage urc40GetOwner(BytesMessage query) {
+//    return dbManager.getTokenPoolStore().query(query);
+    return null;
+  }
+
+  //@fixme urc40
+  public NumberMessage urc40Allowance(Urc40AllowanceQuery query) {
+//    return dbManager.getTokenPoolStore().query(query);
+    return null;
+  }
+
   public Account getAccountById(Account account) {
     AccountStore accountStore = dbManager.getAccountStore();
     AccountIdIndexStore accountIdIndexStore = dbManager.getAccountIdIndexStore();
@@ -1564,7 +1697,6 @@ public class Wallet {
             .addAllDeals(deals)
             .build();
   }
-
 
   public FuturePack getFuture(FutureQuery query) {
     //validate

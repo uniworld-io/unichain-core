@@ -23,7 +23,7 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class ClearABIContractActuator extends AbstractActuator {
 
-  ClearABIContractActuator(Any contract, Manager dbManager) {
+  public ClearABIContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

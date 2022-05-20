@@ -21,6 +21,9 @@ service Wallet {
     };
   };
 
+  /**
+    URC30
+   */
   rpc GetFutureToken (FutureTokenQuery) returns (FutureTokenPack) {
     option (google.api.http) = {
       post: "/wallet/getfuturetoken"
@@ -41,6 +44,103 @@ service Wallet {
     };
   };
 
+  /**
+  URC40
+ */
+  rpc Urc40GetFutureToken (Urc40FutureTokenQuery) returns (Urc40FutureTokenPack) {
+    option (google.api.http) = {
+      post: "/wallet/urc40getfuturetoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40getfuturetoken"
+      }
+    };
+  };
+
+  rpc Urc40GetTokenPool (Urc40TokenPoolQuery) returns (Urc40TokenPage) {
+    option (google.api.http) = {
+      post: "/wallet/urc40gettokenpool"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40gettokenpool"
+      }
+    };
+  };
+
+  rpc Urc40GetName (BytesMessage) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc40getname"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40getname"
+      }
+    };
+  };
+
+  rpc Urc40GetSymbol (BytesMessage) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc40getsymbol"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40getsymbol"
+      }
+    };
+  };
+
+  rpc Urc40Decimals (BytesMessage) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc40decimals"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40decimals"
+      }
+    };
+  };
+
+  rpc Urc40TotalSupply (BytesMessage) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc40totalsupply"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40totalsupply"
+      }
+    };
+  };
+
+  rpc Urc40BalanceOf (Urc40BalanceOfQuery) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc40balanceof"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40balanceof"
+      }
+    };
+  };
+
+  rpc Urc40GetOwner (BytesMessage) returns (BytesMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc40getowner"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40getowner"
+      }
+    };
+  };
+
+  rpc Urc40Allowance (Urc40AllowanceQuery) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc40allowance"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40allowance"
+      }
+    };
+  };
+
+
+  /**
+    NFT
+   */
   rpc ListNftTokenApprove (NftTokenApproveQuery) returns (NftTokenApproveResult) {
     option (google.api.http) = {
       post: "/wallet/listnfttokenapprove"
@@ -71,7 +171,6 @@ service Wallet {
     };
   };
 
-
   rpc ListNftToken (NftTokenQuery) returns (NftTokenQueryResult) {
     option (google.api.http) = {
       post: "/wallet/listnfttoken"
@@ -91,7 +190,6 @@ service Wallet {
       }
     };
   };
-
 
   rpc GetNftToken (NftTokenGet) returns (NftTokenGetResult) {
     option (google.api.http) = {
@@ -338,6 +436,9 @@ service Wallet {
     };
   };
 
+  /**
+    URC30
+   */
   rpc CreateToken (CreateTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/createtoken"
@@ -398,7 +499,6 @@ service Wallet {
     };
   }
 
-
   rpc BurnToken (BurnTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/burntoken"
@@ -425,6 +525,120 @@ service Wallet {
       body: "*"
       additional_bindings {
         get: "/wallet/withdrawfuturetoken"
+      }
+    };
+  }
+
+  /**
+    URC40
+ */
+  rpc Urc40CreateToken (Urc40CreateTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc40createtoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40createtoken"
+      }
+    };
+  };
+
+  rpc Urc40ContributeTokenPoolFee (Urc40ContributeTokenPoolFeeContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc40contributetokenpoolfee"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40contributetokenpoolfee"
+      }
+    };
+  };
+
+  rpc Urc40UpdateTokenParams (Urc40UpdateTokenParamsContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc40updatetokenparams"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40updatetokenparams"
+      }
+    };
+  }
+
+  rpc Urc40MineToken (Urc40MineTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc40minetoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40minetoken"
+      }
+    };
+  }
+
+  rpc Urc40BurnToken (Urc40BurnTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc40burntoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40burntoken"
+      }
+    };
+  }
+
+  rpc Urc40TransferToken (Urc40TransferTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc40transfertoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40transfertoken"
+      }
+    };
+  }
+
+  rpc Urc40WithdrawFutureToken (Urc40WithdrawFutureTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc40withdrawfuturetoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40withdrawfuturetoken"
+      }
+    };
+  }
+
+  rpc Urc40TransferTokenOwner (Urc40TransferTokenOwnerContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc40transfertokenowner"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40transfertokenowner"
+      }
+    };
+  };
+
+  rpc Urc40ExchangeToken (Urc40ExchangeTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc40exchangetoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40exchangetoken"
+      }
+    };
+  };
+
+
+  rpc Urc40Approve (Urc40ApproveContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc40approve"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40approve"
+      }
+    };
+  }
+
+  rpc Urc40TransferFrom (Urc40TransferFromContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc40transferfrom"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc40transferfrom"
       }
     };
   }
@@ -1069,6 +1283,9 @@ service WalletSolidity {
     };
   };
 
+  /**
+    Urc30
+   */
   rpc GetFutureToken (FutureTokenQuery) returns (FutureTokenPack) {
     option (google.api.http) = {
       post: "/walletsolidity/getfuturetoken"
@@ -1089,6 +1306,103 @@ service WalletSolidity {
     };
   };
 
+  /**
+  Urc40
+ */
+  rpc Urc40GetFutureToken (Urc40FutureTokenQuery) returns (Urc40FutureTokenPack) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc40getfuturetoken"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc40getfuturetoken"
+      }
+    };
+  };
+
+  rpc Urc40GetTokenPool (Urc40TokenPoolQuery) returns (Urc40TokenPage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc40gettokenpool"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc40gettokenpool"
+      }
+    };
+  };
+
+  rpc Urc40GetName (BytesMessage) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc40getname"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc40getname"
+      }
+    };
+  };
+
+  rpc Urc40GetSymbol (BytesMessage) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc40getsymbol"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc40getsymbol"
+      }
+    };
+  };
+
+  rpc Urc40Decimals (BytesMessage) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc40decimals"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc40decimals"
+      }
+    };
+  };
+
+  rpc Urc40TotalSupply (BytesMessage) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc40totalsupply"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc40totalsupply"
+      }
+    };
+  };
+
+  rpc Urc40BalanceOf (Urc40BalanceOfQuery) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc40balanceof"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc40balanceof"
+      }
+    };
+  };
+
+  rpc Urc40GetOwner (BytesMessage) returns (BytesMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc40getowner"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc40getowner"
+      }
+    };
+  };
+
+  rpc Urc40Allowance (Urc40AllowanceQuery) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc40allowance"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc40allowance"
+      }
+    };
+  };
+
+
+  /**
+  Nft
+   */
   rpc ListNftTokenApprove (NftTokenApproveQuery) returns (NftTokenApproveResult) {
     option (google.api.http) = {
       post: "/walletsolidity/listnfttokenapprove"
@@ -1465,6 +1779,11 @@ message NumberMessage {
 message BytesMessage {
   bytes value = 1;
 }
+
+message StringMessage {
+  string value = 1;
+}
+
 message TimeMessage {
   int64 beginInMilliseconds = 1;
   int64 endInMilliseconds = 2;

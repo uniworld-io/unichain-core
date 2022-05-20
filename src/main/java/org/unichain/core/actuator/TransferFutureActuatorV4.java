@@ -28,7 +28,7 @@ import static org.unichain.core.services.http.utils.Util.FUTURE_TRANSFER_FIELD_T
 
 @Slf4j(topic = "actuator")
 public class TransferFutureActuatorV4 extends AbstractActuator {
-  TransferFutureActuatorV4(Any contract, Manager dbManager) {
+  public TransferFutureActuatorV4(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

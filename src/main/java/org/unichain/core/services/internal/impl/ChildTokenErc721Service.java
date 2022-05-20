@@ -5,6 +5,7 @@ import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.actuator.NftBurnTokenActuator;
 import org.unichain.core.actuator.NftMintTokenActuator;
+import org.unichain.core.capsule.NftTemplateCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -70,4 +71,5 @@ public class ChildTokenErc721Service implements ChildTokenService {
         wrapActuator.execute(wrapRet);
         ret.setFee(wrapRet.getFee());
     }
+
 }

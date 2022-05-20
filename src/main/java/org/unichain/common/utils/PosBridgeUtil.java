@@ -200,15 +200,12 @@ public class PosBridgeUtil {
         types.add(type5);
         List<Type> out = FunctionReturnDecoder.decode(msgHex, org.web3j.abi.Utils.convert(types));
 
-//        Uint256 value = abiDecodeToUint256((DynamicBytes) out.get(4));
-
         return PosBridgeDepositExecMsg.builder()
                 .rootChainId(((Uint32) out.get(0)).getValue().longValue())
                 .childChainId(((Uint32) out.get(1)).getValue().longValue())
                 .rootTokenAddr(((Address) out.get(2)).getValue())
                 .receiveAddr(toUniAddress(((Address) out.get(3)).getValue()))
                 .depositData((DynamicBytes) out.get(4))
-                .extHex(BLIND_URI_HEX) //@todo add uri msg in source msg
                 .build();
     }
 
@@ -232,10 +229,6 @@ public class PosBridgeUtil {
                 .tokenId(((Uint256) types.get(0)).getValue().longValue())
                 .uri(((Utf8String) types.get(1)).getValue())
                 .build();
-    }
-
-    public static void main(String[] args) {
-        System.out.println(abiDecodeToErc721("0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000a74657374737472696e6700000000000000000000000000000000000000000000"));
     }
 
     public static String abiDecodeFromToString(String hex) {

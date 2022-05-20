@@ -133,4 +133,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
     return ArrayUtils.addAll(contractAddr, ByteArray.fromLong(tokenId));
   }
 
+  public String getUri() {
+    return token.getUri();
+  }
 }

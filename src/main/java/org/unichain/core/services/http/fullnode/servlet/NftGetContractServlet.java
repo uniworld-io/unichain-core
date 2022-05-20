@@ -23,11 +23,9 @@ public class NftGetContractServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       boolean visible = Util.getVisible(request);
-      String contract = request.getParameter("contract");
       String address = request.getParameter("address");
       Protocol.NftTemplate.Builder build = Protocol.NftTemplate.newBuilder();
       JSONObject jsonObject = new JSONObject();
-      jsonObject.put("contract", contract);
       jsonObject.put("address", address);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 

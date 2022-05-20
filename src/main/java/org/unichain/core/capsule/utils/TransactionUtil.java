@@ -131,7 +131,7 @@ public class TransactionUtil {
     return true;
   }
 
-  public static boolean validNftName(String name) {
+  public static boolean validCharSpecial(String name) {
     byte[] chars = name.getBytes();
     if (ArrayUtils.isEmpty(chars) || chars.length > 32)
       return false;

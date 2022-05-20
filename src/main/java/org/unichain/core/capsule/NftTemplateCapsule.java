@@ -207,4 +207,5 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
   public byte[] getPrevOfMinter(){
     return template.getPrevOfMinter().toByteArray();
   }
+
 }

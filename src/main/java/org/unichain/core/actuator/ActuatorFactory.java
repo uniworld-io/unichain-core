@@ -198,7 +198,7 @@ public class ActuatorFactory {
        */
       case Urc721CreateContract:
           return new Urc721CreateContractActuator(contract.getParameter(), manager);
-      case MintNftTokenContract:
+      case Urc721MintContract:
         return new Urc721MintActuator(contract.getParameter(), manager);
       case AddNftMinterContract:
         return new Urc721AddMinterActuator(contract.getParameter(), manager);

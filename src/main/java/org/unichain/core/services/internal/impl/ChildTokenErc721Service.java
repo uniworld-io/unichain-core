@@ -32,14 +32,14 @@ public class ChildTokenErc721Service implements ChildTokenService {
 
         PosBridgeUtil.ERC721Decode erc721Decode = PosBridgeUtil.abiDecodeToErc721(depositData);
 
-        var wrapCtx = Contract.MintNftTokenContract.newBuilder()
+        var wrapCtx = Contract.Urc721MintContract.newBuilder()
                 .setOwnerAddress(ByteString.copyFrom(nft.getOwner()))
                 .setAddress(childToken)
                 .setToAddress(user)
                 .setTokenId(erc721Decode.tokenId)
                 .setUri(erc721Decode.uri)
                 .build();
-        var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.MintNftTokenContract)
+        var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc721MintContract)
                 .getInstance()
                 .getRawData()
                 .getContract(0)

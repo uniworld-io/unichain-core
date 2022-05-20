@@ -449,7 +449,7 @@ message Transaction {
 
       //nft
       Urc721CreateContract = 63;
-      MintNftTokenContract = 64;
+      Urc721MintContract = 64;
       RemoveNftMinterContract = 65;
       AddNftMinterContract = 66;
       RenounceNftMinterContract = 67;

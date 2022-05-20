@@ -51,7 +51,7 @@ public class Urc721MintActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(Contract.MintNftTokenContract.class);
+      var ctx = contract.unpack(Contract.Urc721MintContract.class);
       var accountStore = dbManager.getAccountStore();
       var contractStore = dbManager.getNftTemplateStore();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
@@ -125,9 +125,9 @@ public class Urc721MintActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(Contract.MintNftTokenContract.class), "contract type error,expected type [MintNftTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Contract.Urc721MintContract.class), "contract type error,expected type [Urc721MintContract],real type[" + contract.getClass() + "]");
       var fee = calcFee();
-      val ctx = this.contract.unpack(Contract.MintNftTokenContract.class);
+      val ctx = this.contract.unpack(Contract.Urc721MintContract.class);
       var accountStore = dbManager.getAccountStore();
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
@@ -167,7 +167,7 @@ public class Urc721MintActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(Contract.MintNftTokenContract.class).getOwnerAddress();
+    return contract.unpack(Contract.Urc721MintContract.class).getOwnerAddress();
   }
 
   @Override

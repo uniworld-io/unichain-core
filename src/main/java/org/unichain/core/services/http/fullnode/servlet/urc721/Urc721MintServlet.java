@@ -32,7 +32,7 @@ public class Urc721MintServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.MintNftTokenContract.newBuilder();
+      var build = Contract.Urc721MintContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
       var tx = nftService.createToken(tokenCtx);

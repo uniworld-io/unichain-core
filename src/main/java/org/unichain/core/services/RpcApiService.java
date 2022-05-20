@@ -1400,9 +1400,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void mintNftToken(Contract.MintNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+    public void mintNftToken(Contract.Urc721MintContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.MintNftTokenContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721MintContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());

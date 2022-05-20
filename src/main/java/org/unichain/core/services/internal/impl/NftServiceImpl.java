@@ -50,8 +50,8 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.Transaction createToken(Contract.MintNftTokenContract contract) throws ContractValidateException {
-        return wallet.createTransactionCapsule(contract, ContractType.MintNftTokenContract).getInstance();
+    public Protocol.Transaction createToken(Contract.Urc721MintContract contract) throws ContractValidateException {
+        return wallet.createTransactionCapsule(contract, ContractType.Urc721MintContract).getInstance();
     }
 
     @Override

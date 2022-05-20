@@ -356,7 +356,7 @@ service Wallet {
     };
   };
 
-  rpc MintNftToken (MintNftTokenContract) returns (Transaction) {
+  rpc MintNftToken (Urc721MintContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/mintnfttoken"
       body: "*"

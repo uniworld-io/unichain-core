@@ -369,8 +369,8 @@ public class Util {
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
-          case MintNftTokenContract:{
-            var parsedContract = contractParameter.unpack(MintNftTokenContract.class);
+          case Urc721MintContract:{
+            var parsedContract = contractParameter.unpack(Urc721MintContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
@@ -777,11 +777,13 @@ public class Util {
             any = Any.pack(builder.build());
             break;
           }
-          case "MintNftTokenContract":
-            MintNftTokenContract.Builder  mintNftTokenContractBuilder = MintNftTokenContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), mintNftTokenContractBuilder, selfType);
-            any = Any.pack(mintNftTokenContractBuilder.build());
+          case "Urc721MintContract":
+          {
+            var builder = Urc721MintContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "RemoveNftMinterContract":
             RemoveNftMinterContract.Builder removeNftMinterContractBuilder = RemoveNftMinterContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), removeNftMinterContractBuilder, selfType);
@@ -1018,7 +1020,7 @@ public class Util {
   public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_NEXT_OF_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.NEXT_OF_MINTER_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_PREV_OF_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.PREV_OF_MINTER_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor NFT_MINT_FIELD_TOKEN_ID = MintNftTokenContract.getDescriptor().findFieldByNumber(MintNftTokenContract.TOKEN_ID_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_MINT_FIELD_TOKEN_ID = Urc721MintContract.getDescriptor().findFieldByNumber(Urc721MintContract.TOKEN_ID_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.TAIL_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.APPROVED_FOR_ALL_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.APPROVE_TAIL_FIELD_NUMBER);

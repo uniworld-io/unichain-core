@@ -480,7 +480,7 @@ message Urc721CreateContract{
   bytes minter = 6;
 }
 
-message MintNftTokenContract{
+message Urc721MintContract{
   bytes owner_address = 1;
   bytes address = 2;
   bytes to_address = 3;

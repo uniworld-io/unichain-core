@@ -10,7 +10,7 @@ public interface NftService {
     Protocol.NftTemplate getContract(Protocol.NftTemplate query);
     Protocol.NftTemplateQueryResult listContract(Protocol.NftTemplateQuery query);
 
-    Protocol.Transaction createToken(Contract.MintNftTokenContract contract) throws ContractValidateException;
+    Protocol.Transaction createToken(Contract.Urc721MintContract contract) throws ContractValidateException;
     Protocol.NftTokenGetResult getToken(Protocol.NftTokenGet query);
     Protocol.Transaction burnToken(Contract.BurnNftTokenContract burnNftTokenContract) throws ContractValidateException;
     Protocol.NftTokenQueryResult listToken(Protocol.NftTokenQuery query);

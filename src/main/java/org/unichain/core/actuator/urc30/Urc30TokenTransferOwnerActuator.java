@@ -23,9 +23,9 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @Slf4j(topic = "actuator")
-public class TokenTransferOwnerActuator extends AbstractActuator {
+public class Urc30TokenTransferOwnerActuator extends AbstractActuator {
 
-  TokenTransferOwnerActuator(Any contract, Manager dbManager) {
+  public Urc30TokenTransferOwnerActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

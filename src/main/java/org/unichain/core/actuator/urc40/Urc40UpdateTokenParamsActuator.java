@@ -42,7 +42,7 @@ import static org.unichain.core.services.http.utils.Util.*;
 @Slf4j(topic = "actuator")
 public class Urc40UpdateTokenParamsActuator extends AbstractActuator {
 
-  Urc40UpdateTokenParamsActuator(Any contract, Manager dbManager) {
+    public Urc40UpdateTokenParamsActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

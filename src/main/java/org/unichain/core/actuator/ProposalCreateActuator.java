@@ -28,7 +28,7 @@ import static org.unichain.core.actuator.ActuatorConstant.*;
 @Slf4j(topic = "actuator")
 public class ProposalCreateActuator extends AbstractActuator {
 
-  ProposalCreateActuator(final Any contract, final Manager dbManager) {
+  public ProposalCreateActuator(final Any contract, final Manager dbManager) {
     super(contract, dbManager);
   }
 

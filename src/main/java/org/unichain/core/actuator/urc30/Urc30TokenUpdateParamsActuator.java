@@ -31,18 +31,20 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
+import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.UpdateTokenParamsContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
-import static org.unichain.core.config.Parameter.ChainConstant.*;
+import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE;
+import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE_RATE;
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "actuator")
-public class TokenUpdateParamsActuatorV4 extends AbstractActuator {
+public class Urc30TokenUpdateParamsActuator extends AbstractActuator {
 
-  TokenUpdateParamsActuatorV4(Any contract, Manager dbManager) {
+    public Urc30TokenUpdateParamsActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -50,26 +52,23 @@ public class TokenUpdateParamsActuatorV4 extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-        var ctx = contract.unpack(UpdateTokenParamsContract.class);
+        var ctx = contract.unpack(Contract.UpdateTokenParamsContract.class);
         var ownerAddress = ctx.getOwnerAddress().toByteArray();
 
         var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
 
         TokenPoolCapsule tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
-        var updateCriticalParams = false;
 
         if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
-            tokenCap.setFee(ctx.getAmount());
-            updateCriticalParams = true;
+          tokenCap.setFee(ctx.getAmount());
         }
 
         if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
-            tokenCap.setExtraFeeRate(ctx.getExtraFeeRate());
-            updateCriticalParams = true;
+          tokenCap.setExtraFeeRate(ctx.getExtraFeeRate());
         }
 
         if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_LOT)) {
-            tokenCap.setLot(ctx.getLot());
+          tokenCap.setLot(ctx.getLot());
         }
 
         if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_URL)) {
@@ -87,7 +86,6 @@ public class TokenUpdateParamsActuatorV4 extends AbstractActuator {
             var ownerAccount = dbManager.getAccountStore().get(ownerAddress);
             ownerAccount.addToken(tokenKey, totalSupplyDiff);
             dbManager.getAccountStore().put(ownerAddress, ownerAccount);
-            updateCriticalParams = true;
         }
 
         if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_POOL)) {
@@ -99,27 +97,6 @@ public class TokenUpdateParamsActuatorV4 extends AbstractActuator {
             tokenCap.setFeePool(Math.addExact(tokenCap.getFeePool(), diffFeePool));
         }
 
-        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
-            tokenCap.setExchUnwNum(ctx.getExchUnxNum());
-            updateCriticalParams = true;
-        }
-
-        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
-            tokenCap.setExchTokenNum(ctx.getExchNum());
-            updateCriticalParams = true;
-        }
-
-        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)) {
-            tokenCap.setCreateAccFee(ctx.getCreateAccFee());
-            updateCriticalParams = true;
-        }
-
-        if(updateCriticalParams)
-        {
-            tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
-        }
-
-        tokenCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
         dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
 
         chargeFee(ownerAddress, fee);
@@ -207,21 +184,10 @@ public class TokenUpdateParamsActuatorV4 extends AbstractActuator {
                     Assert.isTrue(accountCap.getBalance() >= Math.addExact(diffFeePool, calcFee()), "Not enough balance to update new fee pool, at least: " + diffFeePool + calcFee());
               }
               else if(diffFeePool < 0){
-                  Assert.isTrue(Math.addExact(availableFeePool, diffFeePool) >= 0 && ( Math.subtractExact(accountCap.getBalance(), Math.addExact(diffFeePool, calcFee())) >= 0), "available fee pool not enough to lower down fee pool or balance not enough fee, require at least: " + diffFeePool + " fee :"+ calcFee());
+                  Assert.isTrue(Math.addExact(availableFeePool, diffFeePool) >= 0 && (Math.subtractExact(accountCap.getBalance(),  Math.addExact(diffFeePool, calcFee())) >= 0), "Available fee pool not enough to lower down fee pool or balance not enough fee, require at least: " + diffFeePool + " fee :"+ calcFee());
               }
           }
 
-          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
-              Assert.isTrue(ctx.getExchUnxNum() > 0, "Exchange unw number must be positive");
-          }
-
-          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
-              Assert.isTrue(ctx.getExchNum() > 0, "Exchange token number must be positive");
-          }
-
-          if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)){
-              Assert.isTrue(ctx.getCreateAccFee() > 0 && ctx.getCreateAccFee() <= TOKEN_MAX_CREATE_ACC_FEE, "Invalid create account fee");
-          }
           return true;
       }
       catch (Exception e){
@@ -237,6 +203,6 @@ public class TokenUpdateParamsActuatorV4 extends AbstractActuator {
 
   @Override
   public long calcFee() {
-      return dbManager.getDynamicPropertiesStore().getAssetUpdateFee();//2UNW default
+      return dbManager.getDynamicPropertiesStore().getAssetIssueFee()/2;//250 unw default
   }
 }

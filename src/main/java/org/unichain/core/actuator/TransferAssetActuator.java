@@ -42,7 +42,7 @@ import java.util.Map;
 @Slf4j(topic = "actuator")
 public class TransferAssetActuator extends AbstractActuator {
 
-  TransferAssetActuator(Any contract, Manager dbManager) {
+  public TransferAssetActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

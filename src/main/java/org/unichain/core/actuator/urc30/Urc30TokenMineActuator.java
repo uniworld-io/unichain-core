@@ -35,9 +35,9 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
-public class TokenMineActuatorV3 extends AbstractActuator {
+public class Urc30TokenMineActuator extends AbstractActuator {
 
-  TokenMineActuatorV3(Any contract, Manager dbManager) {
+  public Urc30TokenMineActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -47,11 +47,9 @@ public class TokenMineActuatorV3 extends AbstractActuator {
     try {
       var ctx = contract.unpack(MineTokenContract.class);
       var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
-      tokenCap.setTotalSupply(Math.addExact(tokenCap.getTotalSupply(), ctx.getAmount()));
-      tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
-      tokenCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
+      var tokenCapsule = dbManager.getTokenPoolStore().get(tokenKey);
+      tokenCapsule.setTotalSupply(Math.addExact(tokenCapsule.getTotalSupply(), ctx.getAmount()));
+      dbManager.getTokenPoolStore().put(tokenKey, tokenCapsule);
 
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
@@ -93,7 +91,7 @@ public class TokenMineActuatorV3 extends AbstractActuator {
 
       Assert.isTrue(ctx.getAmount() >= tokenPool.getLot(), "Mined amount at least equal lot: " + tokenPool.getLot());
 
-      //avail to mine = max - total - burned
+      // avail to mine = max - total - burned
       var availableToMine = Math.subtractExact(tokenPool.getMaxSupply(), Math.addExact(tokenPool.getTotalSupply(), tokenPool.getBurnedToken()));
       Assert.isTrue(ctx.getAmount() <= availableToMine, "Not enough frozen token to mine, maximum allowed: " + availableToMine);
 
@@ -112,6 +110,6 @@ public class TokenMineActuatorV3 extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getAssetUpdateFee();//2UNW default
+    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 unw default
   }
 }

@@ -35,9 +35,9 @@ import org.unichain.protos.Contract.WithdrawFutureTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 @Slf4j(topic = "actuator")
-public class TokenWithdrawFutureActuatorV4 extends AbstractActuator {
+public class Urc30TokenWithdrawFutureActuatorV3 extends AbstractActuator {
 
-  TokenWithdrawFutureActuatorV4(Any contract, Manager dbManager) {
+    public Urc30TokenWithdrawFutureActuatorV3(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -51,6 +51,7 @@ public class TokenWithdrawFutureActuatorV4 extends AbstractActuator {
       var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
 
       withdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp());
+
       tokenPool.setFeePool(Math.subtractExact(tokenPool.getFeePool(), fee));
       tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
@@ -125,8 +126,8 @@ public class TokenWithdrawFutureActuatorV4 extends AbstractActuator {
        * loop to withdraw, the most fastest way!!!
        */
       var tmpTickKeyBs = summary.getLowerTick();
-      var withdrawAmount = 0L;
-      var withdrawDeal = 0L;
+      var withdrawAmount = 0;
+      var withdrawDeal = 0;
       var withdrawAll = false;
       while (true){
         if(tmpTickKeyBs == null)
@@ -145,8 +146,8 @@ public class TokenWithdrawFutureActuatorV4 extends AbstractActuator {
         if(tmpTick.getExpireTime() <= headBlockTickDay)
         {
           //withdraw
-          withdrawAmount = Math.addExact(withdrawAmount, tmpTick.getBalance());
-          withdrawDeal = Math.incrementExact(withdrawDeal);
+          withdrawAmount += tmpTick.getBalance();
+          withdrawDeal ++;
           tokenStore.delete(tmpTickKeyBs.toByteArray());
           tmpTickKeyBs = tmpTick.getNextTick();
           continue;
@@ -174,8 +175,8 @@ public class TokenWithdrawFutureActuatorV4 extends AbstractActuator {
       newHead.clearPrevTick();
       tokenStore.put(tmpTickKeyBs.toByteArray(), newHead);
       summary = summary.toBuilder()
-              .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), withdrawDeal))
-              .setTotalValue(Math.subtractExact(summary.getTotalValue(), withdrawAmount))
+              .setTotalDeal(summary.getTotalDeal() - withdrawDeal)
+              .setTotalValue(summary.getTotalValue() - withdrawAmount)
               .setLowerTick(tmpTickKeyBs)
               .setLowerBoundTime(newHead.getExpireTime())
               .build();

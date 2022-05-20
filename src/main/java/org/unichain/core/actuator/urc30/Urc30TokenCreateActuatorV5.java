@@ -36,9 +36,9 @@ import org.unichain.protos.Protocol;
 import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_ADDRESS;
 
 @Slf4j(topic = "actuator")
-public class TokenCreateActuatorV5 extends TokenCreateActuatorV4 {
+public class Urc30TokenCreateActuatorV5 extends Urc30TokenCreateActuatorV4 {
 
-  TokenCreateActuatorV5(Any contract, Manager dbManager) {
+  public Urc30TokenCreateActuatorV5(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

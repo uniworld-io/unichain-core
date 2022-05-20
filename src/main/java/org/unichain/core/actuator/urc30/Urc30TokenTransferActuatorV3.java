@@ -45,8 +45,9 @@ import java.util.Objects;
 import static org.unichain.core.config.Parameter.ChainConstant.URC30_CRITICAL_UPDATE_TIME_GUARD;
 
 @Slf4j(topic = "actuator")
-public class TokenTransferActuatorV3 extends AbstractActuator {
-  TokenTransferActuatorV3(Any contract, Manager dbManager) {
+public class Urc30TokenTransferActuatorV3 extends AbstractActuator {
+
+  public Urc30TokenTransferActuatorV3(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

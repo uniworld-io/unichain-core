@@ -33,7 +33,7 @@ import java.util.List;
 @Slf4j(topic = "actuator")
 public class UnfreezeBalanceActuator extends AbstractActuator {
 
-  UnfreezeBalanceActuator(Any contract, Manager dbManager) {
+    public UnfreezeBalanceActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

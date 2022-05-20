@@ -45,7 +45,7 @@ import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_STAR
 @Slf4j(topic = "actuator")
 public class Urc40CreateTokenActuator extends AbstractActuator {
 
-  Urc40CreateTokenActuator(Any contract, Manager dbManager) {
+  public Urc40CreateTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

@@ -39,7 +39,7 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class ParticipateAssetIssueActuator extends AbstractActuator {
 
-  ParticipateAssetIssueActuator(Any contract, Manager dbManager) {
+  public ParticipateAssetIssueActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

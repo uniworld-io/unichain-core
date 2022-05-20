@@ -28,7 +28,7 @@ import static org.unichain.core.actuator.ActuatorConstant.*;
 @Slf4j(topic = "actuator")
 public class VoteWitnessActuator extends AbstractActuator {
 
-  VoteWitnessActuator(Any contract, Manager dbManager) {
+  public VoteWitnessActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

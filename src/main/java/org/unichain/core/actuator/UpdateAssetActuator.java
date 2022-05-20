@@ -15,14 +15,13 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.AccountUpdateContract;
 import org.unichain.protos.Contract.UpdateAssetContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 @Slf4j(topic = "actuator")
 public class UpdateAssetActuator extends AbstractActuator {
 
-  UpdateAssetActuator(Any contract, Manager dbManager) {
+  public UpdateAssetActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

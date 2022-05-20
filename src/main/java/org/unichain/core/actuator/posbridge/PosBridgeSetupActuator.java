@@ -13,7 +13,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.unichain.core.actuator;
+package org.unichain.core.actuator.posbridge;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
@@ -23,6 +23,7 @@ import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
+import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -47,7 +48,7 @@ import static org.unichain.core.services.http.utils.Util.*;
 @Slf4j(topic = "actuator")
 public class PosBridgeSetupActuator extends AbstractActuator {
 
-    PosBridgeSetupActuator(Any contract, Manager dbManager) {
+    public PosBridgeSetupActuator(Any contract, Manager dbManager) {
         super(contract, dbManager);
     }
 

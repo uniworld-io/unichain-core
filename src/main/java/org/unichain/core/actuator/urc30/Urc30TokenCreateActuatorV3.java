@@ -21,11 +21,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
-import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.unichain.common.event.NativeContractEvent;
-import org.unichain.common.event.TokenCreateEvent;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TokenPoolCapsule;
@@ -43,9 +40,9 @@ import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_END_
 import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_START_TIME;
 
 @Slf4j(topic = "actuator")
-public class TokenCreateActuatorV4 extends AbstractActuator {
+public class Urc30TokenCreateActuatorV3 extends AbstractActuator {
 
-  TokenCreateActuatorV4(Any contract, Manager dbManager) {
+  public Urc30TokenCreateActuatorV3(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -55,45 +52,37 @@ public class TokenCreateActuatorV4 extends AbstractActuator {
     try {
       var ctx = contract.unpack(CreateTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var tokenCap = new TokenPoolCapsule(ctx);
+      var capsule = new TokenPoolCapsule(ctx);
+
+      /*
+        to prevent hacking un-used params, must preset default value for old block version
+       */
+      capsule.setCreateAccountFee(TOKEN_DEFAULT_CREATE_ACC_FEE);
 
       if(!ctx.hasField(TOKEN_CREATE_FIELD_START_TIME))
       {
-        tokenCap.setStartTime(dbManager.getHeadBlockTimeStamp());
+        capsule.setStartTime(dbManager.getHeadBlockTimeStamp());
       }
-      var startTime = tokenCap.getStartTime();
+      var startTime = capsule.getStartTime();
 
       if(!ctx.hasField(TOKEN_CREATE_FIELD_END_TIME))
       {
-        tokenCap.setEndTime(Math.addExact(startTime , URC30_DEFAULT_AGE_V3));
+        capsule.setEndTime(Math.addExact(startTime , URC30_DEFAULT_AGE_V3));
       }
 
-      tokenCap.setBurnedToken(0L);
-      tokenCap.setTokenName(tokenCap.getTokenName().toUpperCase());
-      tokenCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
-      tokenCap.setOriginFeePool(ctx.getFeePool());
-      dbManager.getTokenPoolStore().put(tokenCap.createDbKey(), tokenCap);
+      capsule.setBurnedToken(0L);
+      capsule.setTokenName(capsule.getTokenName().toUpperCase());
+      capsule.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      capsule.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+      capsule.setOriginFeePool(ctx.getFeePool());
+      dbManager.getTokenPoolStore().put(capsule.createDbKey(), capsule);
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      accountCapsule.addToken(tokenCap.createDbKey(), tokenCap.getTotalSupply());
+      accountCapsule.addToken(capsule.createDbKey(), capsule.getTotalSupply());
       accountCapsule.setBalance(Math.subtractExact(accountCapsule.getBalance(), Math.addExact(ctx.getFeePool(), fee)));
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
-
-      //emit event
-      var event = NativeContractEvent.builder()
-              .topic("TokenCreate")
-              .rawData(
-                      TokenCreateEvent.builder()
-                              .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
-                              .name(ctx.getName())
-                              .max_supply(ctx.getMaxSupply())
-                              .total_supply(ctx.getTotalSupply())
-                              .build())
-              .build();
-      emitEvent(event, ret);
       return true;
     } catch (Exception e) {
       logger.error("Actuator error: {} --> ", e.getMessage(), e);
@@ -146,8 +135,6 @@ public class TokenCreateActuatorV4 extends AbstractActuator {
       Assert.isTrue(ctx.getLot() >= 0, "Invalid lot: must not negative");
       Assert.isTrue(ctx.getExchUnxNum() > 0, "Invalid exchange unw number: must be positive");
       Assert.isTrue(ctx.getExchNum() > 0, "Invalid exchange token number: must be positive");
-
-      Assert.isTrue(ctx.getCreateAccFee() > 0 && ctx.getCreateAccFee() <= TOKEN_MAX_CREATE_ACC_FEE, "Invalid create account fee");
       return true;
     }
     catch (Exception e){

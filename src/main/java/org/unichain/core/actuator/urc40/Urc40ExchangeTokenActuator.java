@@ -40,7 +40,7 @@ import static org.unichain.core.config.Parameter.ChainConstant.URC30_CRITICAL_UP
 @Slf4j(topic = "actuator")
 public class Urc40ExchangeTokenActuator extends AbstractActuator {
 
-  Urc40ExchangeTokenActuator(Any contract, Manager dbManager) {
+  public Urc40ExchangeTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

@@ -21,7 +21,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 @Slf4j(topic = "actuator")
 public class CreateAccountActuator extends AbstractActuator {
 
-  CreateAccountActuator(Any contract, Manager dbManager) {
+  public CreateAccountActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

@@ -19,7 +19,7 @@ public abstract class AbstractActuator implements Actuator {
   @Setter
   protected Deposit deposit;
 
-  protected AbstractActuator(Any contract, Manager dbManager) {
+  public AbstractActuator(Any contract, Manager dbManager) {
     this.contract = contract;
     this.dbManager = dbManager;
     this.eventIndex = 0;

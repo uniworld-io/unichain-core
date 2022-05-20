@@ -35,7 +35,7 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class NftRemoveMinterActuator extends AbstractActuator {
 
-  NftRemoveMinterActuator(Any contract, Manager dbManager) {
+  public NftRemoveMinterActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

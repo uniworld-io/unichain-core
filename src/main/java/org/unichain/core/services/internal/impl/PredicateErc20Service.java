@@ -3,7 +3,7 @@ package org.unichain.core.services.internal.impl;
 import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
-import org.unichain.core.actuator.urc30.TokenTransferActuatorV4;
+import org.unichain.core.actuator.urc30.Urc30TokenTransferActuatorV4;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -59,7 +59,7 @@ public class PredicateErc20Service implements PredicateService {
                 .getRawData()
                 .getContract(0)
                 .getParameter();
-        var wrapAct = new TokenTransferActuatorV4(contract, dbManager);
+        var wrapAct = new Urc30TokenTransferActuatorV4(contract, dbManager);
         var wrapRet = new TransactionResultCapsule();
         wrapAct.validate();
         wrapAct.execute(wrapRet);

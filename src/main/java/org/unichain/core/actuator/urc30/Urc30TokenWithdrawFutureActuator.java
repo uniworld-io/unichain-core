@@ -35,9 +35,9 @@ import org.unichain.protos.Contract.WithdrawFutureTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 @Slf4j(topic = "actuator")
-public class TokenWithdrawFutureActuatorV3 extends AbstractActuator {
+public class Urc30TokenWithdrawFutureActuator extends AbstractActuator {
 
-  TokenWithdrawFutureActuatorV3(Any contract, Manager dbManager) {
+  public Urc30TokenWithdrawFutureActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -51,14 +51,13 @@ public class TokenWithdrawFutureActuatorV3 extends AbstractActuator {
       var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
 
       withdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp());
-
       tokenPool.setFeePool(Math.subtractExact(tokenPool.getFeePool(), fee));
       tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getTokenPoolStore().put(tokenKey, tokenPool);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
-    } catch (InvalidProtocolBufferException | ArithmeticException | BalanceInsufficientException e) {
+    } catch (Exception e) {
       logger.error("Actuator error: {} --> ", e.getMessage(), e);
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
@@ -84,12 +83,13 @@ public class TokenWithdrawFutureActuatorV3 extends AbstractActuator {
 
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
-      Assert.isTrue (availableToWithdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp()), "Token unavailable to withdraw");
+      Assert.isTrue (availableTokenFutureWithdraw(ownerAddress, tokenKey, dbManager.getHeadBlockTimeStamp()), "Token unavailable to withdraw");
       Assert.isTrue (tokenPool.getFeePool() >= fee, "Not enough token pool fee balance");
+
       return true;
     }
     catch (Exception e){
-      logger.error("TokenWithdrawFuture failed -->", e);
+      logger.error("Actuator error: {} --> ", e.getMessage(), e);
       throw new ContractValidateException(e.getMessage());
     }
   }
@@ -101,87 +101,76 @@ public class TokenWithdrawFutureActuatorV3 extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
+    return Parameter.ChainConstant.TRANSFER_FEE;
   }
 
-  private boolean availableToWithdraw(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) {
-      var headBlockTickDay = Util.makeDayTick(headBlockTime);
-      var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
-      var summary = ownerAcc.getFutureTokenSummary(new String(tokenKey));
-      if(summary == null || headBlockTickDay < summary.getLowerBoundTime() || summary.getTotalDeal() <= 0 || summary.getTotalValue() <= 0)
-        return false;
+  private boolean availableTokenFutureWithdraw(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) {
+    var headBlockTickDay = Util.makeDayTick(headBlockTime);
+    var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
+    var summary = ownerAcc.getFutureTokenSummary(new String(tokenKey));
+    if(summary == null || headBlockTickDay < summary.getLowerBoundTime() || summary.getTotalDeal() <= 0 || summary.getTotalValue() <= 0)
+      return false;
+    else
+      return true;
+  }
+
+  private void withdraw(byte[] ownerAddress, byte[] tokenKey, long headBlockTime) throws BalanceInsufficientException, ContractValidateException{
+    var headBlockTickDay = Util.makeDayTick(headBlockTime);
+    var tokenName = new String(tokenKey);
+    var tokenStore = dbManager.getFutureTokenStore();
+    var summary = dbManager.getAccountStore().get(ownerAddress).getFutureTokenSummary(tokenName);
+    var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
+
+    if(summary == null || summary.getLowerBoundTime() > headBlockTickDay)
+      throw new ContractValidateException("No token to withdraw");
+
+    //then loop to withdraw, the most fastest way!!!
+    var tmpTickKeyBs = summary.getLowerTick();
+    var withdrawAmount = 0L;
+    var withdrawDeal = 0L;
+    while (true){
+      if(tmpTickKeyBs == null)
+        break;
+      var tmpTick = tokenStore.get(tmpTickKeyBs.toByteArray());
+      if(tmpTick.getExpireTime() <= headBlockTickDay)
+      {
+        //withdraw
+        withdrawAmount = Math.addExact(withdrawAmount, tmpTick.getBalance());
+        withdrawDeal = Math.incrementExact(withdrawDeal);
+        //delete
+        tokenStore.delete(tmpTickKeyBs.toByteArray());
+        tmpTickKeyBs = tmpTick.getNextTick();
+      }
       else
-        return true;
-  }
+        break;
+    }
 
-  private void withdraw(byte[] ownerAddress, byte[] tokenKey, long headBlockTime){
-      var headBlockTickDay = Util.makeDayTick(headBlockTime);
-      var tokenName = new String(tokenKey);
-      var tokenStore = dbManager.getFutureTokenStore();
-      var accountStore = dbManager.getAccountStore();
-      var ownerAcc = accountStore.get(ownerAddress);
-      var summary = ownerAcc.getFutureTokenSummary(tokenName);
-
-      /**
-       * loop to withdraw, the most fastest way!!!
-       */
-      var tmpTickKeyBs = summary.getLowerTick();
-      var withdrawAmount = 0;
-      var withdrawDeal = 0;
-      var withdrawAll = false;
-      while (true){
-        if(tmpTickKeyBs == null)
-        {
-          withdrawAll = true;
-          break;
-        }
-        var tmpTickKey = tmpTickKeyBs.toByteArray();
-        if(!tokenStore.has(tmpTickKey))
-        {
-          withdrawAll = true;
-          break;
-        }
-
-        var tmpTick = tokenStore.get(tmpTickKey);
-        if(tmpTick.getExpireTime() <= headBlockTickDay)
-        {
-          //withdraw
-          withdrawAmount += tmpTick.getBalance();
-          withdrawDeal ++;
-          tokenStore.delete(tmpTickKeyBs.toByteArray());
-          tmpTickKeyBs = tmpTick.getNextTick();
-          continue;
-        }
-        else
-        {
-          break;
-        }
-      }
-
-      /**
-       * all deals withdrawn: remove summary
-       */
-      if(withdrawAll){
-        ownerAcc.clearFutureToken(tokenKey);
-        ownerAcc.addToken(tokenKey, withdrawAmount);
-        accountStore.put(ownerAddress, ownerAcc);
-        return;
-      }
-
-      /**
-       * some deals remain: update head & summary
-       */
-      var newHead = tokenStore.get(tmpTickKeyBs.toByteArray());
-      newHead.clearPrevTick();
-      tokenStore.put(tmpTickKeyBs.toByteArray(), newHead);
-      summary = summary.toBuilder()
-              .setTotalDeal(summary.getTotalDeal() - withdrawDeal)
-              .setTotalValue(summary.getTotalValue() - withdrawAmount)
-              .setLowerTick(tmpTickKeyBs)
-              .setLowerBoundTime(newHead.getExpireTime())
-              .build();
-      ownerAcc.setFutureTokenSummary(summary);
+    /**
+     * all deals withdraw: remove summary
+     */
+    if(tmpTickKeyBs == null){
+      ownerAcc.clearFutureToken(tokenKey);
       ownerAcc.addToken(tokenKey, withdrawAmount);
-      accountStore.put(ownerAddress, ownerAcc);
+      dbManager.getAccountStore().put(ownerAddress, ownerAcc);
+      return;
+    }
+
+    /**
+     * some deals remain: update head & summary
+     */
+    var newHead = tokenStore.get(tmpTickKeyBs.toByteArray());
+    newHead.setPrevTick(null);
+    tokenStore.put(tmpTickKeyBs.toByteArray(), newHead);
+
+    //save summary
+    summary = summary.toBuilder()
+            .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), withdrawDeal))
+            .setTotalValue(Math.subtractExact(summary.getTotalValue(), withdrawAmount))
+            .setLowerTick(tmpTickKeyBs)
+            .setLowerBoundTime(newHead.getExpireTime())
+            .build();
+    ownerAcc.setFutureTokenSummary(summary);
+    ownerAcc.addToken(tokenKey, withdrawAmount);
+    dbManager.getAccountStore().put(ownerAddress, ownerAcc);
   }
 }

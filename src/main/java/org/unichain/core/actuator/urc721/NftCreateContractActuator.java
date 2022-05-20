@@ -44,7 +44,7 @@ import static org.unichain.core.services.http.utils.Util.NFT_CREATE_TEMPLATE_FIE
 @Slf4j(topic = "actuator")
 public class NftCreateContractActuator extends AbstractActuator {
 
-  NftCreateContractActuator(Any contract, Manager dbManager) {
+  public NftCreateContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

@@ -37,7 +37,7 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class Urc40MineTokenActuator extends AbstractActuator {
 
-  Urc40MineTokenActuator(Any contract, Manager dbManager) {
+  public Urc40MineTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

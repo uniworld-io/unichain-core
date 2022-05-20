@@ -38,7 +38,7 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class NftApproveTokenActuator extends AbstractActuator {
 
-  NftApproveTokenActuator(Any contract, Manager dbManager) {
+  public NftApproveTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

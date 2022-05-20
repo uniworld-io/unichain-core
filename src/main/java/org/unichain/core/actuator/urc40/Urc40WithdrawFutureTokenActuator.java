@@ -37,7 +37,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 @Slf4j(topic = "actuator")
 public class Urc40WithdrawFutureTokenActuator extends AbstractActuator {
 
-  Urc40WithdrawFutureTokenActuator(Any contract, Manager dbManager) {
+    public Urc40WithdrawFutureTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

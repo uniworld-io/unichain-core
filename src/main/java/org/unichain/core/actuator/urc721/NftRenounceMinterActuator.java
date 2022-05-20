@@ -35,7 +35,7 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class NftRenounceMinterActuator extends AbstractActuator {
 
-  NftRenounceMinterActuator(Any contract, Manager dbManager) {
+  public NftRenounceMinterActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

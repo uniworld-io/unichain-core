@@ -28,6 +28,7 @@ import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
+import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -40,9 +41,9 @@ import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_END_
 import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_START_TIME;
 
 @Slf4j(topic = "actuator")
-public class TokenCreateActuatorV3 extends AbstractActuator {
+public class Urc30TokenCreateActuator extends AbstractActuator {
 
-  TokenCreateActuatorV3(Any contract, Manager dbManager) {
+  public Urc30TokenCreateActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -63,17 +64,20 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
       {
         capsule.setStartTime(dbManager.getHeadBlockTimeStamp());
       }
-      var startTime = capsule.getStartTime();
 
+      var startTime = capsule.getStartTime();
       if(!ctx.hasField(TOKEN_CREATE_FIELD_END_TIME))
       {
-        capsule.setEndTime(Math.addExact(startTime , URC30_DEFAULT_AGE_V3));
+        capsule.setEndTime(Math.addExact(startTime, Parameter.ChainConstant.URC30_DEFAULT_AGE));
       }
+
+      //with block ver <= 2, pre-set factors to zero
+      capsule.setExchTokenNum(0L);
+      capsule.setExchUnwNum(0L);
 
       capsule.setBurnedToken(0L);
       capsule.setTokenName(capsule.getTokenName().toUpperCase());
       capsule.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      capsule.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
       capsule.setOriginFeePool(ctx.getFeePool());
       dbManager.getTokenPoolStore().put(capsule.createDbKey(), capsule);
 
@@ -96,7 +100,7 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(CreateTokenContract.class), "contract type error,expected type [CreateTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(CreateTokenContract.class), "Contract type error,expected type [CreateTokenContract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(CreateTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
@@ -118,8 +122,8 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
       var maxTokenActive = Math.addExact(dbManager.getHeadBlockTimeStamp(), URC30_MAX_ACTIVE);
       Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= maxTokenActive), "Invalid start time: must be greater than current block time and lower than limit timestamp:" +maxTokenActive);
 
-      var endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : Math.addExact(startTime, URC30_DEFAULT_AGE_V3);
-      var maxTokenAge = dbManager.getHeadBlockTimeStamp() + URC30_MAX_AGE_V3;
+      var endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : Math.addExact(startTime, Parameter.ChainConstant.URC30_DEFAULT_AGE);
+      var maxTokenAge = Math.addExact(dbManager.getHeadBlockTimeStamp(), URC30_MAX_AGE);
       Assert.isTrue((endTime > 0)
               && (endTime > startTime )
               && (endTime > dbManager.getHeadBlockTimeStamp())
@@ -130,11 +134,8 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
       Assert.isTrue(ctx.getMaxSupply() >= ctx.getTotalSupply() , "MaxSupply must greater or equal than TotalSupply");
       Assert.isTrue(ctx.getFee() >= 0 && ctx.getFee() <= TOKEN_MAX_TRANSFER_FEE, "Invalid token transfer fee: must be positive and not exceed max fee : " + TOKEN_MAX_TRANSFER_FEE + " tokens");
       Assert.isTrue(ctx.getExtraFeeRate() >= 0 && ctx.getExtraFeeRate() <= 100 && ctx.getExtraFeeRate() <= TOKEN_MAX_TRANSFER_FEE_RATE, "Invalid extra fee rate , should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
-
-      Assert.isTrue(ctx.getFeePool() >= URC30_MIN_POOL_FEE && (accountCap.getBalance() >= Math.addExact(calcFee(), ctx.getFeePool())), "Invalid fee pool or not enough balance for fee & pre-deposit pool fee");
+      Assert.isTrue(ctx.getFeePool() >= 0 && (accountCap.getBalance() >= Math.addExact(calcFee() , ctx.getFeePool())), "Invalid fee pool or not enough balance for fee & pre-deposit pool fee");
       Assert.isTrue(ctx.getLot() >= 0, "Invalid lot: must not negative");
-      Assert.isTrue(ctx.getExchUnxNum() > 0, "Invalid exchange unw number: must be positive");
-      Assert.isTrue(ctx.getExchNum() > 0, "Invalid exchange token number: must be positive");
       return true;
     }
     catch (Exception e){
@@ -150,6 +151,6 @@ public class TokenCreateActuatorV3 extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
+    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 unw default
   }
 }

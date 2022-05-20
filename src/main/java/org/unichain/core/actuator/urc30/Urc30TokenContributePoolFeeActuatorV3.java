@@ -34,9 +34,9 @@ import org.unichain.protos.Contract.ContributeTokenPoolFeeContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 @Slf4j(topic = "actuator")
-public class TokenContributePoolFeeActuatorV3 extends AbstractActuator {
+public class Urc30TokenContributePoolFeeActuatorV3 extends AbstractActuator {
 
-  TokenContributePoolFeeActuatorV3(Any contract, Manager dbManager) {
+    public Urc30TokenContributePoolFeeActuatorV3(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

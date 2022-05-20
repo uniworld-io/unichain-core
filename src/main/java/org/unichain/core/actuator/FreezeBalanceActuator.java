@@ -27,7 +27,7 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class FreezeBalanceActuator extends AbstractActuator {
 
-  FreezeBalanceActuator(Any contract, Manager dbManager) {
+  public FreezeBalanceActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

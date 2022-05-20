@@ -466,8 +466,8 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           break;
 
           //NFT
-        case CreateNftTemplateContract:
-          owner = contractParameter.unpack(CreateNftTemplateContract.class).getOwnerAddress();
+        case Urc721CreateContract:
+          owner = contractParameter.unpack(Urc721CreateContract.class).getOwnerAddress();
           break;
         case MintNftTokenContract:
           owner = contractParameter.unpack(MintNftTokenContract.class).getOwnerAddress();
@@ -690,8 +690,8 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         break;
 
       //NFT
-      case CreateNftTemplateContract:
-        clazz = CreateNftTemplateContract.class;
+      case Urc721CreateContract:
+        clazz = Urc721CreateContract.class;
         break;
       case MintNftTokenContract:
         clazz = MintNftTokenContract.class;
@@ -1053,7 +1053,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
   public static int getMinSupportedBlockVersion(ContractType txType){
     switch (txType){
-      case CreateNftTemplateContract:
+      case Urc721CreateContract:
       case MintNftTokenContract:
       case AddNftMinterContract:
       case RemoveNftMinterContract:

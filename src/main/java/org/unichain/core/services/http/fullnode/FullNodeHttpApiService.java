@@ -53,19 +53,19 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private Urc721RemoveMinterServlet urc721RemoveMinterServlet;
   @Autowired
-  private Urc721MintTokenServlet urc721MintTokenServlet;
+  private Urc721MintServlet urc721MintServlet;
   @Autowired
   private Urc721AddMinterServlet addNftMinterServlet;
   @Autowired
   private Urc721RenounceMinterServlet urc721RenounceMinterServlet;
   @Autowired
-  private Urc721BurnTokenServlet burnNftTokenServlet;
+  private Urc721BurnServlet burnNftTokenServlet;
   @Autowired
-  private Urc721ApproveTokenServlet urc721ApproveTokenServlet;
+  private Urc721ApproveServlet urc721ApproveServlet;
   @Autowired
   private Urc721SetApprovalForAllServlet nftApprovalForAllServlet;
   @Autowired
-  private Urc721TransferTokenServlet urc721TransferTokenServlet;
+  private Urc721TransferFromServlet urc721TransferFromServlet;
   @Autowired
   private Urc721ListContractServlet urc721ListContractServlet;
   @Autowired
@@ -79,7 +79,7 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private Urc721GetTokenServlet urc721GetTokenServlet;
   @Autowired
-  private Urc721GetBalanceOfServlet urc721GetBalanceOfServlet;
+  private Urc721BalanceOfServlet urc721BalanceOfServlet;
   @Autowired
   private Urc721GetApprovalServlet urc721GetApprovalServlet;
 
@@ -350,7 +350,7 @@ public class FullNodeHttpApiService implements Service {
 
       context.addServlet(new ServletHolder(urc721GetContractServlet), "/getnftcontract");
       context.addServlet(new ServletHolder(urc721GetTokenServlet), "/getnfttoken");
-      context.addServlet(new ServletHolder(urc721GetBalanceOfServlet), "/getnftbalanceOf");
+      context.addServlet(new ServletHolder(urc721BalanceOfServlet), "/getnftbalanceOf");
       context.addServlet(new ServletHolder(urc721GetApprovalServlet), "/getnftapprovedforall");
 
       context.addServlet(new ServletHolder(urc30GetFutureTokenServlet), "/getfuturetoken");
@@ -369,13 +369,13 @@ public class FullNodeHttpApiService implements Service {
        */
       context.addServlet(new ServletHolder(urc721CreateContractServlet), "/createnftcontract");
       context.addServlet(new ServletHolder(urc721RemoveMinterServlet), "/removenftminter");
-      context.addServlet(new ServletHolder(urc721MintTokenServlet), "/mintnfttoken");
+      context.addServlet(new ServletHolder(urc721MintServlet), "/mintnfttoken");
       context.addServlet(new ServletHolder(addNftMinterServlet), "/addnftminter");
       context.addServlet(new ServletHolder(urc721RenounceMinterServlet), "/renouncenftminter");
       context.addServlet(new ServletHolder(burnNftTokenServlet), "/burnnfttoken");
-      context.addServlet(new ServletHolder(urc721ApproveTokenServlet), "/approvenfttoken");
+      context.addServlet(new ServletHolder(urc721ApproveServlet), "/approvenfttoken");
       context.addServlet(new ServletHolder(nftApprovalForAllServlet), "/approveforallnfttoken");
-      context.addServlet(new ServletHolder(urc721TransferTokenServlet), "/transfernfttoken");
+      context.addServlet(new ServletHolder(urc721TransferFromServlet), "/transfernfttoken");
       context.addServlet(new ServletHolder(urc721ListContractServlet), "/listnftcontract");
       context.addServlet(new ServletHolder(urc721ListTokenServlet), "/listnfttoken");
       context.addServlet(new ServletHolder(listNftTokenApproveServlet), "/listnfttokenapprove");

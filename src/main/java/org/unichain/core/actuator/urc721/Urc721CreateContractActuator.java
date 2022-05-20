@@ -34,7 +34,7 @@ import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.CreateNftTemplateContract;
+import org.unichain.protos.Contract.Urc721CreateContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -53,7 +53,7 @@ public class Urc721CreateContractActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(CreateNftTemplateContract.class);
+      var ctx = contract.unpack(Urc721CreateContract.class);
       var owner = ctx.getOwnerAddress().toByteArray();
       var tokenAddr = ctx.getAddress().toByteArray();
 
@@ -95,9 +95,9 @@ public class Urc721CreateContractActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(CreateNftTemplateContract.class), "contract type error, expected type [CreateNftTemplateContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Urc721CreateContract.class), "contract type error, expected type [Urc721CreateContract],real type[" + contract.getClass() + "]");
 
-      val ctx = this.contract.unpack(CreateNftTemplateContract.class);
+      val ctx = this.contract.unpack(Urc721CreateContract.class);
       var accountStore = dbManager.getAccountStore();
 
       var addr = ctx.getAddress().toByteArray();
@@ -137,7 +137,7 @@ public class Urc721CreateContractActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(CreateNftTemplateContract.class).getOwnerAddress();
+    return contract.unpack(Urc721CreateContract.class).getOwnerAddress();
   }
 
   @Override

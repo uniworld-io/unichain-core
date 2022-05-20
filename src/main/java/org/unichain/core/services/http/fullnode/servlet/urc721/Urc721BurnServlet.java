@@ -16,26 +16,22 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-
 @Component
 @Slf4j(topic = "API")
-public class Urc721MintTokenServlet extends HttpServlet {
+public class Urc721BurnServlet extends HttpServlet {
 
   @Autowired
   private NftService nftService;
-
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-  }
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.MintNftTokenContract.newBuilder();
+      var build = Contract.BurnNftTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
-      var tx = nftService.createToken(tokenCtx);
+      var tx = nftService.burnToken(tokenCtx);
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

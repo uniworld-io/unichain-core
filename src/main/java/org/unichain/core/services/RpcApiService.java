@@ -1384,12 +1384,12 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void createNftTemplate(Contract.CreateNftTemplateContract request, StreamObserver<Transaction> responseObserver) {
+    public void createNftTemplate(Contract.Urc721CreateContract request, StreamObserver<Transaction> responseObserver) {
       try {
         request = request.toBuilder()
                 .setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()))
                 .build();
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.CreateNftTemplateContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721CreateContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());

@@ -3,8 +3,8 @@ package org.unichain.core.services.internal.impl;
 import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
-import org.unichain.core.actuator.urc721.Urc721BurnTokenActuator;
-import org.unichain.core.actuator.urc721.Urc721MintTokenActuator;
+import org.unichain.core.actuator.urc721.Urc721BurnActuator;
+import org.unichain.core.actuator.urc721.Urc721MintActuator;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -44,7 +44,7 @@ public class ChildTokenErc721Service implements ChildTokenService {
                 .getRawData()
                 .getContract(0)
                 .getParameter();
-        var wrapActuator = new Urc721MintTokenActuator(contract, dbManager);
+        var wrapActuator = new Urc721MintActuator(contract, dbManager);
         var wrapRet = new TransactionResultCapsule();
         wrapActuator.validate();
         wrapActuator.execute(wrapRet);
@@ -63,7 +63,7 @@ public class ChildTokenErc721Service implements ChildTokenService {
                 .getRawData()
                 .getContract(0)
                 .getParameter();
-        var wrapActuator = new Urc721BurnTokenActuator(wrapCap, dbManager);
+        var wrapActuator = new Urc721BurnActuator(wrapCap, dbManager);
         var wrapRet = new TransactionResultCapsule();
 
         wrapActuator.validate();

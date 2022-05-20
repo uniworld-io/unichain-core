@@ -35,9 +35,9 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
-public class Urc721BurnTokenActuator extends AbstractActuator {
+public class Urc721BurnActuator extends AbstractActuator {
 
-  public Urc721BurnTokenActuator(Any contract, Manager dbManager) {
+  public Urc721BurnActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

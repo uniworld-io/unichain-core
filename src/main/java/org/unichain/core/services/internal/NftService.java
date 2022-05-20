@@ -6,7 +6,7 @@ import org.unichain.protos.Protocol;
 
 public interface NftService {
 
-    Protocol.Transaction createContract(Contract.CreateNftTemplateContract contract) throws ContractValidateException;
+    Protocol.Transaction createContract(Contract.Urc721CreateContract contract) throws ContractValidateException;
     Protocol.NftTemplate getContract(Protocol.NftTemplate query);
     Protocol.NftTemplateQueryResult listContract(Protocol.NftTemplateQuery query);
 

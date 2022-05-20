@@ -14,9 +14,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+//@todo urc721
 @Component
 @Slf4j(topic = "API")
-public class Urc721GetBalanceOfServlet extends HttpServlet {
+public class Urc721GetApprovedServlet extends HttpServlet {
 
   @Autowired
   private NftService nftService;
@@ -25,12 +26,16 @@ public class Urc721GetBalanceOfServlet extends HttpServlet {
     try {
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("owner_address");
-      Protocol.NftBalanceOf.Builder build = Protocol.NftBalanceOf.newBuilder();
+      String operator = request.getParameter("operator");
+      boolean isApproved = Boolean.parseBoolean(request.getParameter("is_approved"));
+      Protocol.IsApprovedForAll.Builder build = Protocol.IsApprovedForAll.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
+      jsonObject.put("operator", operator);
+      jsonObject.put("is_approved", isApproved);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
-      Protocol.NftBalanceOf reply = nftService.balanceOf(build.build());
+      Protocol.IsApprovedForAll reply = nftService.isApprovalForAll(build.build());
 
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
@@ -40,7 +45,8 @@ public class Urc721GetBalanceOfServlet extends HttpServlet {
     } catch (Exception e) {
       logger.debug("Exception: {}", e.getMessage());
       try {
-        response.getWriter().println(Util.printErrorMsg(e));
+        response.setStatus(400);
+        response.getWriter().println(Util.messageErrorHttp(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());
       }

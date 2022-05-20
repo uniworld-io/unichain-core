@@ -364,8 +364,8 @@ public class Util {
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
-          case CreateNftTemplateContract:{
-            var parsedContract = contractParameter.unpack(CreateNftTemplateContract.class);
+          case Urc721CreateContract:{
+            var parsedContract = contractParameter.unpack(Urc721CreateContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
@@ -770,11 +770,13 @@ public class Util {
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), withdrawFutureTokenContractBuilder, selfType);
             any = Any.pack(withdrawFutureTokenContractBuilder.build());
             break;
-          case "CreateNftTemplateContract":
-            CreateNftTemplateContract.Builder createNftTemplateContractBuilder = CreateNftTemplateContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), createNftTemplateContractBuilder, selfType);
-            any = Any.pack(createNftTemplateContractBuilder.build());
+          case "Urc721CreateContract":
+          {
+            var builder = Urc721CreateContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "MintNftTokenContract":
             MintNftTokenContract.Builder  mintNftTokenContractBuilder = MintNftTokenContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), mintNftTokenContractBuilder, selfType);
@@ -1009,7 +1011,7 @@ public class Util {
 
   public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_CREATE_ACC_FEE = CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor NFT_CREATE_TEMPLATE_FIELD_MINTER = CreateNftTemplateContract.getDescriptor().findFieldByNumber(CreateNftTemplateContract.MINTER_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_CREATE_TEMPLATE_FIELD_MINTER = Urc721CreateContract.getDescriptor().findFieldByNumber(Urc721CreateContract.MINTER_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TEMPLATE_ACCOUNT_FIELD_TAIL = Protocol.NftAccountTemplateRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTemplateRelation.TAIL_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_NEXT = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.NEXT_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.MINTER_FIELD_NUMBER);

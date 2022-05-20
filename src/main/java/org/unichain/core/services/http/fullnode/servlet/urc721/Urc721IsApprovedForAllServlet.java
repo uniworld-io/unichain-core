@@ -14,10 +14,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-//@fixme remove and use getApproved
+//@todo urc721
 @Component
 @Slf4j(topic = "API")
-public class Urc721GetApprovalServlet extends HttpServlet {
+public class Urc721IsApprovedForAllServlet extends HttpServlet {
 
   @Autowired
   private NftService nftService;

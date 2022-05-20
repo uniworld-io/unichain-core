@@ -58,7 +58,7 @@ public class SolidityNodeHttpApiService implements Service {
   @Autowired
   private Urc721GetTokenServlet urc721GetTokenServlet;
   @Autowired
-  private Urc721GetBalanceOfServlet urc721GetBalanceOfServlet;
+  private Urc721BalanceOfServlet urc721BalanceOfServlet;
   @Autowired
   private Urc721GetApprovalServlet urc721GetApprovalServlet;
 
@@ -182,7 +182,7 @@ public class SolidityNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(urc721ListTokenServlet), "/walletsolidity/listnfttoken");
       context.addServlet(new ServletHolder(urc721GetContractServlet), "/walletsolidity/getnftcontract");
       context.addServlet(new ServletHolder(urc721GetTokenServlet), "/walletsolidity/getnfttoken");
-      context.addServlet(new ServletHolder(urc721GetBalanceOfServlet), "/walletsolidity/getnftbalanceOf");
+      context.addServlet(new ServletHolder(urc721BalanceOfServlet), "/walletsolidity/getnftbalanceOf");
       context.addServlet(new ServletHolder(urc721GetApprovalServlet), "/walletsolidity/getnftapprovedforall");
 
       //urc40

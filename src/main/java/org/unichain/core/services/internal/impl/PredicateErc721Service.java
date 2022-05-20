@@ -3,7 +3,7 @@ package org.unichain.core.services.internal.impl;
 import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
-import org.unichain.core.actuator.urc721.Urc721TransferTokenActuator;
+import org.unichain.core.actuator.urc721.Urc721TransferFromActuator;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -34,7 +34,7 @@ public class PredicateErc721Service implements PredicateService {
 
         var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                 .setOwnerAddress(depositor)
-                .setToAddress(config.getPredicateErc721())
+                .setTo(config.getPredicateErc721())
                 .setAddress(rootToken)
                 .setTokenId(erc721Decode.tokenId)
                 .build();
@@ -47,7 +47,7 @@ public class PredicateErc721Service implements PredicateService {
                 .getRawData()
                 .getContract(0)
                 .getParameter();
-        var wrapActuator = new Urc721TransferTokenActuator(contract, dbManager);
+        var wrapActuator = new Urc721TransferFromActuator(contract, dbManager);
         var wrapRet = new TransactionResultCapsule();
         wrapActuator.validate();
         wrapActuator.execute(wrapRet);
@@ -58,7 +58,7 @@ public class PredicateErc721Service implements PredicateService {
     public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException, ContractValidateException {
         var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
                 .setOwnerAddress(config.getPredicateErc721())
-                .setToAddress(withdrawer)
+                .setTo(withdrawer)
                 .setAddress(rootToken)
                 .setTokenId(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
                 .build();

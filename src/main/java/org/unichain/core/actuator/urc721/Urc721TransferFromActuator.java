@@ -36,9 +36,9 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
-public class Urc721TransferTokenActuator extends AbstractActuator {
+public class Urc721TransferFromActuator extends AbstractActuator {
 
-    public Urc721TransferTokenActuator(Any contract, Manager dbManager) {
+    public Urc721TransferFromActuator(Any contract, Manager dbManager) {
         super(contract, dbManager);
     }
 
@@ -50,7 +50,7 @@ public class Urc721TransferTokenActuator extends AbstractActuator {
             var accountStore = dbManager.getAccountStore();
             var tokenStore = dbManager.getNftTokenStore();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
-            var toAddr = ctx.getToAddress();
+            var toAddr = ctx.getTo();
             var toAddrBytes = toAddr.toByteArray();
             var tokenId = Urc721TokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
             //create new acc if not exist
@@ -92,7 +92,7 @@ public class Urc721TransferTokenActuator extends AbstractActuator {
             var tokenStore = dbManager.getNftTokenStore();
             var relationStore = dbManager.getNftAccountTokenStore();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
-            var toAddr = ctx.getToAddress().toByteArray();
+            var toAddr = ctx.getTo().toByteArray();
             var tokenId = Urc721TokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
 
             Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Owner address and to address must be not the same");

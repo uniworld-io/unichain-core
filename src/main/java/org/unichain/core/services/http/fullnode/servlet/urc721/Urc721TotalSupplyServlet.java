@@ -16,9 +16,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
+//@todo urc721
 @Component
 @Slf4j(topic = "API")
-public class Urc721TransferTokenServlet extends HttpServlet {
+public class Urc721TotalSupplyServlet extends HttpServlet {
 
   @Autowired
   private NftService nftService;
@@ -28,12 +29,10 @@ public class Urc721TransferTokenServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.TransferNftTokenContract.newBuilder();
+      var build = Contract.BurnNftTokenContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
-
-      var tx = nftService.transfer(tokenCtx);
-
+      var tx = nftService.burnToken(tokenCtx);
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

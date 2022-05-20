@@ -37,8 +37,8 @@ public class NftServiceImpl implements NftService {
     private Wallet wallet;
 
     @Override
-    public Protocol.Transaction createContract(Contract.CreateNftTemplateContract contract) throws ContractValidateException {
-        return wallet.createTransactionCapsule(contract, ContractType.CreateNftTemplateContract).getInstance();
+    public Protocol.Transaction createContract(Contract.Urc721CreateContract contract) throws ContractValidateException {
+        return wallet.createTransactionCapsule(contract, ContractType.Urc721CreateContract).getInstance();
     }
 
     private static Descriptors.FieldDescriptor CONTRACT_ADDR = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.ADDRESS_FIELD_NUMBER);

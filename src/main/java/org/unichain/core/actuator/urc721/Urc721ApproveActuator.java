@@ -36,9 +36,9 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
-public class Urc721ApproveTokenActuator extends AbstractActuator {
+public class Urc721ApproveActuator extends AbstractActuator {
 
-  public Urc721ApproveTokenActuator(Any contract, Manager dbManager) {
+  public Urc721ApproveActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -55,12 +55,12 @@ public class Urc721ApproveTokenActuator extends AbstractActuator {
       var nftToken = nftTokenStore.get(tokenId);
 
       if(ctx.getApprove()){
-        nftToken.setApproval(ctx.getToAddress());
+        nftToken.setApproval(ctx.getTo());
         nftTokenStore.put(tokenId, nftToken);
 
-        dbManager.addApproveToken(tokenId, ctx.getToAddress().toByteArray());
+        dbManager.addApproveToken(tokenId, ctx.getTo().toByteArray());
 
-        var toAddr = ctx.getToAddress();
+        var toAddr = ctx.getTo();
         if(!accountStore.has(toAddr.toByteArray())){
             var moreFee = dbManager.createNewAccount(toAddr);
             fee = Math.addExact(fee, moreFee);
@@ -69,7 +69,7 @@ public class Urc721ApproveTokenActuator extends AbstractActuator {
       else {
         nftToken.clearApproval();
         nftTokenStore.put(tokenId, nftToken);
-        dbManager.disapproveToken(tokenId, ctx.getToAddress().toByteArray());
+        dbManager.disapproveToken(tokenId, ctx.getTo().toByteArray());
       }
 
       chargeFee(owner, fee);
@@ -96,7 +96,7 @@ public class Urc721ApproveTokenActuator extends AbstractActuator {
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
 
-      var toAddr = ctx.getToAddress().toByteArray();
+      var toAddr = ctx.getTo().toByteArray();
       Assert.isTrue(Wallet.addressValid(toAddr), "Target address not active or not exists");
       if(!accountStore.has(toAddr)){
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
@@ -110,12 +110,12 @@ public class Urc721ApproveTokenActuator extends AbstractActuator {
       if(ctx.getApprove()){
         if(nftToken.hasApproval()){
           //approve: just override exception: already approved
-          Assert.isTrue(!Arrays.equals(ctx.getToAddress().toByteArray(), nftToken.getApproval()), "The address has already been approver");
+          Assert.isTrue(!Arrays.equals(ctx.getTo().toByteArray(), nftToken.getApproval()), "The address has already been approver");
         }
       }
       else {
         //disapprove
-        Assert.isTrue(nftToken.hasApproval() && Arrays.equals(ctx.getToAddress().toByteArray(), nftToken.getApproval()), "Unmatched approval address");
+        Assert.isTrue(nftToken.hasApproval() && Arrays.equals(ctx.getTo().toByteArray(), nftToken.getApproval()), "Unmatched approval address");
       }
 
       Assert.isTrue(Arrays.equals(nftToken.getOwner(), ownerAddr), "Not owner of token");

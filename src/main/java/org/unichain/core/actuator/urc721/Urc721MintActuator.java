@@ -41,9 +41,9 @@ import java.util.Objects;
 import static org.unichain.core.services.http.utils.Util.NFT_MINT_FIELD_TOKEN_ID;
 
 @Slf4j(topic = "actuator")
-public class Urc721MintTokenActuator extends AbstractActuator {
+public class Urc721MintActuator extends AbstractActuator {
 
-  public Urc721MintTokenActuator(Any contract, Manager dbManager) {
+  public Urc721MintActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

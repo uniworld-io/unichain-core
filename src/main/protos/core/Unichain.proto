@@ -448,7 +448,7 @@ message Transaction {
       ExchangeTokenContract = 62;
 
       //nft
-      CreateNftTemplateContract = 63;
+      Urc721CreateContract = 63;
       MintNftTokenContract = 64;
       RemoveNftMinterContract = 65;
       AddNftMinterContract = 66;

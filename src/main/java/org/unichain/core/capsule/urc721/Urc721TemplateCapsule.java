@@ -20,7 +20,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.unichain.core.capsule.ProtoCapsule;
-import org.unichain.protos.Contract.CreateNftTemplateContract;
+import org.unichain.protos.Contract.Urc721CreateContract;
 import org.unichain.protos.Protocol.NftTemplate;
 
 import static org.unichain.core.services.http.utils.Util.*;
@@ -41,7 +41,7 @@ public class Urc721TemplateCapsule implements ProtoCapsule<NftTemplate> {
     this.template = template;
   }
 
-  public Urc721TemplateCapsule(CreateNftTemplateContract ctx, long lastOperation, long tokenIndex) {
+  public Urc721TemplateCapsule(Urc721CreateContract ctx, long lastOperation, long tokenIndex) {
     var builder = NftTemplate.newBuilder()
             .setSymbol(ctx.getSymbol().toUpperCase())
             .setName(ctx.getName())

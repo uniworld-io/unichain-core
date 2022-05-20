@@ -38,7 +38,7 @@ public class HttpApiOnSolidityService implements Service {
   @Autowired
   private Urc721GetTokenOnSolidityServlet getNftTokenOnSolidityServlet;
   @Autowired
-  private Urc721GetBalanceOfOnSolidityServlet getNftBalanceOfOnSolidityServlet;
+  private Urc721BalanceOfOnSolidityServlet getNftBalanceOfOnSolidityServlet;
   @Autowired
   private Urc721GetApprovalOnSolidityServlet getNftApprovedForAllOnSolidityServlet;
 

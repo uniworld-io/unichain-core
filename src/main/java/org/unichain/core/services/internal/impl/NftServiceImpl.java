@@ -10,7 +10,7 @@ import org.springframework.util.Assert;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
-import org.unichain.core.capsule.NftTokenCapsule;
+import org.unichain.core.capsule.urc721.Urc721TokenCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.internal.NftService;
@@ -57,7 +57,7 @@ public class NftServiceImpl implements NftService {
     @Override
     public Protocol.NftTokenGetResult getToken(Protocol.NftTokenGet query) {
         Assert.notNull(query.getAddress(), "Token address empty");
-        var id = NftTokenCapsule.genTokenKey(query.getAddress().toByteArray(), query.getId());
+        var id = Urc721TokenCapsule.genTokenKey(query.getAddress().toByteArray(), query.getId());
 
         if(!dbManager.getNftTokenStore().has(id))
         {
@@ -293,7 +293,7 @@ public class NftServiceImpl implements NftService {
                 .build();
     }
 
-    private List<Protocol.NftToken> listTokenByOwner(byte[] ownerAddr, Predicate<NftTokenCapsule> filter){
+    private List<Protocol.NftToken> listTokenByOwner(byte[] ownerAddr, Predicate<Urc721TokenCapsule> filter){
         List<Protocol.NftToken> unsorted = new ArrayList<>();
         var relationStore = dbManager.getNftAccountTokenStore();
         var tokenStore = dbManager.getNftTokenStore();

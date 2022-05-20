@@ -25,7 +25,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
-import org.unichain.core.capsule.TokenPoolCapsule;
+import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
@@ -52,7 +52,7 @@ public class Urc30TokenCreateActuatorV3 extends AbstractActuator {
     try {
       var ctx = contract.unpack(CreateTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var capsule = new TokenPoolCapsule(ctx);
+      var capsule = new Urc30TokenPoolCapsule(ctx);
 
       /*
         to prevent hacking un-used params, must preset default value for old block version

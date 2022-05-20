@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
-import org.unichain.core.capsule.TokenPoolCapsule;
+import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
@@ -23,7 +23,7 @@ import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "DB")
 @Component
-public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> {
+public class TokenPoolStore extends UnichainStoreWithRevoking<Urc30TokenPoolCapsule> {
 
   @Autowired
   protected TokenPoolStore(@Value("token-pool") String dbName) {
@@ -31,7 +31,7 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
   }
 
   @Override
-  public TokenPoolCapsule get(byte[] key) {
+  public Urc30TokenPoolCapsule get(byte[] key) {
     return super.getUnchecked(key);
   }
 
@@ -47,7 +47,7 @@ public class TokenPoolStore extends UnichainStoreWithRevoking<TokenPoolCapsule> 
 
     var sorted = getAll().stream()
             .filter(Objects::nonNull)
-            .map(TokenPoolCapsule::getInstance)
+            .map(Urc30TokenPoolCapsule::getInstance)
             .filter(filter)
             .map(item -> item.hasField(TOKEN_CREATE_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
             .sorted(Comparator.comparing(Contract.CreateTokenContract::getName))

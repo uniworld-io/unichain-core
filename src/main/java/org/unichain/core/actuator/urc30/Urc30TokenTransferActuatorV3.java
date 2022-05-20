@@ -27,7 +27,7 @@ import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.FutureTokenCapsule;
+import org.unichain.core.capsule.urc30.Urc30FutureTokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -234,7 +234,7 @@ public class Urc30TokenTransferActuatorV3 extends AbstractActuator {
               .clearNextTick()
               .clearPrevTick()
               .build();
-      tokenStore.put(tickKey, new FutureTokenCapsule(tick));
+      tokenStore.put(tickKey, new Urc30FutureTokenCapsule(tick));
 
       //save summary
       summary = Protocol.FutureTokenSummaryV2.newBuilder()
@@ -272,7 +272,7 @@ public class Urc30TokenTransferActuatorV3 extends AbstractActuator {
               .setNextTick(summary.getLowerTick())
               .clearPrevTick()
               .build();
-      tokenStore.put(tickKey, new FutureTokenCapsule(newHead));
+      tokenStore.put(tickKey, new Urc30FutureTokenCapsule(newHead));
 
       //save summary
       summary = summary.toBuilder()
@@ -299,7 +299,7 @@ public class Urc30TokenTransferActuatorV3 extends AbstractActuator {
               .clearNextTick()
               .setPrevTick(oldTailKeyBs)
               .build();
-      tokenStore.put(tickKey, new FutureTokenCapsule(newTail));
+      tokenStore.put(tickKey, new Urc30FutureTokenCapsule(newTail));
 
       //save old tail
       var oldTail = tokenStore.get(oldTailKeyBs.toByteArray());
@@ -335,7 +335,7 @@ public class Urc30TokenTransferActuatorV3 extends AbstractActuator {
                 .setPrevTick(searchKeyBs)
                 .setNextTick(oldNextTickKey)
                 .build();
-        tokenStore.put(tickKey, new FutureTokenCapsule(newTick));
+        tokenStore.put(tickKey, new Urc30FutureTokenCapsule(newTick));
 
         //save prev tick
         searchTick.setNextTick(ByteString.copyFrom(tickKey));

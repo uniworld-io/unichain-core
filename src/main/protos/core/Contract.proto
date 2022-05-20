@@ -210,28 +210,28 @@ message WithdrawFutureTokenContract {
  */
 message Urc40CreateTokenContract {
   bytes owner_address = 1;
-  string symbol = 2;
-  string name = 3;
-  int64 decimals = 4;
-  int64 max_supply = 5;
-  int64 total_supply = 6;
-  int64 start_time = 7;
-  int64 end_time = 8;
-  string description = 9;
-  string url = 10;
-  int64 fee = 11;
-  int64 extra_fee_rate = 12;
-  int64 fee_pool = 13;
-  int64 burned = 14;
-  int64 latest_operation_time = 15;
-  int64 lot = 16;
-  int64 fee_pool_origin = 17;
-  int64 exch_unx_num = 18; //#unw
-  int64 exch_num = 19; //exchange to #token
-  bool  exch_enable = 20;
-  int64 critical_update_time = 21;//critical update time, ex: fee, ownership...
-  int64 create_acc_fee = 22; //create new account fee
-  bytes address = 23;
+  bytes address = 2;
+  string symbol = 3;
+  string name = 4;
+  int64 decimals = 5;
+  int64 max_supply = 6;
+  int64 total_supply = 7;
+  int64 start_time = 8;
+  int64 end_time = 9;
+  string description = 10;
+  string url = 11;
+  int64 fee = 12;
+  int64 extra_fee_rate = 13;
+  int64 fee_pool = 14;
+  int64 burned = 15;
+  int64 latest_operation_time = 16;
+  int64 lot = 17;
+  int64 fee_pool_origin = 18;
+  int64 exch_unx_num = 19;
+  int64 exch_num = 20;
+  bool  exch_enable = 21;
+  int64 critical_update_time = 22;
+  int64 create_acc_fee = 23;
 }
 
 message Urc40TransferTokenContract {
@@ -297,9 +297,9 @@ message Urc40UpdateTokenParamsContract {
   string description = 7;
   int64 total_supply = 8;
   int64 fee_pool = 9;
-  int64 exch_unx_num = 10; //exchange by unw
-  int64 exch_num = 11; //exchange to by token
-  int64 create_acc_fee = 12; //create account fee by token
+  int64 exch_unx_num = 10;
+  int64 exch_num = 11;
+  int64 create_acc_fee = 12;
 }
 
 message Urc40WithdrawFutureTokenContract {

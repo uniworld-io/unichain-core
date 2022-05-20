@@ -28,7 +28,7 @@ import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.TokenCreateEvent;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
-import org.unichain.core.capsule.TokenPoolCapsule;
+import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
@@ -55,7 +55,7 @@ public class Urc30TokenCreateActuatorV4 extends AbstractActuator {
     try {
       var ctx = contract.unpack(CreateTokenContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var tokenCap = new TokenPoolCapsule(ctx);
+      var tokenCap = new Urc30TokenPoolCapsule(ctx);
 
       if(!ctx.hasField(TOKEN_CREATE_FIELD_START_TIME))
       {

@@ -13,18 +13,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.unichain.core.capsule;
+package org.unichain.core.capsule.urc30;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol.FutureTokenV2;
 
 @Slf4j(topic = "capsule")
-public class FutureTokenCapsule implements ProtoCapsule<FutureTokenV2> {
+public class Urc30FutureTokenCapsule implements ProtoCapsule<FutureTokenV2> {
   private FutureTokenV2 index;
 
-  public FutureTokenCapsule(byte[] data) {
+  public Urc30FutureTokenCapsule(byte[] data) {
     try {
       this.index = FutureTokenV2.parseFrom(data);
     } catch (InvalidProtocolBufferException e) {
@@ -32,7 +33,7 @@ public class FutureTokenCapsule implements ProtoCapsule<FutureTokenV2> {
     }
   }
 
-  public FutureTokenCapsule(FutureTokenV2 index) {
+  public Urc30FutureTokenCapsule(FutureTokenV2 index) {
     this.index = index;
   }
 

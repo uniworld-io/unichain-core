@@ -13,23 +13,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.unichain.core.capsule;
+package org.unichain.core.capsule.urc721;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.unichain.common.utils.ByteArray;
+import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
-public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
+public class Urc721TokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   private Protocol.NftToken token;
   private byte[] key;
 
-  public NftTokenCapsule(byte[] data) {
+  public Urc721TokenCapsule(byte[] data) {
     try {
       this.token = Protocol.NftToken.parseFrom(data);
       this.key =  genTokenKey(token.getAddress().toByteArray(), token.getId());
@@ -38,7 +39,7 @@ public class NftTokenCapsule implements ProtoCapsule<Protocol.NftToken> {
     }
   }
 
-  public NftTokenCapsule(Protocol.NftToken token) {
+  public Urc721TokenCapsule(Protocol.NftToken token) {
     this.token = token;
     this.key = genTokenKey(token.getAddress().toByteArray(), token.getId());
   }

@@ -29,6 +29,7 @@ import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.*;
+import org.unichain.core.capsule.urc721.Urc721TemplateCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -56,7 +57,7 @@ public class NftCreateContractActuator extends AbstractActuator {
       var owner = ctx.getOwnerAddress().toByteArray();
       var tokenAddr = ctx.getAddress().toByteArray();
 
-      dbManager.saveNftTemplate(new NftTemplateCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
+      dbManager.saveNftTemplate(new Urc721TemplateCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
 
       //register new account with type assetissue
       var defaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;

@@ -13,20 +13,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.unichain.core.capsule;
+package org.unichain.core.capsule.urc721;
 
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
+import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol.NftAccountTemplateRelation;
 
 import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FIELD_TAIL;
 
 @Slf4j(topic = "capsule")
-public class NftAccountTemplateRelationCapsule implements ProtoCapsule<NftAccountTemplateRelation> {
+public class Urc721AccountTemplateRelationCapsule implements ProtoCapsule<NftAccountTemplateRelation> {
   private NftAccountTemplateRelation relation;
   private byte[] key;
 
-  public NftAccountTemplateRelationCapsule(byte[] key, NftAccountTemplateRelation relation) {
+  public Urc721AccountTemplateRelationCapsule(byte[] key, NftAccountTemplateRelation relation) {
     this.key = key;
     this.relation = relation;
   }

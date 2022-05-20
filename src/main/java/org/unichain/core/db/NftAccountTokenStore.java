@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.ByteArray;
-import org.unichain.core.capsule.NftAccountTokenRelationCapsule;
+import org.unichain.core.capsule.urc721.Urc721AccountTokenRelationCapsule;
 import org.unichain.protos.Protocol;
 
 import java.util.Arrays;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Slf4j(topic = "DB")
 @Component
-public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTokenRelationCapsule> {
+public class NftAccountTokenStore extends UnichainStoreWithRevoking<Urc721AccountTokenRelationCapsule> {
 
     @Autowired
     protected NftAccountTokenStore(@Value("nft-acc-token-relation") String dbName) {
@@ -27,18 +27,18 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
     }
 
     @Override
-    public NftAccountTokenRelationCapsule get(byte[] key) {
+    public Urc721AccountTokenRelationCapsule get(byte[] key) {
         return super.getUnchecked(key);
     }
 
-    public List<NftAccountTokenRelationCapsule> getAllTokens() {
+    public List<Urc721AccountTokenRelationCapsule> getAllTokens() {
         return Streams.stream(iterator())
                 .map(Entry::getValue)
                 .collect(Collectors.toList());
     }
 
     public void disApproveForAll(byte[] ownerAddr, byte[] toAddr) {
-        NftAccountTokenRelationCapsule ownerRelation;
+        Urc721AccountTokenRelationCapsule ownerRelation;
         if (has(ownerAddr)) {
             ownerRelation = get(ownerAddr);
             Assert.isTrue(Arrays.equals(ownerRelation.getApprovedForAll(), toAddr), "approved address miss-matched!");
@@ -46,7 +46,7 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
             put(ownerAddr, ownerRelation);
         }
 
-        NftAccountTokenRelationCapsule toRelation;
+        Urc721AccountTokenRelationCapsule toRelation;
         if (has(toAddr)) {
             toRelation = get(toAddr);
             var ownerAddrBs = ByteString.copyFrom(ownerAddr);
@@ -57,7 +57,7 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
     }
 
     public void approveForAll(byte[] ownerAddr, byte[] toAddr) {
-        NftAccountTokenRelationCapsule ownerRelation;
+        Urc721AccountTokenRelationCapsule ownerRelation;
         if (has(ownerAddr)) {
             ownerRelation = get(ownerAddr);
             if (ownerRelation.hasApprovalForAll()) {
@@ -65,7 +65,7 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
             }
             ownerRelation.setApprovedForAll(ByteString.copyFrom(toAddr));
         } else {
-            ownerRelation = new NftAccountTokenRelationCapsule(ownerAddr,
+            ownerRelation = new Urc721AccountTokenRelationCapsule(ownerAddr,
                     Protocol.NftAccountTokenRelation.newBuilder()
                             .setOwnerAddress(ByteString.copyFrom(ownerAddr))
                             .clearHead()
@@ -76,12 +76,12 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<NftAccountTo
         }
         put(ownerAddr, ownerRelation);
 
-        NftAccountTokenRelationCapsule toRelation;
+        Urc721AccountTokenRelationCapsule toRelation;
         if (has(toAddr)) {
             toRelation = get(toAddr);
             toRelation.addApproveAll(ByteString.copyFrom(ownerAddr));
         } else {
-            toRelation = new NftAccountTokenRelationCapsule(toAddr,
+            toRelation = new Urc721AccountTokenRelationCapsule(toAddr,
                     Protocol.NftAccountTokenRelation.newBuilder()
                             .setOwnerAddress(ByteString.copyFrom(toAddr))
                             .clearHead()

@@ -24,7 +24,7 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.actuator.AbstractActuator;
-import org.unichain.core.capsule.TokenPoolCapsule;
+import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
@@ -55,7 +55,7 @@ public class Urc30TokenUpdateParamsActuatorV4 extends AbstractActuator {
 
         var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
 
-        TokenPoolCapsule tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
+        Urc30TokenPoolCapsule tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
         var updateCriticalParams = false;
 
         if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {

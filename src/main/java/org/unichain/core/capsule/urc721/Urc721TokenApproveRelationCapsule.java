@@ -13,24 +13,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.unichain.core.capsule;
+package org.unichain.core.capsule.urc721;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
-import org.unichain.common.utils.ByteArray;
-import org.unichain.core.services.http.utils.Util;
+import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol;
 
-import static org.unichain.core.services.http.utils.Util.*;
+import static org.unichain.core.services.http.utils.Util.NFT_TOKEN_APPROVE_RELATION_FIELD_NEXT;
+import static org.unichain.core.services.http.utils.Util.NFT_TOKEN_APPROVE_RELATION_FIELD_PREV;
 
 @Slf4j(topic = "capsule")
-public class NftTokenApproveRelationCapsule implements ProtoCapsule<Protocol.NftTokenApproveRelation> {
+public class Urc721TokenApproveRelationCapsule implements ProtoCapsule<Protocol.NftTokenApproveRelation> {
   private Protocol.NftTokenApproveRelation token;
   private byte[] key;
 
-  public NftTokenApproveRelationCapsule(byte[] data) {
+  public Urc721TokenApproveRelationCapsule(byte[] data) {
     try {
       this.token = Protocol.NftTokenApproveRelation.parseFrom(data);
       this.key = this.token.getTokenId().toByteArray();
@@ -39,7 +38,7 @@ public class NftTokenApproveRelationCapsule implements ProtoCapsule<Protocol.Nft
     }
   }
 
-  public NftTokenApproveRelationCapsule(Protocol.NftTokenApproveRelation token) {
+  public Urc721TokenApproveRelationCapsule(Protocol.NftTokenApproveRelation token) {
     this.token = token;
     this.key = this.token.getTokenId().toByteArray();
   }

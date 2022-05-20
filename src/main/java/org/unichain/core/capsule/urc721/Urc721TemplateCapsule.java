@@ -13,22 +13,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.unichain.core.capsule;
+package org.unichain.core.capsule.urc721;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Contract.CreateNftTemplateContract;
 import org.unichain.protos.Protocol.NftTemplate;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
-public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
+public class Urc721TemplateCapsule implements ProtoCapsule<NftTemplate> {
   private NftTemplate template;
 
-  public NftTemplateCapsule(byte[] data) {
+  public Urc721TemplateCapsule(byte[] data) {
     try {
       this.template = NftTemplate.parseFrom(data);
     } catch (InvalidProtocolBufferException e) {
@@ -36,11 +37,11 @@ public class NftTemplateCapsule implements ProtoCapsule<NftTemplate> {
     }
   }
 
-  public NftTemplateCapsule(NftTemplate template) {
+  public Urc721TemplateCapsule(NftTemplate template) {
     this.template = template;
   }
 
-  public NftTemplateCapsule(CreateNftTemplateContract ctx, long lastOperation, long tokenIndex) {
+  public Urc721TemplateCapsule(CreateNftTemplateContract ctx, long lastOperation, long tokenIndex) {
     var builder = NftTemplate.newBuilder()
             .setSymbol(ctx.getSymbol().toUpperCase())
             .setName(ctx.getName())

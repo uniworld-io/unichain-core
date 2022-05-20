@@ -13,28 +13,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.unichain.core.capsule;
+package org.unichain.core.capsule.urc30;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
+import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.exception.ContractExeException;
-import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.CreateTokenContract;
 
 import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_CREATE_ACC_FEE;
 import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_CRITICAL_TIME;
 
 @Slf4j(topic = "capsule")
-public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContract> {
+public class Urc30TokenPoolCapsule implements ProtoCapsule<CreateTokenContract> {
   private CreateTokenContract createTokenContract;
 
   /**
    * get asset issue contract from bytes data.
    */
-  public TokenPoolCapsule(byte[] data) {
+  public Urc30TokenPoolCapsule(byte[] data) {
     try {
       this.createTokenContract = CreateTokenContract.parseFrom(data);
     } catch (InvalidProtocolBufferException e) {
@@ -42,7 +42,7 @@ public class TokenPoolCapsule implements ProtoCapsule<Contract.CreateTokenContra
     }
   }
 
-  public TokenPoolCapsule(CreateTokenContract createTokenContract) {
+  public Urc30TokenPoolCapsule(CreateTokenContract createTokenContract) {
     this.createTokenContract = createTokenContract;
   }
 

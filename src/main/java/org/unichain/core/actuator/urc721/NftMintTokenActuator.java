@@ -24,8 +24,8 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
-import org.unichain.core.capsule.NftTemplateCapsule;
-import org.unichain.core.capsule.NftTokenCapsule;
+import org.unichain.core.capsule.urc721.Urc721TemplateCapsule;
+import org.unichain.core.capsule.urc721.Urc721TokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
@@ -87,7 +87,7 @@ public class NftMintTokenActuator extends AbstractActuator {
         nftTokenBuilder.setId(tokenIndex);
       }
 
-      dbManager.saveNftToken(new NftTokenCapsule(nftTokenBuilder.build()));
+      dbManager.saveNftToken(new Urc721TokenCapsule(nftTokenBuilder.build()));
 
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
@@ -105,11 +105,11 @@ public class NftMintTokenActuator extends AbstractActuator {
    * - advance token index
    * - make sure token index not allocated
    */
-  private long allocateTokenId(final NftTemplateCapsule template) {
+  private long allocateTokenId(final Urc721TemplateCapsule template) {
     val tokenStore = dbManager.getNftTokenStore();
     var nextId = Math.incrementExact(template.getTokenIndex());
     while (true){
-      var key = NftTokenCapsule.genTokenKey(template.getAddress(), nextId);
+      var key = Urc721TokenCapsule.genTokenKey(template.getAddress(), nextId);
       if(!tokenStore.has(key)){
         return nextId;
       }
@@ -154,7 +154,7 @@ public class NftMintTokenActuator extends AbstractActuator {
 
       //make sure tokenId not allocated yet!
       if(ctx.hasField(NFT_MINT_FIELD_TOKEN_ID)){
-        val tokenKey = NftTokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
+        val tokenKey = Urc721TokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
         Assert.isTrue(!dbManager.getNftTokenStore().has(tokenKey), "TokenId allocated: " + tokenKey);
       }
       return true;

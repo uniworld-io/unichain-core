@@ -24,7 +24,7 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
-import org.unichain.core.capsule.NftTokenCapsule;
+import org.unichain.core.capsule.urc721.Urc721TokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -52,7 +52,7 @@ public class NftTransferTokenActuator extends AbstractActuator {
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
             var toAddr = ctx.getToAddress();
             var toAddrBytes = toAddr.toByteArray();
-            var tokenId = NftTokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
+            var tokenId = Urc721TokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
             //create new acc if not exist
             if (!accountStore.has(toAddrBytes)) {
                 fee = Math.addExact(fee, dbManager.createNewAccount(toAddr));
@@ -93,7 +93,7 @@ public class NftTransferTokenActuator extends AbstractActuator {
             var relationStore = dbManager.getNftAccountTokenStore();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
             var toAddr = ctx.getToAddress().toByteArray();
-            var tokenId = NftTokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
+            var tokenId = Urc721TokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
 
             Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Owner address and to address must be not the same");
             Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");

@@ -13,12 +13,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.unichain.core.capsule;
+package org.unichain.core.capsule.urc721;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.ByteArray;
+import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol.NftAccountTokenRelation;
 
 import java.util.Map;
@@ -26,11 +27,11 @@ import java.util.Map;
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
-public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTokenRelation> {
+public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<NftAccountTokenRelation> {
   private NftAccountTokenRelation relation;
   private byte[] key;
 
-  public NftAccountTokenRelationCapsule(byte[] data) {
+  public Urc721AccountTokenRelationCapsule(byte[] data) {
     try {
       this.relation = NftAccountTokenRelation.parseFrom(data);
       this.key = this.relation.getOwnerAddress().toByteArray();
@@ -39,7 +40,7 @@ public class NftAccountTokenRelationCapsule implements ProtoCapsule<NftAccountTo
     }
   }
 
-  public NftAccountTokenRelationCapsule(byte[] key, NftAccountTokenRelation relation) {
+  public Urc721AccountTokenRelationCapsule(byte[] key, NftAccountTokenRelation relation) {
     this.relation = relation;
     this.key = key;
   }

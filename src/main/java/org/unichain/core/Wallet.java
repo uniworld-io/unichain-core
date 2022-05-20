@@ -55,6 +55,7 @@ import org.unichain.core.actuator.Actuator;
 import org.unichain.core.actuator.ActuatorFactory;
 import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
+import org.unichain.core.capsule.urc30.Urc30FutureTokenCapsule;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.*;
@@ -464,7 +465,7 @@ public class Wallet {
       return dbManager.getFutureTransferStore().getAll();
   }
 
-  public List<FutureTokenCapsule> listAllFutureTokenStore() {
+  public List<Urc30FutureTokenCapsule> listAllFutureTokenStore() {
     return dbManager.getFutureTokenStore().getAll();
   }
 

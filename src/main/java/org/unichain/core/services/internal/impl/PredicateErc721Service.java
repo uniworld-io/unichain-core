@@ -32,7 +32,7 @@ public class PredicateErc721Service implements PredicateService {
 
         PosBridgeUtil.ERC721Decode erc721Decode = PosBridgeUtil.abiDecodeToErc721(depositData);
 
-        var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
+        var wrapCtx = Contract.Urc721TransferFromContract.newBuilder()
                 .setOwnerAddress(depositor)
                 .setTo(config.getPredicateErc721())
                 .setAddress(rootToken)
@@ -41,8 +41,8 @@ public class PredicateErc721Service implements PredicateService {
         buildThenExecContract(wrapCtx);
     }
 
-    private void buildThenExecContract(Contract.TransferNftTokenContract wrapCtx) throws ContractExeException, ContractValidateException {
-        var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferNftTokenContract)
+    private void buildThenExecContract(Contract.Urc721TransferFromContract wrapCtx) throws ContractExeException, ContractValidateException {
+        var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc721TransferFromContract)
                 .getInstance()
                 .getRawData()
                 .getContract(0)
@@ -56,7 +56,7 @@ public class PredicateErc721Service implements PredicateService {
 
     @Override
     public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException, ContractValidateException {
-        var wrapCtx = Contract.TransferNftTokenContract.newBuilder()
+        var wrapCtx = Contract.Urc721TransferFromContract.newBuilder()
                 .setOwnerAddress(config.getPredicateErc721())
                 .setTo(withdrawer)
                 .setAddress(rootToken)

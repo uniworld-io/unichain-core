@@ -27,7 +27,7 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.RemoveNftMinterContract;
+import org.unichain.protos.Contract.Urc721RemoveMinterContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -43,7 +43,7 @@ public class Urc721RemoveMinterActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(RemoveNftMinterContract.class);
+      var ctx = contract.unpack(Urc721RemoveMinterContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var contractKey = ctx.getAddress().toByteArray();
       var templateCap = dbManager.getNftTemplateStore().get(contractKey);
@@ -66,9 +66,9 @@ public class Urc721RemoveMinterActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(RemoveNftMinterContract.class), "contract type error,expected type [RemoveNftMinterContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Urc721RemoveMinterContract.class), "contract type error,expected type [Urc721RemoveMinterContract],real type[" + contract.getClass() + "]");
 
-      val ctx = this.contract.unpack(RemoveNftMinterContract.class);
+      val ctx = this.contract.unpack(Urc721RemoveMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contractKey = ctx.getAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
@@ -91,7 +91,7 @@ public class Urc721RemoveMinterActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(RemoveNftMinterContract.class).getOwnerAddress();
+    return contract.unpack(Urc721RemoveMinterContract.class).getOwnerAddress();
   }
 
   @Override

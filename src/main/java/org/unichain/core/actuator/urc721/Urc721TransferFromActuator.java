@@ -30,7 +30,7 @@ import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.TransferNftTokenContract;
+import org.unichain.protos.Contract.Urc721TransferFromContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -46,7 +46,7 @@ public class Urc721TransferFromActuator extends AbstractActuator {
     public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
         var fee = calcFee();
         try {
-            val ctx = this.contract.unpack(TransferNftTokenContract.class);
+            val ctx = this.contract.unpack(Urc721TransferFromContract.class);
             var accountStore = dbManager.getAccountStore();
             var tokenStore = dbManager.getNftTokenStore();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
@@ -85,9 +85,9 @@ public class Urc721TransferFromActuator extends AbstractActuator {
         try {
             Assert.notNull(contract, "No contract!");
             Assert.notNull(dbManager, "No dbManager!");
-            Assert.isTrue(contract.is(TransferNftTokenContract.class), "contract type error,expected type [TransferNftTokenContract],real type[" + contract.getClass() + "]");
+            Assert.isTrue(contract.is(Urc721TransferFromContract.class), "contract type error,expected type [Urc721TransferFromContract],real type[" + contract.getClass() + "]");
             var fee = calcFee();
-            val ctx = this.contract.unpack(TransferNftTokenContract.class);
+            val ctx = this.contract.unpack(Urc721TransferFromContract.class);
             var accountStore = dbManager.getAccountStore();
             var tokenStore = dbManager.getNftTokenStore();
             var relationStore = dbManager.getNftAccountTokenStore();
@@ -122,7 +122,7 @@ public class Urc721TransferFromActuator extends AbstractActuator {
 
     @Override
     public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-        return contract.unpack(TransferNftTokenContract.class).getOwnerAddress();
+        return contract.unpack(Urc721TransferFromContract.class).getOwnerAddress();
     }
 
     @Override

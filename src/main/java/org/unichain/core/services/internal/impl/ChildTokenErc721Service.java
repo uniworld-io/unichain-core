@@ -53,12 +53,12 @@ public class ChildTokenErc721Service implements ChildTokenService {
 
     @Override
     public void withdraw(ByteString user, ByteString childToken, String withdrawData) throws ContractExeException, ContractValidateException {
-        var wrapCtx = Contract.BurnNftTokenContract.newBuilder()
+        var wrapCtx = Contract.Urc721BurnContract.newBuilder()
                 .setOwnerAddress(user)
                 .setAddress(childToken)
                 .setTokenId(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
                 .build();
-        var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.BurnNftTokenContract)
+        var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc721BurnContract)
                 .getInstance()
                 .getRawData()
                 .getContract(0)

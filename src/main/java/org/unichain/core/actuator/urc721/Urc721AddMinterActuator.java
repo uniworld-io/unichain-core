@@ -29,7 +29,7 @@ import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.AddNftMinterContract;
+import org.unichain.protos.Contract.Urc721AddMinterContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -45,7 +45,7 @@ public class Urc721AddMinterActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(AddNftMinterContract.class);
+      var ctx = contract.unpack(Urc721AddMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
       var accStore = dbManager.getAccountStore();
@@ -83,9 +83,9 @@ public class Urc721AddMinterActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(AddNftMinterContract.class), "contract type error, expected type [AddNftMinterContract], real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Urc721AddMinterContract.class), "contract type error, expected type [Urc721AddMinterContract], real type[" + contract.getClass() + "]");
 
-      val ctx = this.contract.unpack(AddNftMinterContract.class);
+      val ctx = this.contract.unpack(Urc721AddMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
       var contractAddr = ctx.getAddress().toByteArray();
@@ -118,7 +118,7 @@ public class Urc721AddMinterActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(AddNftMinterContract.class).getOwnerAddress();
+    return contract.unpack(Urc721AddMinterContract.class).getOwnerAddress();
   }
 
   @Override

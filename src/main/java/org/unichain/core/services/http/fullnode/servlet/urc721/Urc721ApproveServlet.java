@@ -28,7 +28,7 @@ public class Urc721ApproveServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.ApproveNftTokenContract.newBuilder();
+      var build = Contract.Urc721ApproveContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
       var tx = nftService.approve(tokenCtx);

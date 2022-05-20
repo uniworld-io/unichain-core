@@ -28,7 +28,7 @@ public class Urc721TransferFromServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.TransferNftTokenContract.newBuilder();
+      var build = Contract.Urc721TransferFromContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
 

@@ -488,29 +488,29 @@ message Urc721MintContract{
   int64 token_id = 5;
 }
 
-message RemoveNftMinterContract{
+message Urc721RemoveMinterContract{
   bytes owner_address = 1;
   bytes address = 2;
 }
 
-message AddNftMinterContract{
+message Urc721AddMinterContract{
   bytes owner_address = 1;
   bytes address = 2;
   bytes minter = 3;
 }
 
-message RenounceNftMinterContract{
+message Urc721RenounceMinterContract{
   bytes owner_address = 1;
   bytes address = 2;
 }
 
-message BurnNftTokenContract{
+message Urc721BurnContract{
   bytes owner_address = 1;
   bytes address = 2;
   int64 token_id = 3;
 }
 
-message ApproveNftTokenContract{
+message Urc721ApproveContract{
   bytes owner_address = 1;
   bytes address = 2;
   int64 token_id = 3;
@@ -518,13 +518,13 @@ message ApproveNftTokenContract{
   bool approve = 5;
 }
 
-message ApproveForAllNftTokenContract{
+message Urc721SetApprovalForAllContract{
   bytes owner_address = 1;
   bytes to_address = 2;
   bool approve = 3;
 }
 
-message TransferNftTokenContract{
+message Urc721TransferFromContract{
   bytes owner_address = 1;
   bytes address = 3;
   bytes to = 2;

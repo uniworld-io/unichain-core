@@ -200,19 +200,19 @@ public class ActuatorFactory {
           return new Urc721CreateContractActuator(contract.getParameter(), manager);
       case Urc721MintContract:
         return new Urc721MintActuator(contract.getParameter(), manager);
-      case AddNftMinterContract:
+      case Urc721AddMinterContract:
         return new Urc721AddMinterActuator(contract.getParameter(), manager);
-      case RemoveNftMinterContract:
+      case Urc721RemoveMinterContract:
         return new Urc721RemoveMinterActuator(contract.getParameter(), manager);
-      case RenounceNftMinterContract:
+      case Urc721RenounceMinterContract:
         return new Urc721RenounceMinterActuator(contract.getParameter(), manager);
-      case ApproveNftTokenContract:
+      case Urc721ApproveContract:
         return new Urc721ApproveActuator(contract.getParameter(), manager);
-      case ApproveForAllNftTokenContract:
+      case Urc721SetApprovalForAllContract:
         return new Urc721SetApprovalForAllActuator(contract.getParameter(), manager);
-      case BurnNftTokenContract:
+      case Urc721BurnContract:
         return new Urc721BurnActuator(contract.getParameter(), manager);
-      case TransferNftTokenContract:
+      case Urc721TransferFromContract:
         return new Urc721TransferFromActuator(contract.getParameter(), manager);
 
       /**

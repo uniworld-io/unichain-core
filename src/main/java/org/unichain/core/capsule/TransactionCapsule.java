@@ -472,26 +472,26 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case Urc721MintContract:
           owner = contractParameter.unpack(Urc721MintContract.class).getOwnerAddress();
           break;
-        case RemoveNftMinterContract:
-          owner = contractParameter.unpack(RemoveNftMinterContract.class).getOwnerAddress();
+        case Urc721RemoveMinterContract:
+          owner = contractParameter.unpack(Urc721RemoveMinterContract.class).getOwnerAddress();
           break;
-        case AddNftMinterContract:
-          owner = contractParameter.unpack(AddNftMinterContract.class).getOwnerAddress();
+        case Urc721AddMinterContract:
+          owner = contractParameter.unpack(Urc721AddMinterContract.class).getOwnerAddress();
           break;
-        case RenounceNftMinterContract:
-          owner = contractParameter.unpack(RenounceNftMinterContract.class).getOwnerAddress();
+        case Urc721RenounceMinterContract:
+          owner = contractParameter.unpack(Urc721RenounceMinterContract.class).getOwnerAddress();
           break;
-        case BurnNftTokenContract:
-          owner = contractParameter.unpack(BurnNftTokenContract.class).getOwnerAddress();
+        case Urc721BurnContract:
+          owner = contractParameter.unpack(Urc721BurnContract.class).getOwnerAddress();
           break;
-        case ApproveNftTokenContract:
-          owner = contractParameter.unpack(ApproveNftTokenContract.class).getOwnerAddress();
+        case Urc721ApproveContract:
+          owner = contractParameter.unpack(Urc721ApproveContract.class).getOwnerAddress();
           break;
-        case ApproveForAllNftTokenContract:
-          owner = contractParameter.unpack(ApproveForAllNftTokenContract.class).getOwnerAddress();
+        case Urc721SetApprovalForAllContract:
+          owner = contractParameter.unpack(Urc721SetApprovalForAllContract.class).getOwnerAddress();
           break;
-        case TransferNftTokenContract:
-          owner = contractParameter.unpack(TransferNftTokenContract.class).getOwnerAddress();
+        case Urc721TransferFromContract:
+          owner = contractParameter.unpack(Urc721TransferFromContract.class).getOwnerAddress();
           break;
 
         /**
@@ -696,26 +696,26 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case Urc721MintContract:
         clazz = Urc721MintContract.class;
         break;
-      case RemoveNftMinterContract:
-        clazz = RemoveNftMinterContract.class;
+      case Urc721RemoveMinterContract:
+        clazz = Urc721RemoveMinterContract.class;
         break;
-      case AddNftMinterContract:
-        clazz = AddNftMinterContract.class;
+      case Urc721AddMinterContract:
+        clazz = Urc721AddMinterContract.class;
         break;
-      case RenounceNftMinterContract:
-        clazz = RenounceNftMinterContract.class;
+      case Urc721RenounceMinterContract:
+        clazz = Urc721RenounceMinterContract.class;
         break;
-      case BurnNftTokenContract:
-        clazz = BurnNftTokenContract.class;
+      case Urc721BurnContract:
+        clazz = Urc721BurnContract.class;
         break;
-      case ApproveNftTokenContract:
-        clazz = ApproveNftTokenContract.class;
+      case Urc721ApproveContract:
+        clazz = Urc721ApproveContract.class;
         break;
-      case ApproveForAllNftTokenContract:
-        clazz = ApproveForAllNftTokenContract.class;
+      case Urc721SetApprovalForAllContract:
+        clazz = Urc721SetApprovalForAllContract.class;
         break;
-      case TransferNftTokenContract:
-        clazz = TransferNftTokenContract.class;
+      case Urc721TransferFromContract:
+        clazz = Urc721TransferFromContract.class;
         break;
       /**
        * POSBridge
@@ -1055,13 +1055,13 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     switch (txType){
       case Urc721CreateContract:
       case Urc721MintContract:
-      case AddNftMinterContract:
-      case RemoveNftMinterContract:
-      case RenounceNftMinterContract:
-      case BurnNftTokenContract:
-      case ApproveNftTokenContract:
-      case ApproveForAllNftTokenContract:
-      case TransferNftTokenContract:
+      case Urc721AddMinterContract:
+      case Urc721RemoveMinterContract:
+      case Urc721RenounceMinterContract:
+      case Urc721BurnContract:
+      case Urc721ApproveContract:
+      case Urc721SetApprovalForAllContract:
+      case Urc721TransferFromContract:
         return BLOCK_VERSION_5;
       /**
        * POSBridge

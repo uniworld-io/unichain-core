@@ -28,7 +28,7 @@ public class Urc721BurnServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.BurnNftTokenContract.newBuilder();
+      var build = Contract.Urc721BurnContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
       var tx = nftService.burnToken(tokenCtx);

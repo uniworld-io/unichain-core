@@ -28,7 +28,7 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.ApproveForAllNftTokenContract;
+import org.unichain.protos.Contract.Urc721SetApprovalForAllContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -44,7 +44,7 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(ApproveForAllNftTokenContract.class);
+      var ctx = contract.unpack(Urc721SetApprovalForAllContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
@@ -75,9 +75,9 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(ApproveForAllNftTokenContract.class), "contract type error,expected type [ApproveForAllNftTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Urc721SetApprovalForAllContract.class), "contract type error,expected type [Urc721SetApprovalForAllContract],real type[" + contract.getClass() + "]");
       var fee = calcFee();
-      val ctx = this.contract.unpack(ApproveForAllNftTokenContract.class);
+      val ctx = this.contract.unpack(Urc721SetApprovalForAllContract.class);
       var accountStore = dbManager.getAccountStore();
       var relationStore = dbManager.getNftAccountTokenStore();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
@@ -112,7 +112,7 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(ApproveForAllNftTokenContract.class).getOwnerAddress();
+    return contract.unpack(Urc721SetApprovalForAllContract.class).getOwnerAddress();
   }
 
   @Override

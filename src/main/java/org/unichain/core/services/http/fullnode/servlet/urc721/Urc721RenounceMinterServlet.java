@@ -29,7 +29,7 @@ public class Urc721RenounceMinterServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.RenounceNftMinterContract.newBuilder();
+      var build = Contract.Urc721RenounceMinterContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
       var tx = nftService.renounceMinter(tokenCtx);

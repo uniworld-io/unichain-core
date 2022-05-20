@@ -79,23 +79,23 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.Transaction addMinter(Contract.AddNftMinterContract contract) throws ContractValidateException {
-        return wallet.createTransactionCapsule(contract, ContractType.AddNftMinterContract).getInstance();
+    public Protocol.Transaction addMinter(Contract.Urc721AddMinterContract contract) throws ContractValidateException {
+        return wallet.createTransactionCapsule(contract, ContractType.Urc721AddMinterContract).getInstance();
     }
 
     @Override
-    public Protocol.Transaction removeMinter(Contract.RemoveNftMinterContract contract) throws ContractValidateException {
-        return wallet.createTransactionCapsule(contract, ContractType.RemoveNftMinterContract).getInstance();
+    public Protocol.Transaction removeMinter(Contract.Urc721RemoveMinterContract contract) throws ContractValidateException {
+        return wallet.createTransactionCapsule(contract, ContractType.Urc721RemoveMinterContract).getInstance();
     }
 
     @Override
-    public Protocol.Transaction renounceMinter(Contract.RenounceNftMinterContract contract) throws ContractValidateException {
-        return wallet.createTransactionCapsule(contract, ContractType.RenounceNftMinterContract).getInstance();
+    public Protocol.Transaction renounceMinter(Contract.Urc721RenounceMinterContract contract) throws ContractValidateException {
+        return wallet.createTransactionCapsule(contract, ContractType.Urc721RenounceMinterContract).getInstance();
     }
 
     @Override
-    public Protocol.Transaction approve(Contract.ApproveNftTokenContract contract) throws ContractValidateException {
-        return wallet.createTransactionCapsule(contract, ContractType.ApproveNftTokenContract).getInstance();
+    public Protocol.Transaction approve(Contract.Urc721ApproveContract contract) throws ContractValidateException {
+        return wallet.createTransactionCapsule(contract, ContractType.Urc721ApproveContract).getInstance();
     }
 
     @Override
@@ -149,8 +149,8 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.Transaction setApprovalForAll(Contract.ApproveForAllNftTokenContract approvalAll) throws ContractValidateException {
-        return wallet.createTransactionCapsule(approvalAll, ContractType.ApproveForAllNftTokenContract).getInstance();
+    public Protocol.Transaction setApprovalForAll(Contract.Urc721SetApprovalForAllContract approvalAll) throws ContractValidateException {
+        return wallet.createTransactionCapsule(approvalAll, ContractType.Urc721SetApprovalForAllContract).getInstance();
     }
 
     @Override
@@ -214,8 +214,8 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.Transaction burnToken(Contract.BurnNftTokenContract contract) throws ContractValidateException {
-        return wallet.createTransactionCapsule(contract, ContractType.BurnNftTokenContract).getInstance();
+    public Protocol.Transaction burnToken(Contract.Urc721BurnContract contract) throws ContractValidateException {
+        return wallet.createTransactionCapsule(contract, ContractType.Urc721BurnContract).getInstance();
     }
 
     @Override
@@ -314,8 +314,8 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.Transaction transfer(Contract.TransferNftTokenContract contract) throws ContractValidateException {
-        return wallet.createTransactionCapsule(contract, ContractType.TransferNftTokenContract).getInstance();
+    public Protocol.Transaction transfer(Contract.Urc721TransferFromContract contract) throws ContractValidateException {
+        return wallet.createTransactionCapsule(contract, ContractType.Urc721TransferFromContract).getInstance();
     }
 
     @Override

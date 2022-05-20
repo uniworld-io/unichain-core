@@ -1413,9 +1413,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void removeNftMinter(Contract.RemoveNftMinterContract request, StreamObserver<Transaction> responseObserver) {
+    public void removeNftMinter(Contract.Urc721RemoveMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.RemoveNftMinterContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721RemoveMinterContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1426,9 +1426,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void addNftMinter(Contract.AddNftMinterContract request, StreamObserver<Transaction> responseObserver) {
+    public void addNftMinter(Contract.Urc721AddMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.AddNftMinterContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721AddMinterContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1439,9 +1439,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void renounceNftMinter(Contract.RenounceNftMinterContract request, StreamObserver<Transaction> responseObserver) {
+    public void renounceNftMinter(Contract.Urc721RenounceMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.RenounceNftMinterContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721RenounceMinterContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1452,9 +1452,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void burnNftToken(Contract.BurnNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+    public void burnNftToken(Contract.Urc721BurnContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.BurnNftTokenContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721BurnContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1465,9 +1465,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void approveNftToken(Contract.ApproveNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+    public void approveNftToken(Contract.Urc721ApproveContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.ApproveNftTokenContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721ApproveContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1478,9 +1478,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void approveForAllNftToken(Contract.ApproveForAllNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+    public void approveForAllNftToken(Contract.Urc721SetApprovalForAllContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.ApproveForAllNftTokenContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721SetApprovalForAllContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1491,9 +1491,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void transferNftToken(Contract.TransferNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+    public void transferNftToken(Contract.Urc721TransferFromContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.TransferNftTokenContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721TransferFromContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());

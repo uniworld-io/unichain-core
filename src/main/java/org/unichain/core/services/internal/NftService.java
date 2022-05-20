@@ -12,22 +12,21 @@ public interface NftService {
 
     Protocol.Transaction createToken(Contract.Urc721MintContract contract) throws ContractValidateException;
     Protocol.NftTokenGetResult getToken(Protocol.NftTokenGet query);
-    Protocol.Transaction burnToken(Contract.BurnNftTokenContract burnNftTokenContract) throws ContractValidateException;
+    Protocol.Transaction burnToken(Contract.Urc721BurnContract burnNftTokenContract) throws ContractValidateException;
     Protocol.NftTokenQueryResult listToken(Protocol.NftTokenQuery query);
 
-    Protocol.Transaction addMinter(Contract.AddNftMinterContract addNftMinterContract) throws ContractValidateException;
-    Protocol.Transaction removeMinter(Contract.RemoveNftMinterContract contract) throws ContractValidateException;
-    Protocol.Transaction renounceMinter(Contract.RenounceNftMinterContract contract) throws ContractValidateException;
+    Protocol.Transaction addMinter(Contract.Urc721AddMinterContract addNftMinterContract) throws ContractValidateException;
+    Protocol.Transaction removeMinter(Contract.Urc721RemoveMinterContract contract) throws ContractValidateException;
+    Protocol.Transaction renounceMinter(Contract.Urc721RenounceMinterContract contract) throws ContractValidateException;
 
-    Protocol.Transaction approve(Contract.ApproveNftTokenContract contract) throws ContractValidateException;
+    Protocol.Transaction approve(Contract.Urc721ApproveContract contract) throws ContractValidateException;
     Protocol.NftTokenApproveResult getListApproval(Protocol.NftTokenApproveQuery query);
 
-    Protocol.Transaction setApprovalForAll(Contract.ApproveForAllNftTokenContract approvalAll) throws ContractValidateException;
+    Protocol.Transaction setApprovalForAll(Contract.Urc721SetApprovalForAllContract approvalAll) throws ContractValidateException;
     Protocol.NftTokenApproveAllResult getApprovalForAll(Protocol.NftTokenApproveAllQuery query);
     Protocol.IsApprovedForAll isApprovalForAll(Protocol.IsApprovedForAll query);
 
 
-    Protocol.Transaction transfer(Contract.TransferNftTokenContract contract) throws ContractValidateException;
+    Protocol.Transaction transfer(Contract.Urc721TransferFromContract contract) throws ContractValidateException;
     Protocol.NftBalanceOf balanceOf(Protocol.NftBalanceOf query);
-
 }

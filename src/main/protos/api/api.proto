@@ -366,7 +366,7 @@ service Wallet {
     };
   };
 
-  rpc RemoveNftMinter (RemoveNftMinterContract) returns (Transaction) {
+  rpc RemoveNftMinter (Urc721RemoveMinterContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/removenftminter"
       body: "*"
@@ -376,7 +376,7 @@ service Wallet {
     };
   };
 
-  rpc AddNftMinter (AddNftMinterContract) returns (Transaction) {
+  rpc AddNftMinter (Urc721AddMinterContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/addnftminter"
       body: "*"
@@ -386,7 +386,7 @@ service Wallet {
     };
   };
 
-  rpc RenounceNftMinter (RenounceNftMinterContract) returns (Transaction) {
+  rpc RenounceNftMinter (Urc721RenounceMinterContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/renouncenftminter"
       body: "*"
@@ -396,7 +396,7 @@ service Wallet {
     };
   };
 
-  rpc BurnNftToken (BurnNftTokenContract) returns (Transaction) {
+  rpc BurnNftToken (Urc721BurnContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/burnnfttoken"
       body: "*"
@@ -406,7 +406,7 @@ service Wallet {
     };
   };
 
-  rpc ApproveNftToken (ApproveNftTokenContract) returns (Transaction) {
+  rpc ApproveNftToken (Urc721ApproveContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/approvenfttoken"
       body: "*"
@@ -416,7 +416,7 @@ service Wallet {
     };
   };
 
-  rpc ApproveForAllNftToken (ApproveForAllNftTokenContract) returns (Transaction) {
+  rpc ApproveForAllNftToken (Urc721SetApprovalForAllContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/approveforallnfttoken"
       body: "*"
@@ -426,7 +426,7 @@ service Wallet {
     };
   };
 
-  rpc TransferNftToken (TransferNftTokenContract) returns (Transaction) {
+  rpc TransferNftToken (Urc721TransferFromContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/transfernfttoken"
       body: "*"

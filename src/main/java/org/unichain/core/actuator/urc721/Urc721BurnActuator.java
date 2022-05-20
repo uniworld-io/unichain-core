@@ -29,7 +29,7 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.BurnNftTokenContract;
+import org.unichain.protos.Contract.Urc721BurnContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -45,7 +45,7 @@ public class Urc721BurnActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(BurnNftTokenContract.class);
+      var ctx = contract.unpack(Urc721BurnContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var tokenId = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
 
@@ -67,9 +67,9 @@ public class Urc721BurnActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(BurnNftTokenContract.class), "Contract type error,expected type [BurnNftTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Urc721BurnContract.class), "Contract type error,expected type [Urc721BurnContract],real type[" + contract.getClass() + "]");
       var fee = calcFee();
-      val ctx = this.contract.unpack(BurnNftTokenContract.class);
+      val ctx = this.contract.unpack(Urc721BurnContract.class);
       var accountStore = dbManager.getAccountStore();
       var tokenStore = dbManager.getNftTokenStore();
       var relationStore = dbManager.getNftAccountTokenStore();
@@ -97,7 +97,7 @@ public class Urc721BurnActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(BurnNftTokenContract.class).getOwnerAddress();
+    return contract.unpack(Urc721BurnContract.class).getOwnerAddress();
   }
 
   @Override

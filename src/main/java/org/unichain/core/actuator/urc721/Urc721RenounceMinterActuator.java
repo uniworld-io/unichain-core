@@ -27,7 +27,7 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.RenounceNftMinterContract;
+import org.unichain.protos.Contract.Urc721RenounceMinterContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -43,7 +43,7 @@ public class Urc721RenounceMinterActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(RenounceNftMinterContract.class);
+      var ctx = contract.unpack(Urc721RenounceMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contractKey = ctx.getAddress().toByteArray();
       //update template
@@ -65,9 +65,9 @@ public class Urc721RenounceMinterActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(RenounceNftMinterContract.class), "Contract type error,expected type [RenounceNftMinterContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Urc721RenounceMinterContract.class), "Contract type error,expected type [Urc721RenounceMinterContract],real type[" + contract.getClass() + "]");
 
-      val ctx = this.contract.unpack(RenounceNftMinterContract.class);
+      val ctx = this.contract.unpack(Urc721RenounceMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contractKey = ctx.getAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
@@ -88,7 +88,7 @@ public class Urc721RenounceMinterActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(RenounceNftMinterContract.class).getOwnerAddress();
+    return contract.unpack(Urc721RenounceMinterContract.class).getOwnerAddress();
   }
 
   @Override

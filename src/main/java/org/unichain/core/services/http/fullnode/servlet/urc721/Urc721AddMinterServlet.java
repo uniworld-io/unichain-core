@@ -28,7 +28,7 @@ public class Urc721AddMinterServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.AddNftMinterContract.newBuilder();
+      var build = Contract.Urc721AddMinterContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
       var tx = nftService.addMinter(tokenCtx);

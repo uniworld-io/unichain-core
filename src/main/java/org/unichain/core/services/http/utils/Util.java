@@ -374,38 +374,38 @@ public class Util {
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
-          case RemoveNftMinterContract:{
-            var parsedContract = contractParameter.unpack(RemoveNftMinterContract.class);
+          case Urc721RemoveMinterContract:{
+            var parsedContract = contractParameter.unpack(Urc721RemoveMinterContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
-          case AddNftMinterContract:{
-            var parsedContract = contractParameter.unpack(AddNftMinterContract.class);
+          case Urc721AddMinterContract:{
+            var parsedContract = contractParameter.unpack(Urc721AddMinterContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
-          case RenounceNftMinterContract:{
-            var parsedContract = contractParameter.unpack(RenounceNftMinterContract.class);
+          case Urc721RenounceMinterContract:{
+            var parsedContract = contractParameter.unpack(Urc721RenounceMinterContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
-          case BurnNftTokenContract:{
-            var parsedContract = contractParameter.unpack(BurnNftTokenContract.class);
+          case Urc721BurnContract:{
+            var parsedContract = contractParameter.unpack(Urc721BurnContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
-          case ApproveNftTokenContract:{
-            var parsedContract = contractParameter.unpack(ApproveNftTokenContract.class);
+          case Urc721ApproveContract:{
+            var parsedContract = contractParameter.unpack(Urc721ApproveContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
-          case ApproveForAllNftTokenContract:{
-            var parsedContract = contractParameter.unpack(ApproveForAllNftTokenContract.class);
+          case Urc721SetApprovalForAllContract:{
+            var parsedContract = contractParameter.unpack(Urc721SetApprovalForAllContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
-          case TransferNftTokenContract:{
-            var parsedContract = contractParameter.unpack(TransferNftTokenContract.class);
+          case Urc721TransferFromContract:{
+            var parsedContract = contractParameter.unpack(Urc721TransferFromContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
@@ -784,47 +784,60 @@ public class Util {
             any = Any.pack(builder.build());
             break;
           }
-          case "RemoveNftMinterContract":
-            RemoveNftMinterContract.Builder removeNftMinterContractBuilder = RemoveNftMinterContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), removeNftMinterContractBuilder, selfType);
-            any = Any.pack(removeNftMinterContractBuilder.build());
+          case "Urc721RemoveMinterContract":
+          {
+            var builder = Urc721RemoveMinterContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
 
-          case "AddNftMinterContract":
-            AddNftMinterContract.Builder addNftMinterContractBuilder = AddNftMinterContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), addNftMinterContractBuilder, selfType);
-            any = Any.pack(addNftMinterContractBuilder.build());
+          case "Urc721AddMinterContract":
+          {
+            var builder = Urc721AddMinterContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
 
-          case "RenounceNftMinterContract":
-            RenounceNftMinterContract.Builder renounceNftMinterContractBuilder = RenounceNftMinterContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), renounceNftMinterContractBuilder, selfType);
-            any = Any.pack(renounceNftMinterContractBuilder.build());
+          case "Urc721RenounceMinterContract":
+          {
+            var builder = Urc721RenounceMinterContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
+          case "Urc721BurnContract":
+          {
+            var builder = Urc721BurnContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
 
-          case "BurnNftTokenContract":
-            BurnNftTokenContract.Builder burnNftTokenContractBuilder = BurnNftTokenContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), burnNftTokenContractBuilder, selfType);
-            any = Any.pack(burnNftTokenContractBuilder.build());
+          case "Urc721ApproveContract":
+          {
+            var builder = Urc721ApproveContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
 
-          case "ApproveNftTokenContract":
-            ApproveNftTokenContract.Builder approveNftTokenContractBuilder = ApproveNftTokenContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), approveNftTokenContractBuilder, selfType);
-            any = Any.pack(approveNftTokenContractBuilder.build());
+          case "Urc721SetApprovalForAllContract":
+          {
+            var builder = Urc721SetApprovalForAllContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
 
-          case "ApproveForAllNftTokenContract":
-            ApproveForAllNftTokenContract.Builder approveForAllNftTokenContractBuilder = ApproveForAllNftTokenContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), approveForAllNftTokenContractBuilder, selfType);
-            any = Any.pack(approveForAllNftTokenContractBuilder.build());
+          case "Urc721TransferFromContract":
+          {
+            var builder = Urc721TransferFromContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-
-          case "TransferNftTokenContract":
-            TransferNftTokenContract.Builder transferNftTokenContractBuilder = TransferNftTokenContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferNftTokenContractBuilder, selfType);
-            any = Any.pack(transferNftTokenContractBuilder.build());
-            break;
+          }
           /**
            * POSBridge
             */

@@ -2119,7 +2119,7 @@ public class Manager {
                       .setTail(ByteString.copyFrom(templateKey))
                       .setTotal(1L)
                       .build());
-      accCtxRelStore.put(relation.getKey(), relation);
+      accCtxRelStore.put(relKey, relation);
     }
     else {
       var relation = accCtxRelStore.get(relKey);

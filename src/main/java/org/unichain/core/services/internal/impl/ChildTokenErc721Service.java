@@ -3,8 +3,8 @@ package org.unichain.core.services.internal.impl;
 import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
-import org.unichain.core.actuator.urc721.NftBurnTokenActuator;
-import org.unichain.core.actuator.urc721.NftMintTokenActuator;
+import org.unichain.core.actuator.NftBurnTokenActuator;
+import org.unichain.core.actuator.NftMintTokenActuator;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -30,12 +30,14 @@ public class ChildTokenErc721Service implements ChildTokenService {
         var contractKey =   childToken.toByteArray();
         var nft = nftContractStore.get(contractKey);
 
+        PosBridgeUtil.ERC721Decode erc721Decode = PosBridgeUtil.abiDecodeToErc721(depositData);
+
         var wrapCtx = Contract.MintNftTokenContract.newBuilder()
                 .setOwnerAddress(ByteString.copyFrom(nft.getOwner()))
                 .setAddress(childToken)
                 .setToAddress(user)
-                .setTokenId(PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue())
-                .setUri("http://blind.uri")//@TODO
+                .setTokenId(erc721Decode.tokenId)
+                .setUri(erc721Decode.uri)
                 .build();
         var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.MintNftTokenContract)
                 .getInstance()
@@ -68,4 +70,5 @@ public class ChildTokenErc721Service implements ChildTokenService {
         wrapActuator.execute(wrapRet);
         ret.setFee(wrapRet.getFee());
     }
+
 }

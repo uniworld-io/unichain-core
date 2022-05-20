@@ -208,4 +208,5 @@ public class Urc721TemplateCapsule implements ProtoCapsule<NftTemplate> {
   public byte[] getPrevOfMinter(){
     return template.getPrevOfMinter().toByteArray();
   }
+
 }

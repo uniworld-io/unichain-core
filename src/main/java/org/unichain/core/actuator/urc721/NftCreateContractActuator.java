@@ -107,8 +107,8 @@ public class NftCreateContractActuator extends AbstractActuator {
       var ownerAccountCap = accountStore.get(ownerAddr);
 
       Assert.isTrue(Wallet.addressValid(addr), "Invalid contract address");
-      Assert.isTrue(TransactionUtil.validNftName(symbol), "Invalid contract symbol");
-      Assert.isTrue(TransactionUtil.validNftName(name), "Invalid contract name");
+      Assert.isTrue(TransactionUtil.validCharSpecial(symbol), "Invalid contract symbol");
+      Assert.isTrue(TransactionUtil.validCharSpecial(name), "Invalid contract name");
 
       Assert.isTrue(!dbManager.getNftTemplateStore().has(addr), "Contract address has existed");
 

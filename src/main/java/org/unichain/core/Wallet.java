@@ -1307,12 +1307,12 @@ public class Wallet {
       var allRoot= dbManager.getRootTokenMapStore().getAll()
               .stream()
               .map(PosBridgeRootTokenMapCapsule::getInstance)
-              .collect(Collectors.toList());
+              .collect(Collectors.toSet());
 
       var allChild= dbManager.getChildTokenMapStore().getAll()
               .stream()
               .map(PosBridgeChildTokenMapCapsule::getInstance)
-              .collect(Collectors.toList());
+              .collect(Collectors.toSet());
       return  PosBridgeTokenMappingPage.newBuilder()
               .setTotal(allRoot.size() + allChild.size())
               .setPageIndex(0)

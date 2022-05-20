@@ -1400,7 +1400,7 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void mintNftToken(Contract.Urc721MintContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721Mint(Contract.Urc721MintContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721MintContract).getInstance());
       } catch (ContractValidateException e) {
@@ -1413,7 +1413,7 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void removeNftMinter(Contract.Urc721RemoveMinterContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721RemoveMinter(Contract.Urc721RemoveMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721RemoveMinterContract).getInstance());
       } catch (ContractValidateException e) {
@@ -1426,7 +1426,7 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void addNftMinter(Contract.Urc721AddMinterContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721AddMinter(Contract.Urc721AddMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721AddMinterContract).getInstance());
       } catch (ContractValidateException e) {
@@ -1439,7 +1439,7 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void renounceNftMinter(Contract.Urc721RenounceMinterContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721RenounceMinter(Contract.Urc721RenounceMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721RenounceMinterContract).getInstance());
       } catch (ContractValidateException e) {
@@ -1452,7 +1452,7 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void burnNftToken(Contract.Urc721BurnContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721Burn(Contract.Urc721BurnContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721BurnContract).getInstance());
       } catch (ContractValidateException e) {
@@ -1465,7 +1465,7 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void approveNftToken(Contract.Urc721ApproveContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721Approve(Contract.Urc721ApproveContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721ApproveContract).getInstance());
       } catch (ContractValidateException e) {
@@ -1478,7 +1478,7 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void approveForAllNftToken(Contract.Urc721SetApprovalForAllContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721SetApprovalForAll(Contract.Urc721SetApprovalForAllContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721SetApprovalForAllContract).getInstance());
       } catch (ContractValidateException e) {
@@ -1491,7 +1491,7 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void transferNftToken(Contract.Urc721TransferFromContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721TransferFrom(Contract.Urc721TransferFromContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721TransferFromContract).getInstance());
       } catch (ContractValidateException e) {

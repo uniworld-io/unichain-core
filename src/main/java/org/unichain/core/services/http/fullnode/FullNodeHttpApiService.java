@@ -367,15 +367,15 @@ public class FullNodeHttpApiService implements Service {
       /**
        * NFT
        */
-      context.addServlet(new ServletHolder(urc721CreateContractServlet), "/createnftcontract");
-      context.addServlet(new ServletHolder(urc721RemoveMinterServlet), "/removenftminter");
-      context.addServlet(new ServletHolder(urc721MintServlet), "/mintnfttoken");
-      context.addServlet(new ServletHolder(addNftMinterServlet), "/addnftminter");
-      context.addServlet(new ServletHolder(urc721RenounceMinterServlet), "/renouncenftminter");
-      context.addServlet(new ServletHolder(burnNftTokenServlet), "/burnnfttoken");
-      context.addServlet(new ServletHolder(urc721ApproveServlet), "/approvenfttoken");
-      context.addServlet(new ServletHolder(nftApprovalForAllServlet), "/approveforallnfttoken");
-      context.addServlet(new ServletHolder(urc721TransferFromServlet), "/transfernfttoken");
+      context.addServlet(new ServletHolder(urc721CreateContractServlet), "/urc721createContract");
+      context.addServlet(new ServletHolder(urc721RemoveMinterServlet), "/urc721removeminter");
+      context.addServlet(new ServletHolder(urc721MintServlet), "/urc721mint");
+      context.addServlet(new ServletHolder(addNftMinterServlet), "/urc721addminter");
+      context.addServlet(new ServletHolder(urc721RenounceMinterServlet), "/urc721renounceminter");
+      context.addServlet(new ServletHolder(burnNftTokenServlet), "/urc721burn");
+      context.addServlet(new ServletHolder(urc721ApproveServlet), "/urc721approve");
+      context.addServlet(new ServletHolder(nftApprovalForAllServlet), "/urc721setapprovalforall");
+      context.addServlet(new ServletHolder(urc721TransferFromServlet), "/urc721transferfrom");
       context.addServlet(new ServletHolder(urc721ListContractServlet), "/listnftcontract");
       context.addServlet(new ServletHolder(urc721ListTokenServlet), "/listnfttoken");
       context.addServlet(new ServletHolder(listNftTokenApproveServlet), "/listnfttokenapprove");

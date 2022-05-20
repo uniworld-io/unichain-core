@@ -3,7 +3,7 @@ package org.unichain.core.services.internal.impl;
 import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
-import org.unichain.core.actuator.urc721.NftTransferTokenActuator;
+import org.unichain.core.actuator.urc721.Urc721TransferTokenActuator;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -47,7 +47,7 @@ public class PredicateErc721Service implements PredicateService {
                 .getRawData()
                 .getContract(0)
                 .getParameter();
-        var wrapActuator = new NftTransferTokenActuator(contract, dbManager);
+        var wrapActuator = new Urc721TransferTokenActuator(contract, dbManager);
         var wrapRet = new TransactionResultCapsule();
         wrapActuator.validate();
         wrapActuator.execute(wrapRet);

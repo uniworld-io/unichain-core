@@ -21,21 +21,23 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
+import org.unichain.common.utils.ByteArray;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.RenounceNftMinterContract;
+import org.unichain.protos.Contract.BurnNftTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
-public class NftRenounceMinterActuator extends AbstractActuator {
+public class Urc721BurnTokenActuator extends AbstractActuator {
 
-  public NftRenounceMinterActuator(Any contract, Manager dbManager) {
+  public Urc721BurnTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -43,11 +45,11 @@ public class NftRenounceMinterActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(RenounceNftMinterContract.class);
+      var ctx = contract.unpack(BurnNftTokenContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var contractKey = ctx.getAddress().toByteArray();
-      //update template
-      dbManager.removeMinterContract(ownerAddr, contractKey);
+      var tokenId = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
+
+      dbManager.removeNftToken(tokenId);
 
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
@@ -65,19 +67,26 @@ public class NftRenounceMinterActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(RenounceNftMinterContract.class), "Contract type error,expected type [RenounceNftMinterContract],real type[" + contract.getClass() + "]");
-
-      val ctx = this.contract.unpack(RenounceNftMinterContract.class);
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var contractKey = ctx.getAddress().toByteArray();
+      Assert.isTrue(contract.is(BurnNftTokenContract.class), "Contract type error,expected type [BurnNftTokenContract],real type[" + contract.getClass() + "]");
+      var fee = calcFee();
+      val ctx = this.contract.unpack(BurnNftTokenContract.class);
       var accountStore = dbManager.getAccountStore();
-      var templateStore = dbManager.getNftTemplateStore();
+      var tokenStore = dbManager.getNftTokenStore();
+      var relationStore = dbManager.getNftAccountTokenStore();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var tokenId = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
 
-      Assert.isTrue(accountStore.has(ownerAddr), "Not found owner account");
-      Assert.isTrue(templateStore.has(contractKey), "Not found template");
-      var template = templateStore.get(contractKey);
-      Assert.isTrue(template.hasMinter() && Arrays.equals(ownerAddr, template.getMinter()), "Minter not exist or un-matched");
-      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "Not enough balance to cover fee");
+      Assert.isTrue(accountStore.has(ownerAddr), "Owner address not exist");
+      Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");
+      var nft = tokenStore.get(tokenId);
+      var nftOwner = nft.getOwner();
+      var relation = relationStore.get(nftOwner);
+
+      Assert.isTrue(Arrays.equals(ownerAddr, nftOwner)
+              || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
+              || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to burn NFT token");
+
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
       return true;
     }
     catch (Exception e){
@@ -88,7 +97,7 @@ public class NftRenounceMinterActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(RenounceNftMinterContract.class).getOwnerAddress();
+    return contract.unpack(BurnNftTokenContract.class).getOwnerAddress();
   }
 
   @Override

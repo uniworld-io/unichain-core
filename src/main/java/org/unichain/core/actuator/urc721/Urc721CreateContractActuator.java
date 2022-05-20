@@ -43,9 +43,9 @@ import java.util.Arrays;
 import static org.unichain.core.services.http.utils.Util.NFT_CREATE_TEMPLATE_FIELD_MINTER;
 
 @Slf4j(topic = "actuator")
-public class NftCreateContractActuator extends AbstractActuator {
+public class Urc721CreateContractActuator extends AbstractActuator {
 
-  public NftCreateContractActuator(Any contract, Manager dbManager) {
+  public Urc721CreateContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

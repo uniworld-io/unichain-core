@@ -18,11 +18,8 @@ package org.unichain.core.capsule.urc721;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-<<<<<<< HEAD:src/main/java/org/unichain/core/capsule/urc721/Urc721AccountTemplateRelationCapsule.java
 import org.unichain.core.capsule.ProtoCapsule;
-=======
 import org.unichain.protos.Protocol;
->>>>>>> 1b56dab36a2be7c2939f16331f715e162b162ed2:src/main/java/org/unichain/core/capsule/NftAccountTemplateRelationCapsule.java
 import org.unichain.protos.Protocol.NftAccountTemplateRelation;
 
 import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FIELD_TAIL;

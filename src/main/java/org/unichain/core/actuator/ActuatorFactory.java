@@ -197,23 +197,23 @@ public class ActuatorFactory {
        * NFT
        */
       case CreateNftTemplateContract:
-          return new NftCreateContractActuator(contract.getParameter(), manager);
+          return new Urc721CreateContractActuator(contract.getParameter(), manager);
       case MintNftTokenContract:
-        return new NftMintTokenActuator(contract.getParameter(), manager);
+        return new Urc721MintTokenActuator(contract.getParameter(), manager);
       case AddNftMinterContract:
-        return new NftAddMinterActuator(contract.getParameter(), manager);
+        return new Urc721AddMinterActuator(contract.getParameter(), manager);
       case RemoveNftMinterContract:
-        return new NftRemoveMinterActuator(contract.getParameter(), manager);
+        return new Urc721RemoveMinterActuator(contract.getParameter(), manager);
       case RenounceNftMinterContract:
-        return new NftRenounceMinterActuator(contract.getParameter(), manager);
+        return new Urc721RenounceMinterActuator(contract.getParameter(), manager);
       case ApproveNftTokenContract:
-        return new NftApproveTokenActuator(contract.getParameter(), manager);
+        return new Urc721ApproveTokenActuator(contract.getParameter(), manager);
       case ApproveForAllNftTokenContract:
-        return new NftApproveForAllTokenActuator(contract.getParameter(), manager);
+        return new Urc721ApproveForAllTokenActuator(contract.getParameter(), manager);
       case BurnNftTokenContract:
-        return new NftBurnTokenActuator(contract.getParameter(), manager);
+        return new Urc721BurnTokenActuator(contract.getParameter(), manager);
       case TransferNftTokenContract:
-        return new NftTransferTokenActuator(contract.getParameter(), manager);
+        return new Urc721TransferTokenActuator(contract.getParameter(), manager);
 
       /**
         POSBridge

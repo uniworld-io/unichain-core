@@ -22,20 +22,21 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
+import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.protos.Contract.RemoveNftMinterContract;
+import org.unichain.protos.Contract.ApproveForAllNftTokenContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
-public class NftRemoveMinterActuator extends AbstractActuator {
+public class Urc721ApproveForAllTokenActuator extends AbstractActuator {
 
-  public NftRemoveMinterActuator(Any contract, Manager dbManager) {
+  public Urc721ApproveForAllTokenActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -43,14 +44,22 @@ public class NftRemoveMinterActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(RemoveNftMinterContract.class);
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var contractKey = ctx.getAddress().toByteArray();
-      var templateCap = dbManager.getNftTemplateStore().get(contractKey);
+      var ctx = contract.unpack(ApproveForAllNftTokenContract.class);
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var toAddr = ctx.getToAddress().toByteArray();
+      var accountStore = dbManager.getAccountStore();
+      var relationStore = dbManager.getNftAccountTokenStore();
+      if(ctx.getApprove())
+        relationStore.approveForAll(ownerAddr, toAddr);
+      else
+        relationStore.disApproveForAll(ownerAddr, toAddr);
 
-      dbManager.removeMinterContract(templateCap.getMinter(), contractKey);
+      //create new account
+      if (!accountStore.has(toAddr)) {
+        fee = Math.addExact(fee, dbManager.createNewAccount(ctx.getToAddress()));
+      }
 
-      chargeFee(ownerAddress, fee);
+      chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -66,21 +75,33 @@ public class NftRemoveMinterActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(RemoveNftMinterContract.class), "contract type error,expected type [RemoveNftMinterContract],real type[" + contract.getClass() + "]");
-
-      val ctx = this.contract.unpack(RemoveNftMinterContract.class);
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var contractKey = ctx.getAddress().toByteArray();
+      Assert.isTrue(contract.is(ApproveForAllNftTokenContract.class), "contract type error,expected type [ApproveForAllNftTokenContract],real type[" + contract.getClass() + "]");
+      var fee = calcFee();
+      val ctx = this.contract.unpack(ApproveForAllNftTokenContract.class);
       var accountStore = dbManager.getAccountStore();
+      var relationStore = dbManager.getNftAccountTokenStore();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var toAddr = ctx.getToAddress().toByteArray();
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
+      Assert.isTrue(Wallet.addressValid(toAddr), "Target address not exists or not active");
+      Assert.isTrue(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0, "Not found any token");
+      var relation = relationStore.get(ownerAddr);
 
-      var templateCap = dbManager.getNftTemplateStore().get(contractKey);
-      Assert.notNull(templateCap, "Contract not found");
-      Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()), "Not owner of NFT template");
-      Assert.isTrue(templateCap.hasMinter(), "Minter not set");
-      long fee = calcFee();
-      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
+      if(ctx.getApprove()){
+        if(relation.hasApprovalForAll()) {
+          Assert.isTrue(!Arrays.equals(toAddr, relation.getApprovedForAll()), "The address has already been approver all");
+        }
+      } else {
+        Assert.isTrue(relation.hasApprovalForAll() && Arrays.equals(toAddr, relation.getApprovedForAll()), "Not approved yet");
+      }
+
+      if(!accountStore.has(toAddr)){
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+      }
+
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover transaction fee, require " + fee + "ginza");
+      Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and approver cannot be the same");
       return true;
     }
     catch (Exception e){
@@ -91,7 +112,7 @@ public class NftRemoveMinterActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(RemoveNftMinterContract.class).getOwnerAddress();
+    return contract.unpack(ApproveForAllNftTokenContract.class).getOwnerAddress();
   }
 
   @Override

@@ -24,7 +24,7 @@ public class Urc721TokenUriServlet extends HttpServlet {
   @Autowired
   private NftService nftService;
 
-  protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);

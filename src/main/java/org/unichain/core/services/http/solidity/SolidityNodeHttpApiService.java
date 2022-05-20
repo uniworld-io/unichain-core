@@ -48,9 +48,9 @@ public class SolidityNodeHttpApiService implements Service {
   @Autowired
   private Urc721ListContractServlet urc721ListContractServlet;
   @Autowired
-  private Urc721ListTokenApprovalServlet listNftTokenApproveServlet;
+  private Urc721ListTokenApprovalServlet urc721ListTokenApproveServlet;
   @Autowired
-  private Urc721GetApprovalForAllServlet listNftTokenApproveAllServlet;
+  private Urc721GetApprovalForAllServlet urc721ListTokenApproveAllServlet;
   @Autowired
   private Urc721ListTokenServlet urc721ListTokenServlet;
   @Autowired
@@ -61,6 +61,20 @@ public class SolidityNodeHttpApiService implements Service {
   private Urc721BalanceOfServlet urc721BalanceOfServlet;
   @Autowired
   private Urc721GetApprovalServlet urc721GetApprovalServlet;
+
+
+  @Autowired
+  private Urc721NameServlet urc721NameServlet;
+  @Autowired
+  private Urc721SymbolServlet urc721SymbolServlet;
+  @Autowired
+  private Urc721TokenUriServlet urc721TokenUriServlet;
+  @Autowired
+  private Urc721TotalSupplyServlet urc721TotalSupplyServlet;
+  @Autowired
+  private Urc721IsApprovedForAllServlet urc721IsApprovedForAllServlet;
+  @Autowired
+  private Urc721OwnerOfServlet urc721OwnerOfServlet;
 
   @Autowired
   private Urc30GetFutureTokenServlet urc30GetFutureTokenServlet;
@@ -167,7 +181,6 @@ public class SolidityNodeHttpApiService implements Service {
       context.setContextPath("/");
       server.setHandler(context);
 
-      //@fixme remove duplicate of /walletsolidity
       //same as FullNode
       context.addServlet(new ServletHolder(getAccountServlet), "/walletsolidity/getaccount");
       context.addServlet(new ServletHolder(urc30GetTokenPoolServlet), "/walletsolidity/gettokenpool");
@@ -176,14 +189,23 @@ public class SolidityNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(posBridgeGetConfigServlet), "/walletsolidity/getposbridgeconfig");
       context.addServlet(new ServletHolder(posBridgeGetTokenMapServlet), "/walletsolidity/getposbridgetokenmap");
 
-      context.addServlet(new ServletHolder(urc721ListContractServlet), "/walletsolidity/listnftcontract");
-      context.addServlet(new ServletHolder(listNftTokenApproveServlet), "/walletsolidity/listnfttokenapprove");
-      context.addServlet(new ServletHolder(listNftTokenApproveAllServlet), "/walletsolidity/listnfttokenapproveall");
-      context.addServlet(new ServletHolder(urc721ListTokenServlet), "/walletsolidity/listnfttoken");
-      context.addServlet(new ServletHolder(urc721GetContractServlet), "/walletsolidity/getnftcontract");
-      context.addServlet(new ServletHolder(urc721GetTokenServlet), "/walletsolidity/getnfttoken");
-      context.addServlet(new ServletHolder(urc721BalanceOfServlet), "/walletsolidity/getnftbalanceOf");
-      context.addServlet(new ServletHolder(urc721GetApprovalServlet), "/walletsolidity/getnftapprovedforall");
+      //urc721
+      context.addServlet(new ServletHolder(urc721ListContractServlet), "/walletsolidity/urc721listcontract");
+      context.addServlet(new ServletHolder(urc721ListTokenApproveServlet), "/walletsolidity/urc721listtokenapprove");
+      context.addServlet(new ServletHolder(urc721ListTokenApproveAllServlet), "/walletsolidity/urc721listtokenapproveall");
+      context.addServlet(new ServletHolder(urc721ListTokenServlet), "/walletsolidity/urc721listtoken");
+      context.addServlet(new ServletHolder(urc721GetContractServlet), "/walletsolidity/urc721getcontract");
+      context.addServlet(new ServletHolder(urc721GetTokenServlet), "/walletsolidity/urc721gettoken");
+
+      context.addServlet(new ServletHolder(urc721BalanceOfServlet), "/walletsolidity/urc721balanceof");
+      context.addServlet(new ServletHolder(urc721GetApprovalServlet), "/walletsolidity/urc721getapprovedforall");
+
+      context.addServlet(new ServletHolder(urc721NameServlet), "/walletsolidity/urc721name");
+      context.addServlet(new ServletHolder(urc721SymbolServlet), "/walletsolidity/urc721symbol");
+      context.addServlet(new ServletHolder(urc721TokenUriServlet), "/walletsolidity/urc721tokenuri");
+      context.addServlet(new ServletHolder(urc721TotalSupplyServlet), "/walletsolidity/urc721totalsupply");
+      context.addServlet(new ServletHolder(urc721IsApprovedForAllServlet), "/walletsolidity/urc721isapprovedforall");
+      context.addServlet(new ServletHolder(urc721OwnerOfServlet), "/walletsolidity/urc721ownerof");
 
       //urc40
       context.addServlet(new ServletHolder(urc40GetFutureTokenServlet), "/walletsolidity/urc40getfuturetoken");

@@ -47,7 +47,7 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private CreateAssetIssueServlet createAssetIssueServlet;
 
-  //NFT
+  //urc721
   @Autowired
   private Urc721CreateContractServlet urc721CreateContractServlet;
   @Autowired
@@ -55,23 +55,24 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private Urc721MintServlet urc721MintServlet;
   @Autowired
-  private Urc721AddMinterServlet addNftMinterServlet;
+  private Urc721AddMinterServlet urc721AddMinterServlet;
   @Autowired
   private Urc721RenounceMinterServlet urc721RenounceMinterServlet;
   @Autowired
-  private Urc721BurnServlet burnNftTokenServlet;
+  private Urc721BurnServlet urc721BurnTokenServlet;
   @Autowired
   private Urc721ApproveServlet urc721ApproveServlet;
   @Autowired
-  private Urc721SetApprovalForAllServlet nftApprovalForAllServlet;
+  private Urc721SetApprovalForAllServlet urc721ApprovalForAllServlet;
   @Autowired
   private Urc721TransferFromServlet urc721TransferFromServlet;
+
   @Autowired
   private Urc721ListContractServlet urc721ListContractServlet;
   @Autowired
-  private Urc721ListTokenApprovalServlet listNftTokenApproveServlet;
+  private Urc721ListTokenApprovalServlet urc721ListTokenApproveServlet;
   @Autowired
-  private Urc721GetApprovalForAllServlet listNftTokenApproveAllServlet;
+  private Urc721GetApprovalForAllServlet urc721ListTokenApproveAllServlet;
   @Autowired
   private Urc721ListTokenServlet urc721ListTokenServlet;
   @Autowired
@@ -82,6 +83,19 @@ public class FullNodeHttpApiService implements Service {
   private Urc721BalanceOfServlet urc721BalanceOfServlet;
   @Autowired
   private Urc721GetApprovalServlet urc721GetApprovalServlet;
+
+  @Autowired
+  private Urc721NameServlet urc721NameServlet;
+  @Autowired
+  private Urc721SymbolServlet urc721SymbolServlet;
+  @Autowired
+  private Urc721TokenUriServlet urc721TokenUriServlet;
+  @Autowired
+  private Urc721TotalSupplyServlet urc721TotalSupplyServlet;
+  @Autowired
+  private Urc721IsApprovedForAllServlet urc721IsApprovedForAllServlet;
+  @Autowired
+  private Urc721OwnerOfServlet urc721OwnerOfServlet;
 
   //urc40
   @Autowired
@@ -348,10 +362,6 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getAccountServlet), "/getaccount");
       context.addServlet(new ServletHolder(urc30GetTokenPoolServlet), "/gettokenpool");
 
-      context.addServlet(new ServletHolder(urc721GetContractServlet), "/getnftcontract");
-      context.addServlet(new ServletHolder(urc721GetTokenServlet), "/getnfttoken");
-      context.addServlet(new ServletHolder(urc721BalanceOfServlet), "/getnftbalanceOf");
-      context.addServlet(new ServletHolder(urc721GetApprovalServlet), "/getnftapprovedforall");
 
       context.addServlet(new ServletHolder(urc30GetFutureTokenServlet), "/getfuturetoken");
       context.addServlet(new ServletHolder(getFutureTransferServlet), "/getfuturetransfer");
@@ -365,21 +375,34 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(createAssetIssueServlet), "/createassetissue");
 
       /**
-       * NFT
+       * urc721
        */
-      context.addServlet(new ServletHolder(urc721CreateContractServlet), "/urc721createContract");
+      context.addServlet(new ServletHolder(urc721CreateContractServlet), "/urc721createcontract");
       context.addServlet(new ServletHolder(urc721RemoveMinterServlet), "/urc721removeminter");
       context.addServlet(new ServletHolder(urc721MintServlet), "/urc721mint");
-      context.addServlet(new ServletHolder(addNftMinterServlet), "/urc721addminter");
+      context.addServlet(new ServletHolder(urc721AddMinterServlet), "/urc721addminter");
       context.addServlet(new ServletHolder(urc721RenounceMinterServlet), "/urc721renounceminter");
-      context.addServlet(new ServletHolder(burnNftTokenServlet), "/urc721burn");
+      context.addServlet(new ServletHolder(urc721BurnTokenServlet), "/urc721burn");
       context.addServlet(new ServletHolder(urc721ApproveServlet), "/urc721approve");
-      context.addServlet(new ServletHolder(nftApprovalForAllServlet), "/urc721setapprovalforall");
+      context.addServlet(new ServletHolder(urc721ApprovalForAllServlet), "/urc721setapprovalforall");
       context.addServlet(new ServletHolder(urc721TransferFromServlet), "/urc721transferfrom");
-      context.addServlet(new ServletHolder(urc721ListContractServlet), "/listnftcontract");
-      context.addServlet(new ServletHolder(urc721ListTokenServlet), "/listnfttoken");
-      context.addServlet(new ServletHolder(listNftTokenApproveServlet), "/listnfttokenapprove");
-      context.addServlet(new ServletHolder(listNftTokenApproveAllServlet), "/listnfttokenapproveall");
+      //standard erc721
+      context.addServlet(new ServletHolder(urc721BalanceOfServlet), "/urc721balanceof");
+      context.addServlet(new ServletHolder(urc721NameServlet), "/urc721name");
+      context.addServlet(new ServletHolder(urc721SymbolServlet), "/urc721symbol");
+      context.addServlet(new ServletHolder(urc721TokenUriServlet), "/urc721tokenuri");
+      context.addServlet(new ServletHolder(urc721TotalSupplyServlet), "/urc721totalsupply");
+      context.addServlet(new ServletHolder(urc721IsApprovedForAllServlet), "/urc721isapprovedforall");
+      context.addServlet(new ServletHolder(urc721OwnerOfServlet), "/urc721ownerof");
+
+      //extended erc721
+      context.addServlet(new ServletHolder(urc721GetApprovalServlet), "/urc721getapprovedforall");
+      context.addServlet(new ServletHolder(urc721ListContractServlet), "/urc721listcontract");
+      context.addServlet(new ServletHolder(urc721ListTokenServlet), "/urc721listtoken");
+      context.addServlet(new ServletHolder(urc721ListTokenApproveServlet), "/urc721listtokenapprove");
+      context.addServlet(new ServletHolder(urc721ListTokenApproveAllServlet), "/urc721listtokenapproveall");
+      context.addServlet(new ServletHolder(urc721GetContractServlet), "/urc721getcontract");
+      context.addServlet(new ServletHolder(urc721GetTokenServlet), "/urc721gettoken");
 
       /**
        * POSBridge

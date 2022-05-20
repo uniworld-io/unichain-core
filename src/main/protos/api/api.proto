@@ -139,87 +139,89 @@ service Wallet {
 
 
   /**
-    NFT
+    urc721
    */
-  rpc ListNftTokenApprove (NftTokenApproveQuery) returns (NftTokenApproveResult) {
+  rpc Urc721ListTokenApprove (NftTokenApproveQuery) returns (NftTokenApproveResult) {
     option (google.api.http) = {
-      post: "/wallet/listnfttokenapprove"
+      post: "/wallet/urc721listtokenapprove"
       body: "*"
       additional_bindings {
-        get: "/wallet/listnfttokenapprove"
+        get: "/wallet/urc721listtokenapprove"
       }
     };
   };
 
-  rpc ListNftTokenApproveAll (NftTokenApproveAllQuery) returns (NftTokenApproveAllResult) {
+  rpc Urc721ListTokenApproveAll (NftTokenApproveAllQuery) returns (NftTokenApproveAllResult) {
     option (google.api.http) = {
-      post: "/wallet/listnfttokenapproveall"
+      post: "/wallet/urc721listtokenapproveall"
       body: "*"
       additional_bindings {
-        get: "/wallet/listnfttokenapproveall"
+        get: "/wallet/urc721listtokenapproveall"
       }
     };
   };
 
-  rpc ListNftTemplate (NftTemplateQuery) returns (NftTemplateQueryResult) {
+  rpc Urc721ListContract (NftTemplateQuery) returns (NftTemplateQueryResult) {
     option (google.api.http) = {
-      post: "/wallet/listnftcontract"
+      post: "/wallet/urc721listcontract"
       body: "*"
       additional_bindings {
-        get: "/wallet/listnftcontract"
+        get: "/wallet/urc721listcontract"
       }
     };
   };
 
-  rpc ListNftToken (NftTokenQuery) returns (NftTokenQueryResult) {
+  rpc Urc721ListToken (NftTokenQuery) returns (NftTokenQueryResult) {
     option (google.api.http) = {
-      post: "/wallet/listnfttoken"
+      post: "/wallet/urc721listtoken"
       body: "*"
       additional_bindings {
-        get: "/wallet/listnfttoken"
+        get: "/wallet/urc721listtoken"
       }
     };
   };
 
-  rpc GetNftTemplate (NftTemplate) returns (NftTemplate) {
+  rpc Urc721GetContract (NftTemplate) returns (NftTemplate) {
     option (google.api.http) = {
-      post: "/wallet/getnftcontract"
+      post: "/wallet/urc721getcontract"
       body: "*"
       additional_bindings {
-        get: "/wallet/getnftcontract"
+        get: "/wallet/urc721getcontract"
       }
     };
   };
 
-  rpc GetNftToken (NftTokenGet) returns (NftTokenGetResult) {
+  rpc Urc721GetToken (NftTokenGet) returns (NftTokenGetResult) {
     option (google.api.http) = {
-      post: "/wallet/getnfttoken"
+      post: "/wallet/urc721gettoken"
       body: "*"
       additional_bindings {
-        get: "/wallet/getnfttoken"
+        get: "/wallet/urc721gettoken"
       }
     };
   };
 
-  rpc GetNftBalanceOf (NftBalanceOf) returns (NftBalanceOf) {
+  rpc Urc721BalanceOf (NftBalanceOf) returns (NftBalanceOf) {
     option (google.api.http) = {
-      post: "/wallet/getnftbalanceof"
+      post: "/wallet/urc721balanceof"
       body: "*"
       additional_bindings {
-        get: "/wallet/getnftbalanceof"
+        get: "/wallet/urc721balanceof"
       }
     };
   };
 
-  rpc GetNftApprovedForAll (IsApprovedForAll) returns (IsApprovedForAll) {
+  rpc Urc721GetApprovedForAll (IsApprovedForAll) returns (IsApprovedForAll) {
     option (google.api.http) = {
-      post: "/wallet/getnftapprovedforall"
+      post: "/wallet/urc721getapprovedforall"
       body: "*"
       additional_bindings {
-        get: "/wallet/getnftapprovedforall"
+        get: "/wallet/urc721getapprovedforall"
       }
     };
   };
+
+  //@fixme add urc721 6 new GET apis
 
   rpc GetAccount (Account) returns (Account) {
     option (google.api.http) = {
@@ -346,7 +348,7 @@ service Wallet {
   rpc CreateAssetIssue2 (AssetIssueContract) returns (TransactionExtention) {
   };
 
-  rpc CreateNftTemplate (Urc721CreateContract) returns (Transaction) {
+  rpc CreateUrc721Contract (Urc721CreateContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/urc721createContract"
       body: "*"
@@ -1401,84 +1403,84 @@ service WalletSolidity {
 
 
   /**
-  Nft
+    urc721
    */
-  rpc ListNftTokenApprove (NftTokenApproveQuery) returns (NftTokenApproveResult) {
+  rpc Urc721ListTokenApprove (NftTokenApproveQuery) returns (NftTokenApproveResult) {
     option (google.api.http) = {
-      post: "/walletsolidity/listnfttokenapprove"
+      post: "/walletsolidity/urc721listtokenapprove"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/listnfttokenapprove"
+        get: "/walletsolidity/urc721listtokenapprove"
       }
     };
   };
 
-  rpc ListNftTokenApproveAll (NftTokenApproveAllQuery) returns (NftTokenApproveAllResult) {
+  rpc Urc721ListTokenApproveAll (NftTokenApproveAllQuery) returns (NftTokenApproveAllResult) {
     option (google.api.http) = {
-      post: "/walletsolidity/listnfttokenapproveall"
+      post: "/walletsolidity/urc721listtokenapproveall"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/listnfttokenapproveall"
+        get: "/walletsolidity/urc721listtokenapproveall"
       }
     };
   };
 
-  rpc ListNftTemplate (NftTemplateQuery) returns (NftTemplateQueryResult) {
+  rpc Urc721ListContract (NftTemplateQuery) returns (NftTemplateQueryResult) {
     option (google.api.http) = {
-      post: "/walletsolidity/listnftcontract"
+      post: "/walletsolidity/urc721listcontract"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/listnftcontract"
+        get: "/walletsolidity/urc721listcontract"
       }
     };
   };
 
-  rpc ListNftToken (NftTokenQuery) returns (NftTokenQueryResult) {
+  rpc Urc721ListToken (NftTokenQuery) returns (NftTokenQueryResult) {
     option (google.api.http) = {
-      post: "/walletsolidity/listnfttoken"
+      post: "/walletsolidity/urc721listtoken"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/listnfttoken"
+        get: "/walletsolidity/urc721listtoken"
       }
     };
   };
 
-  rpc GetNftTemplate (NftTemplate) returns (NftTemplate) {
+  rpc Urc721GetContract (NftTemplate) returns (NftTemplate) {
     option (google.api.http) = {
-      post: "/walletsolidity/getnftcontract"
+      post: "/walletsolidity/urc721getcontract"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/getnftcontract"
+        get: "/walletsolidity/urc721getcontract"
       }
     };
   };
 
-  rpc GetNftToken (NftTokenGet) returns (NftTokenGetResult) {
+  rpc Urc721GetToken (NftTokenGet) returns (NftTokenGetResult) {
     option (google.api.http) = {
-      post: "/walletsolidity/getnfttoken"
+      post: "/walletsolidity/urc721gettoken"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/getnfttoken"
+        get: "/walletsolidity/urc721gettoken"
       }
     };
   };
 
-  rpc GetNftBalanceOf (NftBalanceOf) returns (NftBalanceOf) {
+  rpc Urc721BalanceOf (NftBalanceOf) returns (NftBalanceOf) {
     option (google.api.http) = {
-      post: "/walletsolidity/getnftbalanceof"
+      post: "/walletsolidity/urc721balanceof"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/getnftbalanceof"
+        get: "/walletsolidity/urc721balanceof"
       }
     };
   };
 
-  rpc GetNftApprovedForAll (IsApprovedForAll) returns (IsApprovedForAll) {
+  rpc Urc721GetApprovedForAll (IsApprovedForAll) returns (IsApprovedForAll) {
     option (google.api.http) = {
-      post: "/walletsolidity/getnftapprovedforall"
+      post: "/walletsolidity/urc721getapprovedforall"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/getnftapprovedforall"
+        get: "/walletsolidity/urc721getapprovedforall"
       }
     };
   };

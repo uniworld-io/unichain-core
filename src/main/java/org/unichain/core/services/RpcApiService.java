@@ -293,56 +293,56 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
+    public void urc721ListTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
       NftTokenApproveResult reply = nftService.getListApproval(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
+    public void urc721ListTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
       NftTokenApproveAllResult reply = nftService.getApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftTemplate(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
+    public void urc721ListContract(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
       NftTemplateQueryResult reply = nftService.listContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
+    public void urc721ListToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
       NftTokenQueryResult reply = nftService.listToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftTemplate(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
+    public void urc721GetContract(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
       NftTemplate reply = nftService.getContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
+    public void urc721GetToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
       var reply = nftService.getToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftBalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
+    public void urc721BalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
       NftBalanceOf reply = nftService.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
+    public void urc721GetApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
       IsApprovedForAll reply = nftService.isApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
@@ -818,56 +818,56 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
+    public void urc721ListTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
       NftTokenApproveResult reply = nftService.getListApproval(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
+    public void urc721ListTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
       NftTokenApproveAllResult reply = nftService.getApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftTemplate(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
+    public void urc721ListContract(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
       NftTemplateQueryResult reply = nftService.listContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
+    public void urc721ListToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
       NftTokenQueryResult reply = nftService.listToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftTemplate(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
+    public void urc721GetContract(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
       NftTemplate reply = nftService.getContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
+    public void urc721GetToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
       NftTokenGetResult reply = nftService.getToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftBalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
+    public void urc721BalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
       NftBalanceOf reply = nftService.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
+    public void urc721GetApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
       IsApprovedForAll reply = nftService.isApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
@@ -1384,7 +1384,7 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void createNftTemplate(Contract.Urc721CreateContract request, StreamObserver<Transaction> responseObserver) {
+    public void createUrc721Contract(Contract.Urc721CreateContract request, StreamObserver<Transaction> responseObserver) {
       try {
         request = request.toBuilder()
                 .setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()))

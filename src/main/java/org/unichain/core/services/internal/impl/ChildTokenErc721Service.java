@@ -26,7 +26,7 @@ public class ChildTokenErc721Service implements ChildTokenService {
 
     @Override
     public void deposit(ByteString user, ByteString childToken, String depositData) throws ContractExeException, ContractValidateException {
-        var nftContractStore = dbManager.getNftTemplateStore();
+        var nftContractStore = dbManager.getUrc721ContractStore();
         var contractKey =   childToken.toByteArray();
         var nft = nftContractStore.get(contractKey);
 

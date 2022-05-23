@@ -31,7 +31,6 @@ import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.internal.ChildTokenService;
 import org.unichain.protos.Contract.PosBridgeDepositExecContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.utils.Numeric;
@@ -120,7 +119,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
                     Assert.isTrue(dbManager.getTokenAddrSymbolIndexStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "token with address not found: " + decodedMsg);
                     break;
                 case NFT:
-                    Assert.isTrue(dbManager.getNftTemplateStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "nft with address not found: " + decodedMsg);
+                    Assert.isTrue(dbManager.getUrc721ContractStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "nft with address not found: " + decodedMsg);
                     break;
                 default:
                     throw new ContractValidateException("invalid asset type");

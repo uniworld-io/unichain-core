@@ -78,27 +78,27 @@ import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PE
 public class Manager {
   @Autowired
   @Getter
-  private NftTokenApproveRelationStore nftTokenApproveRelationStore;
+  private Urc721TokenApproveRelationStore urc721TokenApproveRelationStore;
 
   @Autowired
   @Getter
-  private NftTemplateStore nftTemplateStore;
+  private Urc721ContractStore urc721ContractStore;
 
   @Autowired
   @Getter
-  private NftTokenStore nftTokenStore;
+  private Urc721TokenStore urc721TokenStore;
 
   @Autowired
   @Getter
-  private NftAccountTemplateStore nftAccountTemplateStore;
+  private Urc721AccountContractRelationStore urc721AccountContractRelationStore;
 
   @Autowired
   @Getter
-  private NftMinterContractStore nftMinterContractStore;
+  private Urc721MinterContractRelationStore urc721MinterContractRelationStore;
 
   @Autowired
   @Getter
-  private NftAccountTokenStore nftAccountTokenStore;
+  private Urc721AccountTokenRelationStore urc721AccountTokenRelationStore;
 
   @Getter
   @Autowired
@@ -1771,12 +1771,12 @@ public class Manager {
 
   public void closeAllStore() {
     logger.warn("******** begin to close db ********");
-    closeOneStore(nftMinterContractStore);
-    closeOneStore(nftTokenApproveRelationStore);
-    closeOneStore(nftTokenStore);
-    closeOneStore(nftTemplateStore);
-    closeOneStore(nftAccountTemplateStore);
-    closeOneStore(nftAccountTokenStore);
+    closeOneStore(urc721MinterContractRelationStore);
+    closeOneStore(urc721TokenApproveRelationStore);
+    closeOneStore(urc721TokenStore);
+    closeOneStore(urc721ContractStore);
+    closeOneStore(urc721AccountContractRelationStore);
+    closeOneStore(urc721AccountTokenRelationStore);
     closeOneStore(accountStore);
     closeOneStore(posBridgeConfigStore);
     closeOneStore(rootTokenMapStore);
@@ -2100,9 +2100,9 @@ public class Manager {
     }
   }
 
-  public void saveNftTemplate(Urc721TemplateCapsule contractCap){
-    var contractStore = getNftTemplateStore();
-    var accCtxRelStore = getNftAccountTemplateStore();
+  public void saveNftTemplate(Urc721ContractCapsule contractCap){
+    var contractStore = getUrc721ContractStore();
+    var accCtxRelStore = getUrc721AccountContractRelationStore();
 
     var relKey = contractCap.getOwner();
 
@@ -2112,8 +2112,8 @@ public class Manager {
       contractCap.clearPrev();
       contractStore.put(templateKey, contractCap);
 
-      var relation = new Urc721AccountTemplateRelationCapsule(relKey,
-              Protocol.NftAccountTemplateRelation.newBuilder()
+      var relation = new Urc721AccountContractRelationCapsule(relKey,
+              Protocol.Urc721AccountContractRelation.newBuilder()
                       .setOwnerAddress(ByteString.copyFrom(relKey))
                       .setHead(ByteString.copyFrom(templateKey))
                       .setTail(ByteString.copyFrom(templateKey))
@@ -2144,8 +2144,8 @@ public class Manager {
   }
 
   public void saveNftToken(Urc721TokenCapsule tokenCap) {
-    var tokenStore = getNftTokenStore();
-    var relationStore = getNftAccountTokenStore();
+    var tokenStore = getUrc721TokenStore();
+    var relationStore = getUrc721AccountTokenRelationStore();
     var relationKey = tokenCap.getOwner();
 
     if (!relationStore.has(relationKey)) {
@@ -2155,7 +2155,7 @@ public class Manager {
       tokenStore.put(tokenKey, tokenCap);
 
       var relation = new Urc721AccountTokenRelationCapsule(relationKey,
-              Protocol.NftAccountTokenRelation.newBuilder()
+              Protocol.Urc721AccountTokenRelation.newBuilder()
                       .setOwnerAddress(ByteString.copyFrom(tokenCap.getOwner()))
                       .setHead(ByteString.copyFrom(tokenKey))
                       .setTail(ByteString.copyFrom(tokenKey))
@@ -2201,8 +2201,8 @@ public class Manager {
    * @param tokenId
    */
   public void removeNftToken(byte[] tokenId){
-    var tokenStore = getNftTokenStore();
-    var relationStore = getNftAccountTokenStore();
+    var tokenStore = getUrc721TokenStore();
+    var relationStore = getUrc721AccountTokenRelationStore();
 
     Assert.isTrue(tokenStore.has(tokenId), "not found nft token with id " + tokenId);
     val tokenCap = tokenStore.get(tokenId);
@@ -2276,11 +2276,11 @@ public class Manager {
   }
 
   public void addApproveToken(byte[] tokenId, byte[] toAddress){
-    var approveStore = getNftTokenApproveRelationStore();
-    var relationStore = getNftAccountTokenStore();
+    var approveStore = getUrc721TokenApproveRelationStore();
+    var relationStore = getUrc721AccountTokenRelationStore();
 
     if (!relationStore.has(toAddress)) {
-      var approve = new Urc721TokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
+      var approve = new Urc721TokenApproveRelationCapsule(Protocol.Urc721TokenApproveRelation.newBuilder()
               .clearNext()
               .clearPrev()
               .setOwnerAddress(ByteString.copyFrom(toAddress))
@@ -2289,7 +2289,7 @@ public class Manager {
       approveStore.put(approve.getKey(), approve);
 
       var relation = new Urc721AccountTokenRelationCapsule(toAddress,
-              Protocol.NftAccountTokenRelation.newBuilder()
+              Protocol.Urc721AccountTokenRelation.newBuilder()
                       .setOwnerAddress(ByteString.copyFrom(toAddress))
                       .clearHead()
                       .clearTail()
@@ -2305,7 +2305,7 @@ public class Manager {
       var relation = relationStore.get(toAddress);
       if (!relation.hasTailApprove()) {
         //in the case that the relation created to store approve list only
-        var approve = new Urc721TokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
+        var approve = new Urc721TokenApproveRelationCapsule(Protocol.Urc721TokenApproveRelation.newBuilder()
                 .clearNext()
                 .clearPrev()
                 .setOwnerAddress(ByteString.copyFrom(toAddress))
@@ -2325,7 +2325,7 @@ public class Manager {
         relation.setTailApprove(ByteString.copyFrom(tokenId));
         relationStore.put(toAddress, relation);
 
-        var approve = new Urc721TokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
+        var approve = new Urc721TokenApproveRelationCapsule(Protocol.Urc721TokenApproveRelation.newBuilder()
                 .clearNext()
                 .setPrev(ByteString.copyFrom(tailKey))
                 .setOwnerAddress(ByteString.copyFrom(toAddress))
@@ -2340,8 +2340,8 @@ public class Manager {
   }
 
   public void disapproveToken(byte[] tokenId, byte[] toAddress){
-    var approveStore = getNftTokenApproveRelationStore();
-    var relationStore = getNftAccountTokenStore();
+    var approveStore = getUrc721TokenApproveRelationStore();
+    var relationStore = getUrc721AccountTokenRelationStore();
 
     Assert.isTrue(approveStore.has(tokenId), "not found nft token with id" + tokenId);
     val approveCap = approveStore.get(tokenId);
@@ -2404,90 +2404,90 @@ public class Manager {
     approveStore.delete(tokenId);
   }
 
-  public void addMinterContractRelation(Urc721TemplateCapsule contractCap){
+  public void addMinterContractRelation(Urc721ContractCapsule contractCap){
     var minterAddress = contractCap.getMinter();
-    if(!nftMinterContractStore.has(minterAddress)){
+    if(!urc721MinterContractRelationStore.has(minterAddress)){
       contractCap.clearNextOfMinter();
       contractCap.clearPrevOfMinter();
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
 
-      var relation = Protocol.NftAccountTemplateRelation.newBuilder()
+      var relation = Protocol.Urc721AccountContractRelation.newBuilder()
               .setOwnerAddress(ByteString.copyFrom(minterAddress))
               .setHead(ByteString.copyFrom(contractCap.getKey()))
               .setTail(ByteString.copyFrom(contractCap.getKey()))
               .setTotal(1L)
               .build();
-      nftMinterContractStore.put(minterAddress, new Urc721AccountTemplateRelationCapsule(minterAddress, relation));
+      urc721MinterContractRelationStore.put(minterAddress, new Urc721AccountContractRelationCapsule(minterAddress, relation));
     }else {
-      var relationCap = nftMinterContractStore.get(minterAddress);
-      var tail  = nftTemplateStore.get(relationCap.getTail().toByteArray());
+      var relationCap = urc721MinterContractRelationStore.get(minterAddress);
+      var tail  = urc721ContractStore.get(relationCap.getTail().toByteArray());
 
       tail.setNextOfMinter(contractCap.getKey());
-      nftTemplateStore.put(tail.getKey(), tail);
+      urc721ContractStore.put(tail.getKey(), tail);
 
       contractCap.clearNextOfMinter();
       contractCap.setPrevOfMinter(tail.getKey());
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
 
       relationCap.setTail(ByteString.copyFrom(contractCap.getKey()));
       relationCap.setTotal(Math.incrementExact(relationCap.getTotal()));
-      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+      urc721MinterContractRelationStore.put(relationCap.getKey(), relationCap);
     }
   }
 
   public void removeMinterContract(byte[] minterAddress, byte[] contractAddr){
-    nftTemplateStore.clearMinterOf(contractAddr);
-    var contractCap = nftTemplateStore.get(contractAddr);
+    urc721ContractStore.clearMinterOf(contractAddr);
+    var contractCap = urc721ContractStore.get(contractAddr);
 
-    if(!nftMinterContractStore.has(minterAddress))
+    if(!urc721MinterContractRelationStore.has(minterAddress))
       return;
 
-    var relationCap = nftMinterContractStore.get(minterAddress);
+    var relationCap = urc721MinterContractRelationStore.get(minterAddress);
     if(!contractCap.hasPrevOfMinter() && contractCap.hasNextOfMinter()){
-      var next = nftTemplateStore.get(contractCap.getNextOfMinter());
+      var next = urc721ContractStore.get(contractCap.getNextOfMinter());
       next.clearPrevOfMinter();
-      nftTemplateStore.put(next.getKey(), next);
+      urc721ContractStore.put(next.getKey(), next);
 
       relationCap.setHead(ByteString.copyFrom(contractCap.getNextOfMinter()));
       relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
-      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+      urc721MinterContractRelationStore.put(relationCap.getKey(), relationCap);
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
     }else if(!contractCap.hasPrevOfMinter() && !contractCap.hasNextOfMinter()){
-      nftMinterContractStore.delete(relationCap.getKey());
+      urc721MinterContractRelationStore.delete(relationCap.getKey());
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
     }else if(contractCap.hasPrevOfMinter() && !contractCap.hasNextOfMinter()){
-      var prev = nftTemplateStore.get(contractCap.getPrevOfMinter());
+      var prev = urc721ContractStore.get(contractCap.getPrevOfMinter());
       prev.clearNextOfMinter();
-      nftTemplateStore.put(prev.getKey(), prev);
+      urc721ContractStore.put(prev.getKey(), prev);
 
       relationCap.setTail(ByteString.copyFrom(contractCap.getPrevOfMinter()));
       relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
-      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+      urc721MinterContractRelationStore.put(relationCap.getKey(), relationCap);
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
     }else {
-      var prev = nftTemplateStore.get(contractCap.getPrevOfMinter());
-      var next = nftTemplateStore.get(contractCap.getNextOfMinter());
+      var prev = urc721ContractStore.get(contractCap.getPrevOfMinter());
+      var next = urc721ContractStore.get(contractCap.getNextOfMinter());
 
       prev.setNextOfMinter(next.getKey());
       next.setPrevOfMinter(prev.getKey());
-      nftTemplateStore.put(prev.getKey(), prev);
-      nftTemplateStore.put(next.getKey(), next);
+      urc721ContractStore.put(prev.getKey(), prev);
+      urc721ContractStore.put(next.getKey(), next);
 
       relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
-      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+      urc721MinterContractRelationStore.put(relationCap.getKey(), relationCap);
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
     }
   }
 }

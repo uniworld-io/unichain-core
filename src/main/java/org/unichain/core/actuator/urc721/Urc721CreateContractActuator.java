@@ -24,12 +24,12 @@ import lombok.var;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.unichain.common.event.NativeContractEvent;
-import org.unichain.common.event.NftCreateEvent;
+import org.unichain.common.event.Urc721ContractCreatedEvent;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.*;
-import org.unichain.core.capsule.urc721.Urc721TemplateCapsule;
+import org.unichain.core.capsule.urc721.Urc721ContractCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -57,7 +57,7 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       var owner = ctx.getOwnerAddress().toByteArray();
       var tokenAddr = ctx.getAddress().toByteArray();
 
-      dbManager.saveNftTemplate(new Urc721TemplateCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
+      dbManager.saveNftTemplate(new Urc721ContractCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
 
       //register new account with type assetissue
       var defaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
@@ -72,7 +72,7 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       var event = NativeContractEvent.builder()
               .topic("NftCreate")
               .rawData(
-                      NftCreateEvent.builder()
+                      Urc721ContractCreatedEvent.builder()
                               .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
                               .address(Hex.encodeHexString(ctx.getAddress().toByteArray()))
                               .symbol(ctx.getSymbol())
@@ -110,7 +110,7 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       Assert.isTrue(TransactionUtil.validCharSpecial(symbol), "Invalid contract symbol");
       Assert.isTrue(TransactionUtil.validCharSpecial(name), "Invalid contract name");
 
-      Assert.isTrue(!dbManager.getNftTemplateStore().has(addr), "Contract address has existed");
+      Assert.isTrue(!dbManager.getUrc721ContractStore().has(addr), "Contract address has existed");
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
       Assert.isTrue(!TransactionUtil.isGenesisAddress(ownerAddr), "Owner is genesis address");

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.NftService;
+import org.unichain.core.services.internal.Urc721Service;
 import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
@@ -18,20 +18,20 @@ import java.io.IOException;
 @Slf4j(topic = "API")
 public class Urc721GetTokenServlet extends HttpServlet {
   @Autowired
-  private NftService nftService;
+  private Urc721Service urc721Service;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("address");
       Integer tokenId = Integer.valueOf(request.getParameter("id"));
-      Protocol.NftTokenGet.Builder build = Protocol.NftTokenGet.newBuilder();
+      Protocol.Urc721Token.Builder build = Protocol.Urc721Token.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("address", address);
       jsonObject.put("id", tokenId);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
-      Protocol.NftTokenGetResult reply = nftService.getToken(build.build());
+      Protocol.Urc721Token reply = urc721Service.getToken(build.build());
 
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));

@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.NftService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 

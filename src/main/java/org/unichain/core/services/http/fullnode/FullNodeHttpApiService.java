@@ -72,7 +72,7 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private Urc721ListTokenApprovalServlet urc721ListTokenApproveServlet;
   @Autowired
-  private Urc721GetApprovalForAllServlet urc721ListTokenApproveAllServlet;
+  private Urc721GetApprovedForAllServlet urc721ListTokenApproveAllServlet;
   @Autowired
   private Urc721ListTokenServlet urc721ListTokenServlet;
   @Autowired
@@ -82,7 +82,7 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private Urc721BalanceOfServlet urc721BalanceOfServlet;
   @Autowired
-  private Urc721GetApprovalServlet urc721GetApprovalServlet;
+  private Urc721GetApprovedServlet urc721GetApprovedServlet;
 
   @Autowired
   private Urc721NameServlet urc721NameServlet;
@@ -396,7 +396,7 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(urc721OwnerOfServlet), "/urc721ownerof");
 
       //extended erc721
-      context.addServlet(new ServletHolder(urc721GetApprovalServlet), "/urc721getapprovedforall");
+      context.addServlet(new ServletHolder(urc721GetApprovedServlet), "/urc721getapproved");
       context.addServlet(new ServletHolder(urc721ListContractServlet), "/urc721listcontract");
       context.addServlet(new ServletHolder(urc721ListTokenServlet), "/urc721listtoken");
       context.addServlet(new ServletHolder(urc721ListTokenApproveServlet), "/urc721listtokenapprove");

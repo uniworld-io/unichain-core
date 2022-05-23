@@ -71,7 +71,7 @@ public class Urc721RenounceMinterActuator extends AbstractActuator {
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contractKey = ctx.getAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
-      var templateStore = dbManager.getNftTemplateStore();
+      var templateStore = dbManager.getUrc721ContractStore();
 
       Assert.isTrue(accountStore.has(ownerAddr), "Not found owner account");
       Assert.isTrue(templateStore.has(contractKey), "Not found template");

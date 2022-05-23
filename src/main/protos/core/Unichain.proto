@@ -10,6 +10,14 @@ option java_package = "org.unichain.protos"; //Specify the name of the package t
 option java_outer_classname = "Protocol"; //Specify the class name of the generated Java file
 option go_package = "github.com/unichainprotocol/grpc-gateway/core";
 
+message AddressMessage {
+  bytes address = 1;
+}
+
+message BoolMessage {
+  bool flag = 1;
+}
+
 enum AccountType {
   Normal = 0;
   AssetIssue = 1;
@@ -883,7 +891,10 @@ message NodeInfo {
   }
 }
 
-message NftTemplate{
+/**
+  Urc721
+ */
+message Urc721Contract{
   string symbol = 1;
   string name = 2;
   int64 total_supply = 3;
@@ -898,7 +909,7 @@ message NftTemplate{
   bytes address = 12;
 }
 
-message NftToken{
+message Urc721Token{
   string symbol = 1;
   int64 id = 2;
   bytes owner_address = 3;
@@ -910,7 +921,7 @@ message NftToken{
   bytes address = 9;
 }
 
-message NftAccountTokenRelation{
+message Urc721AccountTokenRelation{
   bytes owner_address = 1;
   bytes head = 2;
   bytes tail = 3;
@@ -922,100 +933,87 @@ message NftAccountTokenRelation{
   int64 approve_total = 9;
 }
 
-message NftAccountTemplateRelation{
+message Urc721AccountContractRelation{
   bytes owner_address = 1;
   bytes head = 2;
   bytes tail = 3;
   int64 total = 4;
 }
 
-message NftTemplateQuery{
+message Urc721ContractQuery{
   bytes owner_address = 1;
   int32 page_size = 2;
   int32 page_index = 3;
   string owner_type = 4;
 }
 
-message NftTemplateQueryResult{
+message Urc721ContractPage{
   bytes owner_address = 1;
   int32 page_size = 2;
   int32 page_index = 3;
   int64 total = 4;
-  repeated NftTemplate templates = 5;
+  repeated Urc721Contract templates = 5;
 }
 
-message NftTokenQuery{
+message Urc721TokenQuery{
   bytes owner_address = 1;
   bytes address = 2;
   int32 page_size = 3;
   int32 page_index = 4;
 }
 
-message NftTokenGet{
-  bytes address = 1;
-  int64 id = 2;
-}
-
-message NftTokenGetResult{
-  string symbol = 1;
-  int64 id = 2;
-  bytes owner_address = 3;
-  bytes approval = 4;
-  string uri = 5;
-  string metadata = 6;
-  int64 last_operation = 7;
-  bytes address = 8;
-}
-
-message NftTokenQueryResult{
+message Urc721TokenPage{
   int32 page_size = 1;
   int32 page_index = 2;
   int64 total = 3;
-  repeated NftToken tokens = 4;
+  repeated Urc721Token tokens = 4;
 }
 
-message NftBalanceOf{
+message Urc721BalanceOf{
   bytes owner_address = 1;
-  int64 count = 2;
+  bytes address = 2;
+  int64 count = 3;
 }
 
-message IsApprovedForAll{
+message Urc721IsApprovedForAll{
   bytes owner_address = 1;
   bytes operator = 2;
-  bool is_approved = 3;
+  bytes address = 3;
+  bool is_approved = 4;
 }
 
-message NftTokenApproveAllQuery{
+message Urc721TokenApproveAllQuery{
   bytes owner_address = 1;
-  int32 page_index = 2;
-  int32 page_size = 3;
+  bytes address = 2;
+  int32 page_index = 3;
+  int32 page_size = 4;
 }
 
-message NftTokenApproveAllResult{
+message Urc721TokenApproveAllResult{
   bytes owner_address = 1;
-  repeated NftAccountTokenRelation approve_list = 2;
+  repeated Urc721AccountTokenRelation approve_list = 2;
   bytes approval_for_all = 3;
-  repeated NftToken tokens = 4;
+  repeated Urc721Token tokens = 4;
   int32 page_size = 5;
   int32 page_index = 6;
   int32 total = 7;
 }
 
-message NftTokenApproveQuery{
+message Urc721TokenApproveQuery{
   bytes owner_address = 1;
   int32 page_size = 2;
   int32 page_index = 3;
 }
 
-message NftTokenApproveResult{
+message Urc721TokenApproveQueryResult{
   bytes owner_address = 1;
   int32 page_size = 2;
   int32 page_index = 3;
   int64 total = 4;
-  repeated NftToken tokens= 5;
+  repeated Urc721Token tokens= 5;
 }
 
-message NftTokenApproveRelation{
+message Urc721TokenApproveRelation{
   bytes owner_address = 1;
   bytes token_id = 2;
   bytes next = 3;

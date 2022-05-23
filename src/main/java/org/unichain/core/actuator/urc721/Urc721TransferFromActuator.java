@@ -48,7 +48,7 @@ public class Urc721TransferFromActuator extends AbstractActuator {
         try {
             val ctx = this.contract.unpack(Urc721TransferFromContract.class);
             var accountStore = dbManager.getAccountStore();
-            var tokenStore = dbManager.getNftTokenStore();
+            var tokenStore = dbManager.getUrc721TokenStore();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
             var toAddr = ctx.getTo();
             var toAddrBytes = toAddr.toByteArray();
@@ -89,8 +89,8 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             var fee = calcFee();
             val ctx = this.contract.unpack(Urc721TransferFromContract.class);
             var accountStore = dbManager.getAccountStore();
-            var tokenStore = dbManager.getNftTokenStore();
-            var relationStore = dbManager.getNftAccountTokenStore();
+            var tokenStore = dbManager.getUrc721TokenStore();
+            var relationStore = dbManager.getUrc721AccountTokenRelationStore();
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
             var toAddr = ctx.getTo().toByteArray();
             var tokenId = Urc721TokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());

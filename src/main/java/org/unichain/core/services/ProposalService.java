@@ -67,7 +67,7 @@ public class ProposalService {
     TOKEN_UPDATE_FEE(37), // token update(burn, mine, update params..) fee 37
     MAX_FROZEN_TIME_BY_DAY(38), //max time to freeze balance 38
     MIN_FROZEN_TIME_BY_DAY(39), //min time to freeze balance 39
-    NFT_ISSUE_FEE(40);//fee create NftContract(NftTemplate)
+    NFT_ISSUE_FEE(40);//fee create NftContract(Urc721Contract)
 
     ProposalType(long code) {
       this.code = code;

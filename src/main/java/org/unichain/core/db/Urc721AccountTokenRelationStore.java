@@ -19,10 +19,10 @@ import java.util.stream.Collectors;
 
 @Slf4j(topic = "DB")
 @Component
-public class NftAccountTokenStore extends UnichainStoreWithRevoking<Urc721AccountTokenRelationCapsule> {
+public class Urc721AccountTokenRelationStore extends UnichainStoreWithRevoking<Urc721AccountTokenRelationCapsule> {
 
     @Autowired
-    protected NftAccountTokenStore(@Value("nft-acc-token-relation") String dbName) {
+    protected Urc721AccountTokenRelationStore(@Value("urc721-acc-token-relation") String dbName) {
         super(dbName);
     }
 
@@ -66,7 +66,7 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<Urc721Accoun
             ownerRelation.setApprovedForAll(ByteString.copyFrom(toAddr));
         } else {
             ownerRelation = new Urc721AccountTokenRelationCapsule(ownerAddr,
-                    Protocol.NftAccountTokenRelation.newBuilder()
+                    Protocol.Urc721AccountTokenRelation.newBuilder()
                             .setOwnerAddress(ByteString.copyFrom(ownerAddr))
                             .clearHead()
                             .clearTail()
@@ -82,7 +82,7 @@ public class NftAccountTokenStore extends UnichainStoreWithRevoking<Urc721Accoun
             toRelation.addApproveAll(ByteString.copyFrom(ownerAddr));
         } else {
             toRelation = new Urc721AccountTokenRelationCapsule(toAddr,
-                    Protocol.NftAccountTokenRelation.newBuilder()
+                    Protocol.Urc721AccountTokenRelation.newBuilder()
                             .setOwnerAddress(ByteString.copyFrom(toAddr))
                             .clearHead()
                             .clearTail()

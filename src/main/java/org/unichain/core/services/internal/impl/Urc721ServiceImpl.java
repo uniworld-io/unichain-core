@@ -7,13 +7,14 @@ import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.unichain.api.GrpcAPI;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.urc721.Urc721TokenCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.internal.NftService;
+import org.unichain.core.services.internal.Urc721Service;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
@@ -29,7 +30,7 @@ import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j
 @Service
-public class NftServiceImpl implements NftService {
+public class Urc721ServiceImpl implements Urc721Service {
     @Autowired
     private Manager dbManager;
 
@@ -41,12 +42,12 @@ public class NftServiceImpl implements NftService {
         return wallet.createTransactionCapsule(contract, ContractType.Urc721CreateContract).getInstance();
     }
 
-    private static Descriptors.FieldDescriptor CONTRACT_ADDR = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.ADDRESS_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor CONTRACT_ADDR = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.ADDRESS_FIELD_NUMBER);
 
     @Override
-    public Protocol.NftTemplate getContract(Protocol.NftTemplate query) {
+    public Protocol.Urc721Contract getContract(Protocol.Urc721Contract query) {
         Assert.isTrue(query.hasField(CONTRACT_ADDR), "Contract address missing");
-        return dbManager.getNftTemplateStore().get(query.getAddress().toByteArray()).getInstance();
+        return dbManager.getUrc721ContractStore().get(query.getAddress().toByteArray()).getInstance();
     }
 
     @Override
@@ -55,18 +56,18 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.NftTokenGetResult getToken(Protocol.NftTokenGet query) {
+    public Protocol.Urc721Token getToken(Protocol.Urc721Token query) {
         Assert.notNull(query.getAddress(), "Token address empty");
         var id = Urc721TokenCapsule.genTokenKey(query.getAddress().toByteArray(), query.getId());
 
-        if(!dbManager.getNftTokenStore().has(id))
+        if(!dbManager.getUrc721TokenStore().has(id))
         {
-            return Protocol.NftTokenGetResult.newBuilder()
+            return Protocol.Urc721Token.newBuilder()
                     .build();
         }
         else {
-            var token = dbManager.getNftTokenStore().get(id).getInstance();
-            return  Protocol.NftTokenGetResult.newBuilder()
+            var token = dbManager.getUrc721TokenStore().get(id).getInstance();
+            return  Protocol.Urc721Token.newBuilder()
                     .setId(token.getId())
                     .setAddress(token.getAddress())
                     .setSymbol(token.getSymbol())
@@ -99,7 +100,7 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.NftTokenApproveResult getListApproval(Protocol.NftTokenApproveQuery query) {
+    public Protocol.Urc721TokenApproveQueryResult getListApproval(Protocol.Urc721TokenApproveQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address empty");
 
         int pageSize = query.hasField(NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
@@ -107,11 +108,11 @@ public class NftServiceImpl implements NftService {
         Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
         var ownerAddr = query.getOwnerAddress().toByteArray();
-        var nftTokenStore = dbManager.getNftTokenStore();
-        var approveStore = dbManager.getNftTokenApproveRelationStore();
-        var relationStore = dbManager.getNftAccountTokenStore();
+        var nftTokenStore = dbManager.getUrc721TokenStore();
+        var approveStore = dbManager.getUrc721TokenApproveRelationStore();
+        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
 
-        List<Protocol.NftToken> unsorted = new ArrayList<>();
+        List<Protocol.Urc721Token> unsorted = new ArrayList<>();
 
         if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotalApprove() > 0){
             var accTokenRelation = relationStore.get(ownerAddr);
@@ -132,14 +133,14 @@ public class NftServiceImpl implements NftService {
             accTokenRelation.getApproveAllMap().forEach((owner, isApproveAll) -> {
                 byte[] ownerBytes = ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray();
                 if (isApproveAll && relationStore.has(ownerBytes)) {
-                    List<Protocol.NftToken> tokens = listTokenByOwner(ownerBytes, cap -> true);
+                    List<Protocol.Urc721Token> tokens = listTokenByOwner(ownerBytes, cap -> true);
                     tokens.removeIf(token -> token.hasField(NFT_TOKEN_FIELD_APPROVAL) && Arrays.equals(token.getApproval().toByteArray(), ownerAddr));
                     unsorted.addAll(tokens);
                 }
             });
         }
 
-        return Protocol.NftTokenApproveResult.newBuilder()
+        return Protocol.Urc721TokenApproveQueryResult.newBuilder()
                 .setPageIndex(pageIndex)
                 .setPageSize(pageSize)
                 .setPageIndex(pageIndex)
@@ -154,26 +155,26 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.NftTokenApproveAllResult getApprovalForAll(Protocol.NftTokenApproveAllQuery query) {
+    public Protocol.Urc721TokenApproveAllResult getApprovalForAll(Protocol.Urc721TokenApproveAllQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
         int pageSize = query.hasField(NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
         int pageIndex = query.hasField(NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
         Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
-        var relationStore = dbManager.getNftAccountTokenStore();
+        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
         var relation = relationStore.get(query.getOwnerAddress().toByteArray());
 
         if (relation == null || relation.getApproveAllMap() == null)
-            return Protocol.NftTokenApproveAllResult.newBuilder().setOwnerAddress(query.getOwnerAddress()).build();
+            return Protocol.Urc721TokenApproveAllResult.newBuilder().setOwnerAddress(query.getOwnerAddress()).build();
 
-        List<Protocol.NftAccountTokenRelation> approveList = new ArrayList<>();
-        List<Protocol.NftToken> tokens = new ArrayList<>();
+        List<Protocol.Urc721AccountTokenRelation> approveList = new ArrayList<>();
+        List<Protocol.Urc721Token> tokens = new ArrayList<>();
 
         relation.getApproveAllMap().forEach((owner, isApproveAll) -> {
             byte[] ownerApprove = ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray();
             if (isApproveAll && relationStore.has(ownerApprove)) {
                 var ownerRelationCap = relationStore.get(ownerApprove);
-                var tokenRelation = Protocol.NftAccountTokenRelation.newBuilder()
+                var tokenRelation = Protocol.Urc721AccountTokenRelation.newBuilder()
                         .setOwnerAddress(ownerRelationCap.getInstance().getOwnerAddress())
                         .setTotal(ownerRelationCap.getInstance().getTotal())
                         .build();
@@ -182,7 +183,7 @@ public class NftServiceImpl implements NftService {
             }
         });
 
-        return Protocol.NftTokenApproveAllResult.newBuilder()
+        return Protocol.Urc721TokenApproveAllResult.newBuilder()
                 .setOwnerAddress(query.getOwnerAddress())
                 .addAllApproveList(approveList)
                 .setApprovalForAll(ByteString.copyFrom(relation.getApprovedForAll()))
@@ -194,11 +195,11 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.IsApprovedForAll isApprovalForAll(Protocol.IsApprovedForAll query) {
+    public Protocol.Urc721IsApprovedForAll isApprovalForAll(Protocol.Urc721IsApprovedForAll query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
         Assert.notNull(query.getOperator(), "Operator null");
 
-        var relationStore = dbManager.getNftAccountTokenStore();
+        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
         var isApproved = false;
         if(relationStore.has(query.getOwnerAddress().toByteArray())){
             var relation = relationStore.get(query.getOwnerAddress().toByteArray());
@@ -206,11 +207,17 @@ public class NftServiceImpl implements NftService {
                 isApproved = true;
         }
 
-        return Protocol.IsApprovedForAll.newBuilder()
+        return Protocol.Urc721IsApprovedForAll.newBuilder()
                 .setOwnerAddress(query.getOwnerAddress())
                 .setOperator(query.getOperator())
                 .setIsApproved(isApproved)
                 .build();
+    }
+
+    @Override
+    public Protocol.AddressMessage getApproved(Protocol.Urc721Token query) {
+        //@todo later
+        throw new RuntimeException("not implemented yet!");
     }
 
     @Override
@@ -219,7 +226,7 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.NftTemplateQueryResult listContract(Protocol.NftTemplateQuery query) {
+    public Protocol.Urc721ContractPage listContract(Protocol.Urc721ContractQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
 
         int pageSize = query.hasField(NFT_TEMPLATE_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
@@ -227,9 +234,9 @@ public class NftServiceImpl implements NftService {
         Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
         var ownerAddr = query.getOwnerAddress().toByteArray();
-        List<Protocol.NftTemplate> unsorted = new ArrayList<>();
-        var relationStore = dbManager.getNftAccountTemplateStore();
-        var templateStore = dbManager.getNftTemplateStore();
+        List<Protocol.Urc721Contract> unsorted = new ArrayList<>();
+        var relationStore = dbManager.getUrc721AccountContractRelationStore();
+        var templateStore = dbManager.getUrc721ContractStore();
 
         if ("OWNER".equalsIgnoreCase(query.getOwnerType()) && relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0) {
             var start = templateStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
@@ -242,7 +249,7 @@ public class NftServiceImpl implements NftService {
                 }
             }
         }
-        var minterRelationStore = dbManager.getNftMinterContractStore();
+        var minterRelationStore = dbManager.getUrc721MinterContractRelationStore();
         if("MINTER".equalsIgnoreCase(query.getOwnerType()) && minterRelationStore.has(ownerAddr) && minterRelationStore.get(ownerAddr).getTotal() > 0){
             var relation = minterRelationStore.get(ownerAddr);
             var start = templateStore.get(relation.getHead().toByteArray());
@@ -263,7 +270,7 @@ public class NftServiceImpl implements NftService {
                         .build())
                 .collect(Collectors.toList());
 
-        return  Protocol.NftTemplateQueryResult.newBuilder()
+        return  Protocol.Urc721ContractPage.newBuilder()
                 .setPageIndex(pageIndex)
                 .setPageSize(pageSize)
                 .setTotal(unsorted.size())
@@ -272,7 +279,7 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.NftTokenQueryResult listToken(Protocol.NftTokenQuery query) {
+    public Protocol.Urc721TokenPage listToken(Protocol.Urc721TokenQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
 
         int pageSize = query.hasField(NFT_TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
@@ -283,9 +290,9 @@ public class NftServiceImpl implements NftService {
         var addr = query.getAddress();
         var hasFieldAddr = query.hasField(NFT_TOKEN_QUERY_FIELD_ADDR);
 
-        List<Protocol.NftToken> unsorted = listTokenByOwner(ownerAddr, cap -> !hasFieldAddr || Arrays.equals(cap.getAddr(), addr.toByteArray()));
+        List<Protocol.Urc721Token> unsorted = listTokenByOwner(ownerAddr, cap -> !hasFieldAddr || Arrays.equals(cap.getAddr(), addr.toByteArray()));
 
-        return  Protocol.NftTokenQueryResult.newBuilder()
+        return  Protocol.Urc721TokenPage.newBuilder()
                 .setPageSize(pageSize)
                 .setPageIndex(pageIndex)
                 .setTotal(unsorted.size())
@@ -293,10 +300,10 @@ public class NftServiceImpl implements NftService {
                 .build();
     }
 
-    private List<Protocol.NftToken> listTokenByOwner(byte[] ownerAddr, Predicate<Urc721TokenCapsule> filter){
-        List<Protocol.NftToken> unsorted = new ArrayList<>();
-        var relationStore = dbManager.getNftAccountTokenStore();
-        var tokenStore = dbManager.getNftTokenStore();
+    private List<Protocol.Urc721Token> listTokenByOwner(byte[] ownerAddr, Predicate<Urc721TokenCapsule> filter){
+        List<Protocol.Urc721Token> unsorted = new ArrayList<>();
+        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
+        var tokenStore = dbManager.getUrc721TokenStore();
 
         if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0){
             var start = tokenStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
@@ -319,12 +326,12 @@ public class NftServiceImpl implements NftService {
     }
 
     @Override
-    public Protocol.NftBalanceOf balanceOf(Protocol.NftBalanceOf query) {
+    public Protocol.Urc721BalanceOf balanceOf(Protocol.Urc721BalanceOf query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
 
-        var nftAccountTokenStore = dbManager.getNftAccountTokenStore();
+        var nftAccountTokenStore = dbManager.getUrc721AccountTokenRelationStore();
         var owner = query.getOwnerAddress().toByteArray();
-        var result = Protocol.NftBalanceOf.newBuilder()
+        var result = Protocol.Urc721BalanceOf.newBuilder()
                 .setCount(0)
                 .setOwnerAddress(query.getOwnerAddress());
 
@@ -333,5 +340,57 @@ public class NftServiceImpl implements NftService {
 
         var firstAccTokenRelation = nftAccountTokenStore.get(owner);
         return result.setCount(firstAccTokenRelation.getTotal()).build();
+    }
+
+    @Override
+    public GrpcAPI.StringMessage getName(Protocol.AddressMessage msg) {
+        var contract = Protocol.Urc721Contract.newBuilder()
+                .setAddress(msg.getAddress())
+                .build();
+
+        return GrpcAPI.StringMessage.newBuilder()
+                .setValue(getContract(contract).getName())
+                .build();
+    }
+
+    @Override
+    public GrpcAPI.StringMessage getSymbol(Protocol.AddressMessage msg) {
+        var contract = Protocol.Urc721Contract.newBuilder()
+                .setAddress(msg.getAddress())
+                .build();
+
+        return GrpcAPI.StringMessage.newBuilder()
+                .setValue(getContract(contract).getSymbol())
+                .build();
+    }
+
+    @Override
+    public GrpcAPI.NumberMessage getTotalSupply(Protocol.AddressMessage msg) {
+        var contract = Protocol.Urc721Contract.newBuilder()
+                .setAddress(msg.getAddress())
+                .build();
+        return GrpcAPI.NumberMessage.newBuilder()
+                .setNum(getContract(contract).getTotalSupply())
+                .build();
+    }
+
+    @Override
+    public GrpcAPI.StringMessage getTokenUri(Protocol.Urc721Token msg) {
+        var tokenQuery = Protocol.Urc721Token.newBuilder()
+                .setAddress(msg.getAddress())
+                .build();
+        return GrpcAPI.StringMessage.newBuilder()
+                .setValue(getToken(tokenQuery).getUri())
+                .build();
+    }
+
+    @Override
+    public Protocol.AddressMessage getOwnerOf(Protocol.Urc721Token msg) {
+        var tokenQuery = Protocol.Urc721Token.newBuilder()
+                .setAddress(msg.getAddress())
+                .build();
+        return Protocol.AddressMessage.newBuilder()
+                .setAddress(getToken(tokenQuery).getOwnerAddress())
+                .build();
     }
 }

@@ -50,7 +50,7 @@ public class SolidityNodeHttpApiService implements Service {
   @Autowired
   private Urc721ListTokenApprovalServlet urc721ListTokenApproveServlet;
   @Autowired
-  private Urc721GetApprovalForAllServlet urc721ListTokenApproveAllServlet;
+  private Urc721GetApprovedForAllServlet urc721ListTokenApproveAllServlet;
   @Autowired
   private Urc721ListTokenServlet urc721ListTokenServlet;
   @Autowired
@@ -60,7 +60,7 @@ public class SolidityNodeHttpApiService implements Service {
   @Autowired
   private Urc721BalanceOfServlet urc721BalanceOfServlet;
   @Autowired
-  private Urc721GetApprovalServlet urc721GetApprovalServlet;
+  private Urc721GetApprovedServlet urc721GetApprovedServlet;
 
 
   @Autowired
@@ -198,7 +198,7 @@ public class SolidityNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(urc721GetTokenServlet), "/walletsolidity/urc721gettoken");
 
       context.addServlet(new ServletHolder(urc721BalanceOfServlet), "/walletsolidity/urc721balanceof");
-      context.addServlet(new ServletHolder(urc721GetApprovalServlet), "/walletsolidity/urc721getapprovedforall");
+      context.addServlet(new ServletHolder(urc721GetApprovedServlet), "/walletsolidity/urc721getapproved");
 
       context.addServlet(new ServletHolder(urc721NameServlet), "/walletsolidity/urc721name");
       context.addServlet(new ServletHolder(urc721SymbolServlet), "/walletsolidity/urc721symbol");

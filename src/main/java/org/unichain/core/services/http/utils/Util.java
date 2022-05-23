@@ -1027,40 +1027,40 @@ public class Util {
   public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_CREATE_ACC_FEE = CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
   public static Descriptors.FieldDescriptor NFT_CREATE_TEMPLATE_FIELD_MINTER = Urc721CreateContract.getDescriptor().findFieldByNumber(Urc721CreateContract.MINTER_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TEMPLATE_ACCOUNT_FIELD_TAIL = Protocol.NftAccountTemplateRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTemplateRelation.TAIL_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_NEXT = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.NEXT_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.MINTER_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_NEXT_OF_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.NEXT_OF_MINTER_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_PREV_OF_MINTER = Protocol.NftTemplate.getDescriptor().findFieldByNumber(Protocol.NftTemplate.PREV_OF_MINTER_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_ACCOUNT_FIELD_TAIL = Protocol.Urc721AccountContractRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountContractRelation.TAIL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_NEXT = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.NEXT_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_MINTER = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.MINTER_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_NEXT_OF_MINTER = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.NEXT_OF_MINTER_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_FIELD_PREV_OF_MINTER = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.PREV_OF_MINTER_FIELD_NUMBER);
 
   public static Descriptors.FieldDescriptor NFT_MINT_FIELD_TOKEN_ID = Urc721MintContract.getDescriptor().findFieldByNumber(Urc721MintContract.TOKEN_ID_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.TAIL_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.APPROVED_FOR_ALL_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.APPROVE_TAIL_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_HEAD_APPROVE = Protocol.NftAccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.NftAccountTokenRelation.APPROVE_HEAD_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.TAIL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.APPROVED_FOR_ALL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.APPROVE_TAIL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_ACC_TOKEN_RELATION_FIELD_HEAD_APPROVE = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.APPROVE_HEAD_FIELD_NUMBER);
 
 
-  public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_APPROVAL = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.APPROVAL_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_PREV = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.PREV_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_NEXT = Protocol.NftToken.getDescriptor().findFieldByNumber(Protocol.NftToken.NEXT_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_APPROVAL = Protocol.Urc721Token.getDescriptor().findFieldByNumber(Protocol.Urc721Token.APPROVAL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_PREV = Protocol.Urc721Token.getDescriptor().findFieldByNumber(Protocol.Urc721Token.PREV_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_FIELD_NEXT = Protocol.Urc721Token.getDescriptor().findFieldByNumber(Protocol.Urc721Token.NEXT_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_RELATION_FIELD_PREV = Protocol.NftTokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveRelation.PREV_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_RELATION_FIELD_NEXT = Protocol.NftTokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveRelation.NEXT_FIELD_NUMBER);
-
-
-  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_SIZE = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.PAGE_SIZE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_INDEX = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.PAGE_INDEX_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_ADDR = Protocol.NftTokenQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenQuery.ADDRESS_FIELD_NUMBER);
-
-  public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_SIZE = Protocol.NftTemplateQuery.getDescriptor().findFieldByNumber(Protocol.NftTemplateQuery.PAGE_SIZE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_INDEX = Protocol.NftTemplateQuery.getDescriptor().findFieldByNumber(Protocol.NftTemplateQuery.PAGE_INDEX_FIELD_NUMBER);
-
-  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE = Protocol.NftTokenApproveQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveQuery.PAGE_SIZE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_INDEX = Protocol.NftTokenApproveQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveQuery.PAGE_INDEX_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_RELATION_FIELD_PREV = Protocol.Urc721TokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveRelation.PREV_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_RELATION_FIELD_NEXT = Protocol.Urc721TokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveRelation.NEXT_FIELD_NUMBER);
 
 
-  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_SIZE = Protocol.NftTokenApproveAllQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveAllQuery.PAGE_SIZE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_INDEX = Protocol.NftTokenApproveAllQuery.getDescriptor().findFieldByNumber(Protocol.NftTokenApproveAllQuery.PAGE_INDEX_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721TokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721TokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenQuery.PAGE_INDEX_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_QUERY_FIELD_ADDR = Protocol.Urc721TokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenQuery.ADDRESS_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.PAGE_INDEX_FIELD_NUMBER);
+
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721TokenApproveQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721TokenApproveQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveQuery.PAGE_INDEX_FIELD_NUMBER);
+
+
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721TokenApproveAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveAllQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721TokenApproveAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveAllQuery.PAGE_INDEX_FIELD_NUMBER);
 
   public static Descriptors.FieldDescriptor POSBRIDGE_NEW_OWNER = PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.NEW_OWNER_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor POSBRIDGE_MIN_VALIDATOR = PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.MIN_VALIDATOR_FIELD_NUMBER);

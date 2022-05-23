@@ -5,12 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.NftService;
+import org.unichain.core.services.internal.Urc721Service;
 import org.unichain.protos.Contract;
-import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -22,7 +20,7 @@ import java.util.stream.Collectors;
 @Slf4j(topic = "API")
 public class Urc721SetApprovalForAllServlet extends HttpServlet {
   @Autowired
-  private NftService nftService;
+  private Urc721Service urc721Service;
 
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
@@ -34,7 +32,7 @@ public class Urc721SetApprovalForAllServlet extends HttpServlet {
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
 
-      var tx = nftService.setApprovalForAll(tokenCtx);
+      var tx = urc721Service.setApprovalForAll(tokenCtx);
 
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);

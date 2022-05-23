@@ -46,7 +46,7 @@ public class Urc721RemoveMinterActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc721RemoveMinterContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var contractKey = ctx.getAddress().toByteArray();
-      var templateCap = dbManager.getNftTemplateStore().get(contractKey);
+      var templateCap = dbManager.getUrc721ContractStore().get(contractKey);
 
       dbManager.removeMinterContract(templateCap.getMinter(), contractKey);
 
@@ -75,7 +75,7 @@ public class Urc721RemoveMinterActuator extends AbstractActuator {
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
 
-      var templateCap = dbManager.getNftTemplateStore().get(contractKey);
+      var templateCap = dbManager.getUrc721ContractStore().get(contractKey);
       Assert.notNull(templateCap, "Contract not found");
       Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()), "Not owner of NFT template");
       Assert.isTrue(templateCap.hasMinter(), "Minter not set");

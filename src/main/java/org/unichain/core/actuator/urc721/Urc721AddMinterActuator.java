@@ -57,7 +57,7 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       }
 
       //save relation
-      var templateStore = dbManager.getNftTemplateStore();
+      var templateStore = dbManager.getUrc721ContractStore();
       var template = templateStore.get(contractAddr);
       var currentMinter = template.getMinter();
       dbManager.removeMinterContract(currentMinter, contractAddr);
@@ -90,7 +90,7 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       var minterAddr = ctx.getMinter().toByteArray();
       var contractAddr = ctx.getAddress().toByteArray();
       var accStore = dbManager.getAccountStore();
-      var templateStore = dbManager.getNftTemplateStore();
+      var templateStore = dbManager.getUrc721ContractStore();
 
       Assert.isTrue(accStore.has(ownerAddr), "Owner account not exist");
       Assert.isTrue(Wallet.addressValid(minterAddr), "Minter address not active or not exists");

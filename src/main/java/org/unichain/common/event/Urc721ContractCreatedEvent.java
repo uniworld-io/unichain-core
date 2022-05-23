@@ -5,7 +5,7 @@ import lombok.Builder;
 import java.io.Serializable;
 
 @Builder
-public class NftCreateEvent implements Serializable {
+public class Urc721ContractCreatedEvent implements Serializable {
     public String owner_address;
     public String symbol;
     public String name;

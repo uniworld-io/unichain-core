@@ -49,7 +49,7 @@ public class Urc721ApproveActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc721ApproveContract.class);
       var owner = ctx.getOwnerAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
-      var nftTokenStore = dbManager.getNftTokenStore();
+      var nftTokenStore = dbManager.getUrc721TokenStore();
       var contractAddr = ctx.getAddress().toByteArray();
       var tokenId = ArrayUtils.addAll(contractAddr, ByteArray.fromLong(ctx.getTokenId()));
       var nftToken = nftTokenStore.get(tokenId);
@@ -91,7 +91,7 @@ public class Urc721ApproveActuator extends AbstractActuator {
       Assert.isTrue(contract.is(Urc721ApproveContract.class), "Contract type error,expected type [Urc721ApproveContract], real type[" + contract.getClass() + "]");
       var fee = calcFee();
       var accountStore = dbManager.getAccountStore();
-      var nftTokenStore = dbManager.getNftTokenStore();
+      var nftTokenStore = dbManager.getUrc721TokenStore();
       val ctx = this.contract.unpack(Urc721ApproveContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");

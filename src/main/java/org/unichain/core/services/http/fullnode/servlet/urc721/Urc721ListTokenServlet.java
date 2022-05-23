@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.NftService;
+import org.unichain.core.services.internal.Urc721Service;
 import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
@@ -14,12 +14,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+//@todo urc721 review: confuse naming ?
 @Component
 @Slf4j(topic = "API")
 public class Urc721ListTokenServlet extends HttpServlet {
 
   @Autowired
-  private NftService nftService;
+  private Urc721Service urc721Service;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
@@ -28,7 +29,7 @@ public class Urc721ListTokenServlet extends HttpServlet {
       String contract = request.getParameter("contract");
       long pageSize = Long.parseLong(request.getParameter("page_size"));
       long pageIndex = Long.parseLong(request.getParameter("page_index"));
-      Protocol.NftTokenQuery.Builder build = Protocol.NftTokenQuery.newBuilder();
+      Protocol.Urc721TokenQuery.Builder build = Protocol.Urc721TokenQuery.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
       jsonObject.put("contract", contract);
@@ -36,7 +37,7 @@ public class Urc721ListTokenServlet extends HttpServlet {
       jsonObject.put("page_index", pageIndex);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
-      Protocol.NftTokenQueryResult reply = nftService.listToken(build.build());
+      Protocol.Urc721TokenPage reply = urc721Service.listToken(build.build());
 
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, true));

@@ -11,13 +11,12 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-//@todo nft review
 @Slf4j(topic = "DB")
 @Component
-public class NftTokenStore extends UnichainStoreWithRevoking<Urc721TokenCapsule> {
+public class Urc721TokenStore extends UnichainStoreWithRevoking<Urc721TokenCapsule> {
 
   @Autowired
-  protected NftTokenStore(@Value("nft-token") String dbName) {
+  protected Urc721TokenStore(@Value("urc721-token") String dbName) {
     super(dbName);
   }
 

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.NftService;
+import org.unichain.core.services.internal.Urc721Service;
 import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
@@ -20,7 +20,7 @@ import java.io.IOException;
 public class Urc721IsApprovedForAllServlet extends HttpServlet {
 
   @Autowired
-  private NftService nftService;
+  private Urc721Service urc721Service;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
@@ -28,14 +28,14 @@ public class Urc721IsApprovedForAllServlet extends HttpServlet {
       String address = request.getParameter("owner_address");
       String operator = request.getParameter("operator");
       boolean isApproved = Boolean.parseBoolean(request.getParameter("is_approved"));
-      Protocol.IsApprovedForAll.Builder build = Protocol.IsApprovedForAll.newBuilder();
+      Protocol.Urc721IsApprovedForAll.Builder build = Protocol.Urc721IsApprovedForAll.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
       jsonObject.put("operator", operator);
       jsonObject.put("is_approved", isApproved);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
 
-      Protocol.IsApprovedForAll reply = nftService.isApprovalForAll(build.build());
+      Protocol.Urc721IsApprovedForAll reply = urc721Service.isApprovalForAll(build.build());
 
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));

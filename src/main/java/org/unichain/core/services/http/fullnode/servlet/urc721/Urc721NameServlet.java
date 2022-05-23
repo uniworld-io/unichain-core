@@ -7,42 +7,41 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.NftService;
-import org.unichain.protos.Contract;
+import org.unichain.core.services.internal.Urc721Service;
+import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.stream.Collectors;
 
-//@todo urc721
 @Component
 @Slf4j(topic = "API")
 public class Urc721NameServlet extends HttpServlet {
-
   @Autowired
-  private NftService nftService;
+  private Urc721Service urc721Service;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-      Util.checkBodySize(contract);
-      var visible = Util.getVisiblePost(contract);
-      var build = Contract.Urc721BurnContract.newBuilder();
-      JsonFormat.merge(contract, build, visible);
-      var tokenCtx = build.build();
-      var tx = nftService.burnToken(tokenCtx);
-      var jsonObject = JSONObject.parseObject(contract);
-      tx = Util.setTransactionPermissionId(jsonObject, tx);
-      response.getWriter().println(Util.printCreateTransaction(tx, visible));
+      boolean visible = Util.getVisible(request);
+      String address = request.getParameter("address");
+      var builder = Protocol.AddressMessage.newBuilder();
+      JSONObject jsonObject = new JSONObject();
+      jsonObject.put("address", address);
+      JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
+
+      var msg = urc721Service.getName(builder.build());
+      if (msg != null) {
+        response.getWriter().println(JsonFormat.printToString(msg, visible));
+      } else {
+        response.getWriter().println("{}");
+      }
     } catch (Exception e) {
+      logger.debug("Exception: {}", e.getMessage());
       try {
-        logger.error(e.getMessage(), e);
-        response.setStatus(400);
-        response.getWriter().println(Util.messageErrorHttp(e));
+        response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
-        logger.error("IOException: {}", ioe.getMessage());
+        logger.debug("IOException: {}", ioe.getMessage());
       }
     }
   }

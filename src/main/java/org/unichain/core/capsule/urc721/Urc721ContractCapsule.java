@@ -21,28 +21,28 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Contract.Urc721CreateContract;
-import org.unichain.protos.Protocol.NftTemplate;
+import org.unichain.protos.Protocol.Urc721Contract;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
-public class Urc721TemplateCapsule implements ProtoCapsule<NftTemplate> {
-  private NftTemplate template;
+public class Urc721ContractCapsule implements ProtoCapsule<Urc721Contract> {
+  private Urc721Contract contract;
 
-  public Urc721TemplateCapsule(byte[] data) {
+  public Urc721ContractCapsule(byte[] data) {
     try {
-      this.template = NftTemplate.parseFrom(data);
+      this.contract = Urc721Contract.parseFrom(data);
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
   }
 
-  public Urc721TemplateCapsule(NftTemplate template) {
-    this.template = template;
+  public Urc721ContractCapsule(Urc721Contract contract) {
+    this.contract = contract;
   }
 
-  public Urc721TemplateCapsule(Urc721CreateContract ctx, long lastOperation, long tokenIndex) {
-    var builder = NftTemplate.newBuilder()
+  public Urc721ContractCapsule(Urc721CreateContract ctx, long lastOperation, long tokenIndex) {
+    var builder = Urc721Contract.newBuilder()
             .setSymbol(ctx.getSymbol().toUpperCase())
             .setName(ctx.getName())
             .setOwner(ctx.getOwnerAddress())
@@ -56,157 +56,157 @@ public class Urc721TemplateCapsule implements ProtoCapsule<NftTemplate> {
     else
       builder.clearMinter();
 
-    this.template = builder.build();
+    this.contract = builder.build();
   }
 
   public byte[] getData() {
-    return this.template.toByteArray();
+    return this.contract.toByteArray();
   }
 
   @Override
-  public NftTemplate getInstance() {
-    return this.template;
+  public Urc721Contract getInstance() {
+    return this.contract;
   }
 
   @Override
   public String toString() {
-    return this.template.toString();
+    return this.contract.toString();
   }
 
   public String getSymbol() {
-    return this.template.getSymbol();
+    return this.contract.getSymbol();
   }
 
   public void setSymbol(String symbol) {
-    this.template = this.template.toBuilder().setSymbol(symbol).build();
+    this.contract = this.contract.toBuilder().setSymbol(symbol).build();
   }
 
   public byte[] getAddress() {
-    return this.template.getAddress().toByteArray();
+    return this.contract.getAddress().toByteArray();
   }
 
   public void setAddress(byte[] address) {
-    this.template = this.template.toBuilder().setAddress(ByteString.copyFrom(address)).build();
+    this.contract = this.contract.toBuilder().setAddress(ByteString.copyFrom(address)).build();
   }
 
   public String getName() {
-    return this.template.getName();
+    return this.contract.getName();
   }
 
   public void setName(String name) {
-    this.template = this.template.toBuilder().setName(name).build();
+    this.contract = this.contract.toBuilder().setName(name).build();
   }
 
   public long getTotalSupply() {
-    return this.template.getTotalSupply();
+    return this.contract.getTotalSupply();
   }
 
   public void setTotalSupply(long totalSupply) {
-    this.template = this.template.toBuilder().setTotalSupply(totalSupply).build();
+    this.contract = this.contract.toBuilder().setTotalSupply(totalSupply).build();
   }
 
   public long getTokenIndex() {
-    return this.template.getTokenIndex();
+    return this.contract.getTokenIndex();
   }
 
   public void setTokenIndex(long tokenIndex) {
-    this.template = this.template.toBuilder().setTokenIndex(tokenIndex).build();
+    this.contract = this.contract.toBuilder().setTokenIndex(tokenIndex).build();
   }
 
   public byte[] getMinter() {
-    return this.template.getMinter().toByteArray();
+    return this.contract.getMinter().toByteArray();
   }
 
   public boolean hasMinter(){
-    return this.template.hasField(NFT_TEMPLATE_FIELD_MINTER);
+    return this.contract.hasField(NFT_TEMPLATE_FIELD_MINTER);
   }
 
   public void setMinter(ByteString minter) {
-    this.template = this.template.toBuilder().setMinter(minter).build();
+    this.contract = this.contract.toBuilder().setMinter(minter).build();
   }
 
   public long getLastOperation() {
-    return this.template.getLastOperation();
+    return this.contract.getLastOperation();
   }
 
   public void setLastOperation(long lastOperation) {
-    this.template = this.template.toBuilder().setLastOperation(lastOperation).build();
+    this.contract = this.contract.toBuilder().setLastOperation(lastOperation).build();
   }
 
   public byte[] getOwner() {
-    return this.template.getOwner().toByteArray();
+    return this.contract.getOwner().toByteArray();
   }
 
   public void setOwner(ByteString owner) {
-    this.template = this.template.toBuilder().setOwner(owner).build();
+    this.contract = this.contract.toBuilder().setOwner(owner).build();
   }
 
   public byte[] getKey(){
-    return this.template.getAddress().toByteArray();
+    return this.contract.getAddress().toByteArray();
   }
 
   public void clearMinter(){
-    this.template = template.toBuilder().clearMinter().build();
+    this.contract = contract.toBuilder().clearMinter().build();
   }
 
   public byte[] getNext(){
-    return template.getNext().toByteArray();
+    return contract.getNext().toByteArray();
   }
 
   public byte[] getPrev(){
-    return template.getPrev().toByteArray();
+    return contract.getPrev().toByteArray();
   }
 
   public void setNext(byte[] next){
-     template = template.toBuilder().setNext(ByteString.copyFrom(next)).build();
+     contract = contract.toBuilder().setNext(ByteString.copyFrom(next)).build();
   }
 
   public void setPrev(byte[] prev){
-    template = template.toBuilder().setPrev(ByteString.copyFrom(prev)).build();
+    contract = contract.toBuilder().setPrev(ByteString.copyFrom(prev)).build();
   }
 
   public void clearNext(){
-    this.template = template.toBuilder().clearNext().build();
+    this.contract = contract.toBuilder().clearNext().build();
   }
 
   public boolean hasNext(){
-    return this.template.hasField(NFT_TEMPLATE_FIELD_NEXT);
+    return this.contract.hasField(NFT_TEMPLATE_FIELD_NEXT);
   }
 
   public void clearPrev(){
-    this.template = template.toBuilder().clearPrev().build();
+    this.contract = contract.toBuilder().clearPrev().build();
   }
 
   public void clearPrevOfMinter(){
-    this.template = template.toBuilder().clearPrevOfMinter().build();
+    this.contract = contract.toBuilder().clearPrevOfMinter().build();
   }
 
   public void clearNextOfMinter(){
-    this.template = template.toBuilder().clearNextOfMinter().build();
+    this.contract = contract.toBuilder().clearNextOfMinter().build();
   }
 
   public void setNextOfMinter(byte[] next){
-    template = template.toBuilder().setNextOfMinter(ByteString.copyFrom(next)).build();
+    contract = contract.toBuilder().setNextOfMinter(ByteString.copyFrom(next)).build();
   }
 
   public void setPrevOfMinter(byte[] prev){
-    template = template.toBuilder().setPrevOfMinter(ByteString.copyFrom(prev)).build();
+    contract = contract.toBuilder().setPrevOfMinter(ByteString.copyFrom(prev)).build();
   }
 
   public boolean hasNextOfMinter(){
-    return this.template.hasField(NFT_TEMPLATE_FIELD_NEXT_OF_MINTER);
+    return this.contract.hasField(NFT_TEMPLATE_FIELD_NEXT_OF_MINTER);
   }
 
   public boolean hasPrevOfMinter(){
-    return this.template.hasField(NFT_TEMPLATE_FIELD_PREV_OF_MINTER);
+    return this.contract.hasField(NFT_TEMPLATE_FIELD_PREV_OF_MINTER);
   }
 
   public byte[] getNextOfMinter(){
-    return template.getNextOfMinter().toByteArray();
+    return contract.getNextOfMinter().toByteArray();
   }
 
   public byte[] getPrevOfMinter(){
-    return template.getPrevOfMinter().toByteArray();
+    return contract.getPrevOfMinter().toByteArray();
   }
 
 }

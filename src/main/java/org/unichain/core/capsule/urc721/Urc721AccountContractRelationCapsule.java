@@ -20,25 +20,25 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol;
-import org.unichain.protos.Protocol.NftAccountTemplateRelation;
+import org.unichain.protos.Protocol.Urc721AccountContractRelation;
 
 import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FIELD_TAIL;
 
 @Slf4j(topic = "capsule")
-public class Urc721AccountTemplateRelationCapsule implements ProtoCapsule<NftAccountTemplateRelation> {
-  private NftAccountTemplateRelation relation;
+public class Urc721AccountContractRelationCapsule implements ProtoCapsule<Urc721AccountContractRelation> {
+  private Urc721AccountContractRelation relation;
   private byte[] key;
 
-  public Urc721AccountTemplateRelationCapsule(byte[] data) {
+  public Urc721AccountContractRelationCapsule(byte[] data) {
     try {
-      this.relation = Protocol.NftAccountTemplateRelation.parseFrom(data);
+      this.relation = Protocol.Urc721AccountContractRelation.parseFrom(data);
       this.key = relation.getOwnerAddress().toByteArray();
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
   }
 
-  public Urc721AccountTemplateRelationCapsule(byte[] key, NftAccountTemplateRelation relation) {
+  public Urc721AccountContractRelationCapsule(byte[] key, Urc721AccountContractRelation relation) {
     this.key = key;
     this.relation = relation;
   }
@@ -49,7 +49,7 @@ public class Urc721AccountTemplateRelationCapsule implements ProtoCapsule<NftAcc
   }
 
   @Override
-  public NftAccountTemplateRelation getInstance() {
+  public Urc721AccountContractRelation getInstance() {
     return this.relation;
   }
 

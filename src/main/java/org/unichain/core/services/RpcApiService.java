@@ -36,7 +36,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.exception.NonUniqueObjectException;
 import org.unichain.core.exception.StoreException;
 import org.unichain.core.exception.VMIllegalException;
-import org.unichain.core.services.internal.NftService;
+import org.unichain.core.services.internal.Urc721Service;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol;
@@ -72,7 +72,7 @@ public class RpcApiService implements Service {
   private Wallet wallet;
 
   @Autowired
-  private NftService nftService;
+  private Urc721Service urc721Service;
 
   @Autowired
   private NodeInfoService nodeInfoService;
@@ -293,57 +293,98 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc721ListTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
-      NftTokenApproveResult reply = nftService.getListApproval(request);
+    public void urc721ListTokenApprove(Urc721TokenApproveQuery request, io.grpc.stub.StreamObserver<Urc721TokenApproveQueryResult> responseObserver) {
+      Urc721TokenApproveQueryResult reply = urc721Service.getListApproval(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721ListTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
-      NftTokenApproveAllResult reply = nftService.getApprovalForAll(request);
+    public void urc721ListTokenApproveAll(Urc721TokenApproveAllQuery request, io.grpc.stub.StreamObserver<Urc721TokenApproveAllResult> responseObserver) {
+      Urc721TokenApproveAllResult reply = urc721Service.getApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721ListContract(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
-      NftTemplateQueryResult reply = nftService.listContract(request);
+    public void urc721ListContract(Urc721ContractQuery request, io.grpc.stub.StreamObserver<Urc721ContractPage> responseObserver) {
+      Urc721ContractPage reply = urc721Service.listContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721ListToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
-      NftTokenQueryResult reply = nftService.listToken(request);
+    public void urc721ListToken(Urc721TokenQuery request, io.grpc.stub.StreamObserver<Urc721TokenPage> responseObserver) {
+      Urc721TokenPage reply = urc721Service.listToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetContract(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
-      NftTemplate reply = nftService.getContract(request);
+    public void urc721GetContract(Urc721Contract request, io.grpc.stub.StreamObserver<Urc721Contract> responseObserver) {
+      Urc721Contract reply = urc721Service.getContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
-      var reply = nftService.getToken(request);
+    public void urc721GetToken(Urc721Token request, io.grpc.stub.StreamObserver<Urc721Token> responseObserver) {
+      var reply = urc721Service.getToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721BalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
-      NftBalanceOf reply = nftService.balanceOf(request);
+    public void urc721GetIsApprovedForAll(Urc721IsApprovedForAll request, io.grpc.stub.StreamObserver<Urc721IsApprovedForAll> responseObserver) {
+      Urc721IsApprovedForAll reply = urc721Service.isApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
-      IsApprovedForAll reply = nftService.isApprovalForAll(request);
+    public void urc721GetBalanceOf(Urc721BalanceOf request, io.grpc.stub.StreamObserver<Urc721BalanceOf> responseObserver) {
+      Urc721BalanceOf reply = urc721Service.balanceOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+    @Override
+    public void urc721GetName(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721Service.getName(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetSymbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721Service.getSymbol(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetTotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc721Service.getTotalSupply(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetTokenUri(Urc721Token request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721Service.getTokenUri(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetOwnerOf(Urc721Token request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc721Service.getOwnerOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetApproved(Urc721Token request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc721Service.getApproved(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -818,57 +859,57 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc721ListTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
-      NftTokenApproveResult reply = nftService.getListApproval(request);
+    public void urc721ListTokenApprove(Urc721TokenApproveQuery request, io.grpc.stub.StreamObserver<Urc721TokenApproveQueryResult> responseObserver) {
+      Urc721TokenApproveQueryResult reply = urc721Service.getListApproval(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721ListTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
-      NftTokenApproveAllResult reply = nftService.getApprovalForAll(request);
+    public void urc721ListTokenApproveAll(Urc721TokenApproveAllQuery request, io.grpc.stub.StreamObserver<Urc721TokenApproveAllResult> responseObserver) {
+      Urc721TokenApproveAllResult reply = urc721Service.getApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721ListContract(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
-      NftTemplateQueryResult reply = nftService.listContract(request);
+    public void urc721ListContract(Urc721ContractQuery request, io.grpc.stub.StreamObserver<Urc721ContractPage> responseObserver) {
+      Urc721ContractPage reply = urc721Service.listContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721ListToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
-      NftTokenQueryResult reply = nftService.listToken(request);
+    public void urc721ListToken(Urc721TokenQuery request, io.grpc.stub.StreamObserver<Urc721TokenPage> responseObserver) {
+      Urc721TokenPage reply = urc721Service.listToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetContract(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
-      NftTemplate reply = nftService.getContract(request);
+    public void urc721GetContract(Urc721Contract request, io.grpc.stub.StreamObserver<Urc721Contract> responseObserver) {
+      Urc721Contract reply = urc721Service.getContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
-      NftTokenGetResult reply = nftService.getToken(request);
+    public void urc721GetToken(Urc721Token request, io.grpc.stub.StreamObserver<Urc721Token> responseObserver) {
+      Urc721Token reply = urc721Service.getToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721BalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
-      NftBalanceOf reply = nftService.balanceOf(request);
+    public void urc721GetBalanceOf(Urc721BalanceOf request, io.grpc.stub.StreamObserver<Urc721BalanceOf> responseObserver) {
+      Urc721BalanceOf reply = urc721Service.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
-      IsApprovedForAll reply = nftService.isApprovalForAll(request);
+    public void urc721GetIsApprovedForAll(Urc721IsApprovedForAll request, io.grpc.stub.StreamObserver<Urc721IsApprovedForAll> responseObserver) {
+      Urc721IsApprovedForAll reply = urc721Service.isApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

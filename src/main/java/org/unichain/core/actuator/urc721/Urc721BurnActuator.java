@@ -71,13 +71,13 @@ public class Urc721BurnActuator extends AbstractActuator {
       var fee = calcFee();
       val ctx = this.contract.unpack(Urc721BurnContract.class);
       var accountStore = dbManager.getAccountStore();
-      var tokenStore = dbManager.getNftTokenStore();
-      var relationStore = dbManager.getNftAccountTokenStore();
+      var tokenStore = dbManager.getUrc721TokenStore();
+      var relationStore = dbManager.getUrc721AccountTokenRelationStore();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var tokenId = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner address not exist");
-      Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");
+      Assert.isTrue(tokenStore.has(tokenId), "Urc721 token not exist");
       var nft = tokenStore.get(tokenId);
       var nftOwner = nft.getOwner();
       var relation = relationStore.get(nftOwner);

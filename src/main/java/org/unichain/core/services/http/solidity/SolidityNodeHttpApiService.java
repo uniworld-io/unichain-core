@@ -186,10 +186,10 @@ public class SolidityNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(posBridgeGetTokenMapServlet), "/walletsolidity/getposbridgetokenmap");
 
       //urc721
-      context.addServlet(new ServletHolder(urc721ContractListServlet), "/walletsolidity/urc721listcontract");
-      context.addServlet(new ServletHolder(urc721TokenListServlet), "/walletsolidity/urc721listtoken");
-      context.addServlet(new ServletHolder(urc721ContractGetServlet), "/walletsolidity/urc721getcontract");
-      context.addServlet(new ServletHolder(urc721TokenGetServlet), "/walletsolidity/urc721gettoken");
+      context.addServlet(new ServletHolder(urc721ContractListServlet), "/walletsolidity/urc721contractlist");
+      context.addServlet(new ServletHolder(urc721TokenListServlet), "/walletsolidity/urc721tokenlist");
+      context.addServlet(new ServletHolder(urc721ContractGetServlet), "/walletsolidity/urc721contractget");
+      context.addServlet(new ServletHolder(urc721TokenGetServlet), "/walletsolidity/urc721tokenget");
 
       context.addServlet(new ServletHolder(urc721BalanceOfServlet), "/walletsolidity/urc721balanceof");
       context.addServlet(new ServletHolder(urc721GetApprovedServlet), "/walletsolidity/urc721getapproved");

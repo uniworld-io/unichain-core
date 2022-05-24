@@ -22,7 +22,7 @@ import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Urc721AccountContractRelation;
 
-import static org.unichain.core.services.http.utils.Util.NFT_TEMPLATE_ACCOUNT_FIELD_TAIL;
+import static org.unichain.core.services.http.utils.Util.URC721_CONTRACT_ACCOUNT_FIELD_TAIL;
 
 @Slf4j(topic = "capsule")
 public class Urc721AccountContractRelationCapsule implements ProtoCapsule<Urc721AccountContractRelation> {
@@ -74,7 +74,7 @@ public class Urc721AccountContractRelationCapsule implements ProtoCapsule<Urc721
   }
 
   public boolean hasTail(){
-    return relation.hasField(NFT_TEMPLATE_ACCOUNT_FIELD_TAIL);
+    return relation.hasField(URC721_CONTRACT_ACCOUNT_FIELD_TAIL);
   }
 
   public ByteString getTail(){

@@ -49,17 +49,15 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             val ctx = this.contract.unpack(Urc721TransferFromContract.class);
             var accountStore = dbManager.getAccountStore();
             var tokenStore = dbManager.getUrc721TokenStore();
-            var ownerAddr = ctx.getOwnerAddress().toByteArray();
+            var fromAddr = ctx.getOwnerAddress().toByteArray();
             var toAddr = ctx.getTo();
-            var toAddrBytes = toAddr.toByteArray();
-            var tokenId = Urc721TokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
-            //create new acc if not exist
-            if (!accountStore.has(toAddrBytes)) {
+            var tokenKey = Urc721TokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
+            if (!accountStore.has(toAddr.toByteArray())) {
                 fee = Math.addExact(fee, dbManager.createNewAccount(toAddr));
             }
 
-            var token = tokenStore.get(tokenId);
-            dbManager.removeNftToken(tokenId);
+            var token = tokenStore.get(tokenKey);
+            dbManager.removeUrc721Token(tokenKey);
 
             //then set new info and save
             token.setOwner(toAddr);
@@ -67,9 +65,9 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             token.clearApproval();
             token.clearNext();
             token.clearPrev();
-            dbManager.saveNftToken(token);
+            dbManager.saveUrc721Token(token);
 
-            chargeFee(ownerAddr, fee);
+            chargeFee(fromAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
             return true;
@@ -91,28 +89,28 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             var accountStore = dbManager.getAccountStore();
             var tokenStore = dbManager.getUrc721TokenStore();
             var relationStore = dbManager.getUrc721AccountTokenRelationStore();
-            var ownerAddr = ctx.getOwnerAddress().toByteArray();
+            var fromAddr = ctx.getOwnerAddress().toByteArray();
             var toAddr = ctx.getTo().toByteArray();
             var tokenId = Urc721TokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
 
-            Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Owner address and to address must be not the same");
+            Assert.isTrue(!Arrays.equals(fromAddr, toAddr), "Owner address and to address must be not the same");
             Assert.isTrue(Wallet.addressValid(toAddr), "Invalid target address");
-            Assert.isTrue(accountStore.has(ownerAddr), "Owner, approval or approval-for-all not exist");
-            Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");
-            var nft = tokenStore.get(tokenId);
-            var nftOwner = nft.getOwner();
-            var relation = relationStore.get(nftOwner);
+            Assert.isTrue(accountStore.has(fromAddr), "Owner, approval or approval-for-all not exist");
+            Assert.isTrue(tokenStore.has(tokenId), "Token not exist");
+            var token = tokenStore.get(tokenId);
+            var tokenOwner = token.getOwner();
+            var relation = relationStore.get(tokenOwner);
 
-            Assert.isTrue(Arrays.equals(ownerAddr, nftOwner)
-                    || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
-                    || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to transfer NFT token");
+            Assert.isTrue(Arrays.equals(fromAddr, tokenOwner)
+                    || (relation.hasApprovalForAll() && Arrays.equals(fromAddr, relation.getApprovedForAll()))
+                    || (token.hasApproval() && Arrays.equals(fromAddr, token.getApproval())), "Not allowed to transfer token: must be owner or approved");
 
-            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough fee");
+            Assert.isTrue(accountStore.get(fromAddr).getBalance() >= fee, "Not enough fee");
 
             if (accountStore.has(toAddr)) {
                 fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
             }
-            Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
+            Assert.isTrue(accountStore.get(fromAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);

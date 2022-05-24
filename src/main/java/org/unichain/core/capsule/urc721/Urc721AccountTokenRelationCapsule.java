@@ -120,11 +120,11 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
   }
 
   public boolean hasTail(){
-    return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_TAIL);
+    return relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_TAIL);
   }
 
   public boolean hasTailApprove(){
-    return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE);
+    return relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE);
   }
 
   public void setTail(ByteString tail){
@@ -132,7 +132,7 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
   }
 
   public boolean hasApprovalForAll(){
-    return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL);
+    return relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL);
   }
 
   public byte[] getApprovedForAll(){

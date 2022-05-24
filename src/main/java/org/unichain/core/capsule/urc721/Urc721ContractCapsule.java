@@ -51,7 +51,7 @@ public class Urc721ContractCapsule implements ProtoCapsule<Urc721Contract> {
             .setLastOperation(lastOperation)
             .setAddress(ctx.getAddress());
 
-    if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER))
+    if (ctx.hasField(URC721_CREATE_CONTRACT_FIELD_MINTER))
       builder.setMinter(ctx.getMinter());
     else
       builder.clearMinter();
@@ -118,7 +118,7 @@ public class Urc721ContractCapsule implements ProtoCapsule<Urc721Contract> {
   }
 
   public boolean hasMinter(){
-    return this.contract.hasField(NFT_TEMPLATE_FIELD_MINTER);
+    return this.contract.hasField(URC721_CONTRACT_FIELD_MINTER);
   }
 
   public void setMinter(ByteString minter) {
@@ -170,7 +170,7 @@ public class Urc721ContractCapsule implements ProtoCapsule<Urc721Contract> {
   }
 
   public boolean hasNext(){
-    return this.contract.hasField(NFT_TEMPLATE_FIELD_NEXT);
+    return this.contract.hasField(URC721_CONTRACT_FIELD_NEXT);
   }
 
   public void clearPrev(){
@@ -194,11 +194,11 @@ public class Urc721ContractCapsule implements ProtoCapsule<Urc721Contract> {
   }
 
   public boolean hasNextOfMinter(){
-    return this.contract.hasField(NFT_TEMPLATE_FIELD_NEXT_OF_MINTER);
+    return this.contract.hasField(URC721_CONTRACT_FIELD_NEXT_OF_MINTER);
   }
 
   public boolean hasPrevOfMinter(){
-    return this.contract.hasField(NFT_TEMPLATE_FIELD_PREV_OF_MINTER);
+    return this.contract.hasField(URC721_CONTRACT_FIELD_PREV_OF_MINTER);
   }
 
   public byte[] getNextOfMinter(){

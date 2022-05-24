@@ -21,8 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol;
 
-import static org.unichain.core.services.http.utils.Util.NFT_TOKEN_APPROVE_RELATION_FIELD_NEXT;
-import static org.unichain.core.services.http.utils.Util.NFT_TOKEN_APPROVE_RELATION_FIELD_PREV;
+import static org.unichain.core.services.http.utils.Util.URC721_TOKEN_APPROVE_RELATION_FIELD_NEXT;
+import static org.unichain.core.services.http.utils.Util.URC721_TOKEN_APPROVE_RELATION_FIELD_PREV;
 
 @Slf4j(topic = "capsule")
 public class Urc721TokenApproveRelationCapsule implements ProtoCapsule<Protocol.Urc721TokenApproveRelation> {
@@ -94,11 +94,11 @@ public class Urc721TokenApproveRelationCapsule implements ProtoCapsule<Protocol.
   }
 
   public boolean hasPrev(){
-    return token.hasField(NFT_TOKEN_APPROVE_RELATION_FIELD_PREV);
+    return token.hasField(URC721_TOKEN_APPROVE_RELATION_FIELD_PREV);
   }
 
   public boolean hasNext(){
-    return token.hasField(NFT_TOKEN_APPROVE_RELATION_FIELD_NEXT);
+    return token.hasField(URC721_TOKEN_APPROVE_RELATION_FIELD_NEXT);
   }
 
 }

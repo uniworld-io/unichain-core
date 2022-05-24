@@ -49,14 +49,14 @@ public class Urc721ApproveActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc721ApproveContract.class);
       var owner = ctx.getOwnerAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
-      var nftTokenStore = dbManager.getUrc721TokenStore();
+      var tokenStore = dbManager.getUrc721TokenStore();
       var contractAddr = ctx.getAddress().toByteArray();
       var tokenKey = ArrayUtils.addAll(contractAddr, ByteArray.fromLong(ctx.getTokenId()));
-      var nftToken = nftTokenStore.get(tokenKey);
+      var token = tokenStore.get(tokenKey);
 
       if(ctx.getApprove()){
-        nftToken.setApproval(ctx.getTo());
-        nftTokenStore.put(tokenKey, nftToken);
+        token.setApproval(ctx.getTo());
+        tokenStore.put(tokenKey, token);
 
         dbManager.addApproveToken(tokenKey, ctx.getTo().toByteArray());
 
@@ -67,8 +67,8 @@ public class Urc721ApproveActuator extends AbstractActuator {
         }
       }
       else {
-        nftToken.clearApproval();
-        nftTokenStore.put(tokenKey, nftToken);
+        token.clearApproval();
+        tokenStore.put(tokenKey, token);
         dbManager.disapproveToken(tokenKey, ctx.getTo().toByteArray());
       }
 
@@ -91,7 +91,7 @@ public class Urc721ApproveActuator extends AbstractActuator {
       Assert.isTrue(contract.is(Urc721ApproveContract.class), "Contract type error,expected type [Urc721ApproveContract], real type[" + contract.getClass() + "]");
       var fee = calcFee();
       var accountStore = dbManager.getAccountStore();
-      var nftTokenStore = dbManager.getUrc721TokenStore();
+      var tokenStore = dbManager.getUrc721TokenStore();
       val ctx = this.contract.unpack(Urc721ApproveContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
@@ -104,21 +104,21 @@ public class Urc721ApproveActuator extends AbstractActuator {
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee,"Not enough Balance to cover transaction fee, require " + fee + "ginza");
 
       var tokenId = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
-      Assert.isTrue(nftTokenStore.has(tokenId), "Not found NFT token");
+      Assert.isTrue(tokenStore.has(tokenId), "Not found token");
 
-      var nftToken = nftTokenStore.get(tokenId);
+      var token = tokenStore.get(tokenId);
       if(ctx.getApprove()){
-        if(nftToken.hasApproval()){
+        if(token.hasApproval()){
           //approve: just override exception: already approved
-          Assert.isTrue(!Arrays.equals(ctx.getTo().toByteArray(), nftToken.getApproval()), "The address has already been approver");
+          Assert.isTrue(!Arrays.equals(ctx.getTo().toByteArray(), token.getApproval()), "The address has already been approver");
         }
       }
       else {
         //disapprove
-        Assert.isTrue(nftToken.hasApproval() && Arrays.equals(ctx.getTo().toByteArray(), nftToken.getApproval()), "Unmatched approval address");
+        Assert.isTrue(token.hasApproval() && Arrays.equals(ctx.getTo().toByteArray(), token.getApproval()), "Unmatched approval address");
       }
 
-      Assert.isTrue(Arrays.equals(nftToken.getOwner(), ownerAddr), "Not owner of token");
+      Assert.isTrue(Arrays.equals(token.getOwner(), ownerAddr), "Not owner of token");
       Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and approver cannot be the same");
 
       return true;

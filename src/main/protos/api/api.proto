@@ -144,40 +144,40 @@ service Wallet {
 
   rpc Urc721ListContract (Urc721ContractQuery) returns (Urc721ContractPage) {
     option (google.api.http) = {
-      post: "/wallet/urc721listcontract"
+      post: "/wallet/urc721contractlist"
       body: "*"
       additional_bindings {
-        get: "/wallet/urc721listcontract"
+        get: "/wallet/urc721contractlist"
       }
     };
   };
 
   rpc Urc721ListToken (Urc721TokenQuery) returns (Urc721TokenPage) {
     option (google.api.http) = {
-      post: "/wallet/urc721listtoken"
+      post: "/wallet/urc721tokenlist"
       body: "*"
       additional_bindings {
-        get: "/wallet/urc721listtoken"
+        get: "/wallet/urc721tokenlist"
       }
     };
   };
 
   rpc Urc721GetContract (Urc721Contract) returns (Urc721Contract) {
     option (google.api.http) = {
-      post: "/wallet/urc721getcontract"
+      post: "/wallet/urc721contractget"
       body: "*"
       additional_bindings {
-        get: "/wallet/urc721getcontract"
+        get: "/wallet/urc721contractget"
       }
     };
   };
 
   rpc Urc721GetToken (Urc721Token) returns (Urc721Token) {
     option (google.api.http) = {
-      post: "/wallet/urc721gettoken"
+      post: "/wallet/urc721tokenget"
       body: "*"
       additional_bindings {
-        get: "/wallet/urc721gettoken"
+        get: "/wallet/urc721tokenget"
       }
     };
   };
@@ -1448,40 +1448,40 @@ service WalletSolidity {
 
   rpc Urc721ListContract (Urc721ContractQuery) returns (Urc721ContractPage) {
     option (google.api.http) = {
-      post: "/walletsolidity/urc721listcontract"
+      post: "/walletsolidity/urc721contractlist"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/urc721listcontract"
+        get: "/walletsolidity/urc721contractlist"
       }
     };
   };
 
   rpc Urc721ListToken (Urc721TokenQuery) returns (Urc721TokenPage) {
     option (google.api.http) = {
-      post: "/walletsolidity/urc721listtoken"
+      post: "/walletsolidity/urc721tokenlist"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/urc721listtoken"
+        get: "/walletsolidity/urc721tokenlist"
       }
     };
   };
 
   rpc Urc721GetContract (Urc721Contract) returns (Urc721Contract) {
     option (google.api.http) = {
-      post: "/walletsolidity/urc721getcontract"
+      post: "/walletsolidity/urc721contractget"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/urc721getcontract"
+        get: "/walletsolidity/urc721contractget"
       }
     };
   };
 
   rpc Urc721GetToken (Urc721Token) returns (Urc721Token) {
     option (google.api.http) = {
-      post: "/walletsolidity/urc721gettoken"
+      post: "/walletsolidity/urc721tokenget"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/urc721gettoken"
+        get: "/walletsolidity/urc721tokenget"
       }
     };
   };

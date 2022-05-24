@@ -115,11 +115,11 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             AssetType assetType = AssetType.valueOfNumber(tokenMap.getTokenType());
             switch (assetType){
                 case NATIVE:
-                case TOKEN:
+                case ERC20:
                     Assert.isTrue(dbManager.getTokenAddrSymbolIndexStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "token with address not found: " + decodedMsg);
                     break;
-                case NFT:
-                    Assert.isTrue(dbManager.getUrc721ContractStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "nft with address not found: " + decodedMsg);
+                case ERC721:
+                    Assert.isTrue(dbManager.getUrc721ContractStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "Erc721 with address not found: " + decodedMsg);
                     break;
                 default:
                     throw new ContractValidateException("invalid asset type");

@@ -194,7 +194,7 @@ public class ActuatorFactory {
       case UpdateBrokerageContract:
         return new UpdateBrokerageActuator(contract.getParameter(), manager);
       /**
-       * NFT
+       * Urc721
        */
       case Urc721CreateContract:
           return new Urc721CreateContractActuator(contract.getParameter(), manager);

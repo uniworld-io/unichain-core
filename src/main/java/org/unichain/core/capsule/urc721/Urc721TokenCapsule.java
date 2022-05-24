@@ -67,7 +67,7 @@ public class Urc721TokenCapsule implements ProtoCapsule<Protocol.Urc721Token> {
   }
 
   public boolean hasApproval(){
-    return token.hasField(NFT_TOKEN_FIELD_APPROVAL);
+    return token.hasField(URC721_TOKEN_FIELD_APPROVAL);
   }
 
   public void setApproval(ByteString approval){
@@ -115,11 +115,11 @@ public class Urc721TokenCapsule implements ProtoCapsule<Protocol.Urc721Token> {
   }
 
   public boolean hasPrev(){
-    return token.hasField(NFT_TOKEN_FIELD_PREV);
+    return token.hasField(URC721_TOKEN_FIELD_PREV);
   }
 
   public boolean hasNext(){
-    return token.hasField(NFT_TOKEN_FIELD_NEXT);
+    return token.hasField(URC721_TOKEN_FIELD_NEXT);
   }
 
   public String getSymbol() {

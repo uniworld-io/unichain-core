@@ -2100,7 +2100,7 @@ public class Manager {
     }
   }
 
-  public void saveNftTemplate(Urc721ContractCapsule contractCap){
+  public void saveUrc721Contract(Urc721ContractCapsule contractCap){
     var contractStore = getUrc721ContractStore();
     var accCtxRelStore = getUrc721AccountContractRelationStore();
 
@@ -2143,7 +2143,7 @@ public class Manager {
     }
   }
 
-  public void saveNftToken(Urc721TokenCapsule tokenCap) {
+  public void saveUrc721Token(Urc721TokenCapsule tokenCap) {
     var tokenStore = getUrc721TokenStore();
     var relationStore = getUrc721AccountTokenRelationStore();
     var relationKey = tokenCap.getOwner();
@@ -2198,19 +2198,19 @@ public class Manager {
 
   /**
    * remove then disapprove
-   * @param tokenId
+   * @param tokenKey
    */
-  public void removeNftToken(byte[] tokenId){
+  public void removeUrc721Token(byte[] tokenKey){
     var tokenStore = getUrc721TokenStore();
     var relationStore = getUrc721AccountTokenRelationStore();
 
-    Assert.isTrue(tokenStore.has(tokenId), "not found nft token with id " + tokenId);
-    val tokenCap = tokenStore.get(tokenId);
+    Assert.isTrue(tokenStore.has(tokenKey), "not found token with id " + tokenKey);
+    val tokenCap = tokenStore.get(tokenKey);
 
     var hasPrev = tokenCap.hasPrev();
     var hasNext = tokenCap.hasNext();
     var owner = tokenCap.getOwner();
-    Assert.isTrue(relationStore.has(owner), "missing account-nft relation of owner: "+ owner);
+    Assert.isTrue(relationStore.has(owner), "missing account-token relation of owner: "+ owner);
     var relation = relationStore.get(owner);
 
     if(hasNext){
@@ -2265,13 +2265,13 @@ public class Manager {
       }
     }
     relationStore.put(owner, relation);
-    tokenStore.delete(tokenId);
+    tokenStore.delete(tokenKey);
 
     //update approve relation store
     if(tokenCap.hasApproval())
     {
       var approvedAddr = tokenCap.getApproval();
-      disapproveToken(tokenId, approvedAddr);
+      disapproveToken(tokenKey, approvedAddr);
     }
   }
 
@@ -2343,14 +2343,14 @@ public class Manager {
     var approveStore = getUrc721TokenApproveRelationStore();
     var relationStore = getUrc721AccountTokenRelationStore();
 
-    Assert.isTrue(approveStore.has(tokenId), "not found nft token with id" + tokenId);
+    Assert.isTrue(approveStore.has(tokenId), "not found token with id" + tokenId);
     val approveCap = approveStore.get(tokenId);
 
     var hasPrev = approveCap.hasPrev();
     var hasNext = approveCap.hasNext();
     var owner = approveCap.getOwner();
     Assert.isTrue(Arrays.equals(toAddress, owner), "mismatched approval address");
-    Assert.isTrue(relationStore.has(owner), "missing account-nft relation of address: " + owner);
+    Assert.isTrue(relationStore.has(owner), "missing account-token relation of address: " + owner);
     var relation = relationStore.get(owner);
 
     if(hasNext){

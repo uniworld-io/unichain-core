@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
-
+//@todo urc721 review
 @Slf4j
 @Service
 public class Urc721ServiceImpl implements Urc721Service {
@@ -154,8 +154,8 @@ public class Urc721ServiceImpl implements Urc721Service {
     public Protocol.Urc721ContractPage listContract(Protocol.Urc721ContractQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
 
-        int pageSize = query.hasField(NFT_TEMPLATE_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
-        int pageIndex = query.hasField(NFT_TEMPLATE_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
+        int pageSize = query.hasField(URC721_CONTRACT_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
+        int pageIndex = query.hasField(URC721_CONTRACT_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
         Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
         var ownerAddr = query.getOwnerAddress().toByteArray();
@@ -210,15 +210,15 @@ public class Urc721ServiceImpl implements Urc721Service {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
         Assert.isTrue(Objects.nonNull(query.getOwnerType()) && TOKEN_LIST_OWNER_TYPES.contains(query.getOwnerType().toLowerCase()), "Owner type null or invalid type");
 
-        int pageSize = query.hasField(NFT_TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
-        int pageIndex = query.hasField(NFT_TOKEN_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
+        int pageSize = query.hasField(URC721_TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
+        int pageIndex = query.hasField(URC721_TOKEN_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
         Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
         var ownerAddr = query.getOwnerAddress().toByteArray();
         var ownerType = query.getOwnerType();
 
         var contractAddr = query.getAddress();
-        var hasContractAddr = query.hasField(NFT_TOKEN_QUERY_FIELD_ADDR);
+        var hasContractAddr = query.hasField(URC721_TOKEN_QUERY_FIELD_ADDR);
 
         List<Protocol.Urc721Token> unsorted = new ArrayList<>();
         Predicate<Urc721TokenCapsule> filter = cap -> !hasContractAddr || Arrays.equals(cap.getAddr(), contractAddr.toByteArray());
@@ -315,25 +315,27 @@ public class Urc721ServiceImpl implements Urc721Service {
         return wallet.createTransactionCapsule(contract, ContractType.Urc721TransferFromContract).getInstance();
     }
 
+    //@todo urc721: count token of provided urc721 address only
     @Override
     public Protocol.Urc721BalanceOf balanceOf(Protocol.Urc721BalanceOf query) {
-        //@todo urc721: count token of provided urc721 address only
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
-        var nftAccountTokenStore = dbManager.getUrc721AccountTokenRelationStore();
+        var accountTokenStore = dbManager.getUrc721AccountTokenRelationStore();
         var owner = query.getOwnerAddress().toByteArray();
+        var contractAddr = query.getAddress();
         var result = Protocol.Urc721BalanceOf.newBuilder()
                 .setCount(0)
                 .setOwnerAddress(query.getOwnerAddress());
 
-        if(nftAccountTokenStore.has(owner))
+        if(accountTokenStore.has(owner))
             return result.build();
 
-        var firstAccTokenRelation = nftAccountTokenStore.get(owner);
+        var firstAccTokenRelation = accountTokenStore.get(owner);
         return result.setCount(firstAccTokenRelation.getTotal()).build();
     }
 
     @Override
     public GrpcAPI.StringMessage getName(Protocol.AddressMessage msg) {
+        //@todo urc721 review
         var contract = Protocol.Urc721Contract.newBuilder()
                 .setAddress(msg.getAddress())
                 .build();

@@ -38,7 +38,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static org.unichain.core.services.http.utils.Util.NFT_MINT_FIELD_TOKEN_ID;
+import static org.unichain.core.services.http.utils.Util.URC721_MINT_FIELD_TOKEN_ID;
 
 @Slf4j(topic = "actuator")
 public class Urc721MintActuator extends AbstractActuator {
@@ -64,7 +64,7 @@ public class Urc721MintActuator extends AbstractActuator {
       }
 
       //save token
-      var nftTokenBuilder = Protocol.Urc721Token.newBuilder()
+      var tokenBuilder = Protocol.Urc721Token.newBuilder()
               .setAddress(ctx.getAddress())
               .setSymbol(contractStore.get(contractKey).getSymbol())
               .setUri(ctx.getUri())
@@ -72,22 +72,22 @@ public class Urc721MintActuator extends AbstractActuator {
               .setOwnerAddress(ctx.getToAddress())
               .setLastOperation(dbManager.getHeadBlockTimeStamp());
 
-      if(ctx.hasField(NFT_MINT_FIELD_TOKEN_ID))
+      if(ctx.hasField(URC721_MINT_FIELD_TOKEN_ID))
       {
         //use preset tokenId
-        nftTokenBuilder.setId(ctx.getTokenId());
+        tokenBuilder.setId(ctx.getTokenId());
       }
       else
       {
         //allocate tokenId
-        var nftContract = contractStore.get(contractKey);
-        var tokenIndex = allocateTokenId(nftContract);
-        nftContract.setTokenIndex(tokenIndex);
-        contractStore.put(contractKey, nftContract);
-        nftTokenBuilder.setId(tokenIndex);
+        var contract = contractStore.get(contractKey);
+        var tokenIndex = allocateTokenId(contract);
+        contract.setTokenIndex(tokenIndex);
+        contractStore.put(contractKey, contract);
+        tokenBuilder.setId(tokenIndex);
       }
 
-      dbManager.saveNftToken(new Urc721TokenCapsule(nftTokenBuilder.build()));
+      dbManager.saveUrc721Token(new Urc721TokenCapsule(tokenBuilder.build()));
 
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
@@ -105,11 +105,11 @@ public class Urc721MintActuator extends AbstractActuator {
    * - advance token index
    * - make sure token index not allocated
    */
-  private long allocateTokenId(final Urc721ContractCapsule template) {
+  private long allocateTokenId(final Urc721ContractCapsule contract) {
     val tokenStore = dbManager.getUrc721TokenStore();
-    var nextId = Math.incrementExact(template.getTokenIndex());
+    var nextId = Math.incrementExact(contract.getTokenIndex());
     while (true){
-      var key = Urc721TokenCapsule.genTokenKey(template.getAddress(), nextId);
+      var key = Urc721TokenCapsule.genTokenKey(contract.getAddress(), nextId);
       if(!tokenStore.has(key)){
         return nextId;
       }
@@ -146,14 +146,14 @@ public class Urc721MintActuator extends AbstractActuator {
       var contractAddr = ctx.getAddress().toByteArray();
       Assert.isTrue(dbManager.getUrc721ContractStore().has(contractAddr), "Contract symbol not existed!");
       var contractCap = dbManager.getUrc721ContractStore().get(contractAddr);
-      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwner()) || (contractCap.hasMinter() && Arrays.equals(ownerAddr, contractCap.getMinter())), "Only owner or minter allowed to mint NFT token");
+      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwner()) || (contractCap.hasMinter() && Arrays.equals(ownerAddr, contractCap.getMinter())), "Only owner or minter allowed to mint token");
       Assert.isTrue(!(Arrays.equals(toAddr, contractCap.getOwner()) || Arrays.equals(toAddr, contractCap.getMinter())), "Can not create token for minter or owner!");
-      Assert.isTrue(contractCap.getTokenIndex() < contractCap.getTotalSupply(), "Over slot NFT token mint!");
+      Assert.isTrue(contractCap.getTokenIndex() < contractCap.getTotalSupply(), "Over slot token mint!");
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Not enough balance to cover transaction fee, require "+ fee + "ginza");
       Assert.isTrue(TransactionUtil.validHttpURI(ctx.getUri()), "Invalid uri");
 
       //make sure tokenId not allocated yet!
-      if(ctx.hasField(NFT_MINT_FIELD_TOKEN_ID)){
+      if(ctx.hasField(URC721_MINT_FIELD_TOKEN_ID)){
         val tokenKey = Urc721TokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
         Assert.isTrue(!dbManager.getUrc721TokenStore().has(tokenKey), "TokenId allocated: " + tokenKey);
       }

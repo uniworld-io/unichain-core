@@ -57,14 +57,14 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       }
 
       //save relation
-      var templateStore = dbManager.getUrc721ContractStore();
-      var template = templateStore.get(contractAddr);
-      var currentMinter = template.getMinter();
+      var contractStore = dbManager.getUrc721ContractStore();
+      var contract = contractStore.get(contractAddr);
+      var currentMinter = contract.getMinter();
       dbManager.removeMinterContract(currentMinter, contractAddr);
 
-      template.setMinter(ctx.getMinter());
-      templateStore.put(contractAddr, template);
-      dbManager.addMinterContractRelation(template);
+      contract.setMinter(ctx.getMinter());
+      contractStore.put(contractAddr, contract);
+      dbManager.addMinterContractRelation(contract);
 
       //charge fee
       chargeFee(ownerAddr, fee);
@@ -90,14 +90,14 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       var minterAddr = ctx.getMinter().toByteArray();
       var contractAddr = ctx.getAddress().toByteArray();
       var accStore = dbManager.getAccountStore();
-      var templateStore = dbManager.getUrc721ContractStore();
+      var contractStore = dbManager.getUrc721ContractStore();
 
       Assert.isTrue(accStore.has(ownerAddr), "Owner account not exist");
       Assert.isTrue(Wallet.addressValid(minterAddr), "Minter address not active or not exists");
       Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
-      Assert.isTrue(templateStore.has(contractAddr), "Contract symbol not exist");
-      var template = templateStore.get(contractAddr);
-      Assert.isTrue(Arrays.equals(template.getOwner(), ownerAddr), "Not owner of NFT template");
+      Assert.isTrue(contractStore.has(contractAddr), "Contract symbol not exist");
+      var contractCap = contractStore.get(contractAddr);
+      Assert.isTrue(Arrays.equals(contractCap.getOwner(), ownerAddr), "Not owner of contract");
 
       var fee = calcFee();
       if(!accStore.has(minterAddr))
@@ -105,7 +105,7 @@ public class Urc721AddMinterActuator extends AbstractActuator {
         fee = Math.addExact(dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract(), fee);
       }
       Assert.isTrue(accStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
-      Assert.isTrue(!template.hasMinter() || (!Arrays.equals(template.getMinter(), ctx.getMinter().toByteArray())), "Already minter");
+      Assert.isTrue(!contractCap.hasMinter() || (!Arrays.equals(contractCap.getMinter(), ctx.getMinter().toByteArray())), "Already minter");
       Assert.isTrue(!TransactionUtil.isGenesisAddress(minterAddr), "Minter is genesis address");
 
       return true;

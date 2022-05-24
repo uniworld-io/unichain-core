@@ -75,7 +75,7 @@ public class PosBridgeSetupActuator extends AbstractActuator {
             if(ctx.hasField(POSBRIDGE_PREDICATE_TOKEN))
                 config.setPredicateErc20(ctx.getPredicateToken());
 
-            if(ctx.hasField(POSBRIDGE_PREDICATE_NFT))
+            if(ctx.hasField(POSBRIDGE_PREDICATE_URC721))
                 config.setPredicateErc721(ctx.getPredicateNft());
 
             if(!ctx.getValidatorsList().isEmpty()) {
@@ -132,7 +132,7 @@ public class PosBridgeSetupActuator extends AbstractActuator {
                 Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist token predicate addr");
             }
 
-            if(ctx.hasField(POSBRIDGE_PREDICATE_NFT)) {
+            if(ctx.hasField(POSBRIDGE_PREDICATE_URC721)) {
                 var predicateAddr = Numeric.hexStringToByteArray(ctx.getPredicateNft());
                 Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist NFT predicate addr");
             }

@@ -140,13 +140,13 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                     Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
                 }
                 break;
-            case TOKEN:
+            case ERC20:
                 var tokenIndex = dbManager.getTokenAddrSymbolIndexStore();
                 Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
                 break;
-            case NFT:
-                var nftIndex = dbManager.getUrc721ContractStore();
-                Assert.isTrue(nftIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
+            case ERC721:
+                var urc721ContractStore = dbManager.getUrc721ContractStore();
+                Assert.isTrue(urc721ContractStore.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
                 break;
             default:
                 throw new Exception("invalid asset type");
@@ -167,8 +167,8 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                             "TOKEN_NATIVE_INVALID");
                 }
                 break;
-            case TOKEN:
-            case NFT:
+            case ERC20:
+            case ERC721:
                 Assert.isTrue(org.web3j.crypto.WalletUtils.isValidAddress(token), "invalid EVM-compatible token address, found: " + token);
                 break;
             default:

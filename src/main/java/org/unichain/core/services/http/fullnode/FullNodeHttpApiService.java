@@ -394,10 +394,10 @@ public class FullNodeHttpApiService implements Service {
 
       //extended erc721
       context.addServlet(new ServletHolder(urc721GetApprovedServlet), "/urc721getapproved");
-      context.addServlet(new ServletHolder(urc721ContractListServlet), "/urc721listcontract");
-      context.addServlet(new ServletHolder(urc721TokenListServlet), "/urc721listtoken");
-      context.addServlet(new ServletHolder(urc721ContractGetServlet), "/urc721getcontract");
-      context.addServlet(new ServletHolder(urc721TokenGetServlet), "/urc721gettoken");
+      context.addServlet(new ServletHolder(urc721ContractListServlet), "/urc721contractlist");
+      context.addServlet(new ServletHolder(urc721TokenListServlet), "/urc721tokenlist");
+      context.addServlet(new ServletHolder(urc721ContractGetServlet), "/urc721contractget");
+      context.addServlet(new ServletHolder(urc721TokenGetServlet), "/urc721tokenget");
 
       /**
        * POSBridge

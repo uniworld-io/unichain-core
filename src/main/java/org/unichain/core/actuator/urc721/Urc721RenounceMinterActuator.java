@@ -46,9 +46,7 @@ public class Urc721RenounceMinterActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc721RenounceMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contractKey = ctx.getAddress().toByteArray();
-      //update template
       dbManager.removeMinterContract(ownerAddr, contractKey);
-
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
@@ -71,12 +69,12 @@ public class Urc721RenounceMinterActuator extends AbstractActuator {
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contractKey = ctx.getAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
-      var templateStore = dbManager.getUrc721ContractStore();
+      var contractStore = dbManager.getUrc721ContractStore();
 
       Assert.isTrue(accountStore.has(ownerAddr), "Not found owner account");
-      Assert.isTrue(templateStore.has(contractKey), "Not found template");
-      var template = templateStore.get(contractKey);
-      Assert.isTrue(template.hasMinter() && Arrays.equals(ownerAddr, template.getMinter()), "Minter not exist or un-matched");
+      Assert.isTrue(contractStore.has(contractKey), "Not found contract");
+      var contract = contractStore.get(contractKey);
+      Assert.isTrue(contract.hasMinter() && Arrays.equals(ownerAddr, contract.getMinter()), "Minter not exist or un-matched");
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "Not enough balance to cover fee");
       return true;
     }

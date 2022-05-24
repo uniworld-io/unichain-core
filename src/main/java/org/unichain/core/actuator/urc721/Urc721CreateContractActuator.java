@@ -40,7 +40,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
-import static org.unichain.core.services.http.utils.Util.NFT_CREATE_TEMPLATE_FIELD_MINTER;
+import static org.unichain.core.services.http.utils.Util.URC721_CREATE_CONTRACT_FIELD_MINTER;
 
 @Slf4j(topic = "actuator")
 public class Urc721CreateContractActuator extends AbstractActuator {
@@ -57,9 +57,9 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       var owner = ctx.getOwnerAddress().toByteArray();
       var tokenAddr = ctx.getAddress().toByteArray();
 
-      dbManager.saveNftTemplate(new Urc721ContractCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
+      dbManager.saveUrc721Contract(new Urc721ContractCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
 
-      //register new account with type assetissue
+      //register new account with type asset_issue
       var defaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
       var tokenAccount = new AccountCapsule(ByteString.copyFrom(tokenAddr), Protocol.AccountType.AssetIssue, dbManager.getHeadBlockTimeStamp(), defaultPermission, dbManager);
       dbManager.getAccountStore().put(tokenAddr, tokenAccount);
@@ -70,7 +70,7 @@ public class Urc721CreateContractActuator extends AbstractActuator {
 
       //emit event
       var event = NativeContractEvent.builder()
-              .topic("NftCreate")
+              .topic("Urc721ContractCreate")
               .rawData(
                       Urc721ContractCreatedEvent.builder()
                               .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
@@ -115,7 +115,7 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
       Assert.isTrue(!TransactionUtil.isGenesisAddress(ownerAddr), "Owner is genesis address");
 
-      if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER)){
+      if (ctx.hasField(URC721_CREATE_CONTRACT_FIELD_MINTER)){
         var minterAddr = ctx.getMinter().toByteArray();
         Assert.notNull(accountStore.get(minterAddr), "Minter account[" + StringUtil.createReadableString(minterAddr) + "] not exists or not active");
         Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");

@@ -26,25 +26,25 @@ public class ChildTokenErc721Service implements ChildTokenService {
 
     @Override
     public void deposit(ByteString user, ByteString childToken, String depositData) throws ContractExeException, ContractValidateException {
-        var nftContractStore = dbManager.getUrc721ContractStore();
+        var contractStore = dbManager.getUrc721ContractStore();
         var contractKey =   childToken.toByteArray();
-        var nft = nftContractStore.get(contractKey);
+        var contractCap = contractStore.get(contractKey);
 
         PosBridgeUtil.ERC721Decode erc721Decode = PosBridgeUtil.abiDecodeToErc721(depositData);
 
         var wrapCtx = Contract.Urc721MintContract.newBuilder()
-                .setOwnerAddress(ByteString.copyFrom(nft.getOwner()))
+                .setOwnerAddress(ByteString.copyFrom(contractCap.getOwner()))
                 .setAddress(childToken)
                 .setToAddress(user)
                 .setTokenId(erc721Decode.tokenId)
                 .setUri(erc721Decode.uri)
                 .build();
-        var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc721MintContract)
+        var txCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc721MintContract)
                 .getInstance()
                 .getRawData()
                 .getContract(0)
                 .getParameter();
-        var wrapActuator = new Urc721MintActuator(contract, dbManager);
+        var wrapActuator = new Urc721MintActuator(txCap, dbManager);
         var wrapRet = new TransactionResultCapsule();
         wrapActuator.validate();
         wrapActuator.execute(wrapRet);

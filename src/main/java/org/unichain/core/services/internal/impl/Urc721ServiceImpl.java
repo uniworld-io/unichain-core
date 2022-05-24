@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -19,9 +20,7 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -100,105 +99,15 @@ public class Urc721ServiceImpl implements Urc721Service {
     }
 
     @Override
-    public Protocol.Urc721TokenApproveQueryResult getListApproval(Protocol.Urc721TokenApproveQuery query) {
-        Assert.notNull(query.getOwnerAddress(), "Owner address empty");
-
-        int pageSize = query.hasField(NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
-        int pageIndex = query.hasField(NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
-        Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
-
-        var ownerAddr = query.getOwnerAddress().toByteArray();
-        var nftTokenStore = dbManager.getUrc721TokenStore();
-        var approveStore = dbManager.getUrc721TokenApproveRelationStore();
-        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
-
-        List<Protocol.Urc721Token> unsorted = new ArrayList<>();
-
-        if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotalApprove() > 0){
-            var accTokenRelation = relationStore.get(ownerAddr);
-            var approveRelation = approveStore.get(accTokenRelation.getHeadApprove());
-            while (true){
-                if(nftTokenStore.has(approveRelation.getKey()))
-                    unsorted.add(nftTokenStore.get(approveRelation.getKey()).getInstance());
-                if(approveRelation.hasNext()) {
-                    approveRelation = approveStore.get(approveRelation.getNext());
-                } else {
-                    break;
-                }
-            }
-        }
-        //@TODO discord
-        var accTokenRelation = relationStore.get(ownerAddr);
-        if (accTokenRelation != null && accTokenRelation.getApproveAllMap() != null) {
-            accTokenRelation.getApproveAllMap().forEach((owner, isApproveAll) -> {
-                byte[] ownerBytes = ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray();
-                if (isApproveAll && relationStore.has(ownerBytes)) {
-                    List<Protocol.Urc721Token> tokens = listTokenByOwner(ownerBytes, cap -> true);
-                    tokens.removeIf(token -> token.hasField(NFT_TOKEN_FIELD_APPROVAL) && Arrays.equals(token.getApproval().toByteArray(), ownerAddr));
-                    unsorted.addAll(tokens);
-                }
-            });
-        }
-
-        return Protocol.Urc721TokenApproveQueryResult.newBuilder()
-                .setPageIndex(pageIndex)
-                .setPageSize(pageSize)
-                .setPageIndex(pageIndex)
-                .setTotal(unsorted.size())
-                .addAllTokens(Utils.paging(unsorted, pageIndex, pageSize))
-                .build();
-    }
-
-    @Override
     public Protocol.Transaction setApprovalForAll(Contract.Urc721SetApprovalForAllContract approvalAll) throws ContractValidateException {
         return wallet.createTransactionCapsule(approvalAll, ContractType.Urc721SetApprovalForAllContract).getInstance();
     }
 
     @Override
-    public Protocol.Urc721TokenApproveAllResult getApprovalForAll(Protocol.Urc721TokenApproveAllQuery query) {
-        Assert.notNull(query.getOwnerAddress(), "Owner address null");
-        int pageSize = query.hasField(NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
-        int pageIndex = query.hasField(NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
-        Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
-
-        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
-        var relation = relationStore.get(query.getOwnerAddress().toByteArray());
-
-        if (relation == null || relation.getApproveAllMap() == null)
-            return Protocol.Urc721TokenApproveAllResult.newBuilder().setOwnerAddress(query.getOwnerAddress()).build();
-
-        List<Protocol.Urc721AccountTokenRelation> approveList = new ArrayList<>();
-        List<Protocol.Urc721Token> tokens = new ArrayList<>();
-
-        relation.getApproveAllMap().forEach((owner, isApproveAll) -> {
-            byte[] ownerApprove = ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray();
-            if (isApproveAll && relationStore.has(ownerApprove)) {
-                var ownerRelationCap = relationStore.get(ownerApprove);
-                var tokenRelation = Protocol.Urc721AccountTokenRelation.newBuilder()
-                        .setOwnerAddress(ownerRelationCap.getInstance().getOwnerAddress())
-                        .setTotal(ownerRelationCap.getInstance().getTotal())
-                        .build();
-                approveList.add(tokenRelation);
-                tokens.addAll(listTokenByOwner(tokenRelation.getOwnerAddress().toByteArray(), cap -> true));
-            }
-        });
-
-        return Protocol.Urc721TokenApproveAllResult.newBuilder()
-                .setOwnerAddress(query.getOwnerAddress())
-                .addAllApproveList(approveList)
-                .setApprovalForAll(ByteString.copyFrom(relation.getApprovedForAll()))
-                .addAllTokens(Utils.paging(tokens, pageIndex, pageSize))
-                .setTotal(tokens.size())
-                .setPageIndex(pageIndex)
-                .setPageSize(pageSize)
-                .build();
-    }
-
-    @Override
     public Protocol.Urc721IsApprovedForAll isApprovalForAll(Protocol.Urc721IsApprovedForAll query) {
+        //@todo urc721 review
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
         Assert.notNull(query.getOperator(), "Operator null");
-
         var relationStore = dbManager.getUrc721AccountTokenRelationStore();
         var isApproved = false;
         if(relationStore.has(query.getOwnerAddress().toByteArray())){
@@ -216,8 +125,24 @@ public class Urc721ServiceImpl implements Urc721Service {
 
     @Override
     public Protocol.AddressMessage getApproved(Protocol.Urc721Token query) {
-        //@todo later
-        throw new RuntimeException("not implemented yet!");
+        try {
+            var tokenStore = dbManager.getUrc721TokenStore();
+            var contractAddr = query.getAddress().toByteArray();
+            var tokenKey = ArrayUtils.addAll(contractAddr, ByteArray.fromLong(query.getId()));
+            Assert.isTrue(tokenStore.has(tokenKey), "token not found!");
+
+            var token = tokenStore.get(tokenKey);
+            var addrMsg = Protocol.AddressMessage.newBuilder();
+            if (token.hasApproval())
+                addrMsg.setAddress(ByteString.copyFrom(token.getApproval()));
+            else
+                addrMsg.clearAddress();
+            return addrMsg.build();
+        }
+        catch (Exception e){
+            logger.error("getApproved got error -->", e);
+            return Protocol.AddressMessage.newBuilder().build();
+        }
     }
 
     @Override
@@ -238,7 +163,7 @@ public class Urc721ServiceImpl implements Urc721Service {
         var relationStore = dbManager.getUrc721AccountContractRelationStore();
         var templateStore = dbManager.getUrc721ContractStore();
 
-        if ("OWNER".equalsIgnoreCase(query.getOwnerType()) && relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0) {
+        if ("owner".equalsIgnoreCase(query.getOwnerType()) && relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0) {
             var start = templateStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
             while (true) {
                 unsorted.add(start.getInstance());
@@ -250,7 +175,7 @@ public class Urc721ServiceImpl implements Urc721Service {
             }
         }
         var minterRelationStore = dbManager.getUrc721MinterContractRelationStore();
-        if("MINTER".equalsIgnoreCase(query.getOwnerType()) && minterRelationStore.has(ownerAddr) && minterRelationStore.get(ownerAddr).getTotal() > 0){
+        if("minter".equalsIgnoreCase(query.getOwnerType()) && minterRelationStore.has(ownerAddr) && minterRelationStore.get(ownerAddr).getTotal() > 0){
             var relation = minterRelationStore.get(ownerAddr);
             var start = templateStore.get(relation.getHead().toByteArray());
             while (true){
@@ -274,23 +199,43 @@ public class Urc721ServiceImpl implements Urc721Service {
                 .setPageIndex(pageIndex)
                 .setPageSize(pageSize)
                 .setTotal(unsorted.size())
-                .addAllTemplates(Utils.paging(unsorted, pageIndex, pageSize))
+                .addAllContracts(Utils.paging(unsorted, pageIndex, pageSize))
                 .build();
     }
+
+    private static final Set<String> TOKEN_LIST_OWNER_TYPES = new HashSet<>(Arrays.asList("owner","approved", "approved_all"));
 
     @Override
     public Protocol.Urc721TokenPage listToken(Protocol.Urc721TokenQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
+        Assert.isTrue(Objects.nonNull(query.getOwnerType()) && TOKEN_LIST_OWNER_TYPES.contains(query.getOwnerType().toLowerCase()), "Owner type null or invalid type");
 
         int pageSize = query.hasField(NFT_TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
         int pageIndex = query.hasField(NFT_TOKEN_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
         Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
         var ownerAddr = query.getOwnerAddress().toByteArray();
-        var addr = query.getAddress();
-        var hasFieldAddr = query.hasField(NFT_TOKEN_QUERY_FIELD_ADDR);
+        var ownerType = query.getOwnerType();
 
-        List<Protocol.Urc721Token> unsorted = listTokenByOwner(ownerAddr, cap -> !hasFieldAddr || Arrays.equals(cap.getAddr(), addr.toByteArray()));
+        var contractAddr = query.getAddress();
+        var hasContractAddr = query.hasField(NFT_TOKEN_QUERY_FIELD_ADDR);
+
+        List<Protocol.Urc721Token> unsorted = new ArrayList<>();
+        Predicate<Urc721TokenCapsule> filter = cap -> !hasContractAddr || Arrays.equals(cap.getAddr(), contractAddr.toByteArray());
+
+        switch (ownerType){
+            case "owner":
+                unsorted = listTokenByOwner(ownerAddr, filter);
+                break;
+            case "approved":
+                unsorted = listTokenByApproved(ownerAddr, filter);
+                break;
+            case "approved_all":
+                unsorted = listTokenByApprovedForAll(ownerAddr, filter);
+                break;
+            default:
+                break;
+        }
 
         return  Protocol.Urc721TokenPage.newBuilder()
                 .setPageSize(pageSize)
@@ -301,7 +246,7 @@ public class Urc721ServiceImpl implements Urc721Service {
     }
 
     private List<Protocol.Urc721Token> listTokenByOwner(byte[] ownerAddr, Predicate<Urc721TokenCapsule> filter){
-        List<Protocol.Urc721Token> unsorted = new ArrayList<>();
+        var unsorted = new ArrayList<Protocol.Urc721Token>();
         var relationStore = dbManager.getUrc721AccountTokenRelationStore();
         var tokenStore = dbManager.getUrc721TokenStore();
 
@@ -320,6 +265,51 @@ public class Urc721ServiceImpl implements Urc721Service {
         return unsorted;
     }
 
+    private List<Protocol.Urc721Token> listTokenByApproved(byte[] ownerAddr, Predicate<Urc721TokenCapsule> filter){
+        var tokenStore = dbManager.getUrc721TokenStore();
+        var approvedStore = dbManager.getUrc721TokenApproveRelationStore();
+        var accTokenRelationStore = dbManager.getUrc721AccountTokenRelationStore();
+        var result = new ArrayList<Protocol.Urc721Token>();
+
+        if(accTokenRelationStore.has(ownerAddr) && accTokenRelationStore.get(ownerAddr).getTotalApprove() > 0){
+            var accTokenRelation = accTokenRelationStore.get(ownerAddr);
+            var approveRelation = approvedStore.get(accTokenRelation.getHeadApprove());
+            while (true){
+                if(tokenStore.has(approveRelation.getKey()))
+                {
+                    var tmpToken = tokenStore.get(approveRelation.getKey());
+                    if(filter.test(tmpToken))
+                        result.add(tmpToken.getInstance());
+                }
+
+                if(approveRelation.hasNext()) {
+                    approveRelation = approvedStore.get(approveRelation.getNext());
+                } else {
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    private List<Protocol.Urc721Token> listTokenByApprovedForAll(byte[] ownerAddr, Predicate<Urc721TokenCapsule> filter){
+        var result = new ArrayList<Protocol.Urc721Token>();
+        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
+        relationStore.get(ownerAddr).getApproveAllMap().forEach((owner, isApprovedAll) -> {
+            var tokenOwner = ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray();
+            if (isApprovedAll && relationStore.has(tokenOwner)) {
+                var ownerRelationCap = relationStore.get(tokenOwner);
+                var tokenRelation = Protocol.Urc721AccountTokenRelation.newBuilder()
+                        .setOwnerAddress(ownerRelationCap.getInstance().getOwnerAddress())
+                        .setTotal(ownerRelationCap.getInstance().getTotal())
+                        .build();
+                result.addAll(listTokenByOwner(tokenRelation.getOwnerAddress().toByteArray(), filter));
+            }
+        });
+
+        return result;
+    }
+
     @Override
     public Protocol.Transaction transfer(Contract.Urc721TransferFromContract contract) throws ContractValidateException {
         return wallet.createTransactionCapsule(contract, ContractType.Urc721TransferFromContract).getInstance();
@@ -327,8 +317,8 @@ public class Urc721ServiceImpl implements Urc721Service {
 
     @Override
     public Protocol.Urc721BalanceOf balanceOf(Protocol.Urc721BalanceOf query) {
+        //@todo urc721: count token of provided urc721 address only
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
-
         var nftAccountTokenStore = dbManager.getUrc721AccountTokenRelationStore();
         var owner = query.getOwnerAddress().toByteArray();
         var result = Protocol.Urc721BalanceOf.newBuilder()
@@ -347,7 +337,6 @@ public class Urc721ServiceImpl implements Urc721Service {
         var contract = Protocol.Urc721Contract.newBuilder()
                 .setAddress(msg.getAddress())
                 .build();
-
         return GrpcAPI.StringMessage.newBuilder()
                 .setValue(getContract(contract).getName())
                 .build();
@@ -355,10 +344,10 @@ public class Urc721ServiceImpl implements Urc721Service {
 
     @Override
     public GrpcAPI.StringMessage getSymbol(Protocol.AddressMessage msg) {
+        //@todo urc721 review
         var contract = Protocol.Urc721Contract.newBuilder()
                 .setAddress(msg.getAddress())
                 .build();
-
         return GrpcAPI.StringMessage.newBuilder()
                 .setValue(getContract(contract).getSymbol())
                 .build();
@@ -366,6 +355,7 @@ public class Urc721ServiceImpl implements Urc721Service {
 
     @Override
     public GrpcAPI.NumberMessage getTotalSupply(Protocol.AddressMessage msg) {
+        //@todo urc721 review
         var contract = Protocol.Urc721Contract.newBuilder()
                 .setAddress(msg.getAddress())
                 .build();
@@ -386,6 +376,7 @@ public class Urc721ServiceImpl implements Urc721Service {
 
     @Override
     public Protocol.AddressMessage getOwnerOf(Protocol.Urc721Token msg) {
+        //@todo urc721 review
         var tokenQuery = Protocol.Urc721Token.newBuilder()
                 .setAddress(msg.getAddress())
                 .build();

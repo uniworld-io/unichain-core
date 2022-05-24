@@ -24,10 +24,10 @@ public class Urc721OwnerOfServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       boolean visible = Util.getVisible(request);
-      String address = request.getParameter("address");
-      Integer tokenId = Integer.valueOf(request.getParameter("id"));
+      var address = request.getParameter("address");
+      var tokenId = Integer.valueOf(request.getParameter("id"));
       var builder = Protocol.Urc721Token.newBuilder();
-      JSONObject jsonObject = new JSONObject();
+      var jsonObject = new JSONObject();
       jsonObject.put("address", address);
       jsonObject.put("id", tokenId);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);

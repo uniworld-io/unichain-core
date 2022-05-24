@@ -2,6 +2,8 @@ package org.unichain.core.services.http.fullnode.servlet.urc721;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.utils.JsonFormat;
@@ -14,30 +16,29 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-//@todo urc721 review: confuse naming ?
 @Component
 @Slf4j(topic = "API")
-public class Urc721GetApprovedForAllServlet extends HttpServlet {
+public class Urc721ContractListServlet extends HttpServlet {
 
   @Autowired
   private Urc721Service urc721Service;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
-      boolean visible = Util.getVisible(request);
-      String address = request.getParameter("owner_address");
-
-      Integer pageIndex = request.getParameter("page_index") == null ? 0 : Integer.parseInt(request.getParameter("page_index"));
-      Integer pageSize = request.getParameter("page_size") == null ? 10 : Integer.parseInt(request.getParameter("page_size"));
-
-      Protocol.Urc721TokenApproveAllQuery.Builder build = Protocol.Urc721TokenApproveAllQuery.newBuilder();
-      JSONObject jsonObject = new JSONObject();
+      var visible = Util.getVisible(request);
+      var address = request.getParameter("owner_address");
+      var pageSize = Long.parseLong(request.getParameter("page_size"));
+      var pageIndex = Long.parseLong(request.getParameter("page_index"));
+      var ownerType = request.getParameter("owner_type");
+      var builder = Protocol.Urc721ContractQuery.newBuilder();
+      var jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
-      jsonObject.put("page_index", pageIndex);
       jsonObject.put("page_size", pageSize);
-      JsonFormat.merge(jsonObject.toJSONString(), build, visible);
+      jsonObject.put("page_index", pageIndex);
+      jsonObject.put("owner_type", StringUtils.isEmpty(ownerType) ? "OWNER" : ownerType);
+      JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
 
-      Protocol.Urc721TokenApproveAllResult reply = urc721Service.getApprovalForAll(build.build());
+      var reply = urc721Service.listContract(builder.build());
 
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, true));
@@ -47,6 +48,7 @@ public class Urc721GetApprovedForAllServlet extends HttpServlet {
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       try {
+        response.setStatus(400);
         response.getWriter().println(Util.messageErrorHttp(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());

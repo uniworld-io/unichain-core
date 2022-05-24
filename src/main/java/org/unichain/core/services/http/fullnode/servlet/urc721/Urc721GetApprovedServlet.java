@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-//@todo implement
 @Component
 @Slf4j(topic = "API")
 public class Urc721GetApprovedServlet extends HttpServlet {
@@ -25,11 +24,11 @@ public class Urc721GetApprovedServlet extends HttpServlet {
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
-      boolean visible = Util.getVisible(request);
-      String contractAddr = request.getParameter("address");
-      String tokenId = request.getParameter("id");
+      var visible = Util.getVisible(request);
+      var contractAddr = request.getParameter("address");
+      var tokenId = request.getParameter("id");
       var builder = Protocol.Urc721Token.newBuilder();
-      JSONObject jsonObject = new JSONObject();
+      var jsonObject = new JSONObject();
       jsonObject.put("address", contractAddr);
       jsonObject.put("id", tokenId);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);

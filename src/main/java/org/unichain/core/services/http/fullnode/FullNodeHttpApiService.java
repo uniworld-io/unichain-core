@@ -47,7 +47,9 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private CreateAssetIssueServlet createAssetIssueServlet;
 
-  //urc721
+  /**
+   * urc721
+   */
   @Autowired
   private Urc721CreateContractServlet urc721CreateContractServlet;
   @Autowired
@@ -66,19 +68,14 @@ public class FullNodeHttpApiService implements Service {
   private Urc721SetApprovalForAllServlet urc721ApprovalForAllServlet;
   @Autowired
   private Urc721TransferFromServlet urc721TransferFromServlet;
-
   @Autowired
-  private Urc721ListContractServlet urc721ListContractServlet;
+  private Urc721ContractListServlet urc721ContractListServlet;
   @Autowired
-  private Urc721ListTokenApprovalServlet urc721ListTokenApproveServlet;
+  private Urc721TokenListServlet urc721TokenListServlet;
   @Autowired
-  private Urc721GetApprovedForAllServlet urc721ListTokenApproveAllServlet;
+  private Urc721ContractGetServlet urc721ContractGetServlet;
   @Autowired
-  private Urc721ListTokenServlet urc721ListTokenServlet;
-  @Autowired
-  private Urc721GetContractServlet urc721GetContractServlet;
-  @Autowired
-  private Urc721GetTokenServlet urc721GetTokenServlet;
+  private Urc721TokenGetServlet urc721TokenGetServlet;
   @Autowired
   private Urc721BalanceOfServlet urc721BalanceOfServlet;
   @Autowired
@@ -397,12 +394,10 @@ public class FullNodeHttpApiService implements Service {
 
       //extended erc721
       context.addServlet(new ServletHolder(urc721GetApprovedServlet), "/urc721getapproved");
-      context.addServlet(new ServletHolder(urc721ListContractServlet), "/urc721listcontract");
-      context.addServlet(new ServletHolder(urc721ListTokenServlet), "/urc721listtoken");
-      context.addServlet(new ServletHolder(urc721ListTokenApproveServlet), "/urc721listtokenapprove");
-      context.addServlet(new ServletHolder(urc721ListTokenApproveAllServlet), "/urc721listtokenapproveall");
-      context.addServlet(new ServletHolder(urc721GetContractServlet), "/urc721getcontract");
-      context.addServlet(new ServletHolder(urc721GetTokenServlet), "/urc721gettoken");
+      context.addServlet(new ServletHolder(urc721ContractListServlet), "/urc721listcontract");
+      context.addServlet(new ServletHolder(urc721TokenListServlet), "/urc721listtoken");
+      context.addServlet(new ServletHolder(urc721ContractGetServlet), "/urc721getcontract");
+      context.addServlet(new ServletHolder(urc721TokenGetServlet), "/urc721gettoken");
 
       /**
        * POSBridge

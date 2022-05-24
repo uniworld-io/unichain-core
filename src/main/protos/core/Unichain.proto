@@ -455,7 +455,7 @@ message Transaction {
       TransferTokenOwnerContract = 61;
       ExchangeTokenContract = 62;
 
-      //nft
+      //urc721
       Urc721CreateContract = 63;
       Urc721MintContract = 64;
       Urc721RemoveMinterContract = 65;
@@ -944,7 +944,7 @@ message Urc721ContractQuery{
   bytes owner_address = 1;
   int32 page_size = 2;
   int32 page_index = 3;
-  string owner_type = 4;
+  string owner_type = 4; //owner|minter
 }
 
 message Urc721ContractPage{
@@ -952,7 +952,7 @@ message Urc721ContractPage{
   int32 page_size = 2;
   int32 page_index = 3;
   int64 total = 4;
-  repeated Urc721Contract templates = 5;
+  repeated Urc721Contract contracts = 5;
 }
 
 message Urc721TokenQuery{
@@ -960,13 +960,15 @@ message Urc721TokenQuery{
   bytes address = 2;
   int32 page_size = 3;
   int32 page_index = 4;
+  string owner_type = 5; //owner|approved|approved_all
 }
 
 message Urc721TokenPage{
-  int32 page_size = 1;
-  int32 page_index = 2;
-  int64 total = 3;
-  repeated Urc721Token tokens = 4;
+  bytes owner_address = 1;
+  int32 page_size = 2;
+  int32 page_index = 3;
+  int64 total = 4;
+  repeated Urc721Token tokens = 5;
 }
 
 message Urc721BalanceOf{
@@ -980,37 +982,6 @@ message Urc721IsApprovedForAll{
   bytes operator = 2;
   bytes address = 3;
   bool is_approved = 4;
-}
-
-message Urc721TokenApproveAllQuery{
-  bytes owner_address = 1;
-  bytes address = 2;
-  int32 page_index = 3;
-  int32 page_size = 4;
-}
-
-message Urc721TokenApproveAllResult{
-  bytes owner_address = 1;
-  repeated Urc721AccountTokenRelation approve_list = 2;
-  bytes approval_for_all = 3;
-  repeated Urc721Token tokens = 4;
-  int32 page_size = 5;
-  int32 page_index = 6;
-  int32 total = 7;
-}
-
-message Urc721TokenApproveQuery{
-  bytes owner_address = 1;
-  int32 page_size = 2;
-  int32 page_index = 3;
-}
-
-message Urc721TokenApproveQueryResult{
-  bytes owner_address = 1;
-  int32 page_size = 2;
-  int32 page_index = 3;
-  int64 total = 4;
-  repeated Urc721Token tokens= 5;
 }
 
 message Urc721TokenApproveRelation{

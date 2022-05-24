@@ -30,13 +30,13 @@ public class HttpApiOnSolidityService implements Service {
   private Urc30GetTokenPoolOnSolidityServlet tokenPoolOnSolidityServlet;
 
   @Autowired
-  private Urc721ListContractOnSolidityServlet urc721ListContractOnSolidityServlet;
+  private Urc721ContractOnSolidityListServlet urc721ListContractOnSolidityServlet;
   @Autowired
-  private Urc721GetOnSolidityContractServlet urc721GetContractOnSolidityServlet;
+  private Urc721OnSolidityContractGetServlet urc721GetContractOnSolidityServlet;
   @Autowired
-  private Urc721ListTokenOnSolidityServlet urc721ListTokenOnSolidityServlet;
+  private Urc721TokenOnSolidityListServlet urc721ListTokenOnSolidityServlet;
   @Autowired
-  private Urc721GetTokenOnSolidityServlet urc721GetTokenOnSolidityServlet;
+  private Urc721TokenOnSolidityGetServlet urc721GetTokenOnSolidityServlet;
   @Autowired
   private Urc721BalanceOfOnSolidityServlet urc721BalanceOfOnSolidityServlet;
   @Autowired

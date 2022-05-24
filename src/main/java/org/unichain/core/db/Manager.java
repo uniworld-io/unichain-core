@@ -2275,7 +2275,7 @@ public class Manager {
     }
   }
 
-  public void addApproveToken(byte[] tokenId, byte[] toAddress){
+  public void addApproveToken(byte[] tokenKey, byte[] toAddress){
     var approveStore = getUrc721TokenApproveRelationStore();
     var relationStore = getUrc721AccountTokenRelationStore();
 
@@ -2284,7 +2284,7 @@ public class Manager {
               .clearNext()
               .clearPrev()
               .setOwnerAddress(ByteString.copyFrom(toAddress))
-              .setTokenId(ByteString.copyFrom(tokenId))
+              .setTokenId(ByteString.copyFrom(tokenKey))
               .build());
       approveStore.put(approve.getKey(), approve);
 
@@ -2309,7 +2309,7 @@ public class Manager {
                 .clearNext()
                 .clearPrev()
                 .setOwnerAddress(ByteString.copyFrom(toAddress))
-                .setTokenId(ByteString.copyFrom(tokenId))
+                .setTokenId(ByteString.copyFrom(tokenKey))
                 .build());
         approveStore.put(approve.getKey(), approve);
 
@@ -2322,18 +2322,18 @@ public class Manager {
         var tailApproveCap = approveStore.get(tailKey);
 
         relation.setTotalApprove(Math.incrementExact(relation.getTotalApprove()));
-        relation.setTailApprove(ByteString.copyFrom(tokenId));
+        relation.setTailApprove(ByteString.copyFrom(tokenKey));
         relationStore.put(toAddress, relation);
 
         var approve = new Urc721TokenApproveRelationCapsule(Protocol.Urc721TokenApproveRelation.newBuilder()
                 .clearNext()
                 .setPrev(ByteString.copyFrom(tailKey))
                 .setOwnerAddress(ByteString.copyFrom(toAddress))
-                .setTokenId(ByteString.copyFrom(tokenId))
+                .setTokenId(ByteString.copyFrom(tokenKey))
                 .build());
         approveStore.put(approve.getKey(), approve);
 
-        tailApproveCap.setNext(tokenId);
+        tailApproveCap.setNext(tokenKey);
         approveStore.put(tailKey, tailApproveCap);
       }
     }

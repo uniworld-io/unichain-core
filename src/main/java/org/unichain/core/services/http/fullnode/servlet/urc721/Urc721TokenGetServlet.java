@@ -14,40 +14,32 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-//@todo urc721 review: confuse naming ?
 @Component
 @Slf4j(topic = "API")
-public class Urc721ListTokenServlet extends HttpServlet {
-
+public class Urc721TokenGetServlet extends HttpServlet {
   @Autowired
   private Urc721Service urc721Service;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       boolean visible = Util.getVisible(request);
-      String address = request.getParameter("owner_address");
-      String contract = request.getParameter("contract");
-      long pageSize = Long.parseLong(request.getParameter("page_size"));
-      long pageIndex = Long.parseLong(request.getParameter("page_index"));
-      Protocol.Urc721TokenQuery.Builder build = Protocol.Urc721TokenQuery.newBuilder();
+      String address = request.getParameter("address");
+      Integer tokenId = Integer.valueOf(request.getParameter("id"));
+      Protocol.Urc721Token.Builder build = Protocol.Urc721Token.newBuilder();
       JSONObject jsonObject = new JSONObject();
-      jsonObject.put("owner_address", address);
-      jsonObject.put("contract", contract);
-      jsonObject.put("page_size", pageSize);
-      jsonObject.put("page_index", pageIndex);
+      jsonObject.put("address", address);
+      jsonObject.put("id", tokenId);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
-
-      Protocol.Urc721TokenPage reply = urc721Service.listToken(build.build());
-
+      Protocol.Urc721Token reply = urc721Service.getToken(build.build());
       if (reply != null) {
-        response.getWriter().println(JsonFormat.printToString(reply, true));
+        response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {
-        response.getWriter().println("[]");
+        response.getWriter().println("{}");
       }
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      logger.debug("Exception: {}", e.getMessage());
       try {
-        response.getWriter().println(Util.messageErrorHttp(e));
+        response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());
       }

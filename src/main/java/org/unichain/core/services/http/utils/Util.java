@@ -1055,13 +1055,6 @@ public class Util {
   public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.PAGE_SIZE_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor NFT_TEMPLATE_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.PAGE_INDEX_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721TokenApproveQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveQuery.PAGE_SIZE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721TokenApproveQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveQuery.PAGE_INDEX_FIELD_NUMBER);
-
-
-  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721TokenApproveAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveAllQuery.PAGE_SIZE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor NFT_TOKEN_APPROVE_ALL_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721TokenApproveAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveAllQuery.PAGE_INDEX_FIELD_NUMBER);
-
   public static Descriptors.FieldDescriptor POSBRIDGE_NEW_OWNER = PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.NEW_OWNER_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor POSBRIDGE_MIN_VALIDATOR = PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.MIN_VALIDATOR_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor POSBRIDGE_VALIDATORS= PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.VALIDATORS_FIELD_NUMBER);

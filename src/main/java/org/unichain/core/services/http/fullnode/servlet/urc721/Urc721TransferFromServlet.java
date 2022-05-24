@@ -31,9 +31,7 @@ public class Urc721TransferFromServlet extends HttpServlet {
       var build = Contract.Urc721TransferFromContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
-
       var tx = urc721Service.transfer(tokenCtx);
-
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

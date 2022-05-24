@@ -167,5 +167,4 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
     return relation.getApproveHead().toByteArray();
   }
 
-
 }

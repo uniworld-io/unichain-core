@@ -51,14 +51,14 @@ public class Urc721ApproveActuator extends AbstractActuator {
       var accountStore = dbManager.getAccountStore();
       var nftTokenStore = dbManager.getUrc721TokenStore();
       var contractAddr = ctx.getAddress().toByteArray();
-      var tokenId = ArrayUtils.addAll(contractAddr, ByteArray.fromLong(ctx.getTokenId()));
-      var nftToken = nftTokenStore.get(tokenId);
+      var tokenKey = ArrayUtils.addAll(contractAddr, ByteArray.fromLong(ctx.getTokenId()));
+      var nftToken = nftTokenStore.get(tokenKey);
 
       if(ctx.getApprove()){
         nftToken.setApproval(ctx.getTo());
-        nftTokenStore.put(tokenId, nftToken);
+        nftTokenStore.put(tokenKey, nftToken);
 
-        dbManager.addApproveToken(tokenId, ctx.getTo().toByteArray());
+        dbManager.addApproveToken(tokenKey, ctx.getTo().toByteArray());
 
         var toAddr = ctx.getTo();
         if(!accountStore.has(toAddr.toByteArray())){
@@ -68,8 +68,8 @@ public class Urc721ApproveActuator extends AbstractActuator {
       }
       else {
         nftToken.clearApproval();
-        nftTokenStore.put(tokenId, nftToken);
-        dbManager.disapproveToken(tokenId, ctx.getTo().toByteArray());
+        nftTokenStore.put(tokenKey, nftToken);
+        dbManager.disapproveToken(tokenKey, ctx.getTo().toByteArray());
       }
 
       chargeFee(owner, fee);

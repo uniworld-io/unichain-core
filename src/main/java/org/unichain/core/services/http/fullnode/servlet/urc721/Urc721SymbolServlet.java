@@ -24,12 +24,11 @@ public class Urc721SymbolServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       boolean visible = Util.getVisible(request);
-      String address = request.getParameter("address");
+      var address = request.getParameter("address");
       var builder = Protocol.AddressMessage.newBuilder();
-      JSONObject jsonObject = new JSONObject();
+      var jsonObject = new JSONObject();
       jsonObject.put("address", address);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
-
       var msg = urc721Service.getSymbol(builder.build());
       if (msg != null) {
         response.getWriter().println(JsonFormat.printToString(msg, visible));

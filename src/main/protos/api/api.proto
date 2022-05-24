@@ -141,25 +141,6 @@ service Wallet {
   /**
     urc721
    */
-  rpc Urc721ListTokenApprove (Urc721TokenApproveQuery) returns (Urc721TokenApproveQueryResult) {
-    option (google.api.http) = {
-      post: "/wallet/urc721listtokenapprove"
-      body: "*"
-      additional_bindings {
-        get: "/wallet/urc721listtokenapprove"
-      }
-    };
-  };
-
-  rpc Urc721ListTokenApproveAll (Urc721TokenApproveAllQuery) returns (Urc721TokenApproveAllResult) {
-    option (google.api.http) = {
-      post: "/wallet/urc721listtokenapproveall"
-      body: "*"
-      additional_bindings {
-        get: "/wallet/urc721listtokenapproveall"
-      }
-    };
-  };
 
   rpc Urc721ListContract (Urc721ContractQuery) returns (Urc721ContractPage) {
     option (google.api.http) = {
@@ -1463,25 +1444,7 @@ service WalletSolidity {
   /**
      urc721
     */
-  rpc Urc721ListTokenApprove (Urc721TokenApproveQuery) returns (Urc721TokenApproveQueryResult) {
-    option (google.api.http) = {
-      post: "/walletsolidity/urc721listtokenapprove"
-      body: "*"
-      additional_bindings {
-        get: "/walletsolidity/urc721listtokenapprove"
-      }
-    };
-  };
 
-  rpc Urc721ListTokenApproveAll (Urc721TokenApproveAllQuery) returns (Urc721TokenApproveAllResult) {
-    option (google.api.http) = {
-      post: "/walletsolidity/urc721listtokenapproveall"
-      body: "*"
-      additional_bindings {
-        get: "/walletsolidity/urc721listtokenapproveall"
-      }
-    };
-  };
 
   rpc Urc721ListContract (Urc721ContractQuery) returns (Urc721ContractPage) {
     option (google.api.http) = {

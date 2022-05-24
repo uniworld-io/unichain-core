@@ -293,20 +293,6 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc721ListTokenApprove(Urc721TokenApproveQuery request, io.grpc.stub.StreamObserver<Urc721TokenApproveQueryResult> responseObserver) {
-      Urc721TokenApproveQueryResult reply = urc721Service.getListApproval(request);
-      responseObserver.onNext(reply);
-      responseObserver.onCompleted();
-    }
-
-    @Override
-    public void urc721ListTokenApproveAll(Urc721TokenApproveAllQuery request, io.grpc.stub.StreamObserver<Urc721TokenApproveAllResult> responseObserver) {
-      Urc721TokenApproveAllResult reply = urc721Service.getApprovalForAll(request);
-      responseObserver.onNext(reply);
-      responseObserver.onCompleted();
-    }
-
-    @Override
     public void urc721ListContract(Urc721ContractQuery request, io.grpc.stub.StreamObserver<Urc721ContractPage> responseObserver) {
       Urc721ContractPage reply = urc721Service.listContract(request);
       responseObserver.onNext(reply);
@@ -854,20 +840,6 @@ public class RpcApiService implements Service {
     @Override
     public void getTokenPool(TokenPoolQuery request, io.grpc.stub.StreamObserver<TokenPage> responseObserver) {
       TokenPage reply = wallet.getTokenPool(request);
-      responseObserver.onNext(reply);
-      responseObserver.onCompleted();
-    }
-
-    @Override
-    public void urc721ListTokenApprove(Urc721TokenApproveQuery request, io.grpc.stub.StreamObserver<Urc721TokenApproveQueryResult> responseObserver) {
-      Urc721TokenApproveQueryResult reply = urc721Service.getListApproval(request);
-      responseObserver.onNext(reply);
-      responseObserver.onCompleted();
-    }
-
-    @Override
-    public void urc721ListTokenApproveAll(Urc721TokenApproveAllQuery request, io.grpc.stub.StreamObserver<Urc721TokenApproveAllResult> responseObserver) {
-      Urc721TokenApproveAllResult reply = urc721Service.getApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

@@ -21,24 +21,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol;
 
-import static org.unichain.core.services.http.utils.Util.NFT_TOKEN_APPROVE_RELATION_FIELD_NEXT;
-import static org.unichain.core.services.http.utils.Util.NFT_TOKEN_APPROVE_RELATION_FIELD_PREV;
+import static org.unichain.core.services.http.utils.Util.URC721_TOKEN_APPROVE_RELATION_FIELD_NEXT;
+import static org.unichain.core.services.http.utils.Util.URC721_TOKEN_APPROVE_RELATION_FIELD_PREV;
 
 @Slf4j(topic = "capsule")
-public class Urc721TokenApproveRelationCapsule implements ProtoCapsule<Protocol.NftTokenApproveRelation> {
-  private Protocol.NftTokenApproveRelation token;
+public class Urc721TokenApproveRelationCapsule implements ProtoCapsule<Protocol.Urc721TokenApproveRelation> {
+  private Protocol.Urc721TokenApproveRelation token;
   private byte[] key;
 
   public Urc721TokenApproveRelationCapsule(byte[] data) {
     try {
-      this.token = Protocol.NftTokenApproveRelation.parseFrom(data);
+      this.token = Protocol.Urc721TokenApproveRelation.parseFrom(data);
       this.key = this.token.getTokenId().toByteArray();
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
   }
 
-  public Urc721TokenApproveRelationCapsule(Protocol.NftTokenApproveRelation token) {
+  public Urc721TokenApproveRelationCapsule(Protocol.Urc721TokenApproveRelation token) {
     this.token = token;
     this.key = this.token.getTokenId().toByteArray();
   }
@@ -48,7 +48,7 @@ public class Urc721TokenApproveRelationCapsule implements ProtoCapsule<Protocol.
   }
 
   @Override
-  public Protocol.NftTokenApproveRelation getInstance() {
+  public Protocol.Urc721TokenApproveRelation getInstance() {
     return this.token;
   }
 
@@ -94,11 +94,11 @@ public class Urc721TokenApproveRelationCapsule implements ProtoCapsule<Protocol.
   }
 
   public boolean hasPrev(){
-    return token.hasField(NFT_TOKEN_APPROVE_RELATION_FIELD_PREV);
+    return token.hasField(URC721_TOKEN_APPROVE_RELATION_FIELD_PREV);
   }
 
   public boolean hasNext(){
-    return token.hasField(NFT_TOKEN_APPROVE_RELATION_FIELD_NEXT);
+    return token.hasField(URC721_TOKEN_APPROVE_RELATION_FIELD_NEXT);
   }
 
 }

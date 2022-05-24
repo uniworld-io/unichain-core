@@ -2,11 +2,12 @@ package org.unichain.core.services.http.fullnode.servlet.urc721;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.NftService;
+import org.unichain.core.services.internal.Urc721Service;
 import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
@@ -19,19 +20,17 @@ import java.io.IOException;
 public class Urc721BalanceOfServlet extends HttpServlet {
 
   @Autowired
-  private NftService nftService;
+  private Urc721Service urc721Service;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
-      boolean visible = Util.getVisible(request);
-      String address = request.getParameter("owner_address");
-      Protocol.NftBalanceOf.Builder build = Protocol.NftBalanceOf.newBuilder();
-      JSONObject jsonObject = new JSONObject();
+      var visible = Util.getVisible(request);
+      var address = request.getParameter("owner_address");
+      var builder = Protocol.Urc721BalanceOf.newBuilder();
+      var jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
-      JsonFormat.merge(jsonObject.toJSONString(), build, visible);
-
-      Protocol.NftBalanceOf reply = nftService.balanceOf(build.build());
-
+      JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
+      var reply = urc721Service.balanceOf(builder.build());
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {

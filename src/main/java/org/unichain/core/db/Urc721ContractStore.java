@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.unichain.core.capsule.urc721.Urc721TemplateCapsule;
+import org.unichain.core.capsule.urc721.Urc721ContractCapsule;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -13,26 +13,26 @@ import java.util.stream.Collectors;
 
 @Slf4j(topic = "DB")
 @Component
-public class NftTemplateStore extends UnichainStoreWithRevoking<Urc721TemplateCapsule> {
+public class Urc721ContractStore extends UnichainStoreWithRevoking<Urc721ContractCapsule> {
 
   @Autowired
-  protected NftTemplateStore(@Value("nft-template") String dbName) {
+  protected Urc721ContractStore(@Value("urc721-contract") String dbName) {
     super(dbName);
   }
 
   @Override
-  public Urc721TemplateCapsule get(byte[] key) {
+  public Urc721ContractCapsule get(byte[] key) {
     return super.getUnchecked(key);
   }
 
-  public List<Urc721TemplateCapsule> getAll() {
+  public List<Urc721ContractCapsule> getAll() {
     return Streams.stream(iterator())
         .map(Entry::getValue)
         .collect(Collectors.toList());
   }
 
   public void clearMinterOf(byte[] key) {
-    Urc721TemplateCapsule capsule = get(key);
+    Urc721ContractCapsule capsule = get(key);
     capsule.clearMinter();
     put(key, capsule);
   }

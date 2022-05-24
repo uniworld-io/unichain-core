@@ -48,7 +48,7 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
-      var relationStore = dbManager.getNftAccountTokenStore();
+      var relationStore = dbManager.getUrc721AccountTokenRelationStore();
       if(ctx.getApprove())
         relationStore.approveForAll(ownerAddr, toAddr);
       else
@@ -79,7 +79,7 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
       var fee = calcFee();
       val ctx = this.contract.unpack(Urc721SetApprovalForAllContract.class);
       var accountStore = dbManager.getAccountStore();
-      var relationStore = dbManager.getNftAccountTokenStore();
+      var relationStore = dbManager.getUrc721AccountTokenRelationStore();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
 

@@ -52,9 +52,8 @@ public class PosBridgeUtil {
     @Getter
     public enum AssetType{
         NATIVE(1, "NATIVE"),
-        TOKEN(2, "ERC20"),
-        NFT(3, "ERC721");
-
+        ERC20(2, "ERC20"),
+        ERC721(3, "ERC721");
 
         private final int number;
         private final String type;
@@ -68,9 +67,9 @@ public class PosBridgeUtil {
                 case 1:
                     return NATIVE;
                 case 2:
-                    return TOKEN;
+                    return ERC20;
                 case 3:
-                    return NFT;
+                    return ERC721;
                 default:
                     throw new IllegalAccessException("Not mapped asset type");
             }
@@ -83,10 +82,10 @@ public class PosBridgeUtil {
             case NATIVE: {
                 return new PredicateNativeService(dbManager, ret, config);
             }
-            case TOKEN: {
+            case ERC20: {
                 return new PredicateErc20Service(dbManager, ret, config);
             }
-            case NFT: {
+            case ERC721: {
                 return new PredicateErc721Service(dbManager, ret, config);
             }
             default:
@@ -98,10 +97,10 @@ public class PosBridgeUtil {
         AssetType assetType = AssetType.valueOfNumber(numberType);
         switch (assetType){
             case NATIVE:
-            case TOKEN: {
+            case ERC20: {
                 return new ChildTokenErc20Service(dbManager, ret);
             }
-            case NFT: {
+            case ERC721: {
                 return new ChildTokenErc721Service(dbManager, ret);
             }
             default:

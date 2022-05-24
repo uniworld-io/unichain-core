@@ -465,7 +465,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           owner = contractParameter.unpack(WithdrawFutureTokenContract.class).getOwnerAddress();
           break;
 
-          //NFT
+          //Urc721
         case Urc721CreateContract:
           owner = contractParameter.unpack(Urc721CreateContract.class).getOwnerAddress();
           break;

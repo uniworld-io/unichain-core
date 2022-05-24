@@ -47,9 +47,8 @@ public class Urc721BurnActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(Urc721BurnContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var tokenId = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
-
-      dbManager.removeNftToken(tokenId);
+      var tokenKey = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
+      dbManager.removeUrc721Token(tokenKey);
 
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
@@ -71,20 +70,20 @@ public class Urc721BurnActuator extends AbstractActuator {
       var fee = calcFee();
       val ctx = this.contract.unpack(Urc721BurnContract.class);
       var accountStore = dbManager.getAccountStore();
-      var tokenStore = dbManager.getNftTokenStore();
-      var relationStore = dbManager.getNftAccountTokenStore();
+      var tokenStore = dbManager.getUrc721TokenStore();
+      var relationStore = dbManager.getUrc721AccountTokenRelationStore();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var tokenId = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
+      var tokenKey = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner address not exist");
-      Assert.isTrue(tokenStore.has(tokenId), "NFT token not exist");
-      var nft = tokenStore.get(tokenId);
-      var nftOwner = nft.getOwner();
-      var relation = relationStore.get(nftOwner);
+      Assert.isTrue(tokenStore.has(tokenKey), "Token not exist");
+      var token = tokenStore.get(tokenKey);
+      var tokenOwner = token.getOwner();
+      var relation = relationStore.get(tokenOwner);
 
-      Assert.isTrue(Arrays.equals(ownerAddr, nftOwner)
+      Assert.isTrue(Arrays.equals(ownerAddr, tokenOwner)
               || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
-              || (nft.hasApproval() && Arrays.equals(ownerAddr, nft.getApproval())), "Not allowed to burn NFT token");
+              || (token.hasApproval() && Arrays.equals(ownerAddr, token.getApproval())), "Not allowed to burn token");
 
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
       return true;

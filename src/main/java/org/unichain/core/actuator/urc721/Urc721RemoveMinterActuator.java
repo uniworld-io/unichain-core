@@ -46,9 +46,9 @@ public class Urc721RemoveMinterActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc721RemoveMinterContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var contractKey = ctx.getAddress().toByteArray();
-      var templateCap = dbManager.getNftTemplateStore().get(contractKey);
+      var contractCap = dbManager.getUrc721ContractStore().get(contractKey);
 
-      dbManager.removeMinterContract(templateCap.getMinter(), contractKey);
+      dbManager.removeMinterContract(contractCap.getMinter(), contractKey);
 
       chargeFee(ownerAddress, fee);
       dbManager.burnFee(fee);
@@ -75,10 +75,10 @@ public class Urc721RemoveMinterActuator extends AbstractActuator {
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
 
-      var templateCap = dbManager.getNftTemplateStore().get(contractKey);
-      Assert.notNull(templateCap, "Contract not found");
-      Assert.isTrue(Arrays.equals(ownerAddr, templateCap.getOwner()), "Not owner of NFT template");
-      Assert.isTrue(templateCap.hasMinter(), "Minter not set");
+      var contractCap = dbManager.getUrc721ContractStore().get(contractKey);
+      Assert.notNull(contractCap, "Contract not found");
+      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwner()), "Not owner of contract");
+      Assert.isTrue(contractCap.hasMinter(), "Minter not set");
       long fee = calcFee();
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
       return true;

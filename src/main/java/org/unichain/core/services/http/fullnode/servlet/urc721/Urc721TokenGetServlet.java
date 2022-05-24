@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.NftService;
+import org.unichain.core.services.internal.Urc721Service;
 import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
@@ -14,29 +14,23 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-//@fixme remove and use getApproved
 @Component
 @Slf4j(topic = "API")
-public class Urc721GetApprovalServlet extends HttpServlet {
-
+public class Urc721TokenGetServlet extends HttpServlet {
   @Autowired
-  private NftService nftService;
+  private Urc721Service urc721Service;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       boolean visible = Util.getVisible(request);
-      String address = request.getParameter("owner_address");
-      String operator = request.getParameter("operator");
-      boolean isApproved = Boolean.parseBoolean(request.getParameter("is_approved"));
-      Protocol.IsApprovedForAll.Builder build = Protocol.IsApprovedForAll.newBuilder();
+      String address = request.getParameter("address");
+      Integer tokenId = Integer.valueOf(request.getParameter("id"));
+      Protocol.Urc721Token.Builder build = Protocol.Urc721Token.newBuilder();
       JSONObject jsonObject = new JSONObject();
-      jsonObject.put("owner_address", address);
-      jsonObject.put("operator", operator);
-      jsonObject.put("is_approved", isApproved);
+      jsonObject.put("address", address);
+      jsonObject.put("id", tokenId);
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
-
-      Protocol.IsApprovedForAll reply = nftService.isApprovalForAll(build.build());
-
+      Protocol.Urc721Token reply = urc721Service.getToken(build.build());
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {
@@ -45,8 +39,7 @@ public class Urc721GetApprovalServlet extends HttpServlet {
     } catch (Exception e) {
       logger.debug("Exception: {}", e.getMessage());
       try {
-        response.setStatus(400);
-        response.getWriter().println(Util.messageErrorHttp(e));
+        response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());
       }

@@ -24,12 +24,12 @@ import lombok.var;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.unichain.common.event.NativeContractEvent;
-import org.unichain.common.event.NftCreateEvent;
+import org.unichain.common.event.Urc721ContractCreatedEvent;
 import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.*;
-import org.unichain.core.capsule.urc721.Urc721TemplateCapsule;
+import org.unichain.core.capsule.urc721.Urc721ContractCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -40,7 +40,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
-import static org.unichain.core.services.http.utils.Util.NFT_CREATE_TEMPLATE_FIELD_MINTER;
+import static org.unichain.core.services.http.utils.Util.URC721_CREATE_CONTRACT_FIELD_MINTER;
 
 @Slf4j(topic = "actuator")
 public class Urc721CreateContractActuator extends AbstractActuator {
@@ -57,9 +57,9 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       var owner = ctx.getOwnerAddress().toByteArray();
       var tokenAddr = ctx.getAddress().toByteArray();
 
-      dbManager.saveNftTemplate(new Urc721TemplateCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
+      dbManager.saveUrc721Contract(new Urc721ContractCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
 
-      //register new account with type assetissue
+      //register new account with type asset_issue
       var defaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
       var tokenAccount = new AccountCapsule(ByteString.copyFrom(tokenAddr), Protocol.AccountType.AssetIssue, dbManager.getHeadBlockTimeStamp(), defaultPermission, dbManager);
       dbManager.getAccountStore().put(tokenAddr, tokenAccount);
@@ -70,9 +70,9 @@ public class Urc721CreateContractActuator extends AbstractActuator {
 
       //emit event
       var event = NativeContractEvent.builder()
-              .topic("NftCreate")
+              .topic("Urc721ContractCreate")
               .rawData(
-                      NftCreateEvent.builder()
+                      Urc721ContractCreatedEvent.builder()
                               .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
                               .address(Hex.encodeHexString(ctx.getAddress().toByteArray()))
                               .symbol(ctx.getSymbol())
@@ -110,12 +110,12 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       Assert.isTrue(TransactionUtil.validCharSpecial(symbol), "Invalid contract symbol");
       Assert.isTrue(TransactionUtil.validCharSpecial(name), "Invalid contract name");
 
-      Assert.isTrue(!dbManager.getNftTemplateStore().has(addr), "Contract address has existed");
+      Assert.isTrue(!dbManager.getUrc721ContractStore().has(addr), "Contract address has existed");
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
       Assert.isTrue(!TransactionUtil.isGenesisAddress(ownerAddr), "Owner is genesis address");
 
-      if (ctx.hasField(NFT_CREATE_TEMPLATE_FIELD_MINTER)){
+      if (ctx.hasField(URC721_CREATE_CONTRACT_FIELD_MINTER)){
         var minterAddr = ctx.getMinter().toByteArray();
         Assert.notNull(accountStore.get(minterAddr), "Minter account[" + StringUtil.createReadableString(minterAddr) + "] not exists or not active");
         Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");

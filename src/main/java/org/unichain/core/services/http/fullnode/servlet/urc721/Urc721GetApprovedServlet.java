@@ -2,11 +2,12 @@ package org.unichain.core.services.http.fullnode.servlet.urc721;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.NftService;
+import org.unichain.core.services.internal.Urc721Service;
 import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
@@ -14,28 +15,25 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-//@todo urc721
 @Component
 @Slf4j(topic = "API")
 public class Urc721GetApprovedServlet extends HttpServlet {
 
   @Autowired
-  private NftService nftService;
+  private Urc721Service urc721Service;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
-      boolean visible = Util.getVisible(request);
-      String address = request.getParameter("owner_address");
-      String operator = request.getParameter("operator");
-      boolean isApproved = Boolean.parseBoolean(request.getParameter("is_approved"));
-      Protocol.IsApprovedForAll.Builder build = Protocol.IsApprovedForAll.newBuilder();
-      JSONObject jsonObject = new JSONObject();
-      jsonObject.put("owner_address", address);
-      jsonObject.put("operator", operator);
-      jsonObject.put("is_approved", isApproved);
-      JsonFormat.merge(jsonObject.toJSONString(), build, visible);
+      var visible = Util.getVisible(request);
+      var contractAddr = request.getParameter("address");
+      var tokenId = request.getParameter("id");
+      var builder = Protocol.Urc721Token.newBuilder();
+      var jsonObject = new JSONObject();
+      jsonObject.put("address", contractAddr);
+      jsonObject.put("id", tokenId);
+      JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
 
-      Protocol.IsApprovedForAll reply = nftService.isApprovalForAll(build.build());
+      var reply = urc721Service.getApproved(builder.build());
 
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));

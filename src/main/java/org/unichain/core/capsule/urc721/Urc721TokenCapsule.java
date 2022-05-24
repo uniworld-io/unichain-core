@@ -26,20 +26,20 @@ import org.unichain.protos.Protocol;
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
-public class Urc721TokenCapsule implements ProtoCapsule<Protocol.NftToken> {
-  private Protocol.NftToken token;
+public class Urc721TokenCapsule implements ProtoCapsule<Protocol.Urc721Token> {
+  private Protocol.Urc721Token token;
   private byte[] key;
 
   public Urc721TokenCapsule(byte[] data) {
     try {
-      this.token = Protocol.NftToken.parseFrom(data);
+      this.token = Protocol.Urc721Token.parseFrom(data);
       this.key =  genTokenKey(token.getAddress().toByteArray(), token.getId());
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
   }
 
-  public Urc721TokenCapsule(Protocol.NftToken token) {
+  public Urc721TokenCapsule(Protocol.Urc721Token token) {
     this.token = token;
     this.key = genTokenKey(token.getAddress().toByteArray(), token.getId());
   }
@@ -49,7 +49,7 @@ public class Urc721TokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   }
 
   @Override
-  public Protocol.NftToken getInstance() {
+  public Protocol.Urc721Token getInstance() {
     return this.token;
   }
 
@@ -67,7 +67,7 @@ public class Urc721TokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   }
 
   public boolean hasApproval(){
-    return token.hasField(NFT_TOKEN_FIELD_APPROVAL);
+    return token.hasField(URC721_TOKEN_FIELD_APPROVAL);
   }
 
   public void setApproval(ByteString approval){
@@ -115,11 +115,11 @@ public class Urc721TokenCapsule implements ProtoCapsule<Protocol.NftToken> {
   }
 
   public boolean hasPrev(){
-    return token.hasField(NFT_TOKEN_FIELD_PREV);
+    return token.hasField(URC721_TOKEN_FIELD_PREV);
   }
 
   public boolean hasNext(){
-    return token.hasField(NFT_TOKEN_FIELD_NEXT);
+    return token.hasField(URC721_TOKEN_FIELD_NEXT);
   }
 
   public String getSymbol() {

@@ -9,7 +9,6 @@ import org.unichain.core.services.interfaceOnSolidity.WalletOnSolidity;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-//@todo urc721
 @Component
 @Slf4j(topic = "API")
 public class Urc721TotalSupplyOnSolidityServlet extends Urc721TotalSupplyServlet {

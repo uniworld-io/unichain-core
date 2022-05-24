@@ -20,27 +20,27 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.capsule.ProtoCapsule;
-import org.unichain.protos.Protocol.NftAccountTokenRelation;
+import org.unichain.protos.Protocol.Urc721AccountTokenRelation;
 
 import java.util.Map;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
-public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<NftAccountTokenRelation> {
-  private NftAccountTokenRelation relation;
+public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721AccountTokenRelation> {
+  private Urc721AccountTokenRelation relation;
   private byte[] key;
 
   public Urc721AccountTokenRelationCapsule(byte[] data) {
     try {
-      this.relation = NftAccountTokenRelation.parseFrom(data);
+      this.relation = Urc721AccountTokenRelation.parseFrom(data);
       this.key = this.relation.getOwnerAddress().toByteArray();
     } catch (InvalidProtocolBufferException e) {
       logger.debug(e.getMessage());
     }
   }
 
-  public Urc721AccountTokenRelationCapsule(byte[] key, NftAccountTokenRelation relation) {
+  public Urc721AccountTokenRelationCapsule(byte[] key, Urc721AccountTokenRelation relation) {
     this.relation = relation;
     this.key = key;
   }
@@ -50,7 +50,7 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<NftAccoun
   }
 
   @Override
-  public NftAccountTokenRelation getInstance() {
+  public Urc721AccountTokenRelation getInstance() {
     return this.relation;
   }
 
@@ -120,11 +120,11 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<NftAccoun
   }
 
   public boolean hasTail(){
-    return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_TAIL);
+    return relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_TAIL);
   }
 
   public boolean hasTailApprove(){
-    return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE);
+    return relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE);
   }
 
   public void setTail(ByteString tail){
@@ -132,7 +132,7 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<NftAccoun
   }
 
   public boolean hasApprovalForAll(){
-    return relation.hasField(NFT_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL);
+    return relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL);
   }
 
   public byte[] getApprovedForAll(){
@@ -166,6 +166,5 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<NftAccoun
   public byte[] getHeadApprove(){
     return relation.getApproveHead().toByteArray();
   }
-
 
 }

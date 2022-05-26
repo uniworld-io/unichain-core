@@ -23,33 +23,33 @@ import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
+import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.ContributeTokenPoolFeeContract;
+import org.unichain.protos.Contract.Urc40ContributePoolFeeContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 @Slf4j(topic = "actuator")
-public class Urc40ContributeTokenPoolFeeActuator extends AbstractActuator {
+public class Urc40ContributePoolFeeActuator extends AbstractActuator {
 
-    public Urc40ContributeTokenPoolFeeActuator(Any contract, Manager dbManager) {
-    super(contract, dbManager);
-  }
+    public Urc40ContributePoolFeeActuator(Any contract, Manager dbManager) {
+        super(contract, dbManager);
+    }
 
-  @Override
-  public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
+    @Override
+    public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-        var ctx = contract.unpack(ContributeTokenPoolFeeContract.class);
-        var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
+        var ctx = contract.unpack(Urc40ContributePoolFeeContract.class);
+        var contractAddr = ctx.getAddress().toByteArray();
         var contributeAmount =  ctx.getAmount();
-        var tokenCapsule = dbManager.getTokenPoolStore().get(tokenKey);
-        tokenCapsule.setFeePool(Math.addExact(tokenCapsule.getFeePool(), contributeAmount));
-        dbManager.getTokenPoolStore().put(tokenKey, tokenCapsule);
+        var contractCap = dbManager.getUrc40ContractStore().get(contractAddr);
+        contractCap.setFeePool(Math.addExact(contractCap.getFeePool(), contributeAmount));
+        dbManager.getUrc40ContractStore().put(contractAddr, contractCap);
         var ownerAddress = ctx.getOwnerAddress().toByteArray();
         dbManager.adjustBalance(ownerAddress, -Math.addExact(ctx.getAmount(), fee));
         dbManager.burnFee(fee);
@@ -61,27 +61,28 @@ public class Urc40ContributeTokenPoolFeeActuator extends AbstractActuator {
         throw new ContractExeException(e.getMessage());
     }
     return true;
-  }
+    }
 
-  @Override
-  public boolean validate() throws ContractValidateException {
+    @Override
+    public boolean validate() throws ContractValidateException {
       try {
           Assert.notNull(contract, "No contract!");
           Assert.notNull(dbManager, "No dbManager!");
-          Assert.isTrue(contract.is(ContributeTokenPoolFeeContract.class), "Contract type error,expected type [ContributeTokenPoolFeeContract],real type[" + contract.getClass() + "]");
+          Assert.isTrue(contract.is(Urc40ContributePoolFeeContract.class), "Contract type error,expected type [Urc40ContributePoolFeeContract],real type[" + contract.getClass() + "]");
 
-          val ctx  = this.contract.unpack(ContributeTokenPoolFeeContract.class);
+          val ctx  = this.contract.unpack(Urc40ContributePoolFeeContract.class);
           var ownerAccount = dbManager.getAccountStore().get(ctx.getOwnerAddress().toByteArray());
-          Assert.notNull(ownerAccount, "Invalid ownerAddress: not found");
+          Assert.notNull(ownerAccount, "Not found ownerAddress");
 
-          var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
+          var contractAddr = ctx.getAddress().toByteArray();
+          var contractAddrBase58 = Wallet.encode58Check(contractAddr);
           var contributeAmount = ctx.getAmount();
-          var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
-          tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-          Assert.notNull(tokenPool, "TokenName not exist: " + ctx.getTokenName());
+          var urc40Contract = dbManager.getUrc40ContractStore().get(contractAddr);
+          urc40Contract.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+          Assert.notNull(urc40Contract, "Contract not exist: " + contractAddrBase58);
 
-          Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
-          Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+          Assert.isTrue(dbManager.getHeadBlockTimeStamp() < urc40Contract.getEndTime(), "Contract expired at: " + Utils.formatDateLong(urc40Contract.getEndTime()));
+          Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= urc40Contract.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(urc40Contract.getStartTime()));
           Assert.isTrue(ownerAccount.getBalance() >= Math.addExact(contributeAmount, calcFee()), "Not enough balance");
           return true;
       }
@@ -89,15 +90,15 @@ public class Urc40ContributeTokenPoolFeeActuator extends AbstractActuator {
           logger.error("Actuator validate error: {} --> ", e.getMessage(), e);;
           throw  new ContractValidateException(e.getMessage());
       }
-  }
+    }
 
-  @Override
-  public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(ContributeTokenPoolFeeContract.class).getOwnerAddress();
-  }
+    @Override
+    public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
+    return contract.unpack(Urc40ContributePoolFeeContract.class).getOwnerAddress();
+    }
 
-  @Override
-  public long calcFee() {
+    @Override
+    public long calcFee() {
       return Parameter.ChainConstant.TRANSFER_FEE;
-  }
+    }
 }

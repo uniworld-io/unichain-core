@@ -9,7 +9,6 @@ import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Protocol;
-import org.unichain.protos.Protocol.FutureTokenQuery;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -19,14 +18,9 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class Urc40GetFutureTokenServlet extends HttpServlet {
+public class Urc40FutureGetServlet extends HttpServlet {
   @Autowired
   private Wallet wallet;
-
-  private String convertOutput(Protocol.FutureTokenPack tokenPool) {
-      JSONObject tokenPoolJson = JSONObject.parseObject(JsonFormat.printToString(tokenPool, false));
-      return tokenPoolJson.toJSONString();
-  }
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
       doPost(request, response);
@@ -34,29 +28,29 @@ public class Urc40GetFutureTokenServlet extends HttpServlet {
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String filter = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+      var filter = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(filter);
-      boolean visible = Util.getVisiblePost(filter);
-      FutureTokenQuery.Builder build = FutureTokenQuery.newBuilder();
-      JsonFormat.merge(filter, build, visible);
-      var query = build.build();
-      Protocol.FutureTokenPack reply = wallet.getFutureToken(query);
+      var visible = Util.getVisiblePost(filter);
+      var builder = Protocol.Urc40FutureTokenQuery.newBuilder();
+      JsonFormat.merge(filter, builder, visible);
+      var query = builder.build();
+      var reply = wallet.urc40FutureGet(query);
       if (reply != null) {
-        if (visible) {
-          response.getWriter().println(JsonFormat.printToString(reply, true));
-        } else {
-          response.getWriter().println(convertOutput(reply));
-        }
+        response.getWriter().println(visible ? JsonFormat.printToString(reply, true) : convertOutput(reply));
       } else {
         response.getWriter().println("{}");
       }
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
       try {
+        logger.error("Urc40FutureGet error: {}", e.getMessage(), e);
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());
       }
     }
+  }
+
+  private String convertOutput(Protocol.Urc40FutureTokenPack msg) {
+    return  JSONObject.parseObject(JsonFormat.printToString(msg, false)).toJSONString();
   }
 }

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.ContributeTokenPoolFeeContract;
+import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 
 import javax.servlet.http.HttpServlet;
@@ -19,33 +19,28 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class Urc40ContributeTokenPoolFeeServlet extends HttpServlet {
-
+public class Urc40TransferOwnerServlet extends HttpServlet {
   @Autowired
   private Wallet wallet;
 
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-  }
-
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+      var contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = ContributeTokenPoolFeeContract.newBuilder();
+      var build = Contract.Urc40TransferOwnerContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
-      var contributeCtx = build.build();
-      logger.info("contributeTokenFee --> {} --> {}" , Wallet.encode58Check(contributeCtx.getOwnerAddress().toByteArray()), contributeCtx);
-      var tx = wallet.createTransactionCapsule(contributeCtx, ContractType.ContributeTokenPoolFeeContract).getInstance();
+      var tokenCtx = build.build();
+      var tx = wallet.createTransactionCapsule(tokenCtx, ContractType.Urc40TransferOwnerContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
       try {
+        logger.error("Urc40TransferOwner got error --> ", e);
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
-        logger.debug("IOException: {}", ioe.getMessage());
+        logger.error("IOException: {}", ioe.getMessage());
       }
     }
   }

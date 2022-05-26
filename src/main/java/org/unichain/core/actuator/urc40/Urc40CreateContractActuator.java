@@ -28,24 +28,24 @@ import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.TokenCreateEvent;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
+import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
+import org.unichain.core.capsule.urc40.Urc40ContractCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import static org.unichain.core.config.Parameter.ChainConstant.*;
-import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_END_TIME;
-import static org.unichain.core.services.http.utils.Util.TOKEN_CREATE_FIELD_START_TIME;
+import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "actuator")
-public class Urc40CreateTokenActuator extends AbstractActuator {
+public class Urc40CreateContractActuator extends AbstractActuator {
 
-  public Urc40CreateTokenActuator(Any contract, Manager dbManager) {
+  public Urc40CreateContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -53,38 +53,49 @@ public class Urc40CreateTokenActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(Contract.CreateTokenContract.class);
+      var ctx = contract.unpack(Contract.Urc40CreateContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var tokenCap = new Urc30TokenPoolCapsule(ctx);
+      var contractCap = new Urc40ContractCapsule(ctx);
+      var contractAddr = contractCap.getAddress().toByteArray();
 
-      if(!ctx.hasField(TOKEN_CREATE_FIELD_START_TIME))
+      if(!ctx.hasField(URC40_CREATE_FIELD_START_TIME))
       {
-        tokenCap.setStartTime(dbManager.getHeadBlockTimeStamp());
+        contractCap.setStartTime(dbManager.getHeadBlockTimeStamp());
       }
-      var startTime = tokenCap.getStartTime();
+      var startTime = contractCap.getStartTime();
 
-      if(!ctx.hasField(TOKEN_CREATE_FIELD_END_TIME))
+      if(!ctx.hasField(URC40_CREATE_FIELD_END_TIME))
       {
-        tokenCap.setEndTime(Math.addExact(startTime , URC30_DEFAULT_AGE_V3));
+        contractCap.setEndTime(Math.addExact(startTime , URC30_DEFAULT_AGE_V3));
       }
 
-      tokenCap.setBurnedToken(0L);
-      tokenCap.setTokenName(tokenCap.getTokenName().toUpperCase());
-      tokenCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
-      tokenCap.setOriginFeePool(ctx.getFeePool());
-      dbManager.getTokenPoolStore().put(tokenCap.createDbKey(), tokenCap);
+      if(!ctx.hasField(URC40_CREATE_FIELD_ENABLE_EXCH))
+      {
+        contractCap.setEnableExch(true);
+      }
+
+      contractCap.setBurnedToken(0L);
+      contractCap.setSymbol(contractCap.getSymbol().toUpperCase());
+      contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+      contractCap.setOriginFeePool(ctx.getFeePool());
+      dbManager.getUrc40ContractStore().put(contractAddr, contractCap);
 
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      accountCapsule.addToken(tokenCap.createDbKey(), tokenCap.getTotalSupply());
+      accountCapsule.addUrc40Token(contractCap.createDbKey(), contractCap.getTotalSupply());
       accountCapsule.setBalance(Math.subtractExact(accountCapsule.getBalance(), Math.addExact(ctx.getFeePool(), fee)));
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
 
+      //register new account with type asset_issue
+      var defaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
+      var tokenAccount = new AccountCapsule(ByteString.copyFrom(contractAddr), Protocol.AccountType.AssetIssue, dbManager.getHeadBlockTimeStamp(), defaultPermission, dbManager);
+      dbManager.getAccountStore().put(contractAddr, tokenAccount);
+
       //emit event
       var event = NativeContractEvent.builder()
-              .topic("TokenCreate")
+              .topic("Urc40ContractCreate")
               .rawData(
                       TokenCreateEvent.builder()
                               .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
@@ -107,34 +118,35 @@ public class Urc40CreateTokenActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(Contract.CreateTokenContract.class), "contract type error,expected type [CreateTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Contract.Urc40CreateContract.class), "contract type error,expected type [Urc40CreateContract],real type[" + contract.getClass() + "]");
 
-      val ctx = this.contract.unpack(Contract.CreateTokenContract.class);
+      val ctx = this.contract.unpack(Contract.Urc40CreateContract.class);
+
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
       var accountCap = dbManager.getAccountStore().get(ownerAddress);
       Assert.notNull(accountCap, "Account not exists");
 
-      Assert.isTrue(!ctx.getName().isEmpty() && TransactionUtil.validTokenName(ctx.getName().getBytes()), "Invalid token name");
-      Assert.isTrue(!ctx.getName().equalsIgnoreCase("UNX"), "Token name can't be UNX");
+      var contractAddr = ctx.getAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(contractAddr), "Invalid contractAddress");
+      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
+      Assert.isTrue(!dbManager.getAccountStore().has(contractAddr) && !dbManager.getUrc40ContractStore().has(contractAddr), "Contract address exists: " + contractAddrBase58);
 
-      var tokenKey = Util.stringAsBytesUppercase(ctx.getName());
-      Assert.isTrue(!this.dbManager.getTokenPoolStore().has(tokenKey), "Token exists");
-
-      Assert.isTrue(!StringUtils.isEmpty(ctx.getAbbr().isEmpty()) && TransactionUtil.validTokenName(ctx.getAbbr().getBytes()), "Invalid token abbreviation");
+      Assert.isTrue(!ctx.getSymbol().isEmpty() && TransactionUtil.validTokenName(ctx.getSymbol().getBytes()), "Invalid contract symbol");
+      Assert.isTrue(!ctx.getSymbol().equalsIgnoreCase("UNX"), "Token symbol can't be UNX");
+      Assert.isTrue(!StringUtils.isEmpty(ctx.getName().isEmpty()) && TransactionUtil.validTokenName(ctx.getName().getBytes()), "Invalid token name");
       Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
-      Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
 
-      var startTime = ctx.hasField(TOKEN_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
-      var maxTokenActive = Math.addExact(dbManager.getHeadBlockTimeStamp(), URC30_MAX_ACTIVE);
-      Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= maxTokenActive), "Invalid start time: must be greater than current block time and lower than limit timestamp:" +maxTokenActive);
+      var startTime = ctx.hasField(URC40_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
+      var maxActive = Math.addExact(dbManager.getHeadBlockTimeStamp(), URC30_MAX_ACTIVE);
+      Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= maxActive), "Invalid start time: must be greater than current block time and lower than limit timestamp:" +maxActive);
 
-      var endTime = ctx.hasField(TOKEN_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : Math.addExact(startTime, URC30_DEFAULT_AGE_V3);
-      var maxTokenAge = dbManager.getHeadBlockTimeStamp() + URC30_MAX_AGE_V3;
+      var endTime = ctx.hasField(URC40_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : Math.addExact(startTime, URC30_DEFAULT_AGE_V3);
+      var maxAge = dbManager.getHeadBlockTimeStamp() + URC30_MAX_AGE_V3;
       Assert.isTrue((endTime > 0)
               && (endTime > startTime )
               && (endTime > dbManager.getHeadBlockTimeStamp())
-              && (endTime <= maxTokenAge) , "Invalid end time: must greater start time and lower than token age's limit timestamp:" + maxTokenAge);
+              && (endTime <= maxAge) , "Invalid end time: must greater start time and lower than token age's limit timestamp:" + maxAge);
 
       Assert.isTrue(ctx.getTotalSupply() > 0 , "TotalSupply must greater than 0");
       Assert.isTrue(ctx.getMaxSupply() > 0 , "MaxSupply must greater than 0!");
@@ -146,6 +158,7 @@ public class Urc40CreateTokenActuator extends AbstractActuator {
       Assert.isTrue(ctx.getLot() >= 0, "Invalid lot: must not negative");
       Assert.isTrue(ctx.getExchUnxNum() > 0, "Invalid exchange unw number: must be positive");
       Assert.isTrue(ctx.getExchNum() > 0, "Invalid exchange token number: must be positive");
+      Assert.isTrue(ctx.getDecimals() >= 0 && ctx.getDecimals() <= 100, "Invalid decimals number: must be from 0 to 100");
 
       Assert.isTrue(ctx.getCreateAccFee() > 0 && ctx.getCreateAccFee() <= TOKEN_MAX_CREATE_ACC_FEE, "Invalid create account fee");
       return true;
@@ -158,7 +171,7 @@ public class Urc40CreateTokenActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(Contract.CreateTokenContract.class).getOwnerAddress();
+    return contract.unpack(Contract.Urc40CreateContract.class).getOwnerAddress();
   }
 
   @Override

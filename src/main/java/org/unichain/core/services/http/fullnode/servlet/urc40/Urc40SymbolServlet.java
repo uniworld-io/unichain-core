@@ -17,7 +17,7 @@ import java.io.IOException;
 
 @Component
 @Slf4j(topic = "API")
-public class Urc40GetOwnerServlet extends HttpServlet {
+public class Urc40SymbolServlet extends HttpServlet {
   @Autowired
   private Wallet wallet;
 
@@ -29,7 +29,7 @@ public class Urc40GetOwnerServlet extends HttpServlet {
       var jsonObject = new JSONObject();
       jsonObject.put("address", address);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
-      var msg = wallet.urc40GetOwner(builder.build());
+      var msg = wallet.urc40Symbol(builder.build());
       if (msg != null) {
         response.getWriter().println(JsonFormat.printToString(msg, visible));
       } else {
@@ -37,7 +37,7 @@ public class Urc40GetOwnerServlet extends HttpServlet {
       }
     } catch (Exception e) {
       try {
-        logger.error("Urc40GetOwner error: {}", e.getMessage(), e);
+        logger.error("Urc40Symbol error: {}", e.getMessage(), e);
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());

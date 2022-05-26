@@ -2,13 +2,13 @@ package org.unichain.core.services.http.fullnode.servlet.urc40;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.ExchangeTokenContract;
-import org.unichain.protos.Protocol.Transaction;
+import org.unichain.protos.Contract.Urc40TransferFromContract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 
 import javax.servlet.http.HttpServlet;
@@ -20,26 +20,24 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j(topic = "API")
 public class Urc40TransferFromServlet extends HttpServlet {
-
   @Autowired
   private Wallet wallet;
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+      var contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
-      boolean visible = Util.getVisiblePost(contract);
-      ExchangeTokenContract.Builder build = ExchangeTokenContract.newBuilder();
+      var visible = Util.getVisiblePost(contract);
+      var build = Urc40TransferFromContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
-      Transaction tx = wallet
-          .createTransactionCapsule(build.build(), ContractType.ExchangeTokenContract)
-          .getInstance();
-      JSONObject jsonObject = JSONObject.parseObject(contract);
+      var transferCtx = build.build();
+      var tx = wallet.createTransactionCapsule(transferCtx, ContractType.Urc40TransferFromContract).getInstance();
+      var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
       try {
-        logger.error("Api error: {} --> ", e.getMessage(), e);
+        logger.error("Urc40TransferFrom error: {} --> ", e.getMessage(), e);
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());

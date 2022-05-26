@@ -26,7 +26,6 @@ public interface Urc721Service {
     Protocol.AddressMessage getOwnerOf(Protocol.Urc721Token msg);
     Protocol.AddressMessage getApproved(Protocol.Urc721Token query);
     Protocol.Urc721IsApprovedForAll isApprovalForAll(Protocol.Urc721IsApprovedForAll query);
-
     Protocol.Urc721Contract getContract(Protocol.Urc721Contract query);
     Protocol.Urc721ContractPage listContract(Protocol.Urc721ContractQuery query);
     Protocol.Urc721TokenPage listToken(Protocol.Urc721TokenQuery query);

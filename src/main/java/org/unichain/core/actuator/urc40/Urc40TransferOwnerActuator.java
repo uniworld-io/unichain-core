@@ -14,8 +14,7 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.TransferTokenOwnerContract;
+import org.unichain.protos.Contract.Urc40TransferOwnerContract;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -23,9 +22,9 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @Slf4j(topic = "actuator")
-public class Urc40TransferTokenOwnerActuator extends AbstractActuator {
+public class Urc40TransferOwnerActuator extends AbstractActuator {
 
-  public Urc40TransferTokenOwnerActuator(Any contract, Manager dbManager) {
+  public Urc40TransferOwnerActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -33,13 +32,13 @@ public class Urc40TransferTokenOwnerActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(TransferTokenOwnerContract.class);
+      var ctx = contract.unpack(Urc40TransferOwnerContract.class);
       var accountStore = dbManager.getAccountStore();
-      var tokenStore = dbManager.getTokenPoolStore();
+      var contractStore = dbManager.getUrc40ContractStore();
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var toAddress = ctx.getToAddress().toByteArray();
-      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenPool = tokenStore.get(tokenKey);
+      var contractAddr = ctx.getAddress().toByteArray();
+      var contractCap = contractStore.get(contractAddr);
 
       var toAccount = accountStore.get(toAddress);
       if (Objects.isNull(toAccount)) {
@@ -48,14 +47,14 @@ public class Urc40TransferTokenOwnerActuator extends AbstractActuator {
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
-      tokenPool.setOwnerAddress(ctx.getToAddress());
-      tokenPool.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
-      tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      tokenStore.put(tokenKey, tokenPool);
+      contractCap.setOwnerAddress(ctx.getToAddress());
+      contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+      contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      contractStore.put(contractAddr, contractCap);
 
       var ownerAccount = accountStore.get(ownerAddress);
-      var tokenAvail = ownerAccount.burnAllAvailableToken(tokenKey);
-      toAccount.addToken(tokenKey, tokenAvail);
+      var tokenAvail = ownerAccount.burnUrc40AllAvailableToken(contractAddr);
+      toAccount.addUrc40Token(contractAddr, tokenAvail);
       accountStore.put(toAddress, toAccount);
       accountStore.put(ownerAddress, ownerAccount);
 
@@ -74,10 +73,10 @@ public class Urc40TransferTokenOwnerActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(TransferTokenOwnerContract.class), "Contract type error, expected type [TransferTokenOwnerContract], real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Urc40TransferOwnerContract.class), "Contract type error, expected type [Urc40TransferOwnerContract], real type[" + contract.getClass() + "]");
 
       var fee = calcFee();
-      var ctx = contract.unpack(TransferTokenOwnerContract.class);
+      var ctx = contract.unpack(Urc40TransferOwnerContract.class);
 
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
@@ -88,12 +87,13 @@ public class Urc40TransferTokenOwnerActuator extends AbstractActuator {
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
       Assert.isTrue(!Arrays.equals(ownerAddress, toAddress), "Transfer owner to itself not allowed");
 
-      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
-      Assert.notNull(tokenPool, "Token pool not found: " + ctx.getTokenName());
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
-      Assert.isTrue(Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()), "Mismatched token owner not allowed");
+      var contractAddr = ctx.getAddress().toByteArray();
+      var contractAddrBase58 = Wallet.encode58Check(contractAddr).toLowerCase();
+      var contractCap = dbManager.getUrc40ContractStore().get(contractAddr);
+      Assert.notNull(contractCap, "Contract not found: " + contractAddrBase58);
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
+      Assert.isTrue(Arrays.equals(ownerAddress, contractCap.getOwnerAddress().toByteArray()), "Mismatched Contract owner not allowed");
 
       var toAccount = dbManager.getAccountStore().get(toAddress);
       if (Objects.isNull(toAccount)) {
@@ -118,7 +118,7 @@ public class Urc40TransferTokenOwnerActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(TransferTokenOwnerContract.class).getOwnerAddress();
+    return contract.unpack(Urc40TransferOwnerContract.class).getOwnerAddress();
   }
 
   @Override

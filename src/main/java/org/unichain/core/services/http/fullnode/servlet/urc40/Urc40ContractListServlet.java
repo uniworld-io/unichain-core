@@ -1,14 +1,16 @@
 package org.unichain.core.services.http.fullnode.servlet.urc40;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.unichain.api.GrpcAPI;
+import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
+import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
@@ -19,12 +21,12 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class Urc40AllowanceServlet extends HttpServlet {
+public class Urc40ContractListServlet extends HttpServlet {
   @Autowired
   private Wallet wallet;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-      doPost(request, response);
+    doPost(request, response);
   }
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
@@ -32,19 +34,18 @@ public class Urc40AllowanceServlet extends HttpServlet {
       var tokenFilter = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(tokenFilter);
       var visible = Util.getVisiblePost(tokenFilter);
-      var builder = Protocol.Urc40AllowanceQuery.newBuilder();
+      var builder = Protocol.Urc40ContractQuery.newBuilder();
       JsonFormat.merge(tokenFilter, builder, visible);
       var query = builder.build();
-      logger.info("Urc40Allowance --> {}" , query);
-      var reply = wallet.urc40Allowance(query);
+      var reply = wallet.urc40ContractList(query);
       if (reply != null) {
-        response.getWriter().println(visible ? JsonFormat.printToString(reply, true) :convertOutput(reply));
+        response.getWriter().println(visible ? JsonFormat.printToString(reply, true) : convertOutput(reply));
       } else {
         response.getWriter().println("{}");
       }
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
       try {
+        logger.error(e.getMessage(), e);
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());
@@ -52,7 +53,23 @@ public class Urc40AllowanceServlet extends HttpServlet {
     }
   }
 
-  private String convertOutput(GrpcAPI.NumberMessage msg) {
-    return JSONObject.parseObject(JsonFormat.printToString(msg, false)).toJSONString();
+  private String convertOutput(Contract.Urc40ContractPage page) {
+    var pageJson = new JSONObject();
+    pageJson.put("page_size", page.getPageSize());
+    pageJson.put("page_index", page.getPageIndex());
+    pageJson.put("total", page.getTotal());
+    var contracts = new JSONArray();
+    for(var item : page.getContractsList()){
+      var itemJson = JSONObject.parseObject(JsonFormat.printToString(item, false));
+      var start_time = item.getStartTime();
+      var end_time = item.getEndTime();
+      var lastOpTime = item.getLatestOperationTime();
+      itemJson.put("start_time", Utils.formatDateTimeLong(start_time));
+      itemJson.put("end_time", Utils.formatDateTimeLong(end_time));
+      itemJson.put("latest_operation_time", Utils.formatDateTimeLong(lastOpTime));
+      contracts.add(itemJson);
+    }
+    pageJson.put("contracts", contracts);
+    return pageJson.toJSONString();
   }
 }

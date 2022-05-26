@@ -87,6 +87,7 @@ import static org.unichain.core.services.http.utils.Util.*;
 public class Wallet {
   private static String addressPreFixString = Constant.ADD_PRE_FIX_STRING_MAINNET;
   private static byte addressPreFixByte = Constant.ADD_PRE_FIX_BYTE_MAINNET;
+  //@todo move to constant file
   private static Set<Long> posBridgeSupportedChainIds;
   private final int minEffectiveConnection = Args.getInstance().getMinEffectiveConnection();
 
@@ -101,16 +102,10 @@ public class Wallet {
   @Autowired
   private NodeManager nodeManager;
 
-  /**
-   * Creates a new Wallet with a random ECKey.
-   */
   public Wallet() {
     this.ecKey = new ECKey(Utils.getRandom());
   }
 
-  /**
-   * Creates a Wallet with an existing ECKey.
-   */
   public Wallet(final ECKey ecKey) {
     this.ecKey = ecKey;
     logger.info("wallet address: {}", ByteArray.toHexString(this.ecKey.getAddress()));
@@ -181,7 +176,6 @@ public class Wallet {
       logger.warn("Warning: Address need prefix with " + addressPreFixByte + " but " + address[0] + " !!");
       return false;
     }
-    //Other rule;
     return true;
   }
   
@@ -195,7 +189,6 @@ public class Wallet {
     System.arraycopy(input, 0, inputCheck, 0, input.length);
     System.arraycopy(hash1, 0, inputCheck, input.length, extendInput);
     inputCheck[0] = 68;
-    //System.out.println(Arrays.toString(inputCheck));
     return Base58.encode(inputCheck);
   }
 
@@ -226,9 +219,7 @@ public class Wallet {
     byte[] combined = new byte[txRawDataHash.length + ownerAddress.length];
     System.arraycopy(txRawDataHash, 0, combined, 0, txRawDataHash.length);
     System.arraycopy(ownerAddress, 0, combined, txRawDataHash.length, ownerAddress.length);
-
     return Hash.sha3omit12(combined);
-
   }
 
   public static byte[] generateContractAddress(byte[] ownerAddress, byte[] txRawDataHash) {
@@ -238,13 +229,11 @@ public class Wallet {
     return Hash.sha3omit12(combined);
   }
 
-  // for `CREATE2`
   public static byte[] generateContractAddress2(byte[] address, byte[] salt, byte[] code) {
     byte[] mergedData = ByteUtil.merge(address, salt, Hash.sha3(code));
     return Hash.sha3omit12(mergedData);
   }
 
-  // for `CREATE`
   public static byte[] generateContractAddress(byte[] transactionRootId, long nonce) {
     byte[] nonceBytes = Longs.toByteArray(nonce);
     byte[] combined = new byte[transactionRootId.length + nonceBytes.length];
@@ -295,137 +284,164 @@ public class Wallet {
     return dbManager.getTokenPoolStore().query(query);
   }
 
-  //@fixme urc40
-  public Urc40FutureTokenPack urc40getFutureToken(Urc40FutureTokenQuery query) {
-//    Assert.isTrue(query.hasField(TOKEN_QR_FIELD_NAME), "Missing token name");
-//    Assert.isTrue(query.hasField(TOKEN_QR_FIELD_OWNER_ADDR), "Missing owner address");
-//
-//    if(!query.hasField(TOKEN_QR_FIELD_PAGE_SIZE))
-//    {
-//      query = query.toBuilder()
-//              .setPageSize(DEFAULT_PAGE_SIZE)
-//              .build();
-//    }
-//
-//    if(!query.hasField(TOKEN_QR_FIELD_PAGE_INDEX))
-//    {
-//      query = query.toBuilder()
-//              .setPageIndex(DEFAULT_PAGE_INDEX)
-//              .build();
-//    }
-//
-//    query = query.toBuilder()
-//            .setTokenName(query.getTokenName().toUpperCase())
-//            .build();
-//
-//    Assert.isTrue(query.getPageSize() > 0 &&  query.getPageIndex() >=0 && query.getPageSize() <= MAX_PAGE_SIZE, "invalid paging info");
-//
-//    var acc = dbManager.getAccountStore().get(query.getOwnerAddress().toByteArray());
-//    Assert.notNull(acc, "Owner address not found: " + Wallet.encode58Check(query.getOwnerAddress().toByteArray()));
-//    var summary = acc.getFutureTokenSummary(query.getTokenName());
-//
-//    //no deals
-//    if(Objects.isNull(summary) || (summary.getTotalDeal() <= 0)){
-//      return FutureTokenPack.newBuilder()
-//              .setTokenName(query.getTokenName())
-//              .setOwnerAddress(query.getOwnerAddress())
-//              .setTotalDeal(0)
-//              .setTotalValue(0)
-//              .clearLowerBoundTime()
-//              .clearUpperBoundTime()
-//              .clearDeals()
-//              .build();
-//    }
-//
-//    //validate query
-//    List<FutureTokenV2> deals = new ArrayList<>();
-//
-//    int pageSize = query.getPageSize();
-//    int pageIndex = query.getPageIndex();
-//    long start = (long) pageIndex * pageSize;
-//    long end = start + pageSize;
-//    if(start >= summary.getTotalDeal()){
-//      //empty deals
-//    }
-//    else {
-//      if(end >= summary.getTotalDeal())
-//        end = summary.getTotalDeal();
-//
-//      //load sublist from [start -> end)
-//      var tokenStore = dbManager.getFutureTokenStore();
-//      var tmpTickKeyBs = summary.getLowerTick();
-//      int index = 0;
-//      while (true){
-//        var tmpTick = tokenStore.get(tmpTickKeyBs.toByteArray());
-//        if(index >= start && index < end)
-//        {
-//          deals.add(tmpTick.getInstance());
-//        }
-//        if(index >= end)
-//          break;
-//        tmpTickKeyBs = tmpTick.getNextTick();
-//        index ++;
-//      }
-//    }
-//
-//    return FutureTokenPack.newBuilder()
-//            .setTokenName(query.getTokenName())
-//            .setOwnerAddress(query.getOwnerAddress())
-//            .setTotalDeal(summary.getTotalDeal())
-//            .setTotalValue(summary.getTotalValue())
-//            .setLowerBoundTime(summary.getLowerBoundTime())
-//            .setUpperBoundTime(summary.getUpperBoundTime())
-//            .addAllDeals(deals)
-//            .build();
-    return null;
+  public Urc40FutureTokenPack urc40FutureGet(Urc40FutureTokenQuery query) {
+    Assert.isTrue(query.hasField(URC40_QR_FIELD_OWNER_ADDR), "Missing owner address");
+    Assert.isTrue(query.hasField(URC40_QR_FIELD_ADDR), "Missing contract address");
+    var ownerAddr = query.getOwnerAddress().toByteArray();
+    var addr = query.getAddress().toByteArray();
+    Assert.isTrue(Wallet.addressValid(ownerAddr), "Invalid owner address");
+    Assert.isTrue(Wallet.addressValid(addr), "Invalid contract address");
+    var acc = dbManager.getAccountStore().get(ownerAddr);
+    Assert.notNull(acc, "Owner address not found: " + Wallet.encode58Check(ownerAddr));
+
+    var addrBase58 = Wallet.encode58Check(addr);
+    var contract = dbManager.getUrc40ContractStore().get(addr);
+    Assert.notNull(contract, "Contract not found: " + addrBase58);
+
+    if(!query.hasField(URC40_QR_FIELD_PAGE_SIZE))
+    {
+      query = query.toBuilder()
+              .setPageSize(DEFAULT_PAGE_SIZE)
+              .build();
+    }
+
+    if(!query.hasField(URC40_QR_FIELD_PAGE_INDEX))
+    {
+      query = query.toBuilder()
+              .setPageIndex(DEFAULT_PAGE_INDEX)
+              .build();
+    }
+
+    Assert.isTrue(query.getPageSize() > 0 &&  query.getPageIndex() >=0 && query.getPageSize() <= MAX_PAGE_SIZE, "invalid paging info");
+
+
+    var summary = acc.getUrc40FutureTokenSummary(addrBase58.toLowerCase());
+
+    //no deals
+    if(Objects.isNull(summary) || (summary.getTotalDeal() <= 0)){
+      return Urc40FutureTokenPack.newBuilder()
+              .setOwnerAddress(query.getOwnerAddress())
+              .setAddress(query.getAddress())
+              .setSymbol(contract.getSymbol())
+              .setTotalDeal(0)
+              .setTotalValue(0)
+              .clearLowerBoundTime()
+              .clearUpperBoundTime()
+              .clearDeals()
+              .build();
+    }
+
+    //validate query
+    var deals = new ArrayList<Urc40FutureToken>();
+
+    int pageSize = query.getPageSize();
+    int pageIndex = query.getPageIndex();
+    long start = (long) pageIndex * pageSize;
+    long end = start + pageSize;
+    if(start >= summary.getTotalDeal()){
+      //empty deals
+    }
+    else {
+      if(end >= summary.getTotalDeal())
+        end = summary.getTotalDeal();
+
+      //load sublist from [start -> end)
+      var futureStore = dbManager.getUrc40FutureTransferStore();
+      var tmpTickKeyBs = summary.getLowerTick();
+      int index = 0;
+      while (true){
+        var tmpTick = futureStore.get(tmpTickKeyBs.toByteArray());
+        if(index >= start && index < end)
+        {
+          deals.add(tmpTick.getInstance());
+        }
+        if(index >= end)
+          break;
+        tmpTickKeyBs = tmpTick.getNextTick();
+        index ++;
+      }
+    }
+
+    return Urc40FutureTokenPack.newBuilder()
+            .setOwnerAddress(query.getOwnerAddress())
+            .setAddress(query.getAddress())
+            .setSymbol(contract.getSymbol())
+            .setTotalDeal(summary.getTotalDeal())
+            .setTotalValue(summary.getTotalValue())
+            .setLowerBoundTime(summary.getLowerBoundTime())
+            .setUpperBoundTime(summary.getUpperBoundTime())
+            .addAllDeals(deals)
+            .build();
   }
 
-  //@fixme urc40
-  public Urc40TokenPage urc40GetTokenPool(Urc40TokenPoolQuery query) {
-//    return dbManager.getTokenPoolStore().query(query);
-    return null;
-  }
-
-  //@fixme urc40
-  public StringMessage urc40GetName(BytesMessage query) {
-//    return dbManager.getTokenPoolStore().query(query);
-    return null;
-  }
-
-  //@fixme urc40
-  public StringMessage urc40GetSymbol(BytesMessage query) {
-//    return dbManager.getTokenPoolStore().query(query);
-    return null;
-  }
-
-  //@fixme urc40
-  public NumberMessage urc40Decimals(BytesMessage query) {
-//    return dbManager.getTokenPoolStore().query(query);
-    return null;
-  }
-
-  //@fixme urc40
-  public NumberMessage urc40TotalSupply(BytesMessage query) {
-//    return dbManager.getTokenPoolStore().query(query);
-    return null;
-  }
-
-  //@fixme urc40
-  public NumberMessage urc40BalanceOf(Urc40BalanceOfQuery query) {
-//    return dbManager.getTokenPoolStore().query(query);
-    return null;
-  }
-
-  //@fixme urc40
-  public BytesMessage urc40GetOwner(BytesMessage query) {
-//    return dbManager.getTokenPoolStore().query(query);
-    return null;
-  }
 
   //@fixme urc40
   public NumberMessage urc40Allowance(Urc40AllowanceQuery query) {
-//    return dbManager.getTokenPoolStore().query(query);
     return null;
+  }
+
+  public NumberMessage urc40BalanceOf(Urc40BalanceOfQuery query) {
+    var owner = query.getOwnerAddress().toByteArray();
+    var contract = query.getAddress().toByteArray();
+    var contractBase58 = Wallet.encode58Check(contract);
+    var accStore = dbManager.getAccountStore();
+    var contractStore = dbManager.getContractStore();
+    Assert.isTrue(accStore.has(owner), "Not found address: " + Wallet.encode58Check(owner));
+    Assert.isTrue(contractStore.has(contract), "Not found contract: " + contractBase58);
+    var ownerCap = accStore.get(owner);
+    var futureSummary = ownerCap.getUrc40FutureTokenSummary(contractBase58);
+    var avail = ownerCap.getUrc40TokenAvailable(contractBase58.toLowerCase());
+    var future = (futureSummary == null ? 0L : futureSummary.getTotalValue());
+    return NumberMessage.newBuilder().setNum(avail + future).build();
+  }
+
+  public Urc40ContractPage urc40ContractList(Urc40ContractQuery query) {
+    return dbManager.getUrc40ContractStore().query(query);
+  }
+
+  public StringMessage urc40Name(AddressMessage query) {
+    var addr = query.getAddress().toByteArray();
+    var contractStore = dbManager.getUrc40ContractStore();
+    Assert.isTrue(contractStore.has(addr), "Not found urc40 contract: " + Wallet.encode58Check(addr));
+    return StringMessage.newBuilder()
+            .setValue(contractStore.get(addr).getName())
+            .build();
+  }
+
+  public StringMessage urc40Symbol(AddressMessage query) {
+    var addr = query.getAddress().toByteArray();
+    var contractStore = dbManager.getUrc40ContractStore();
+    Assert.isTrue(contractStore.has(addr), "Not found urc40 contract: " + Wallet.encode58Check(addr));
+    return StringMessage.newBuilder()
+            .setValue(contractStore.get(addr).getSymbol())
+            .build();
+  }
+
+  public NumberMessage urc40Decimals(AddressMessage query) {
+    var addr = query.getAddress().toByteArray();
+    var contractStore = dbManager.getUrc40ContractStore();
+    Assert.isTrue(contractStore.has(addr), "Not found urc40 contract: " + Wallet.encode58Check(addr));
+    return NumberMessage.newBuilder()
+            .setNum(contractStore.get(addr).getDecimals())
+            .build();
+  }
+
+  public NumberMessage urc40TotalSupply(AddressMessage query) {
+    var addr = query.getAddress().toByteArray();
+    var contractStore = dbManager.getUrc40ContractStore();
+    Assert.isTrue(contractStore.has(addr), "Not found urc40 contract: " + Wallet.encode58Check(addr));
+    return NumberMessage.newBuilder()
+            .setNum(contractStore.get(addr).getTotalSupply())
+            .build();
+  }
+
+  public AddressMessage urc40GetOwner(AddressMessage query) {
+    var addr = query.getAddress().toByteArray();
+    var contractStore = dbManager.getUrc40ContractStore();
+    Assert.isTrue(contractStore.has(addr), "Not found urc40 contract: " + Wallet.encode58Check(addr));
+    return AddressMessage.newBuilder()
+            .setAddress(contractStore.get(addr).getOwnerAddress())
+            .build();
   }
 
   public Account getAccountById(Account account) {

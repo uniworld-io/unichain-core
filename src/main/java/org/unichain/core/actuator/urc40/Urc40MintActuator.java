@@ -23,21 +23,21 @@ import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
+import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.MineTokenContract;
+import org.unichain.protos.Contract.Urc40MintContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
-public class Urc40MineTokenActuator extends AbstractActuator {
+public class Urc40MintActuator extends AbstractActuator {
 
-  public Urc40MineTokenActuator(Any contract, Manager dbManager) {
+  public Urc40MintActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -45,17 +45,17 @@ public class Urc40MineTokenActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(MineTokenContract.class);
-      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
-      tokenCap.setTotalSupply(Math.addExact(tokenCap.getTotalSupply(), ctx.getAmount()));
-      tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
-      tokenCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
+      var ctx = contract.unpack(Urc40MintContract.class);
+      var contractAddr = ctx.getAddress().toByteArray();
+      var contractCap = dbManager.getUrc40ContractStore().get(contractAddr);
+      contractCap.setTotalSupply(Math.addExact(contractCap.getTotalSupply(), ctx.getAmount()));
+      contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+      contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      dbManager.getUrc40ContractStore().put(contractAddr, contractCap);
 
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      accountCapsule.addToken(tokenKey, ctx.getAmount());
+      accountCapsule.addUrc40Token(contractAddr, ctx.getAmount());
       dbManager.getAccountStore().put(ownerAddress, accountCapsule);
 
       chargeFee(ownerAddress, fee);
@@ -73,28 +73,29 @@ public class Urc40MineTokenActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(MineTokenContract.class), "Contract type error,expected type [MineTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Urc40MintContract.class), "Contract type error,expected type [Urc40MintContract], real type[" + contract.getClass() + "]");
 
-      val ctx = this.contract.unpack(MineTokenContract.class);
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
+      val ctx = this.contract.unpack(Urc40MintContract.class);
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
       Assert.notNull(ownerAccountCap, "Owner address not exist");
 
       Assert.isTrue(ownerAccountCap.getBalance() >= calcFee(), "Fee exceed balance");
 
-      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
-      Assert.notNull(tokenPool, "Token not exist :" + ctx.getTokenName());
+      var contractAddr = ctx.getAddress().toByteArray();
+      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
+      var contractCap = dbManager.getUrc40ContractStore().get(contractAddr);
+      Assert.notNull(contractCap, "Contract not exist :" + contractAddrBase58);
 
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
 
-      Assert.isTrue(Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()), "Mismatched token owner not allowed to mine");
+      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwnerAddress().toByteArray()), "Mismatched Contract owner not allowed to mine");
 
-      Assert.isTrue(ctx.getAmount() >= tokenPool.getLot(), "Mined amount at least equal lot: " + tokenPool.getLot());
+      Assert.isTrue(ctx.getAmount() >= contractCap.getLot(), "Mined amount at least equal lot: " + contractCap.getLot());
 
       //avail to mine = max - total - burned
-      var availableToMine = Math.subtractExact(tokenPool.getMaxSupply(), Math.addExact(tokenPool.getTotalSupply(), tokenPool.getBurnedToken()));
+      var availableToMine = Math.subtractExact(contractCap.getMaxSupply(), Math.addExact(contractCap.getTotalSupply(), contractCap.getBurnedToken()));
       Assert.isTrue(ctx.getAmount() <= availableToMine, "Not enough frozen token to mine, maximum allowed: " + availableToMine);
 
       return true;
@@ -107,7 +108,7 @@ public class Urc40MineTokenActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(MineTokenContract.class).getOwnerAddress();
+    return contract.unpack(Urc40MintContract.class).getOwnerAddress();
   }
 
   @Override

@@ -392,15 +392,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case SetAccountIdContract:
           owner = contractParameter.unpack(SetAccountIdContract.class).getOwnerAddress();
           break;
-        //case BuyStorageContract:
-        //  owner = contractParameter.unpack(BuyStorageContract.class).getOwnerAddress();
-        //  break;
-        //case BuyStorageBytesContract:
-        //  owner = contractParameter.unpack(BuyStorageBytesContract.class).getOwnerAddress();
-        //  break;
-        //case SellStorageContract:
-        //  owner = contractParameter.unpack(SellStorageContract.class).getOwnerAddress();
-        //  break;
         case UpdateSettingContract:
           owner = contractParameter.unpack(UpdateSettingContract.class)
               .getOwnerAddress();
@@ -437,6 +428,10 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case FutureWithdrawContract:
           owner = contractParameter.unpack(FutureWithdrawContract.class).getOwnerAddress();
           break;
+
+        /**
+         * Urc30
+         */
         case ExchangeTokenContract:
           owner = contractParameter.unpack(ExchangeTokenContract.class).getOwnerAddress();
           break;
@@ -465,7 +460,9 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           owner = contractParameter.unpack(WithdrawFutureTokenContract.class).getOwnerAddress();
           break;
 
-          //Urc721
+        /**
+         * Urc721
+         */
         case Urc721CreateContract:
           owner = contractParameter.unpack(Urc721CreateContract.class).getOwnerAddress();
           break;
@@ -518,6 +515,41 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case PosBridgeWithdrawExecContract:
           owner = contractParameter.unpack(PosBridgeWithdrawExecContract.class).getOwnerAddress();
           break;
+
+        /**
+         * Urc40
+         */
+        case Urc40CreateContract:
+          owner = contractParameter.unpack(Urc40CreateContract.class).getOwnerAddress();
+          break;
+        case Urc40ContributePoolFeeContract:
+          owner = contractParameter.unpack(Urc40ContributePoolFeeContract.class).getOwnerAddress();
+          break;
+        case Urc40UpdateParamsContract:
+          owner = contractParameter.unpack(Urc40UpdateParamsContract.class).getOwnerAddress();
+          break;
+        case Urc40MintContract:
+          owner = contractParameter.unpack(Urc40MintContract.class).getOwnerAddress();
+          break;
+        case Urc40BurnContract:
+          owner = contractParameter.unpack(Urc40BurnContract.class).getOwnerAddress();
+          break;
+        case Urc40TransferFromContract:
+          owner = contractParameter.unpack(Urc40TransferFromContract.class).getOwnerAddress();
+          break;
+        case Urc40WithdrawFutureContract:
+          owner = contractParameter.unpack(Urc40WithdrawFutureContract.class).getOwnerAddress();
+          break;
+        case Urc40TransferOwnerContract:
+          owner = contractParameter.unpack(Urc40TransferOwnerContract.class).getOwnerAddress();
+          break;
+        case Urc40ExchangeContract:
+          owner = contractParameter.unpack(Urc40ExchangeContract.class).getOwnerAddress();
+          break;
+        case Urc40ApproveContract:
+          owner = contractParameter.unpack(Urc40ApproveContract.class).getOwnerAddress();
+          break;
+
         default:
           return null;
       }
@@ -653,14 +685,15 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case UpdateBrokerageContract:
         clazz = UpdateBrokerageContract.class;
         break;
-
-      //Token
       case FutureTransferContract:
         clazz = FutureTransferContract.class;
         break;
       case FutureWithdrawContract:
         clazz = FutureWithdrawContract.class;
         break;
+      /**
+       * Urc30
+       */
       case CreateTokenContract:
         clazz = CreateTokenContract.class;
         break;
@@ -689,7 +722,9 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         clazz = ExchangeTokenContract.class;
         break;
 
-      //NFT
+      /**
+       * Urc721
+       */
       case Urc721CreateContract:
         clazz = Urc721CreateContract.class;
         break;
@@ -741,7 +776,41 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case PosBridgeWithdrawExecContract:
         clazz = PosBridgeWithdrawExecContract.class;
         break;
-      //@todo add other contract
+
+      /**
+       * Urc40
+       */
+      case Urc40CreateContract:
+        clazz = Urc40CreateContract.class;
+        break;
+      case Urc40ContributePoolFeeContract:
+        clazz = Urc40ContributePoolFeeContract.class;
+        break;
+      case Urc40UpdateParamsContract:
+        clazz = Urc40UpdateParamsContract.class;
+        break;
+      case Urc40MintContract:
+        clazz = Urc40MintContract.class;
+        break;
+      case Urc40BurnContract:
+        clazz = Urc40BurnContract.class;
+        break;
+      case Urc40TransferFromContract:
+        clazz = Urc40TransferFromContract.class;
+        break;
+      case Urc40WithdrawFutureContract:
+        clazz = Urc40WithdrawFutureContract.class;
+        break;
+      case Urc40TransferOwnerContract:
+        clazz = Urc40TransferOwnerContract.class;
+        break;
+      case Urc40ExchangeContract:
+        clazz = Urc40ExchangeContract.class;
+        break;
+      case Urc40ApproveContract:
+        clazz = Urc40ApproveContract.class;
+        break;
+
       default:
         break;
     }
@@ -753,7 +822,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     Message.compareBytes(src.toByteArray(), contractMessage.toByteArray());
   }
 
-  // todo mv this static function to capsule util
   public static byte[] getToAddress(Transaction.Contract contract) {
     ByteString to;
     try {
@@ -779,7 +847,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     }
   }
 
-  // todo mv this static function to capsule util
   public static long getCallValue(Transaction.Contract contract) {
     int energyForUnx;
     try {
@@ -801,7 +868,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     }
   }
 
-  // todo mv this static function to capsule util
   public static long getCallTokenValue(Transaction.Contract contract) {
     int energyForUnx;
     try {
@@ -1074,6 +1140,21 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case PosBridgeWithdrawContract:
       case PosBridgeWithdrawExecContract:
         return BLOCK_VERSION_5;
+      /**
+       * Urc40
+       */
+      case Urc40CreateContract:
+      case Urc40ContributePoolFeeContract:
+      case Urc40UpdateParamsContract:
+      case Urc40MintContract:
+      case Urc40BurnContract:
+      case Urc40TransferFromContract:
+      case Urc40WithdrawFutureContract:
+      case Urc40TransferOwnerContract:
+      case Urc40ExchangeContract:
+      case Urc40ApproveContract:
+        return BLOCK_VERSION_5;
+
       case TransferTokenOwnerContract:
       case ExchangeTokenContract:
         return BLOCK_VERSION_3;

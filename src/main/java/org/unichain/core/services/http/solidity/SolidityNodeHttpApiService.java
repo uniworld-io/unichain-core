@@ -78,13 +78,13 @@ public class SolidityNodeHttpApiService implements Service {
   private GetFutureTransferServlet getFutureTransferServlet;
 
   @Autowired
-  private Urc40GetFutureTokenServlet urc40GetFutureTokenServlet;
+  private Urc40FutureGetServlet urc40FutureGetServlet;
   @Autowired
-  private Urc40GetTokenPoolServlet urc40GetTokenPoolServlet;
+  private Urc40ContractListServlet urc40ContractListServlet;
   @Autowired
-  private Urc40GetNameServlet urc40GetNameServlet;
+  private Urc40NameServlet urc40NameServlet;
   @Autowired
-  private Urc40GetSymbolServlet urc40GetSymbolServlet;
+  private Urc40SymbolServlet urc40SymbolServlet;
   @Autowired
   private Urc40DecimalsServlet urc40DecimalsServlet;
   @Autowired
@@ -202,15 +202,16 @@ public class SolidityNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(urc721OwnerOfServlet), "/walletsolidity/urc721ownerof");
 
       //urc40
-      context.addServlet(new ServletHolder(urc40GetFutureTokenServlet), "/walletsolidity/urc40getfuturetoken");
-      context.addServlet(new ServletHolder(urc40GetTokenPoolServlet), "/walletsolidity/urc40gettokenpool");
-      context.addServlet(new ServletHolder(urc40GetSymbolServlet), "/walletsolidity/urc40getsymbol");
+      context.addServlet(new ServletHolder(urc40ContractListServlet), "/walletsolidity/urc40contractlist");
+      context.addServlet(new ServletHolder(urc40FutureGetServlet), "/walletsolidity/urc40futureget");
+      context.addServlet(new ServletHolder(urc40NameServlet), "/walletsolidity/urc40name");
+      context.addServlet(new ServletHolder(urc40SymbolServlet), "/walletsolidity/urc40symbol");
       context.addServlet(new ServletHolder(urc40DecimalsServlet), "/walletsolidity/urc40decimals");
       context.addServlet(new ServletHolder(urc40TotalSupplyServlet), "/walletsolidity/urc40totalsupply");
       context.addServlet(new ServletHolder(urc40BalanceOfServlet), "/walletsolidity/urc40balanceof");
       context.addServlet(new ServletHolder(urc40GetOwnerServlet), "/walletsolidity/urc40getowner");
-      context.addServlet(new ServletHolder(urc40BalanceOfServlet), "/walletsolidity/urc40balanceof");
       context.addServlet(new ServletHolder(urc40AllowanceServlet), "/walletsolidity/urc40allowance");
+
 
       context.addServlet(new ServletHolder(urc30GetFutureTokenServlet), "/walletsolidity/getfuturetoken");
       context.addServlet(new ServletHolder(getFutureTransferServlet), "/walletsolidity/getfuturetransfer");

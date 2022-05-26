@@ -30,11 +30,11 @@ message TokenPage {
   repeated CreateTokenContract tokens = 4;
 }
 
-message Urc40TokenPage {
+message Urc40ContractPage {
   int64  page_size = 1;
   int64 page_index = 2;
   int64 total = 3;
-  repeated Urc40CreateTokenContract tokens = 4;
+  repeated Urc40CreateContract contracts = 4;
 }
 
 message AccountCreateContract {
@@ -208,7 +208,7 @@ message WithdrawFutureTokenContract {
 /**
   urc40 token
  */
-message Urc40CreateTokenContract {
+message Urc40CreateContract {
   bytes owner_address = 1;
   bytes address = 2;
   string symbol = 3;
@@ -218,26 +218,25 @@ message Urc40CreateTokenContract {
   int64 total_supply = 7;
   int64 start_time = 8;
   int64 end_time = 9;
-  string description = 10;
-  string url = 11;
-  int64 fee = 12;
-  int64 extra_fee_rate = 13;
-  int64 fee_pool = 14;
-  int64 burned = 15;
-  int64 latest_operation_time = 16;
-  int64 lot = 17;
-  int64 fee_pool_origin = 18;
-  int64 exch_unx_num = 19;
-  int64 exch_num = 20;
-  bool  exch_enable = 21;
-  int64 critical_update_time = 22;
-  int64 create_acc_fee = 23;
+  string url = 10;
+  int64 fee = 11;
+  int64 extra_fee_rate = 12;
+  int64 fee_pool = 13;
+  int64 burned = 14;
+  int64 latest_operation_time = 15;
+  int64 lot = 16;
+  int64 fee_pool_origin = 17;
+  int64 exch_unx_num = 18;
+  int64 exch_num = 19;
+  bool  exch_enable = 20;
+  int64 critical_update_time = 21;
+  int64 create_acc_fee = 22;
 }
 
-message Urc40TransferTokenContract {
+message Urc40TransferFromContract {
   bytes owner_address = 1;
-  bytes to_address = 2;
-  bytes address = 3;
+  bytes address = 2;
+  bytes to = 3;
   int64 amount = 4;
   int64 available_time = 5;
 }
@@ -249,60 +248,51 @@ message Urc40ApproveContract{
   int64 amount = 4;
 }
 
-message Urc40TransferFromContract{
-  bytes owner_address = 1;
-  bytes address = 2;
-  bytes from = 3;
-  bytes to = 4;
-  int64 amount = 5;
-}
-
-message Urc40MineTokenContract {
+message Urc40MintContract {
   bytes owner_address = 1;
   bytes address = 2;
   int64 amount = 3;
 }
 
-message Urc40BurnTokenContract {
+message Urc40BurnContract {
   bytes owner_address = 1;
   bytes address = 2;
   int64 amount = 3;
 }
 
-message Urc40TransferTokenOwnerContract {
+message Urc40TransferOwnerContract {
   bytes owner_address = 1;
   bytes to_address = 2;
   bytes address = 3;
 }
 
-message Urc40ExchangeTokenContract {
+message Urc40ExchangeContract {
   bytes owner_address = 1;
   bytes address = 2;
   int64 amount = 3;
 }
 
-message Urc40ContributeTokenPoolFeeContract {
+message Urc40ContributePoolFeeContract {
   bytes owner_address = 1;
   bytes address = 2;
   int64 amount = 3;
 }
 
-message Urc40UpdateTokenParamsContract {
+message Urc40UpdateParamsContract {
   bytes owner_address = 1;
   bytes address = 2;
-  int64 amount = 3;
+  int64 fee = 3; //what is this ?
   int64 extra_fee_rate = 4;
   int64 lot = 5;
   string url = 6;
-  string description = 7;
-  int64 total_supply = 8;
-  int64 fee_pool = 9;
-  int64 exch_unx_num = 10;
-  int64 exch_num = 11;
-  int64 create_acc_fee = 12;
+  int64 total_supply = 7;
+  int64 fee_pool = 8;
+  int64 exch_unx_num = 9;
+  int64 exch_num = 10;
+  int64 create_acc_fee = 11;
 }
 
-message Urc40WithdrawFutureTokenContract {
+message Urc40WithdrawFutureContract {
   bytes owner_address = 1;
   bytes address = 2;
 }
@@ -390,7 +380,7 @@ message ProposalCreateContract {
 message ProposalApproveContract {
   bytes owner_address = 1;
   int64 proposal_id = 2;
-  bool is_add_approval = 3; // add or remove approval
+  bool is_add_approval = 3; //add or remove approval
 }
 
 message ProposalDeleteContract {

@@ -94,15 +94,17 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private Urc721OwnerOfServlet urc721OwnerOfServlet;
 
-  //urc40
+  /**
+   * urc40
+   */
   @Autowired
-  private Urc40GetFutureTokenServlet urc40GetFutureTokenServlet;
+  private Urc40ContractListServlet urc40ContractListServlet;
   @Autowired
-  private Urc40GetTokenPoolServlet urc40GetTokenPoolServlet;
+  private Urc40FutureGetServlet urc40FutureGetServlet;
   @Autowired
-  private Urc40GetNameServlet urc40GetNameServlet;
+  private Urc40NameServlet urc40NameServlet;
   @Autowired
-  private Urc40GetSymbolServlet urc40GetSymbolServlet;
+  private Urc40SymbolServlet urc40SymbolServlet;
   @Autowired
   private Urc40DecimalsServlet urc40DecimalsServlet;
   @Autowired
@@ -115,30 +117,29 @@ public class FullNodeHttpApiService implements Service {
   private Urc40AllowanceServlet urc40AllowanceServlet;
 
   @Autowired
-  private Urc40CreateTokenServlet urc40CreateTokenServlet;
+  private Urc40CreateContractServlet urc40CreateContractServlet;
   @Autowired
-  private Urc40ContributeTokenPoolFeeServlet urc40ContributeTokenPoolFeeServlet;
-  @Autowired
-  private Urc40UpdateTokenParamsServlet urc40UpdateTokenParamsServlet;
-  @Autowired
-  private Urc40MineTokenServlet urc40MineTokenServlet;
-  @Autowired
-  private Urc40BurnTokenServlet urc40BurnTokenServlet;
-  @Autowired
-  private Urc40TransferTokenServlet urc40TransferTokenServlet;
-  @Autowired
-  private Urc40WithdrawFutureTokenServlet urc40WithdrawFutureTokenServlet;
-  @Autowired
-  private Urc40TransferTokenOwnerServlet urc40TransferTokenOwnerServlet;
-  @Autowired
-  private Urc40ExchangeTokenServlet urc40ExchangeTokenServlet;
+  private Urc40TransferFromServlet urc40TransferFromServlet;
   @Autowired
   private Urc40ApproveServlet urc40ApproveServlet;
   @Autowired
-  private Urc40TransferFromServlet urc40TransferFromServlet;
+  private Urc40ContributePoolFeeServlet urc40ContributePoolFeeServlet;
+  @Autowired
+  private Urc40UpdateParamsServlet urc40UpdateParamsServlet;
+  @Autowired
+  private Urc40MintServlet urc40MintServlet;
+  @Autowired
+  private Urc40BurnServlet urc40BurnServlet;
+  @Autowired
+  private Urc40WithdrawFutureServlet urc40WithdrawFutureServlet;
+  @Autowired
+  private Urc40TransferOwnerServlet urc40TransferOwnerServlet;
+  @Autowired
+  private Urc40ExchangeServlet urc40ExchangeServlet;
 
-
-  //PoSBridge
+  /**
+   * PoSBridge
+   */
   @Autowired
   private PosBridgeCleanMapTokenServlet posBridgeCleanMapTokenServlet;
   @Autowired
@@ -154,7 +155,14 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private PosBridgeWithdrawServlet posBridgeWithdrawServlet;
 
-  //URC30
+  @Autowired
+  private PosBridgeGetConfigServlet posBridgeGetConfigServlet;
+  @Autowired
+  private PosBridgeGetTokenMapServlet posBridgeGetTokenMapServlet;
+
+  /**
+   * URC30
+   */
   @Autowired
   private Urc30CreateTokenServlet urc30CreateTokenServlet;
   @Autowired
@@ -173,19 +181,14 @@ public class FullNodeHttpApiService implements Service {
   private Urc30TransferTokenServlet urc30TransferTokenServlet;
   @Autowired
   private Urc30WithdrawFutureTokenServlet urc30WithdrawFutureTokenServlet;
+
   @Autowired
   private Urc30GetTokenPoolServlet urc30GetTokenPoolServlet;
-
-  @Autowired
-  private PosBridgeGetConfigServlet posBridgeGetConfigServlet;
-  @Autowired
-  private PosBridgeGetTokenMapServlet posBridgeGetTokenMapServlet;
-
   @Autowired
   private Urc30GetFutureTokenServlet urc30GetFutureTokenServlet;
+
   @Autowired
   private GetFutureTransferServlet getFutureTransferServlet;
-
   @Autowired
   private UpdateWitnessServlet updateWitnessServlet;
   @Autowired
@@ -415,28 +418,26 @@ public class FullNodeHttpApiService implements Service {
       /**
        * Urc40
        */
-      context.addServlet(new ServletHolder(urc40CreateTokenServlet), "/urc40createtoken");
-      context.addServlet(new ServletHolder(urc40ContributeTokenPoolFeeServlet), "/urc40contributetokenpoolfee");
-      context.addServlet(new ServletHolder(urc40UpdateTokenParamsServlet), "/urc40updatetokenparams");
-      context.addServlet(new ServletHolder(urc40MineTokenServlet), "/urc40minetoken");
-      context.addServlet(new ServletHolder(urc40BurnTokenServlet), "/urc40burntoken");
-      context.addServlet(new ServletHolder(urc40TransferTokenServlet), "/urc40transfertoken");
-      context.addServlet(new ServletHolder(urc40TransferTokenOwnerServlet), "/urc40transfertokenowner");
-      context.addServlet(new ServletHolder(urc40ExchangeTokenServlet), "/urc40exchangetoken");
-      context.addServlet(new ServletHolder(urc40ApproveServlet), "/urc40approve");
+      context.addServlet(new ServletHolder(urc40CreateContractServlet), "/urc40createcontract");
       context.addServlet(new ServletHolder(urc40TransferFromServlet), "/urc40transferfrom");
+      context.addServlet(new ServletHolder(urc40ApproveServlet), "/urc40approve");
+      context.addServlet(new ServletHolder(urc40ContributePoolFeeServlet), "/urc40contributepoolfee");
+      context.addServlet(new ServletHolder(urc40UpdateParamsServlet), "/urc40updateparams");
+      context.addServlet(new ServletHolder(urc40MintServlet), "/urc40mint");
+      context.addServlet(new ServletHolder(urc40BurnServlet), "/urc40burn");
+      context.addServlet(new ServletHolder(urc40WithdrawFutureServlet), "/urc40withdrawfuture");
+      context.addServlet(new ServletHolder(urc40TransferOwnerServlet), "/urc40transferowner");
+      context.addServlet(new ServletHolder(urc40ExchangeServlet), "/urc40exchange");
 
-
-      context.addServlet(new ServletHolder(urc40GetFutureTokenServlet), "/urc40getfuturetoken");
-      context.addServlet(new ServletHolder(urc40GetTokenPoolServlet), "/urc40gettokenpool");
-      context.addServlet(new ServletHolder(urc40GetSymbolServlet), "/urc40getsymbol");
+      context.addServlet(new ServletHolder(urc40ContractListServlet), "/urc40contractlist");
+      context.addServlet(new ServletHolder(urc40FutureGetServlet), "/urc40futureget");
+      context.addServlet(new ServletHolder(urc40NameServlet), "/urc40name");
+      context.addServlet(new ServletHolder(urc40SymbolServlet), "/urc40symbol");
       context.addServlet(new ServletHolder(urc40DecimalsServlet), "/urc40decimals");
       context.addServlet(new ServletHolder(urc40TotalSupplyServlet), "/urc40totalsupply");
       context.addServlet(new ServletHolder(urc40BalanceOfServlet), "/urc40balanceof");
       context.addServlet(new ServletHolder(urc40GetOwnerServlet), "/urc40getowner");
-      context.addServlet(new ServletHolder(urc40BalanceOfServlet), "/urc40balanceof");
       context.addServlet(new ServletHolder(urc40AllowanceServlet), "/urc40allowance");
-
 
       context.addServlet(new ServletHolder(urc30CreateTokenServlet), "/createtoken");
       context.addServlet(new ServletHolder(urc30TransferTokenOwnerServlet), "/transfertokenowner");

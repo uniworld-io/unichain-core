@@ -169,12 +169,6 @@ public class ActuatorFactory {
         return new ProposalDeleteActuator(contract.getParameter(), manager);
       case SetAccountIdContract:
         return new SetAccountIdActuator(contract.getParameter(), manager);
-//      case BuyStorageContract:
-//        return new BuyStorageActuator(contract.getParameter(), manager);
-//      case BuyStorageBytesContract:
-//        return new BuyStorageBytesActuator(contract.getParameter(), manager);
-//      case SellStorageContract:
-//        return new SellStorageActuator(contract.getParameter(), manager);
       case UpdateSettingContract:
         return new UpdateSettingContractActuator(contract.getParameter(), manager);
       case UpdateEnergyLimitContract:
@@ -236,29 +230,26 @@ public class ActuatorFactory {
       /**
        * Urc40
        */
-      case Urc40CreateTokenContract:
-          return new Urc40CreateTokenActuator(contract.getParameter(), manager);
-      case Urc40ContributeTokenPoolFeeContract:
-        return new Urc40ContributeTokenPoolFeeActuator(contract.getParameter(), manager);
-      case Urc40UpdateTokenParamsContract:
-        return new Urc40UpdateTokenParamsActuator(contract.getParameter(), manager);
-      case Urc40MineTokenContract:
-        return new Urc40MineTokenActuator(contract.getParameter(), manager);
-      case Urc40BurnTokenContract:
-        return new Urc40BurnTokenActuator(contract.getParameter(), manager);
-      case Urc40TransferTokenContract:
-        return new Urc40TransferTokenActuator(contract.getParameter(), manager);
-      case Urc40WithdrawFutureTokenContract:
-        return new Urc40WithdrawFutureTokenActuator(contract.getParameter(), manager);
-      case Urc40TransferTokenOwnerContract:
-        return new Urc40TransferTokenOwnerActuator(contract.getParameter(), manager);
-      case Urc40ExchangeTokenContract:
-        return new Urc40ExchangeTokenActuator(contract.getParameter(), manager);
-      case Urc40ApproveContract:
-        return new Urc40ApproveActuator(contract.getParameter(), manager);
+      case Urc40CreateContract:
+          return new Urc40CreateContractActuator(contract.getParameter(), manager);
+      case Urc40ContributePoolFeeContract:
+        return new Urc40ContributePoolFeeActuator(contract.getParameter(), manager);
+      case Urc40UpdateParamsContract:
+        return new Urc40UpdateParamsActuator(contract.getParameter(), manager);
+      case Urc40MintContract:
+        return new Urc40MintActuator(contract.getParameter(), manager);
+      case Urc40BurnContract:
+        return new Urc40BurnActuator(contract.getParameter(), manager);
       case Urc40TransferFromContract:
         return new Urc40TransferFromActuator(contract.getParameter(), manager);
-
+      case Urc40WithdrawFutureContract:
+        return new Urc40WithdrawFutureActuator(contract.getParameter(), manager);
+      case Urc40TransferOwnerContract:
+        return new Urc40TransferOwnerActuator(contract.getParameter(), manager);
+      case Urc40ExchangeContract:
+        return new Urc40ExchangeActuator(contract.getParameter(), manager);
+      case Urc40ApproveContract:
+        return new Urc40ApproveActuator(contract.getParameter(), manager);
       default:
         logger.warn("un-supported contract type {}!", contract.getType().name());
         return null;

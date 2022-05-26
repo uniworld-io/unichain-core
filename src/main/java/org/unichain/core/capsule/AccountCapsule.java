@@ -20,6 +20,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.ByteArray;
+import org.unichain.core.Wallet;
 import org.unichain.core.db.Manager;
 import org.unichain.protos.Contract.AccountCreateContract;
 import org.unichain.protos.Contract.AccountUpdateContract;
@@ -170,6 +171,10 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
 
   public void clearFutureToken(byte[] tokenKey){
       this.account = this.account.toBuilder().removeTokenFuture(new String(tokenKey)).build();
+  }
+
+  public void clearUrc40FutureToken(String base58Addr){
+    this.account = this.account.toBuilder().removeUrc40Future(base58Addr).build();
   }
 
   public void clearFuture(){
@@ -526,9 +531,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return false;
   }
 
-  /**
-   * add asset amount.
-   */
   public boolean addAssetAmount(byte[] key, long amount) {
     Map<String, Long> assetMap = this.account.getAssetMap();
     String nameKey = ByteArray.toStr(key);
@@ -541,9 +543,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return true;
   }
 
-  /**
-   * add asset amount.
-   */
   public boolean addAssetAmountV2(byte[] key, long amount, Manager manager) {
     //key is token name
     if (manager.getDynamicPropertiesStore().getAllowSameTokenName() == 0) {
@@ -575,23 +574,14 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return true;
   }
 
-  /**
-   * set account name
-   */
   public void setAccountName(byte[] name) {
     this.account = this.account.toBuilder().setAccountName(ByteString.copyFrom(name)).build();
   }
 
-  /**
-   * set account id
-   */
   public void setAccountId(byte[] id) {
     this.account = this.account.toBuilder().setAccountId(ByteString.copyFrom(id)).build();
   }
 
-  /**
-   * add asset.
-   */
   public boolean addAsset(byte[] key, long value) {
     Map<String, Long> assetMap = this.account.getAssetMap();
     String nameKey = ByteArray.toStr(key);
@@ -604,9 +594,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return true;
   }
 
-  /**
-   * add instant token
-   */
   public boolean addToken(byte[] key, long value) {
     Map<String, Long> tokenMap = this.account.getTokenMap();
     String nameKey = ByteArray.toStr(key);
@@ -616,19 +603,18 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return true;
   }
 
+  public boolean addUrc40Token(byte[] addr, long value) {
+    Map<String, Long> tokenMap = this.account.getUrc40Map();
+    String addrBase58 = Wallet.encode58Check(addr).toLowerCase();
+    long totalValue = tokenMap.containsKey(addrBase58) ? Math.addExact(tokenMap.get(addrBase58), value) : value;
+    this.account = this.account.toBuilder().putUrc40(addrBase58, totalValue).build();
+    return true;
+  }
+
   public void addBalance(long value){
     this.account = this.account.toBuilder().setBalance(Math.addExact(account.getBalance(), value)).build();
   }
 
-  public void removeFutureTokenSummary(byte[] tokenKey){
-      this.account = this.account.toBuilder()
-              .removeTokenFuture(new String(tokenKey))
-              .build();
-  }
-
-  /**
-   * add token future
-   */
   public boolean setFutureTokenSummary(FutureTokenSummaryV2 summary){
       this.account = this.account.toBuilder()
               .putTokenFuture(summary.getTokenName(), summary)
@@ -636,8 +622,20 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
       return true;
   }
 
+  public boolean setUrc40FutureTokenSummary(String base58AddrLowercase, Urc40FutureTokenSummary summary){
+    this.account = this.account.toBuilder()
+            .putUrc40Future(base58AddrLowercase, summary)
+            .build();
+    return true;
+  }
+
+
   public FutureTokenSummaryV2 getFutureTokenSummary(String tokenName){
     return account.getTokenFutureMap().get(tokenName);
+  }
+
+  public Urc40FutureTokenSummary getUrc40FutureTokenSummary(String addr58Lowercase){
+    return account.getUrc40FutureMap().get(addr58Lowercase);
   }
 
   public FutureSummary getFutureSummary(){
@@ -666,6 +664,25 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return true;
   }
 
+  public boolean burnUrc40Token(byte[] addr, long amount) {
+    Map<String, Long> tokenMap = this.account.getUrc40Map();
+    String addrBase58 = Wallet.encode58Check(addr).toLowerCase();
+    if (!tokenMap.containsKey(addrBase58) || tokenMap.get(addrBase58) < amount) {
+      return false;
+    }
+
+    long remain = Math.subtractExact(tokenMap.get(addrBase58), amount);
+    if(remain > 0)
+    {
+      this.account = this.account.toBuilder().putUrc40(addrBase58, remain).build();
+    }
+    else
+    {
+      this.account = this.account.toBuilder().removeUrc40(addrBase58).build();
+    }
+    return true;
+  }
+
   public long burnAllAvailableToken(byte[] key) {
     Map<String, Long> tokenMap = this.account.getTokenMap();
     String nameKey = ByteArray.toStr(key);
@@ -680,13 +697,29 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     }
   }
 
-  /**
-   * get token info by name
-   */
+  public long burnUrc40AllAvailableToken(byte[] addr) {
+    Map<String, Long> tokenMap = this.account.getUrc40Map();
+    String addrBase58Lowercase = Wallet.encode58Check(addr).toLowerCase();
+    if (!tokenMap.containsKey(addrBase58Lowercase)) {
+      logger.warn("missing token {}", addrBase58Lowercase);
+      return 0L;
+    }
+    else {
+      long available = tokenMap.get(addrBase58Lowercase);
+      this.account = this.account.toBuilder().removeUrc40(addrBase58Lowercase).build();
+      return available;
+    }
+  }
+
   public Long getTokenAvailable(byte[] key) {
     Map<String, Long> tokenMap = this.account.getTokenMap();
     String nameKey = ByteArray.toStr(key);
     return tokenMap.containsKey(nameKey) ? tokenMap.get(nameKey) : 0L;
+  }
+
+  public Long getUrc40TokenAvailable(String addrBase58Lowercase) {
+    Map<String, Long> tokenMap = this.account.getUrc40Map();
+    return tokenMap.containsKey(addrBase58Lowercase) ? tokenMap.get(addrBase58Lowercase) : 0L;
   }
 
   public boolean addAssetV2(byte[] key, long value) {

@@ -151,9 +151,9 @@ message FuturePack {
   urc40
  */
 message Urc40FutureTokenPack {
-  bytes address = 1;
-  string token_symbol = 2;
-  bytes  owner_address = 3;
+  bytes  owner_address = 1;
+  bytes address = 2;
+  string symbol = 3;
   int64  total_deal = 4;
   int64 lower_bound_time = 5;
   int64 upper_bound_time = 6;
@@ -161,35 +161,35 @@ message Urc40FutureTokenPack {
   repeated Urc40FutureToken deals = 8;
 }
 
-message Urc40TokenPoolQuery {
+message Urc40ContractQuery {
   bytes address = 1;
-  int32  page_size = 2;
-  int32 page_index = 3;
-  string token_addr = 4;
+  string symbol = 2;
+  int32  page_size = 3;
+  int32 page_index = 4;
 }
 
 message Urc40FutureTokenQuery {
-  bytes address = 1;
-  string token_symbol = 2;
   bytes  owner_address = 3;
+  bytes address = 1;
   int32  page_size = 4;
   int32 page_index = 5;
 }
 
 message Urc40BalanceOfQuery {
-  bytes address = 1;
-  bytes owner_address = 2;
+  bytes owner_address = 1;
+  bytes address = 2;
 }
 
 message Urc40AllowanceQuery {
-  bytes address = 1;
-  bytes owner_address = 2;
-  bytes spender_address = 3;
+  bytes owner = 1;
+  bytes address = 2;
+  bytes spender = 3;
 }
 
+//@fixme set address, symbol every tx
 message Urc40FutureTokenSummary {
   bytes address = 1;
-  string token_symbol = 2;
+  string symbol = 2;
   int64  total_deal = 3;
   int64 lower_bound_time = 4;
   int64 upper_bound_time = 5;
@@ -476,17 +476,16 @@ message Transaction {
       PosBridgeWithdrawExecContract = 96;
 
       //token urc40
-      Urc40CreateTokenContract = 110;
-      Urc40ContributeTokenPoolFeeContract = 111;
-      Urc40UpdateTokenParamsContract = 112;
-      Urc40MineTokenContract = 113;
-      Urc40BurnTokenContract = 114;
-      Urc40TransferTokenContract = 115;
-      Urc40WithdrawFutureTokenContract = 116;
-      Urc40TransferTokenOwnerContract = 117;
-      Urc40ExchangeTokenContract = 118;
+      Urc40CreateContract = 110;
+      Urc40ContributePoolFeeContract = 111;
+      Urc40UpdateParamsContract = 112;
+      Urc40MintContract = 113;
+      Urc40BurnContract = 114;
+      Urc40TransferFromContract = 115;
+      Urc40WithdrawFutureContract = 116;
+      Urc40TransferOwnerContract = 117;
+      Urc40ExchangeContract = 118;
       Urc40ApproveContract = 119;
-      Urc40TransferFromContract =120;
     }
 
     ContractType type = 1;

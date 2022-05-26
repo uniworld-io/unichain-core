@@ -30,6 +30,7 @@ import org.unichain.common.overlay.message.Message;
 import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.utils.*;
 import org.unichain.core.Constant;
+import org.unichain.core.Wallet;
 import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
 import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
@@ -54,7 +55,9 @@ import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.witness.ProposalController;
 import org.unichain.core.witness.WitnessController;
 import org.unichain.protos.Contract.TransferTokenContract;
+import org.unichain.protos.Contract.Urc40TransferFromContract;
 import org.unichain.protos.Contract.WithdrawFutureTokenContract;
+import org.unichain.protos.Contract.Urc40WithdrawFutureContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction;
@@ -132,18 +135,19 @@ public class Manager {
   private AssetIssueStore assetIssueStore;
   @Autowired
   private TokenPoolStore tokenPoolStore;
+  @Autowired
+  private Urc40ContractStore urc40ContractStore;
 
   @Autowired
   private TokenAddrSymbolIndexStore tokenAddrSymbolIndexStore;
   @Autowired
   private TokenSymbolAddrIndexStore tokenSymbolAddrIndexStore;
-
   @Autowired
   private FutureTokenStore futureTokenStore;
-
+  @Autowired
+  private Urc40FutureTransferStore urc40FutureTransferStore;
   @Autowired
   private FutureTransferStore futureTransferStore;
-
   @Autowired
   private AssetIssueV2Store assetIssueV2Store;
   @Autowired
@@ -764,62 +768,58 @@ public class Manager {
     return true;
   }
 
-  public void consumeMultiSignFee(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws AccountResourceInsufficientException, ContractExeException {
+  public void consumeMultiSignFee(TransactionCapsule tx, TransactionTrace trace, BlockCapsule block) throws AccountResourceInsufficientException, ContractExeException {
     val blockVersion = findBlockVersion(block);
     switch (blockVersion){
       case BLOCK_VERSION_1:
-        consumeMultiSignFeeV1(unx, trace);
+        consumeMultiSignFeeV1(tx, trace);
         break;
       default:
-        consumeMultiSignFeeV2(unx, trace);
+        consumeMultiSignFeeV2(tx, trace);
         break;
     }
   }
 
-  private void consumeMultiSignFeeV2(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException, ContractExeException {
-    if (unx.getInstance().getSignatureCount() > 1) {
-      long fee = getDynamicPropertiesStore().getMultiSignFee();
-
-      List<Contract> contracts = unx.getInstance().getRawData().getContractList();
-      for (Contract contract : contracts) {
-        switch (contract.getType()){
-          case TransferTokenContract:
-            TransferTokenContract tContract;
-            try {
-              tContract = contract.getParameter().unpack(TransferTokenContract.class);
-              chargeFee4TokenPool(Util.stringAsBytesUppercase(tContract.getTokenName()), fee);
+  private void consumeMultiSignFeeV2(TransactionCapsule tx, TransactionTrace trace) throws AccountResourceInsufficientException, ContractExeException {
+    if (tx.getInstance().getSignatureCount() > 1) {
+      var fee = getDynamicPropertiesStore().getMultiSignFee();
+      for (var contract : tx.getInstance().getRawData().getContractList()) {
+        try{
+          switch (contract.getType()){
+            case TransferTokenContract: {
+                var ctx = contract.getParameter().unpack(TransferTokenContract.class);
+                chargeFee4Urc30Pool(Util.stringAsBytesUppercase(ctx.getTokenName()), fee);
+                break;
             }
-            catch (BalanceInsufficientException e1) {
-              throw new AccountResourceInsufficientException("Not enough account's balance or pool fee to transfer token");
+            case Urc40TransferFromContract: {
+                var ctx = contract.getParameter().unpack(Urc40TransferFromContract.class);
+                chargeFee4Urc40Pool(ctx.getAddress().toByteArray(), fee);
+                break;
             }
-            catch (InvalidProtocolBufferException e2){
-              throw new ContractExeException("bad TransferTokenContract format");
+            case WithdrawFutureTokenContract: {
+                var ctx = contract.getParameter().unpack(WithdrawFutureTokenContract.class);
+                chargeFee4Urc30Pool(Util.stringAsBytesUppercase(ctx.getTokenName()), fee);
+                break;
             }
-            break;
-          case WithdrawFutureTokenContract:
-            WithdrawFutureTokenContract wContract;
-            try {
-              wContract = contract.getParameter().unpack(WithdrawFutureTokenContract.class);
-              chargeFee4TokenPool(Util.stringAsBytesUppercase(wContract.getTokenName()), fee);
+            case Urc40WithdrawFutureContract: {
+                var ctx = contract.getParameter().unpack(Urc40WithdrawFutureContract.class);
+                chargeFee4Urc40Pool(ctx.getAddress().toByteArray(), fee);
+                break;
             }
-            catch (BalanceInsufficientException e1) {
-              throw new AccountResourceInsufficientException("Not enough account's balance or pool fee to withdraw future token");
+            default: {
+                var txOwner = getAccountStore().get(TransactionCapsule.getOwner(contract));
+                chargeFee(txOwner, fee);
+              break;
             }
-            catch (InvalidProtocolBufferException e2){
-              throw new ContractExeException("bad WithdrawFutureTokenContract format");
-            }
-            break;
-          default:
-            AccountCapsule accountCapsule = getAccountStore().get(TransactionCapsule.getOwner(contract));
-            try {
-              chargeFee(accountCapsule, fee);
-            } catch (BalanceInsufficientException e) {
-                throw new AccountResourceInsufficientException("Account Insufficient  balance[" + fee + "] to MultiSign");
-            }
-            break;
+          }
+        }
+        catch (BalanceInsufficientException e1) {
+          throw new AccountResourceInsufficientException("Not enough account's balance or token pool fee");
+        }
+        catch (InvalidProtocolBufferException e2) {
+          throw new ContractExeException("bad contract format");
         }
       }
-
       trace.getReceipt().setMultiSignFee(fee);
     }
   }
@@ -840,7 +840,8 @@ public class Manager {
   }
 
   public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    getBandwidthProcessor(findBlockVersion(block)).consume(unx, trace);
+    loadBandwidthProcessor(findBlockVersion(block))
+            .consume(unx, trace);
   }
 
   /**
@@ -1806,6 +1807,8 @@ public class Manager {
     closeOneStore(transactionRetStore);
     closeOneStore(tokenPoolStore);
     closeOneStore(futureTokenStore);
+    closeOneStore(urc40ContractStore);
+    closeOneStore(urc40FutureTransferStore);
     closeOneStore(futureTransferStore);
 
     closeOneStore(tokenAddrSymbolIndexStore);
@@ -2065,7 +2068,7 @@ public class Manager {
     burnFee(fee);
   }
 
-  protected void chargeFee4TokenPool(byte[] tokenKey, long fee) throws BalanceInsufficientException {
+  protected void chargeFee4Urc30Pool(byte[] tokenKey, long fee) throws BalanceInsufficientException {
     Urc30TokenPoolCapsule tokenPool = getTokenPoolStore().get(tokenKey);
     if(tokenPool.getFeePool() < fee)
       throw new BalanceInsufficientException("not enough token pool fee");
@@ -2074,6 +2077,19 @@ public class Manager {
     tokenPool.setLatestOperationTime(latestOperationTime);
     tokenPool.setFeePool(Math.subtractExact(tokenPool.getFeePool(), fee));
     getTokenPoolStore().put(tokenKey, tokenPool);
+    burnFee(fee);
+  }
+
+  protected void chargeFee4Urc40Pool(byte[] contractAddr, long fee) throws BalanceInsufficientException {
+    var contractStore = getUrc40ContractStore();
+    var contractCap = contractStore.get(contractAddr);
+    if(contractCap.getFeePool() < fee)
+      throw new BalanceInsufficientException("not enough contract pool fee: " + Wallet.encode58Check(contractAddr));
+
+    long latestOperationTime = getHeadBlockTimeStamp();
+    contractCap.setLatestOperationTime(latestOperationTime);
+    contractCap.setFeePool(Math.subtractExact(contractCap.getFeePool(), fee));
+    contractStore.put(contractAddr, contractCap);
     burnFee(fee);
   }
 
@@ -2086,8 +2102,8 @@ public class Manager {
     return  (block == null) ? this.dynamicPropertiesStore.getBlockVersion() : block.getInstance().getBlockHeader().getRawData().getVersion();
   }
 
-  private ResourceProcessor getBandwidthProcessor(int blockVer){
-    switch (blockVer){
+  private ResourceProcessor loadBandwidthProcessor(int blockNum){
+    switch (blockNum){
       case BLOCK_VERSION_0:
       case BLOCK_VERSION_1:
         return new BandwidthProcessor(this);

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import org.unichain.core.Wallet;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.BurnTokenContract;
+import org.unichain.protos.Contract.Urc40ExchangeContract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 
 import javax.servlet.http.HttpServlet;
@@ -19,29 +19,25 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class Urc40BurnTokenServlet extends HttpServlet {
+public class Urc40ExchangeServlet extends HttpServlet {
 
   @Autowired
   private Wallet wallet;
 
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-  }
-
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
-      String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+      var contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = BurnTokenContract.newBuilder();
+      var build = Urc40ExchangeContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
-      var burnCtx = build.build();
-      var tx = wallet.createTransactionCapsule(burnCtx, ContractType.BurnTokenContract).getInstance();
+      var tx = wallet.createTransactionCapsule(build.build(), ContractType.Urc40ExchangeContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
-      logger.error("Api error: {} --> ", e.getMessage(), e);
       try {
+        logger.error("Urc40Exchange error: {} --> ", e.getMessage(), e);
         response.getWriter().println(Util.printErrorMsg(e));
       } catch (IOException ioe) {
         logger.debug("IOException: {}", ioe.getMessage());

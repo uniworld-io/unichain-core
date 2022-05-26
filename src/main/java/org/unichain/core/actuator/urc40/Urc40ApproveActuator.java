@@ -37,6 +37,7 @@ import java.util.Arrays;
 
 import static org.unichain.core.config.Parameter.ChainConstant.URC30_CRITICAL_UPDATE_TIME_GUARD;
 
+//@todo urc40 implement approve
 @Slf4j(topic = "actuator")
 public class Urc40ApproveActuator extends AbstractActuator {
 

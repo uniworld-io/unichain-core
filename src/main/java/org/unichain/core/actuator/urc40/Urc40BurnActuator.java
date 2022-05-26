@@ -23,21 +23,21 @@ import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
+import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.BurnTokenContract;
+import org.unichain.protos.Contract.Urc40BurnContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
-public class Urc40BurnTokenActuator extends AbstractActuator {
+public class Urc40BurnActuator extends AbstractActuator {
 
-  public Urc40BurnTokenActuator(Any contract, Manager dbManager) {
+  public Urc40BurnActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -45,20 +45,20 @@ public class Urc40BurnTokenActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(BurnTokenContract.class);
-      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
-      tokenCap.burnToken(ctx.getAmount());
-      tokenCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
-      dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
+      var ctx = contract.unpack(Urc40BurnContract.class);
+      var contractAddr = ctx.getAddress().toByteArray();
+      var contractCap = dbManager.getUrc40ContractStore().get(contractAddr);
+      contractCap.burnToken(ctx.getAmount());
+      contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+      dbManager.getUrc40ContractStore().put(contractAddr, contractCap);
 
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var accountCap = dbManager.getAccountStore().get(ownerAddress);
-      accountCap.burnToken(tokenKey, ctx.getAmount());
-      dbManager.getAccountStore().put(ownerAddress, accountCap);
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var ownerCap = dbManager.getAccountStore().get(ownerAddr);
+      ownerCap.burnUrc40Token(contractAddr, ctx.getAmount());
+      dbManager.getAccountStore().put(ownerAddr, ownerCap);
 
-      chargeFee(ownerAddress, fee);
+      chargeFee(ownerAddr, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (Exception e) {
@@ -73,24 +73,24 @@ public class Urc40BurnTokenActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(BurnTokenContract.class), "Contract type error,expected type [BurnTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Urc40BurnContract.class), "Contract type error,expected type [Urc40BurnContract],real type[" + contract.getClass() + "]");
 
-      val ctx = this.contract.unpack(BurnTokenContract.class);
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddress);
+      val ctx = this.contract.unpack(Urc40BurnContract.class);
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
 
       Assert.notNull(ownerAccountCap, "Owner address not exist");
       Assert.isTrue(ownerAccountCap.getBalance() >= calcFee());
 
-      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
-      Assert.notNull(tokenPool, "Token not exist :" + ctx.getTokenName());
+      var contractAddr = ctx.getAddress().toByteArray();
+      var contractAddrBase58 =  Wallet.encode58Check(contractAddr);
+      var contractCap = dbManager.getUrc40ContractStore().get(contractAddr);
+      Assert.notNull(contractCap, "Contract not exist :" + contractAddrBase58);
 
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: "+ Utils.formatDateLong(tokenPool.getEndTime()));
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
-      Assert.isTrue(Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()), "Mismatched token owner not allowed to mine");
-      Assert.isTrue(ownerAccountCap.getTokenAvailable(tokenKey) >= ctx.getAmount(), "Not enough token balance of" + ctx.getTokenName() + "at least " + ctx.getAmount());
-
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: "+ Utils.formatDateLong(contractCap.getEndTime()));
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
+      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwnerAddress().toByteArray()), "Burning limited only on contract's owner");
+      Assert.isTrue(ownerAccountCap.getUrc40TokenAvailable(contractAddrBase58.toLowerCase()) >= ctx.getAmount(), "Not enough contract balance of" + contractAddrBase58 + "at least " + ctx.getAmount());
       return true;
     }
     catch (Exception e){
@@ -101,7 +101,7 @@ public class Urc40BurnTokenActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(BurnTokenContract.class).getOwnerAddress();
+    return contract.unpack(Urc40BurnContract.class).getOwnerAddress();
   }
 
   @Override

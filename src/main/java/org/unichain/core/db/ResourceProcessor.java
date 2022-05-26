@@ -1,9 +1,10 @@
 package org.unichain.core.db;
 
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.unichain.core.capsule.AccountCapsule;
-import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
+import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
 import org.unichain.core.config.Parameter.AdaptiveResourceLimitConstants;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.exception.AccountResourceInsufficientException;
@@ -70,14 +71,14 @@ abstract class ResourceProcessor {
     }
   }
 
-  protected boolean consumeFeeTokenPool(byte[] tokenKey, long fee) {
+  protected boolean consumeFeeUrc30Pool(byte[] tokenKey, long fee) {
       long latestOperationTime = dbManager.getHeadBlockTimeStamp();
       Urc30TokenPoolCapsule tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
       tokenPool.setLatestOperationTime(latestOperationTime);
 
       if(tokenPool.getFeePool() < fee)
       {
-        logger.error("not enough token pool fee for token {} available {} require {}", tokenPool.getName(), tokenPool.getFeePool(), fee);
+        logger.error("not enough urc30 pool fee for token {} available {} require {}", tokenPool.getName(), tokenPool.getFeePool(), fee);
         return false;
       }
 
@@ -88,8 +89,33 @@ abstract class ResourceProcessor {
         return true;
       }
       catch (Exception e){
-        logger.warn("Exception while charge token pool fee: ", e);
+        logger.warn("Exception while charge urc30 pool fee: ", e);
         return false;
       }
+  }
+
+  protected boolean consumeFeeUrc40Pool(byte[] contractAddr, long fee) {
+    try {
+        var latestOperationTime = dbManager.getHeadBlockTimeStamp();
+        var contractStore = dbManager.getUrc40ContractStore();
+        var contract = contractStore.get(contractAddr);
+        contract.setLatestOperationTime(latestOperationTime);
+
+        if(contract.getFeePool() < fee)
+        {
+          logger.error("not enough urc40 pool fee for token {} available {} require {}", contract.getName(), contract.getFeePool(), fee);
+          return false;
+        }
+        else {
+          dbManager.burnFee(fee);
+          contract.setFeePool(Math.subtractExact(contract.getFeePool(), fee));
+          contractStore.put(contractAddr, contract);
+          return true;
+        }
+    }
+    catch (Exception e){
+      logger.warn("Exception while charge urc40 pool fee: ", e);
+      return false;
+    }
   }
 }

@@ -23,15 +23,14 @@ import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
+import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
-import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.UpdateTokenParamsContract;
+import org.unichain.protos.Contract.Urc40UpdateParamsContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -40,9 +39,9 @@ import static org.unichain.core.config.Parameter.ChainConstant.*;
 import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "actuator")
-public class Urc40UpdateTokenParamsActuator extends AbstractActuator {
+public class Urc40UpdateParamsActuator extends AbstractActuator {
 
-    public Urc40UpdateTokenParamsActuator(Any contract, Manager dbManager) {
+    public Urc40UpdateParamsActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -50,79 +49,74 @@ public class Urc40UpdateTokenParamsActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-        var ctx = contract.unpack(UpdateTokenParamsContract.class);
-        var ownerAddress = ctx.getOwnerAddress().toByteArray();
+        var ctx = contract.unpack(Urc40UpdateParamsContract.class);
+        var ownerAddr = ctx.getOwnerAddress().toByteArray();
+        var contractAddr = ctx.getAddress().toByteArray();
 
-        var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-
-        Urc30TokenPoolCapsule tokenCap = dbManager.getTokenPoolStore().get(tokenKey);
+        var contractCap = dbManager.getUrc40ContractStore().get(contractAddr);
         var updateCriticalParams = false;
 
-        if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
-            tokenCap.setFee(ctx.getAmount());
+        if(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE)) {
+            contractCap.setFee(ctx.getFee());
             updateCriticalParams = true;
         }
 
-        if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
-            tokenCap.setExtraFeeRate(ctx.getExtraFeeRate());
+        if(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE_RATE)) {
+            contractCap.setExtraFeeRate(ctx.getExtraFeeRate());
             updateCriticalParams = true;
         }
 
-        if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_LOT)) {
-            tokenCap.setLot(ctx.getLot());
+        if(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_LOT)) {
+            contractCap.setLot(ctx.getLot());
         }
 
-        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_URL)) {
-            tokenCap.setUrl(ctx.getUrl());
+        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_URL)) {
+            contractCap.setUrl(ctx.getUrl());
         }
 
-        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_DESCRIPTION)) {
-            tokenCap.setDescription(ctx.getDescription());
-        }
-
-        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
+        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
             var newTotalSupply = ctx.getTotalSupply();
-            var totalSupplyDiff = Math.subtractExact(newTotalSupply, tokenCap.getTotalSupply());
-            tokenCap.setTotalSupply(newTotalSupply);
-            var ownerAccount = dbManager.getAccountStore().get(ownerAddress);
-            ownerAccount.addToken(tokenKey, totalSupplyDiff);
-            dbManager.getAccountStore().put(ownerAddress, ownerAccount);
+            var totalSupplyDiff = Math.subtractExact(newTotalSupply, contractCap.getTotalSupply());
+            contractCap.setTotalSupply(newTotalSupply);
+            var ownerAccount = dbManager.getAccountStore().get(ownerAddr);
+            ownerAccount.addToken(contractAddr, totalSupplyDiff);
+            dbManager.getAccountStore().put(ownerAddr, ownerAccount);
             updateCriticalParams = true;
         }
 
-        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_POOL)) {
+        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE_POOL)) {
             var newFeePool = ctx.getFeePool();
-            var oldFeePool = tokenCap.getOriginFeePool();
+            var oldFeePool = contractCap.getOriginFeePool();
             var diffFeePool = Math.subtractExact(newFeePool, oldFeePool);
-            tokenCap.setOriginFeePool(newFeePool);
-            dbManager.adjustBalance(ownerAddress, -diffFeePool);
-            tokenCap.setFeePool(Math.addExact(tokenCap.getFeePool(), diffFeePool));
+            contractCap.setOriginFeePool(newFeePool);
+            dbManager.adjustBalance(ownerAddr, -diffFeePool);
+            contractCap.setFeePool(Math.addExact(contractCap.getFeePool(), diffFeePool));
         }
 
-        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
-            tokenCap.setExchUnwNum(ctx.getExchUnxNum());
+        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
+            contractCap.setExchUnwNum(ctx.getExchUnxNum());
             updateCriticalParams = true;
         }
 
-        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
-            tokenCap.setExchTokenNum(ctx.getExchNum());
+        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
+            contractCap.setExchTokenNum(ctx.getExchNum());
             updateCriticalParams = true;
         }
 
-        if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)) {
-            tokenCap.setCreateAccFee(ctx.getCreateAccFee());
+        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)) {
+            contractCap.setCreateAccFee(ctx.getCreateAccFee());
             updateCriticalParams = true;
         }
 
         if(updateCriticalParams)
         {
-            tokenCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+            contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
         }
 
-        tokenCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-        dbManager.getTokenPoolStore().put(tokenKey, tokenCap);
+        contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+        dbManager.getUrc40ContractStore().put(contractAddr, contractCap);
 
-        chargeFee(ownerAddress, fee);
+        chargeFee(ownerAddr, fee);
         ret.setStatus(fee, code.SUCESS);
         return true;
     } catch (Exception e) {
@@ -137,53 +131,50 @@ public class Urc40UpdateTokenParamsActuator extends AbstractActuator {
       try {
           Assert.notNull(contract, "No contract!");
           Assert.notNull(dbManager, "No dbManager!");
-          Assert.isTrue(contract.is(UpdateTokenParamsContract.class), "Contract type error,expected type [UpdateTokenParamsContract],real type[" + contract.getClass() + "]");
+          Assert.isTrue(contract.is(Urc40UpdateParamsContract.class), "Contract type error,expected type [Urc40UpdateParamsContract],real type[" + contract.getClass() + "]");
 
-          val ctx = this.contract.unpack(UpdateTokenParamsContract.class);
+          val ctx = this.contract.unpack(Urc40UpdateParamsContract.class);
 
-          Assert.isTrue(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_OWNER_ADDR), "Missing owner address");
-          Assert.isTrue(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_NAME), "Missing token name");
+          Assert.isTrue(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_OWNER_ADDR), "Missing owner address");
+          Assert.isTrue(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_ADDR), "Missing contract address");
 
-          var ownerAddress = ctx.getOwnerAddress().toByteArray();
-          var accountCap = dbManager.getAccountStore().get(ownerAddress);
+          var ownerAddr = ctx.getOwnerAddress().toByteArray();
+          var accountCap = dbManager.getAccountStore().get(ownerAddr);
           Assert.notNull(accountCap, "Invalid ownerAddress");
           Assert.isTrue (accountCap.getBalance() >= calcFee(), "Not enough balance");
 
-          var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-          var tokenPool = dbManager.getTokenPoolStore().get(tokenKey);
-          Assert.notNull(tokenPool, "TokenName not exist");
+          var contractAddr = ctx.getAddress().toByteArray();
+          var contractAddrBase58 = Wallet.encode58Check(contractAddr);
+          var contractCap = dbManager.getUrc40ContractStore().get(contractAddr);
+          Assert.notNull(contractCap, "Contract not exist: " + contractAddrBase58);
 
-          Assert.isTrue(Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()), "Mismatched token owner not allowed to mine");
+          Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwnerAddress().toByteArray()), "Mismatched Contract owner not allowed to mine");
 
-          Assert.isTrue (dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
-          Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+          Assert.isTrue (dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
+          Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
 
-          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE)) {
-              var fee = ctx.getAmount();
+          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE)) {
+              var fee = ctx.getFee();
               Assert.isTrue (fee >= 0 && fee <= TOKEN_MAX_TRANSFER_FEE, "Invalid fee amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE + "]");
           }
 
-          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_LOT)) {
+          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_LOT)) {
               Assert.isTrue (ctx.getLot() >= 0, "Invalid lot: require positive!");
           }
 
-          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE)) {
+          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE_RATE)) {
               var extraFeeRate = ctx.getExtraFeeRate();
               Assert.isTrue (extraFeeRate >= 0 && extraFeeRate <= 100 && extraFeeRate <= TOKEN_MAX_TRANSFER_FEE_RATE, "Invalid extra fee rate amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
           }
 
-          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_URL)) {
+          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_URL)) {
               Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
           }
 
-          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_DESCRIPTION)) {
-              Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
-          }
-
-          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
-              var maxSupply = tokenPool.getMaxSupply();
+          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
+              var maxSupply = contractCap.getMaxSupply();
               var newTotalSupply = ctx.getTotalSupply();
-              var oldTotalSupply = tokenPool.getTotalSupply();
+              var oldTotalSupply = contractCap.getTotalSupply();
               var diff = Math.subtractExact(newTotalSupply, oldTotalSupply);
 
               Assert.isTrue(diff != 0, "Total supply not changed!");
@@ -192,15 +183,15 @@ public class Urc40UpdateTokenParamsActuator extends AbstractActuator {
                   Assert.isTrue(maxSupply >= newTotalSupply, "New total supply break max supply: " + maxSupply);
               }
               else if(diff < 0){
-                  var availableSupply = accountCap.getTokenAvailable(tokenKey);
+                  var availableSupply = accountCap.getUrc40TokenAvailable(contractAddrBase58.toLowerCase());
                   Assert.isTrue(Math.addExact(availableSupply, diff) >= 0, "Max available token supply not enough to lower down total supply, minimum total supply is: " + (oldTotalSupply - availableSupply));
               }
           }
 
-          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_FEE_POOL)) {
+          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE_POOL)) {
               var newFeePool = ctx.getFeePool();
-              var oldFeePool = tokenPool.getOriginFeePool();
-              var availableFeePool = tokenPool.getFeePool();
+              var oldFeePool = contractCap.getOriginFeePool();
+              var availableFeePool = contractCap.getFeePool();
               var diffFeePool = Math.subtractExact(newFeePool, oldFeePool);
               Assert.isTrue(diffFeePool != 0, "Fee pool not changed");
               if(diffFeePool > 0){
@@ -211,15 +202,15 @@ public class Urc40UpdateTokenParamsActuator extends AbstractActuator {
               }
           }
 
-          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
+          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
               Assert.isTrue(ctx.getExchUnxNum() > 0, "Exchange unw number must be positive");
           }
 
-          if (ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
+          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
               Assert.isTrue(ctx.getExchNum() > 0, "Exchange token number must be positive");
           }
 
-          if(ctx.hasField(TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)){
+          if(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)){
               Assert.isTrue(ctx.getCreateAccFee() > 0 && ctx.getCreateAccFee() <= TOKEN_MAX_CREATE_ACC_FEE, "Invalid create account fee");
           }
           return true;
@@ -232,7 +223,7 @@ public class Urc40UpdateTokenParamsActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(UpdateTokenParamsContract.class).getOwnerAddress();
+    return contract.unpack(Urc40UpdateParamsContract.class).getOwnerAddress();
   }
 
   @Override

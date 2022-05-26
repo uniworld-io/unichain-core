@@ -22,7 +22,7 @@ public class BandwidthProcessorV4 extends BandwidthProcessorV2 {
     super(manager);
   }
   @Override
-  protected void consumeForCreateNewAccountIfTokenTransfer(AccountCapsule ownerAccountCapsule, Protocol.Transaction.Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
+  protected void consumeCreateNewAccountIfUrc30Transfer(AccountCapsule ownerAccountCapsule, Protocol.Transaction.Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
     try {
       var ctx = contract.getParameter().unpack(Contract.TransferTokenContract.class);
       var tokenPool = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(ctx.getTokenName()));
@@ -35,7 +35,30 @@ public class BandwidthProcessorV4 extends BandwidthProcessorV2 {
       }
       else {
         //now owner, charge pool and in actuator charge token
-        super.consumeForCreateNewAccountIfTokenTransfer(ownerAccountCapsule, contract, trace);
+        super.consumeCreateNewAccountIfUrc30Transfer(ownerAccountCapsule, contract, trace);
+      }
+    }
+    catch (InvalidProtocolBufferException e){
+      logger.error("bad contract format {}", e.getMessage(), e);
+      throw new ContractValidateException("bad contract format:" + e.getMessage());
+    }
+  }
+
+  @Override
+  protected void consumeCreateNewAccountIfUrc40Transfer(AccountCapsule ownerAccountCapsule, Protocol.Transaction.Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
+    try {
+      var ctx = contract.getParameter().unpack(Contract.Urc40TransferFromContract.class);
+      var tokenPool = dbManager.getUrc40ContractStore().get(ctx.getAddress().toByteArray());
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var tokenPoolOwnerAddr = tokenPool.getOwnerAddress().toByteArray();
+
+      if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){
+        //direct charge owner account
+        consumeForCreateNewAccount(ownerAccountCapsule, trace);
+      }
+      else {
+        //now owner, charge pool and in actuator charge token
+        super.consumeCreateNewAccountIfUrc40Transfer(ownerAccountCapsule, contract, trace);
       }
     }
     catch (InvalidProtocolBufferException e){

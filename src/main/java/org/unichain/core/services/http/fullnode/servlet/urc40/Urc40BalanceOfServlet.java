@@ -33,6 +33,7 @@ public class Urc40BalanceOfServlet extends HttpServlet {
       Util.checkBodySize(filter);
       var visible = Util.getVisiblePost(filter);
       var builder = Protocol.Urc40BalanceOfQuery.newBuilder();
+      JsonFormat.merge(filter, builder, visible);
       var reply = wallet.urc40BalanceOf(builder.build());
       if (reply != null) {
         response.getWriter().println(visible ? JsonFormat.printToString(reply, true) : convertOutput(reply));

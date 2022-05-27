@@ -47,12 +47,22 @@ public class BandwidthProcessorV4 extends BandwidthProcessorV2 {
   @Override
   protected void consumeCreateNewAccountIfUrc40Transfer(AccountCapsule ownerAccountCapsule, Protocol.Transaction.Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
     try {
-      var ctx = contract.getParameter().unpack(Contract.Urc40TransferFromContract.class);
-      var tokenPool = dbManager.getUrc40ContractStore().get(ctx.getAddress().toByteArray());
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var tokenPoolOwnerAddr = tokenPool.getOwnerAddress().toByteArray();
+      var isTransfer = (contract.getType() == Protocol.Transaction.Contract.ContractType.Urc40TransferContract);
+      byte[] contractAddr, ownerAddr;
+      if(isTransfer){
+        var ctx = contract.getParameter().unpack(Contract.Urc40TransferContract.class);
+        contractAddr = ctx.getAddress().toByteArray();
+        ownerAddr = ctx.getOwnerAddress().toByteArray();
+      }
+      else {
+        var ctx = contract.getParameter().unpack(Contract.Urc40TransferFromContract.class);
+        contractAddr = ctx.getAddress().toByteArray();
+        ownerAddr = ctx.getOwnerAddress().toByteArray();
+      }
+      var urc40Pool = dbManager.getUrc40ContractStore().get(contractAddr);
+      var poolOwnerAddr = urc40Pool.getOwnerAddress().toByteArray();
 
-      if(Arrays.equals(ownerAddr, tokenPoolOwnerAddr)){
+      if(Arrays.equals(ownerAddr, poolOwnerAddr)){
         //direct charge owner account
         consumeForCreateNewAccount(ownerAccountCapsule, trace);
       }

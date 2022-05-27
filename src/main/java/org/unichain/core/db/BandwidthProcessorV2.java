@@ -97,6 +97,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
               consumeCreateNewAccountIfUrc30Transfer(ownerAccountCap, contract, trace);
               break;
             case Urc40TransferFromContract:
+            case Urc40TransferContract:
               consumeCreateNewAccountIfUrc40Transfer(ownerAccountCap, contract, trace);
               break;
             default:
@@ -126,8 +127,15 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
             }
             case Urc40TransferFromContract:
             {
-              var tokenKey = contract.getParameter().unpack(Urc40TransferFromContract.class).getAddress().toByteArray();
-              if (useTransactionFee4Urc40Pool(tokenKey, bytesSize, trace))
+              var contractAddr = contract.getParameter().unpack(Urc40TransferFromContract.class).getAddress().toByteArray();
+              if (useTransactionFee4Urc40Pool(contractAddr, bytesSize, trace))
+                continue;
+              break;
+            }
+            case Urc40TransferContract:
+            {
+              var contractAddr = contract.getParameter().unpack(Urc40TransferContract.class).getAddress().toByteArray();
+              if (useTransactionFee4Urc40Pool(contractAddr, bytesSize, trace))
                 continue;
               break;
             }
@@ -226,9 +234,11 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
 
   protected void consumeCreateNewAccountIfUrc40Transfer(AccountCapsule ownerAccountCapsule, Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
     try {
-      var ctx = contract.getParameter().unpack(Urc40TransferFromContract.class);
+      var isTransfer = (contract.getType() == Contract.ContractType.Urc40TransferContract);
+      var addr = isTransfer ? contract.getParameter().unpack(Urc40TransferContract.class).getAddress().toByteArray()
+              : contract.getParameter().unpack(Urc40TransferFromContract.class).getAddress().toByteArray();
       var fee = dbManager.getDynamicPropertiesStore().getCreateAccountFee();
-      if (consumeFeeUrc40Pool(ctx.getAddress().toByteArray(), fee)) {
+      if (consumeFeeUrc40Pool(addr, fee)) {
         trace.setNetBill(0, fee);
         dbManager.getDynamicPropertiesStore().addTotalCreateAccountCost(fee);
         return;
@@ -264,6 +274,11 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         case Urc40TransferFromContract:
         {
           var ctx= contract.getParameter().unpack(Urc40TransferFromContract.class);
+          return !dbManager.getAccountStore().has(ctx.getTo().toByteArray());
+        }
+        case Urc40TransferContract:
+        {
+          var ctx= contract.getParameter().unpack(Urc40TransferContract.class);
           return !dbManager.getAccountStore().has(ctx.getTo().toByteArray());
         }
         default:

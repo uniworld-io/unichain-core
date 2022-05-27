@@ -241,6 +241,14 @@ message Urc40TransferFromContract {
   int64 available_time = 5;
 }
 
+message Urc40TransferContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  bytes to = 3;
+  int64 amount = 4;
+  int64 available_time = 5;
+}
+
 message Urc40ApproveContract{
   bytes owner_address = 1;
   bytes address = 2;

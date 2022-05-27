@@ -121,6 +121,9 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private Urc40TransferFromServlet urc40TransferFromServlet;
   @Autowired
+  private Urc40TransferServlet urc40TransferServlet;
+
+  @Autowired
   private Urc40ApproveServlet urc40ApproveServlet;
   @Autowired
   private Urc40ContributePoolFeeServlet urc40ContributePoolFeeServlet;
@@ -420,6 +423,7 @@ public class FullNodeHttpApiService implements Service {
        */
       context.addServlet(new ServletHolder(urc40CreateContractServlet), "/urc40createcontract");
       context.addServlet(new ServletHolder(urc40TransferFromServlet), "/urc40transferfrom");
+      context.addServlet(new ServletHolder(urc40TransferServlet), "/urc40transfer");
       context.addServlet(new ServletHolder(urc40ApproveServlet), "/urc40approve");
       context.addServlet(new ServletHolder(urc40ContributePoolFeeServlet), "/urc40contributepoolfee");
       context.addServlet(new ServletHolder(urc40UpdateParamsServlet), "/urc40updateparams");

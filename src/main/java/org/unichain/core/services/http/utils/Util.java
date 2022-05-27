@@ -486,6 +486,12 @@ public class Util {
             break;
           }
 
+          case Urc40TransferContract:{
+            var parsedContract = contractParameter.unpack(Urc40TransferContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
+
           case Urc40WithdrawFutureContract:{
             var parsedContract = contractParameter.unpack(Urc40WithdrawFutureContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
@@ -909,6 +915,12 @@ public class Util {
           }
           case "Urc40TransferFromContract":{
             var builder = Urc40TransferFromContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
+          case "Urc40TransferContract":{
+            var builder = Urc40TransferContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;

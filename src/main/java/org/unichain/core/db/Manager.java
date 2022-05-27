@@ -56,6 +56,7 @@ import org.unichain.core.witness.ProposalController;
 import org.unichain.core.witness.WitnessController;
 import org.unichain.protos.Contract.TransferTokenContract;
 import org.unichain.protos.Contract.Urc40TransferFromContract;
+import org.unichain.protos.Contract.Urc40TransferContract;
 import org.unichain.protos.Contract.WithdrawFutureTokenContract;
 import org.unichain.protos.Contract.Urc40WithdrawFutureContract;
 import org.unichain.protos.Protocol;
@@ -133,11 +134,16 @@ public class Manager {
   private WitnessStore witnessStore;
   @Autowired
   private AssetIssueStore assetIssueStore;
+
+  //urc40
   @Autowired
-  private TokenPoolStore tokenPoolStore;
+  private Urc40FutureTransferStore urc40FutureTransferStore;
   @Autowired
   private Urc40ContractStore urc40ContractStore;
+  @Autowired
+  private Urc40SpenderStore urc40SpenderStore;
 
+  //urc30
   @Autowired
   private TokenAddrSymbolIndexStore tokenAddrSymbolIndexStore;
   @Autowired
@@ -145,9 +151,11 @@ public class Manager {
   @Autowired
   private FutureTokenStore futureTokenStore;
   @Autowired
-  private Urc40FutureTransferStore urc40FutureTransferStore;
-  @Autowired
   private FutureTransferStore futureTransferStore;
+
+  @Autowired
+  private TokenPoolStore tokenPoolStore;
+
   @Autowired
   private AssetIssueV2Store assetIssueV2Store;
   @Autowired
@@ -795,6 +803,12 @@ public class Manager {
                 var ctx = contract.getParameter().unpack(Urc40TransferFromContract.class);
                 chargeFee4Urc40Pool(ctx.getAddress().toByteArray(), fee);
                 break;
+            }
+            //@fixme transfer vs transferFrom
+            case Urc40TransferContract: {
+              var ctx = contract.getParameter().unpack(Urc40TransferContract.class);
+              chargeFee4Urc40Pool(ctx.getAddress().toByteArray(), fee);
+              break;
             }
             case WithdrawFutureTokenContract: {
                 var ctx = contract.getParameter().unpack(WithdrawFutureTokenContract.class);
@@ -1808,6 +1822,7 @@ public class Manager {
     closeOneStore(tokenPoolStore);
     closeOneStore(futureTokenStore);
     closeOneStore(urc40ContractStore);
+    closeOneStore(urc40SpenderStore);
     closeOneStore(urc40FutureTransferStore);
     closeOneStore(futureTransferStore);
 

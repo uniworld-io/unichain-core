@@ -537,6 +537,9 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case Urc40TransferFromContract:
           owner = contractParameter.unpack(Urc40TransferFromContract.class).getOwnerAddress();
           break;
+        case Urc40TransferContract:
+          owner = contractParameter.unpack(Urc40TransferContract.class).getOwnerAddress();
+          break;
         case Urc40WithdrawFutureContract:
           owner = contractParameter.unpack(Urc40WithdrawFutureContract.class).getOwnerAddress();
           break;
@@ -797,6 +800,9 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         break;
       case Urc40TransferFromContract:
         clazz = Urc40TransferFromContract.class;
+        break;
+      case Urc40TransferContract:
+        clazz = Urc40TransferContract.class;
         break;
       case Urc40WithdrawFutureContract:
         clazz = Urc40WithdrawFutureContract.class;
@@ -1149,6 +1155,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case Urc40MintContract:
       case Urc40BurnContract:
       case Urc40TransferFromContract:
+      case Urc40TransferContract:
       case Urc40WithdrawFutureContract:
       case Urc40TransferOwnerContract:
       case Urc40ExchangeContract:

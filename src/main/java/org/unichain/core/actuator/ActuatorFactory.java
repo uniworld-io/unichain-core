@@ -242,6 +242,8 @@ public class ActuatorFactory {
         return new Urc40BurnActuator(contract.getParameter(), manager);
       case Urc40TransferFromContract:
         return new Urc40TransferFromActuator(contract.getParameter(), manager);
+      case Urc40TransferContract:
+        return new Urc40TransferActuator(contract.getParameter(), manager);
       case Urc40WithdrawFutureContract:
         return new Urc40WithdrawFutureActuator(contract.getParameter(), manager);
       case Urc40TransferOwnerContract:

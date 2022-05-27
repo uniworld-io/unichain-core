@@ -186,7 +186,6 @@ message Urc40AllowanceQuery {
   bytes spender = 3;
 }
 
-//@fixme set address, symbol every tx
 message Urc40FutureTokenSummary {
   bytes address = 1;
   string symbol = 2;
@@ -203,6 +202,19 @@ message Urc40FutureToken {
   int64 expire_time = 2;
   bytes prev_tick = 3;
   bytes next_tick = 4;
+}
+
+message Urc40SpenderQuota{
+    bytes owner = 1;
+    int64 limit = 2;
+    int64 spent = 3;
+    int64 avail = 4;
+}
+message Urc40Spender {
+  bytes spender = 1;
+  bytes contract = 2;
+  int64 total = 3;
+  map<string, Urc40SpenderQuota> quotas = 4; //owner --> spend quota
 }
 
 /**
@@ -486,6 +498,7 @@ message Transaction {
       Urc40TransferOwnerContract = 117;
       Urc40ExchangeContract = 118;
       Urc40ApproveContract = 119;
+      Urc40TransferContract = 120;
     }
 
     ContractType type = 1;

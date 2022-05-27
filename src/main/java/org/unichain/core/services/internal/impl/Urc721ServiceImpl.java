@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
-//@todo urc721 review
+//@todo urc721 reviewurcurc
 @Slf4j
 @Service
 public class Urc721ServiceImpl implements Urc721Service {

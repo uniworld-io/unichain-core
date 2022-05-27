@@ -22,22 +22,19 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
-import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.urc40.Urc40SpenderCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
-import org.unichain.protos.Contract.ExchangeTokenContract;
+import org.unichain.protos.Contract.Urc40ApproveContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
-import static org.unichain.core.config.Parameter.ChainConstant.URC30_CRITICAL_UPDATE_TIME_GUARD;
-
-//@todo urc40 implement approve
+//@todo urc40 should charge token only, not unw ???
 @Slf4j(topic = "actuator")
 public class Urc40ApproveActuator extends AbstractActuator {
 
@@ -49,35 +46,24 @@ public class Urc40ApproveActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var accountStore = dbManager.getAccountStore();
-      var tokenPoolStore = dbManager.getTokenPoolStore();
+      var spenderStore = dbManager.getUrc40SpenderStore();
+      var ctx = contract.unpack(Urc40ApproveContract.class);
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var spenderAddr = ctx.getSpender().toByteArray();
+      var urc40Addr = ctx.getAddress().toByteArray();
+      var limit = ctx.getAmount();
 
-      var ctx = contract.unpack(ExchangeTokenContract.class);
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var ownerAccount = accountStore.get(ownerAddress);
+      var spenderKey = Urc40SpenderCapsule.genKey(spenderAddr, urc40Addr);
+      if(!spenderStore.has(spenderKey)){
+        var quota = new Urc40SpenderCapsule(spenderAddr, urc40Addr, ownerAddr, limit);
+        spenderStore.put(spenderKey, quota);
+      }
+      else {
+        var quota = spenderStore.get(spenderKey);
+        quota.setQuotaTo(ownerAddr, limit);
+        spenderStore.put(spenderKey, quota);
+      }
 
-      var tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenPool = tokenPoolStore.get(tokenKey);
-      var tokenOwnerAddress = tokenPool.getOwnerAddress().toByteArray();
-      var tokenOwnerAcc = accountStore.get(tokenOwnerAddress);
-
-      var exchUnwFactor = tokenPool.getExchUnw();
-      var exchTokenFactor = tokenPool.getExchToken();
-      Assert.isTrue(exchUnwFactor > 0, "Exchange unw factor must be positive");
-      Assert.isTrue(exchTokenFactor > 0, "Exchange token factor must be positive");
-      var exchangedToken = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
-
-      ownerAccount.addToken(tokenKey, exchangedToken);
-      ownerAccount.setBalance(Math.subtractExact(ownerAccount.getBalance(), Math.addExact(ctx.getAmount(), fee)));
-
-      tokenOwnerAcc.burnToken(tokenKey, exchangedToken);
-
-      tokenOwnerAcc.setBalance(Math.addExact(tokenOwnerAcc.getBalance() , ctx.getAmount()));
-
-      accountStore.put(ownerAddress, ownerAccount);
-      accountStore.put(tokenOwnerAddress, tokenOwnerAcc);
-      tokenPool.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      tokenPoolStore.put(tokenKey, tokenPool);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -93,39 +79,29 @@ public class Urc40ApproveActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(ExchangeTokenContract.class), "contract type error,expected type [ExchangeTokenContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Urc40ApproveContract.class), "contract type error,expected type [Urc40ApproveContract],real type[" + contract.getClass() + "]");
 
       var accountStore = dbManager.getAccountStore();
-      var tokenPoolStore = dbManager.getTokenPoolStore();
-      val ctx = this.contract.unpack(ExchangeTokenContract.class);
-      Assert.isTrue(ctx.getAmount() > 0, "Exchange UNW amount must be positive");
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-      var ownerCap = accountStore.get(ownerAddress);
-      Assert.notNull(ownerCap, "Owner account not exists");
-      Assert.isTrue(ownerCap.getBalance() >= Math.addExact(ctx.getAmount(), calcFee()), "Not enough balance to exchange");
+      var contractStore = dbManager.getUrc40ContractStore();
+      var spenderStore = dbManager.getUrc40SpenderStore();
+      val ctx = this.contract.unpack(Urc40ApproveContract.class);
 
-      byte[] tokenKey = Util.stringAsBytesUppercase(ctx.getTokenName());
-      var tokenPool = tokenPoolStore.get(tokenKey);
-      Assert.notNull(tokenPool, "Token pool not exists");
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < tokenPool.getEndTime(), "Token expired at: " + Utils.formatDateLong(tokenPool.getEndTime()));
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= tokenPool.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(tokenPool.getStartTime()));
+      var owner = ctx.getOwnerAddress().toByteArray();
+      var spender = ctx.getSpender().toByteArray();
+      var contractAddr = ctx.getAddress().toByteArray();
+      var limit = ctx.getAmount();
 
-      //prevent critical token update cause this tx to be wrong affected!
-      var guardTime = Math.subtractExact(dbManager.getHeadBlockTimeStamp(), tokenPool.getCriticalUpdateTime());
-      Assert.isTrue(guardTime >= URC30_CRITICAL_UPDATE_TIME_GUARD, "Critical token update found! Please wait up to 3 minutes before retry.");
+      Assert.isTrue(Wallet.addressValid(spender) && Wallet.addressValid(contractAddr) && Wallet.addressValid(owner), "Bad owner|contract|spender address");
+      Assert.isTrue(!Arrays.equals(owner, spender), "Spender must not be owner");
+      Assert.isTrue(accountStore.has(owner) && accountStore.has(spender) && contractStore.has(contractAddr) , "Unrecognized owner|spender|contract address");
 
-      var tokenOwnerCap = accountStore.get(tokenPool.getOwnerAddress().toByteArray());
-      Assert.notNull(tokenOwnerCap, "Token owner account not exists");
-
-      Assert.isTrue(!Arrays.equals(ownerAddress, tokenPool.getOwnerAddress().toByteArray()), "Token owner not allowed to exchange token");
-
-      var exchUnwFactor = tokenPool.getExchUnw();
-      var exchTokenFactor = tokenPool.getExchToken();
-      Assert.isTrue(exchUnwFactor > 0, "Exchange unw factor must be positive");
-      Assert.isTrue(exchTokenFactor > 0, "Exchange token factor must be positive");
-      var estimatedExchangeToken = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
-      Assert.isTrue(tokenOwnerCap.getTokenAvailable(tokenKey) >= estimatedExchangeToken, "Not enough token liquidity to exchange");
+      var contractCap = contractStore.get(contractAddr);
+      var spenderKey = Urc40SpenderCapsule.genKey(spender, contractAddr);
+      if(spenderStore.has(spenderKey))
+        Assert.isTrue(spenderStore.get(spenderKey).checkSetQuotaTo(owner, limit), "Invalid limit value");
+      else {
+        Assert.isTrue(contractCap.getTotalSupply() >= limit, "Spender limit reached out contract total supply!");
+      }
       return true;
     }
     catch (Exception e){
@@ -136,7 +112,7 @@ public class Urc40ApproveActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(ExchangeTokenContract.class).getOwnerAddress();
+    return contract.unpack(Urc40ApproveContract.class).getOwnerAddress();
   }
 
   @Override

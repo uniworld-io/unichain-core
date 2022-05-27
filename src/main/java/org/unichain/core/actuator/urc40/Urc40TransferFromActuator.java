@@ -45,7 +45,6 @@ import java.util.Objects;
 
 import static org.unichain.core.config.Parameter.ChainConstant.URC30_CRITICAL_UPDATE_TIME_GUARD;
 
-//@todo urc40: allow approved address to transfer
 @Slf4j(topic = "actuator")
 public class Urc40TransferFromActuator extends AbstractActuator {
   public Urc40TransferFromActuator(Any contract, Manager dbManager) {
@@ -57,22 +56,30 @@ public class Urc40TransferFromActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(Urc40TransferFromContract.class);
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
+      var accStore = dbManager.getAccountStore();
+      var contractStore = dbManager.getUrc40ContractStore();
+
+      var spender = ctx.getOwnerAddress().toByteArray();
+      var spenderCap = accStore.get(spender);
+
+      var from = ctx.getFrom().toByteArray();
+      var fromCap = accStore.get(from);
+
+      var to = ctx.getTo().toByteArray();
+      var toAccountCap = accStore.get(to);
+
       var contractAddr = ctx.getAddress().toByteArray();
-      var contract = dbManager.getUrc40ContractStore().get(contractAddr);
-      var contractOwnerAddr = contract.getOwnerAddress().toByteArray();
-      var toAddr = ctx.getTo().toByteArray();
-      var toAccountCap = dbManager.getAccountStore().get(toAddr);
+      var contractCap = contractStore.get(contractAddr);
+      var contractOwnerAddr = contractCap.getOwnerAddress().toByteArray();
 
       var isCreateNewAcc = (toAccountCap == null);
       if (isCreateNewAcc) {
         var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
-        toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddr), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
-        dbManager.getAccountStore().put(toAddr, toAccountCap);
+        toAccountCap = new AccountCapsule(ByteString.copyFrom(to), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+        accStore.put(to, toAccountCap);
       }
 
-      if(Arrays.equals(ownerAddr, contractOwnerAddr)){
+      if(Arrays.equals(from, contractOwnerAddr)){
          /*
           owner of token, so:
           - if create new account, charge more fee on owner
@@ -80,19 +87,19 @@ public class Urc40TransferFromActuator extends AbstractActuator {
         */
         if(isCreateNewAcc)
         {
-          dbManager.adjustBalanceNoPut(ownerAccountCap, -dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+          dbManager.adjustBalanceNoPut(fromCap, -dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
         }
 
-        ownerAccountCap.burnUrc40Token(contractAddr, ctx.getAmount());
-        dbManager.getAccountStore().put(ownerAddr, ownerAccountCap);
+        fromCap.burnUrc40Token(contractAddr, ctx.getAmount());
+        accStore.put(from, fromCap);
 
         if(ctx.getAvailableTime() <= 0)
         {
           toAccountCap.addUrc40Token(contractAddr, ctx.getAmount());
-          dbManager.getAccountStore().put(toAddr, toAccountCap);
+          accStore.put(to, toAccountCap);
         }
         else
-          addUrc40Future(toAddr, contractAddr, ctx.getAmount(), ctx.getAvailableTime());
+          addUrc40Future(to, contractAddr, ctx.getAmount(), ctx.getAvailableTime());
       }
       else {
          /*
@@ -100,33 +107,36 @@ public class Urc40TransferFromActuator extends AbstractActuator {
           - if create new account, charge more fee on pool and more token fee on this account
           - charge more token fee on this account
         */
-        var tokenFee = Math.addExact(contract.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), contract.getExtraFeeRate()), 100, RoundingMode.CEILING));
+        var tokenFee = Math.addExact(contractCap.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), contractCap.getExtraFeeRate()), 100, RoundingMode.CEILING));
         if(isCreateNewAcc)
         {
-          tokenFee = Math.addExact(tokenFee, contract.getCreateAccountFee());
+          tokenFee = Math.addExact(tokenFee, contractCap.getCreateAccountFee());
           fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
         }
-        var contractOwnerCap = dbManager.getAccountStore().get(contractOwnerAddr);
+        var contractOwnerCap = accStore.get(contractOwnerAddr);
         contractOwnerCap.addUrc40Token(contractAddr, tokenFee);
-        dbManager.getAccountStore().put(contractOwnerAddr, contractOwnerCap);
+        accStore.put(contractOwnerAddr, contractOwnerCap);
 
-        ownerAccountCap.burnUrc40Token(contractAddr, ctx.getAmount());
-        dbManager.getAccountStore().put(ownerAddr, ownerAccountCap);
+        fromCap.burnUrc40Token(contractAddr, ctx.getAmount());
+        accStore.put(from, fromCap);
         var realTransfer = Math.subtractExact(ctx.getAmount(), tokenFee);
         Assert.isTrue(realTransfer > 0, "Transfer amount must be greater than fee: " + tokenFee);
         if(ctx.getAvailableTime() <= 0)
         {
           toAccountCap.addUrc40Token(contractAddr, realTransfer);
-          dbManager.getAccountStore().put(toAddr, toAccountCap);
+          accStore.put(to, toAccountCap);
         }
         else
-          addUrc40Future(toAddr, contractAddr, realTransfer, ctx.getAvailableTime());
+          addUrc40Future(to, contractAddr, realTransfer, ctx.getAvailableTime());
       }
 
+      //update spender
+      dbManager.getUrc40SpenderStore().spend(spender, contractAddr, from, ctx.getAmount());
+
       //charge pool fee
-      contract.setFeePool(Math.subtractExact(contract.getFeePool(), fee));
-      contract.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      dbManager.getUrc40ContractStore().put(contractAddr, contract);
+      contractCap.setFeePool(Math.subtractExact(contractCap.getFeePool(), fee));
+      contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      contractStore.put(contractAddr, contractCap);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -142,22 +152,35 @@ public class Urc40TransferFromActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(Urc40TransferFromContract.class), "Contract type error,expected type [Urc40TransferFromContract],real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Urc40TransferFromContract.class), "Contract type error,expected type [Urc40TransferFromContract], real type[" + contract.getClass() + "]");
 
       var fee = calcFee();
+      var accStore = dbManager.getAccountStore();
 
       val ctx = this.contract.unpack(Urc40TransferFromContract.class);
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
-      Assert.notNull(ownerAccountCap, "Owner account not found");
-
       var contractAddr = ctx.getAddress().toByteArray();
       var contractAddrBase58 = Wallet.encode58Check(contractAddr);
+
+      var spenderAddr = ctx.getOwnerAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(spenderAddr), "Invalid spenderAddr");
+      Assert.notNull(accStore.has(spenderAddr), "Spender account not found");
+
+      var toAddr = ctx.getTo().toByteArray();
+      Assert.isTrue(Wallet.addressValid(toAddr), "Invalid toAddress");
+
+      var fromAddr = ctx.getFrom().toByteArray();
+      Assert.isTrue(Wallet.addressValid(fromAddr), "Invalid fromAddress");
+      Assert.isTrue(!Arrays.equals(spenderAddr, toAddr) && !Arrays.equals(fromAddr, toAddr), "Transfer to itself not allowed");
+
+      //check spender
+      dbManager.getUrc40SpenderStore().checkSpend(spenderAddr, contractAddr, fromAddr, ctx.getAmount());
+
+      //check contract active
       var contractCap = dbManager.getUrc40ContractStore().get(contractAddr);
-      var contractOwnerAddr = contractCap.getOwnerAddress().toByteArray();
       Assert.notNull(contractCap, "Contract not found: " + contractAddrBase58);
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Token expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
+      var contractOwnerAddr = contractCap.getOwnerAddress().toByteArray();
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
 
       //prevent critical token update cause this tx to be wrong affected!
       var guardTime = Math.subtractExact(dbManager.getHeadBlockTimeStamp(), contractCap.getCriticalUpdateTime());
@@ -171,19 +194,18 @@ public class Urc40TransferFromActuator extends AbstractActuator {
         Assert.isTrue(ctx.getAmount() >= contractCap.getLot(),"Future transfer require minimum amount of : " + contractCap.getLot());
       }
 
-      var toAddr = ctx.getTo().toByteArray();
-      Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Transfer to itself not allowed");
-      Assert.isTrue(Wallet.addressValid(toAddr), "Invalid toAddress");
 
-      var toAccountCap = dbManager.getAccountStore().get(toAddr);
+      //check fee
+      var toAccountCap = accStore.get(toAddr);
+      var fromAccCap = accStore.get(fromAddr);
       var isCreateNewAccount = (toAccountCap == null);
-      var ownerIsContractOwner = Arrays.equals(ownerAddr, contractOwnerAddr);
+      var ownerIsContractOwner = Arrays.equals(fromAddr, contractOwnerAddr);
       if(ownerIsContractOwner)
       {
         if(isCreateNewAccount)
         {
           var moreFee = dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
-          Assert.isTrue(ownerAccountCap.getBalance() >= moreFee, "Owner not enough balance to create new account fee, require at least "+ moreFee + "ginza");
+          Assert.isTrue(fromAccCap.getBalance() >= moreFee, "Owner not enough balance to create new account fee, require at least "+ moreFee + "ginza");
         }
       }
       else {
@@ -191,13 +213,13 @@ public class Urc40TransferFromActuator extends AbstractActuator {
           fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
         }
       }
-      Assert.isTrue(contractCap.getFeePool() >= fee, "Not enough token pool fee balance, require at least " + fee);
 
+      Assert.isTrue(contractCap.getFeePool() >= fee, "Not enough token pool fee balance, require at least " + fee);
       Assert.isTrue (ctx.getAmount() > 0, "Invalid transfer amount, expect positive number");
-      Assert.isTrue(ownerAccountCap.getUrc40TokenAvailable(contractAddrBase58.toLowerCase()) >= ctx.getAmount(), "Not enough token balance");
+      Assert.isTrue(fromAccCap.getUrc40TokenAvailable(contractAddrBase58.toLowerCase()) >= ctx.getAmount(), "Not enough token balance");
 
       //validate transfer amount vs fee
-      if(!Arrays.equals(ownerAddr, contractOwnerAddr)){
+      if(!Arrays.equals(fromAddr, contractOwnerAddr)){
         var tokenFee = Math.addExact(contractCap.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), contractCap.getExtraFeeRate()), 100, RoundingMode.CEILING));
         if(isCreateNewAccount)
         {
@@ -215,7 +237,7 @@ public class Urc40TransferFromActuator extends AbstractActuator {
       return true;
     }
     catch (Exception e){
-      logger.error("TokenTransfer got error -->", e);
+      logger.error("Urc40TransferFrom got error -->", e);
       throw new ContractValidateException(e.getMessage());
     }
   }

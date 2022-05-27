@@ -109,8 +109,8 @@ public class Urc40SpenderCapsule implements ProtoCapsule<Urc40Spender> {
       }
   }
 
-  public boolean checkSetQuotaTo(byte[] owner, long limit){
-    Assert.isTrue(limit >= 0, "Bad limit value: must be gte zero");
+  public boolean checkSetQuota(byte[] owner, long limit){
+    Assert.isTrue(limit >= 0, "Bad quota limit value: must be gte zero");
     var base58 = Wallet.encode58Check(owner);
     var quota = ctx.getQuotasMap().get(base58);
     if(Objects.isNull(quota)){
@@ -126,7 +126,7 @@ public class Urc40SpenderCapsule implements ProtoCapsule<Urc40Spender> {
     var base58 = Wallet.encode58Check(owner);
     var quota = ctx.getQuotasMap().get(base58);
     Assert.notNull(quota, "no spend quota for: " + base58);
-    Assert.notNull(quota.getAvail() >= amt, "not enough quota to spend: " + base58);
+    Assert.isTrue(quota.getAvail() >= amt, "out of spending quota: " + base58);
     var avail = quota.getAvail();
     var spent = quota.getSpent();
     quota = quota.toBuilder()
@@ -136,11 +136,12 @@ public class Urc40SpenderCapsule implements ProtoCapsule<Urc40Spender> {
     ctx = ctx.toBuilder().putQuotas(base58, quota).build();
   }
 
-  public boolean enoughToSpend(byte[] owner, long amt){
+  public void checkSpend(byte[] owner, long amt){
     Assert.isTrue(amt > 0, "amount must be positive");
     var base58 = Wallet.encode58Check(owner);
     var quota = ctx.getQuotasMap().get(base58);
-    return (quota != null) && (quota.getAvail() >= amt);
+    Assert.notNull(quota, "No spend permission to: " + base58);
+    Assert.isTrue(quota.getAvail() >= amt, "out of spending quota: " + base58);
   }
 
   public long getQuota(byte[] owner){

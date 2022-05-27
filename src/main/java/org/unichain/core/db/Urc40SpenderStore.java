@@ -2,9 +2,11 @@ package org.unichain.core.db;
 
 import com.google.common.collect.Streams;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.unichain.core.capsule.urc40.Urc40SpenderCapsule;
 
 import java.util.List;
@@ -29,5 +31,20 @@ public class Urc40SpenderStore extends UnichainStoreWithRevoking<Urc40SpenderCap
     return Streams.stream(iterator())
             .map(Map.Entry::getValue)
             .collect(Collectors.toList());
+  }
+
+  public void spend(byte[] spender, byte[] contract, byte[] owner, long amt){
+    var spenderKey = Urc40SpenderCapsule.genKey(spender, contract);
+    var quota = get(spenderKey);
+    Assert.notNull(quota, "No spender permission");
+    quota.spend(owner, amt);
+    put(spenderKey, quota);
+  }
+
+  public void checkSpend(byte[] spender, byte[] contract, byte[] owner, long spendAmt){
+    var spenderKey = Urc40SpenderCapsule.genKey(spender, contract);
+    var quota = get(spenderKey);
+    Assert.notNull(quota, "No spender permission");
+    quota.checkSpend(owner, spendAmt);
   }
 }

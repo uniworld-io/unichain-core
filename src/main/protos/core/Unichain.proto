@@ -213,8 +213,7 @@ message Urc40SpenderQuota{
 message Urc40Spender {
   bytes spender = 1;
   bytes contract = 2;
-  int64 total = 3;
-  map<string, Urc40SpenderQuota> quotas = 4; //owner --> spend quota
+  map<string, Urc40SpenderQuota> quotas = 3; //owner --> spend quota
 }
 
 /**

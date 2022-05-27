@@ -235,10 +235,11 @@ message Urc40CreateContract {
 
 message Urc40TransferFromContract {
   bytes owner_address = 1;
-  bytes address = 2;
+  bytes from = 2;
   bytes to = 3;
-  int64 amount = 4;
-  int64 available_time = 5;
+  bytes address = 4;
+  int64 amount = 5;
+  int64 available_time = 6;
 }
 
 message Urc40TransferContract {

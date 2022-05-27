@@ -98,7 +98,7 @@ public class Urc40ApproveActuator extends AbstractActuator {
       var contractCap = contractStore.get(contractAddr);
       var spenderKey = Urc40SpenderCapsule.genKey(spender, contractAddr);
       if(spenderStore.has(spenderKey))
-        Assert.isTrue(spenderStore.get(spenderKey).checkSetQuotaTo(owner, limit), "Invalid limit value");
+        Assert.isTrue(spenderStore.get(spenderKey).checkSetQuota(owner, limit), "Invalid limit value");
       else {
         Assert.isTrue(contractCap.getTotalSupply() >= limit, "Spender limit reached out contract total supply!");
       }

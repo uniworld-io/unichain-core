@@ -43,6 +43,7 @@ public class ChildTokenErc20Service implements ChildTokenService {
     public void withdraw(ByteString user, ByteString childToken, String withdrawData) throws ContractExeException, ContractValidateException {
         var symbol = dbManager.getTokenAddrSymbolIndexStore().get(childToken.toByteArray()).getSymbol();
         var tokenInfo = dbManager.getTokenPoolStore().get(symbol.toUpperCase().getBytes());
+
         var wrapCtx = Contract.TransferTokenContract.newBuilder()
                 .setAmount(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
                 .setOwnerAddress(user)

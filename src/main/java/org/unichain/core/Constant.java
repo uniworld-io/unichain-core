@@ -55,7 +55,9 @@ public class Constant {
             4L,
             42L, //eth testnet
             130L, //uni testnet
-            97L  // bsc testnet
+            97L, // bsc testnet
+            4242L, //eth devnet
+            9797L //bsc devnet
     ));
     public static final Set<Long> POSBRIDGE_TESTNET_SUPPORT = new HashSet<>(Arrays.asList(
             2L,
@@ -63,7 +65,9 @@ public class Constant {
             4L,
             42L,
             130L, //uni testnet
-            97L
+            97L,
+            4242L, //eth devnet
+            9797L //bsc devnet
     ));
 
     // config for transaction

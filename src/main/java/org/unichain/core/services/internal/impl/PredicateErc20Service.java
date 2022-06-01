@@ -4,12 +4,15 @@ import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.actuator.urc30.Urc30TokenTransferActuatorV4;
+import org.unichain.core.actuator.urc40.Urc40TransferActuator;
+import org.unichain.core.actuator.urc40.Urc40TransferFromActuator;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.services.internal.PredicateService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
@@ -30,40 +33,51 @@ public class PredicateErc20Service implements PredicateService {
     @Override
     public void lockTokens(ByteString depositor, ByteString rootToken, String depositData) throws ContractExeException, ContractValidateException {
         var symbol = dbManager.getTokenAddrSymbolIndexStore().get(rootToken.toByteArray()).getSymbol();
-        var wrapCtx = Contract.TransferTokenContract.newBuilder()
+        var tokenInfo = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(symbol));
+
+        var wrapCtx = Contract.Urc40TransferFromContract.newBuilder()
+                .setFrom(depositor)
+                .setTo(config.getPredicateErc20())
+                .setAddress(tokenInfo.getAddress())
                 .setAmount(PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue())
-                .setOwnerAddress(depositor)
-                .setToAddress(config.getPredicateErc20())
-                .setTokenName(symbol)
+                .setOwnerAddress(config.getPredicateErc20())
                 .setAvailableTime(0L)
                 .build();
-        buildThenExecContract(wrapCtx);
+
+
+        var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc40TransferFromContract)
+                .getInstance()
+                .getRawData()
+                .getContract(0)
+                .getParameter();
+
+        var actuator = new Urc40TransferFromActuator(contract, dbManager);
+        actuator.validate();
+        actuator.execute(ret);
     }
 
     @Override
     public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException, ContractValidateException {
         var symbol = dbManager.getTokenAddrSymbolIndexStore().get(rootToken.toByteArray()).getSymbol();
-        var wrapCtx = Contract.TransferTokenContract.newBuilder()
-                .setAmount(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
+        var tokenInfo = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(symbol));
+
+        var wrapCtx = Contract.Urc40TransferContract.newBuilder()
                 .setOwnerAddress(config.getPredicateErc20())
-                .setToAddress(withdrawer)
-                .setTokenName(symbol)
+                .setTo(withdrawer)
+                .setAddress(tokenInfo.getAddress())
+                .setAmount(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
                 .setAvailableTime(0L)
                 .build();
-        buildThenExecContract(wrapCtx);
-    }
 
-    private void buildThenExecContract(Contract.TransferTokenContract wrapCtx) throws ContractExeException, ContractValidateException {
-        var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.TransferTokenContract)
+        var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc40TransferContract)
                 .getInstance()
                 .getRawData()
                 .getContract(0)
                 .getParameter();
-        var wrapAct = new Urc30TokenTransferActuatorV4(contract, dbManager);
-        var wrapRet = new TransactionResultCapsule();
-        wrapAct.validate();
-        wrapAct.execute(wrapRet);
-        ret.setFee(wrapRet.getFee());
+
+        var actuator = new Urc40TransferActuator(contract, dbManager);
+        actuator.validate();
+        actuator.execute(ret);
     }
 
 }

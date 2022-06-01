@@ -104,8 +104,8 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
                 Assert.isTrue(WalletUtils.isValidAddress(ctx.getChildToken()), "CHILD_TOKEN_INVALID");
             }
             if(PosBridgeUtil.isUnichain(ctx.getChildChainid())){
-                Assert.isTrue(Wallet.addressValid(ctx.getChildToken()), "ROOT_TOKEN_INVALID");
-                Assert.isTrue(WalletUtils.isValidAddress(ctx.getRootToken()), "CHILD_TOKEN_INVALID");
+                Assert.isTrue(Wallet.addressValid(ctx.getChildToken()), "CHILD_TOKEN_INVALID");
+                Assert.isTrue(WalletUtils.isValidAddress(ctx.getRootToken()), "ROOT_TOKEN_INVALID");
             }
 
             //check permission

@@ -35,6 +35,8 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private TransferFutureServlet transferFutureServlet;
   @Autowired
+  private TransferFutureLockedServlet transferFutureLockedServlet;
+  @Autowired
   private WithdrawFutureServlet withdrawFutureServlet;
   @Autowired
   private BroadcastServlet broadcastServlet;
@@ -370,6 +372,7 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(getFutureTransferServlet), "/getfuturetransfer");
       context.addServlet(new ServletHolder(transferServlet), "/createtransaction");
       context.addServlet(new ServletHolder(transferFutureServlet), "/createfuturetransaction");
+      context.addServlet(new ServletHolder(transferFutureLockedServlet), "/createfuturelockedtransaction");
       context.addServlet(new ServletHolder(withdrawFutureServlet), "/withdrawfuturetransaction");
       context.addServlet(new ServletHolder(broadcastServlet), "/broadcasttransaction");
       context.addServlet(new ServletHolder(transactionSignServlet), "/gettransactionsign");

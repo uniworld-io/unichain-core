@@ -314,6 +314,16 @@ service Wallet {
     };
   };
 
+  rpc CreateFutureLockedTransferTransaction (FutureLockedTransferContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/createfuturelockedtransaction"
+      body: "*"
+        additional_bindings {
+          get: "/wallet/createfuturelockedtransaction"
+      }
+    };
+  };
+
   rpc BroadcastTransaction (Transaction) returns (Return) {
     option (google.api.http) = {
       post: "/wallet/broadcasttransaction"

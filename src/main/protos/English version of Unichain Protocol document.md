@@ -692,6 +692,8 @@ Input, transaction and head block all require signature.
     Check out the total transaction.
    __`Createfuturetransaction`__:  
    Create future transfer.
+   __`Createfuturelockedtransaction`__:  
+   Create future locked transfer.
    __`WithdrawFutureTransaction`__:  
    Withdraw future deals.
    __`GetFutureTransfer`__:  

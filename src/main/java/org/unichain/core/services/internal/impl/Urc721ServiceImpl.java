@@ -368,11 +368,8 @@ public class Urc721ServiceImpl implements Urc721Service {
 
     @Override
     public GrpcAPI.StringMessage getTokenUri(Protocol.Urc721Token msg) {
-        var tokenQuery = Protocol.Urc721Token.newBuilder()
-                .setAddress(msg.getAddress())
-                .build();
         return GrpcAPI.StringMessage.newBuilder()
-                .setValue(getToken(tokenQuery).getUri())
+                .setValue(getToken(msg).getUri())
                 .build();
     }
 

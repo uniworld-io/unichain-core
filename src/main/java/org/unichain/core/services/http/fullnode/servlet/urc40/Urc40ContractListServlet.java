@@ -7,7 +7,7 @@ import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.common.utils.Utils;
-import org.unichain.core.Wallet;
+import org.unichain.core.actuator.urc40.ext.Urc40;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j(topic = "API")
 public class Urc40ContractListServlet extends HttpServlet {
   @Autowired
-  private Wallet wallet;
+  private Urc40 urc40;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     doPost(request, response);
@@ -37,7 +37,7 @@ public class Urc40ContractListServlet extends HttpServlet {
       var builder = Protocol.Urc40ContractQuery.newBuilder();
       JsonFormat.merge(tokenFilter, builder, visible);
       var query = builder.build();
-      var reply = wallet.urc40ContractList(query);
+      var reply = urc40.contractList(query);
       if (reply != null) {
         response.getWriter().println(visible ? JsonFormat.printToString(reply, true) : convertOutput(reply));
       } else {

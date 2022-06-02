@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.unichain.core.Wallet;
+import org.unichain.core.actuator.urc40.ext.Urc40;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Protocol;
@@ -19,7 +19,7 @@ import java.io.IOException;
 @Slf4j(topic = "API")
 public class Urc40GetOwnerServlet extends HttpServlet {
   @Autowired
-  private Wallet wallet;
+  private Urc40 urc40;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
@@ -29,7 +29,7 @@ public class Urc40GetOwnerServlet extends HttpServlet {
       var jsonObject = new JSONObject();
       jsonObject.put("address", address);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
-      var msg = wallet.urc40GetOwner(builder.build());
+      var msg = urc40.getOwner(builder.build());
       if (msg != null) {
         response.getWriter().println(JsonFormat.printToString(msg, visible));
       } else {

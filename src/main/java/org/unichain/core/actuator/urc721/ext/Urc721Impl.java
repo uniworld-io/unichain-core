@@ -1,4 +1,4 @@
-package org.unichain.core.services.internal.impl;
+package org.unichain.core.actuator.urc721.ext;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
@@ -15,7 +15,6 @@ import org.unichain.core.Wallet;
 import org.unichain.core.capsule.urc721.Urc721TokenCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.internal.Urc721Service;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
@@ -29,7 +28,7 @@ import static org.unichain.core.services.http.utils.Util.*;
 //@todo urc721 reviewurcurc
 @Slf4j
 @Service
-public class Urc721ServiceImpl implements Urc721Service {
+public class Urc721Impl implements Urc721 {
     @Autowired
     private Manager dbManager;
 
@@ -321,7 +320,6 @@ public class Urc721ServiceImpl implements Urc721Service {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
         var accountTokenStore = dbManager.getUrc721AccountTokenRelationStore();
         var owner = query.getOwnerAddress().toByteArray();
-        var contractAddr = query.getAddress();
         var result = Protocol.Urc721BalanceOf.newBuilder()
                 .setCount(0)
                 .setOwnerAddress(query.getOwnerAddress());
@@ -375,12 +373,8 @@ public class Urc721ServiceImpl implements Urc721Service {
 
     @Override
     public Protocol.AddressMessage getOwnerOf(Protocol.Urc721Token msg) {
-        //@todo urc721 review
-        var tokenQuery = Protocol.Urc721Token.newBuilder()
-                .setAddress(msg.getAddress())
-                .build();
         return Protocol.AddressMessage.newBuilder()
-                .setAddress(getToken(tokenQuery).getOwnerAddress())
+                .setAddress(getToken(msg).getOwnerAddress())
                 .build();
     }
 }

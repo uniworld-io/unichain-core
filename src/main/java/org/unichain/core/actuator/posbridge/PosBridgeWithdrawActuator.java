@@ -32,7 +32,6 @@ import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.internal.ChildTokenService;
 import org.unichain.protos.Contract.PosBridgeWithdrawContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.crypto.WalletUtils;

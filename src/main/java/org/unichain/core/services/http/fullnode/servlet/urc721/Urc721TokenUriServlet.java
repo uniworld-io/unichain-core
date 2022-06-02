@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.Urc721Service;
+import org.unichain.core.actuator.urc721.ext.Urc721;
 import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
@@ -19,7 +19,7 @@ import java.io.IOException;
 @Slf4j(topic = "API")
 public class Urc721TokenUriServlet extends HttpServlet {
   @Autowired
-  private Urc721Service urc721Service;
+  private Urc721 urc721;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
@@ -32,7 +32,7 @@ public class Urc721TokenUriServlet extends HttpServlet {
       jsonObject.put("id", tokenId);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
 
-      var msg = urc721Service.getTokenUri(builder.build());
+      var msg = urc721.getTokenUri(builder.build());
       if (msg != null) {
         response.getWriter().println(JsonFormat.printToString(msg, visible));
       } else {

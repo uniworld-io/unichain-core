@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.Urc721Service;
+import org.unichain.core.actuator.urc721.ext.Urc721;
 import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
@@ -20,7 +20,7 @@ import java.io.IOException;
 public class Urc721BalanceOfServlet extends HttpServlet {
 
   @Autowired
-  private Urc721Service urc721Service;
+  private Urc721 urc721;
 
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
@@ -30,7 +30,7 @@ public class Urc721BalanceOfServlet extends HttpServlet {
       var jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
-      var reply = urc721Service.balanceOf(builder.build());
+      var reply = urc721.balanceOf(builder.build());
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {

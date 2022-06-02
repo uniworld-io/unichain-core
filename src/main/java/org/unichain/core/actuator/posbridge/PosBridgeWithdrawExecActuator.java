@@ -32,7 +32,7 @@ import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.internal.PredicateService;
+import org.unichain.core.actuator.posbridge.ext.Predicate;
 import org.unichain.protos.Contract.PosBridgeWithdrawExecContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.utils.Numeric;
@@ -61,7 +61,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             var tokenMap = tokenMapStore.get(childKey.getBytes());
             var config = dbManager.getPosBridgeConfigStore().get();
 
-            PredicateService predicateService = lookupPredicate(tokenMap.getTokenType(), dbManager, ret, config);
+            Predicate predicateService = lookupPredicate(tokenMap.getTokenType(), dbManager, ret, config);
 
             ByteString rootToken = ByteString.copyFrom(Numeric.hexStringToByteArray(tokenMap.getRootToken()));
             ByteString receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));

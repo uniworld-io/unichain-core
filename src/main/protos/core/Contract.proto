@@ -68,10 +68,11 @@ message FutureTransferContract {
   int64 expire_time = 4;
 }
 
+//@fixme rename to TransferFutureDealContract
 message FutureLockedTransferContract {
   bytes owner_address = 1;
   bytes to_address = 2;
-  int64 expire_time = 4;
+  int64 expire_time = 4; //@fixme using name deal_id instead
 }
 
 message TransferAssetContract {

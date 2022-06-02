@@ -27,5 +27,4 @@ public interface Urc40 {
   Protocol.Transaction transfer(Contract.Urc40TransferContract contract) throws ContractValidateException;
   Protocol.Transaction updateParams(Contract.Urc40UpdateParamsContract contract) throws ContractValidateException;
   Protocol.Transaction withdrawFuture(Contract.Urc40WithdrawFutureContract contract) throws ContractValidateException;
-
 }

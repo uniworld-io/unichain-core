@@ -1584,7 +1584,7 @@ public class Manager {
       }
     }
 
-    TransactionRetCapsule transactionRetCapsule = new TransactionRetCapsule(block);
+    var transactionRetCapsule = new TransactionRetCapsule(block);
 
     try {
       accountStateCallBack.preExecute(block);
@@ -1616,7 +1616,7 @@ public class Manager {
       }
     }
     if (getDynamicPropertiesStore().getAllowAdaptiveEnergy() == 1) {
-      EnergyProcessor energyProcessor = new EnergyProcessor(this);
+      var energyProcessor = new EnergyProcessor(this);
       energyProcessor.updateTotalEnergyAverageUsage();
       energyProcessor.updateAdaptiveTotalEnergyLimit();
     }
@@ -1648,7 +1648,7 @@ public class Manager {
     List<Long> numbers = witnessController
             .getActiveWitnesses()
             .stream()
-            .map(address -> witnessController.getWitnesseByAddress(address).getLatestBlockNum())
+            .map(address -> witnessController.getWitnessByAddress(address).getLatestBlockNum())
             .sorted()
             .collect(Collectors.toList());
 
@@ -1720,21 +1720,18 @@ public class Manager {
   }
 
   /**
+   * @todo verify ?
    * @param block the block update signed witness. set witness who signed block the 1. the latest
    * block num 2. pay the unx to witness. 3. the latest slot num.
    */
   public void updateSignedWitness(BlockCapsule block) {
-    // TODO: add verification
-    WitnessCapsule witnessCapsule =
-        witnessStore.getUnchecked(
-            block.getInstance().getBlockHeader().getRawData().getWitnessAddress()
-                .toByteArray());
+    var witnessAddr = block.getWitnessAddress();
+    var witnessCapsule = witnessStore.getUnchecked(witnessAddr.toByteArray());
     witnessCapsule.setTotalProduced(witnessCapsule.getTotalProduced() + 1);
     witnessCapsule.setLatestBlockNum(block.getNum());
     witnessCapsule.setLatestSlotNum(witnessController.getAbSlotAtTime(block.getTimeStamp()));
 
-    // Update memory witness status
-    WitnessCapsule wit = witnessController.getWitnesseByAddress(block.getWitnessAddress());
+    WitnessCapsule wit = witnessController.getWitnessByAddress(witnessAddr);
     if (wit != null) {
       wit.setTotalProduced(witnessCapsule.getTotalProduced() + 1);
       wit.setLatestBlockNum(block.getNum());
@@ -1759,8 +1756,8 @@ public class Manager {
     }
   }
 
-  public void updateMaintenanceState(boolean needMaint) {
-    if (needMaint) {
+  public void updateMaintenanceState(boolean needMaintain) {
+    if (needMaintain) {
       getDynamicPropertiesStore().saveStateFlag(1);
     } else {
       getDynamicPropertiesStore().saveStateFlag(0);

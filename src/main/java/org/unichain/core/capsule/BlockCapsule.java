@@ -211,14 +211,10 @@ public class BlockCapsule implements ProtoCapsule<Block> {
   }
 
   public void sign(byte[] privateKey) {
-    // TODO private_key == null
     ECKey ecKey = ECKey.fromPrivate(privateKey);
     ECDSASignature signature = ecKey.sign(getRawHash().getBytes());
     ByteString sig = ByteString.copyFrom(signature.toByteArray());
-
-    BlockHeader blockHeader = this.block.getBlockHeader().toBuilder().setWitnessSignature(sig)
-        .build();
-
+    BlockHeader blockHeader = this.block.getBlockHeader().toBuilder().setWitnessSignature(sig).build();
     this.block = this.block.toBuilder().setBlockHeader(blockHeader).build();
   }
 

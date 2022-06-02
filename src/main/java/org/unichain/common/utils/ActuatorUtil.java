@@ -175,6 +175,7 @@ public class ActuatorUtil {
     }
   }
 
+  //@fixme whats happen if only one deal in ownerAddress ? cause null pointer exception!
   public static void removeFutureDeal(Manager dbManager, byte[] ownerAddress, FutureTransferCapsule futureTick) {
     var futureStore = dbManager.getFutureTransferStore();
     var accountStore = dbManager.getAccountStore();

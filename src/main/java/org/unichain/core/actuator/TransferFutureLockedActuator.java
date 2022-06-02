@@ -44,6 +44,7 @@ public class TransferFutureLockedActuator extends AbstractActuator {
     }
   }
 
+  //@fixme validate future deal exist ?
   @Override
   public boolean validate() throws ContractValidateException {
     try {
@@ -108,6 +109,8 @@ public class TransferFutureLockedActuator extends AbstractActuator {
       Check if owner doesn't have locked tick
     */
     if (!futureStore.has(tickKey)) {
+      //@fixme this case should never happen
+      //@fixme use logger
       System.out.println("OwnerAddress doesn't have future locked with expired time " + availableTime);
       return;
     }
@@ -118,6 +121,8 @@ public class TransferFutureLockedActuator extends AbstractActuator {
     var tick = futureStore.get(tickKey);
 
     var currentTick = futureStore.get(ownerSummary.getLowerTick().toByteArray());
+
+    //@fixme don't loop, just access using key that composed by [ownerAddr_availableTime]
     while (currentTick != null) {
       if (currentTick.getData() == tick.getData()) {
         ActuatorUtil.removeFutureDeal(dbManager, ownerAddress, currentTick);

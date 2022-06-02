@@ -212,8 +212,7 @@ public class UnichainNetDelegate {
 
   public boolean validBlock(BlockCapsule block) throws P2pException {
     try {
-      return witnessScheduleStore.getActiveWitnesses().contains(block.getWitnessAddress())
-          && block.validateSignature(dbManager);
+      return witnessScheduleStore.getActiveWitnesses().contains(block.getWitnessAddress()) && block.validateSignature(dbManager);
     } catch (ValidateSignatureException e) {
       throw new P2pException(TypeEnum.BAD_BLOCK, e);
     }

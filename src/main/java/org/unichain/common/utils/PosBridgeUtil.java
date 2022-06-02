@@ -10,12 +10,10 @@ import org.springframework.util.Assert;
 import org.unichain.common.crypto.ECKey;
 import org.unichain.common.crypto.Hash;
 import org.unichain.core.Wallet;
+import org.unichain.core.actuator.posbridge.ext.*;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
-import org.unichain.core.services.internal.ChildTokenService;
-import org.unichain.core.services.internal.PredicateService;
-import org.unichain.core.services.internal.impl.*;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
@@ -76,32 +74,32 @@ public class PosBridgeUtil {
         }
     }
 
-    public static PredicateService lookupPredicate(int numberType, Manager dbManager, TransactionResultCapsule ret, PosBridgeConfigCapsule config) throws Exception {
+    public static Predicate lookupPredicate(int numberType, Manager dbManager, TransactionResultCapsule ret, PosBridgeConfigCapsule config) throws Exception {
         AssetType assetType = AssetType.valueOfNumber(numberType);
         switch (assetType){
             case NATIVE: {
-                return new PredicateNativeService(dbManager, ret, config);
+                return new UnwPredicate(dbManager, ret, config);
             }
             case ERC20: {
-                return new PredicateErc20Service(dbManager, ret, config);
+                return new Urc40Predicate(dbManager, ret, config);
             }
             case ERC721: {
-                return new PredicateErc721Service(dbManager, ret, config);
+                return new Urc721Predicate(dbManager, ret, config);
             }
             default:
                 throw new Exception("invalid asset type");
         }
     }
 
-    public static ChildTokenService lookupChildToken(int numberType, Manager dbManager, TransactionResultCapsule ret) throws Exception {
+    public static ChildToken lookupChildToken(int numberType, Manager dbManager, TransactionResultCapsule ret) throws Exception {
         AssetType assetType = AssetType.valueOfNumber(numberType);
         switch (assetType){
             case NATIVE:
             case ERC20: {
-                return new ChildTokenErc20Service(dbManager, ret);
+                return new ChildTokenUrc40(dbManager, ret);
             }
             case ERC721: {
-                return new ChildTokenErc721Service(dbManager, ret);
+                return new ChildTokenUrc721(dbManager, ret);
             }
             default:
                 throw new Exception("invalid asset type");

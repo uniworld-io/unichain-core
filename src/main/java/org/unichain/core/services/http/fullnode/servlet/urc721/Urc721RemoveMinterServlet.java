@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.Urc721Service;
+import org.unichain.core.actuator.urc721.ext.Urc721;
 import org.unichain.protos.Contract;
 
 import javax.servlet.http.HttpServlet;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class Urc721RemoveMinterServlet extends HttpServlet {
 
   @Autowired
-  private Urc721Service urc721Service;
+  private Urc721 urc721;
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
@@ -32,7 +32,7 @@ public class Urc721RemoveMinterServlet extends HttpServlet {
       JsonFormat.merge(contract, build, visible);
       var tokenCtx = build.build();
 
-      var tx = urc721Service.removeMinter(tokenCtx);
+      var tx = urc721.removeMinter(tokenCtx);
 
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);

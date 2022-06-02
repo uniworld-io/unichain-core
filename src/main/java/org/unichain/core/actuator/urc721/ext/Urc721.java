@@ -1,11 +1,11 @@
-package org.unichain.core.services.internal;
+package org.unichain.core.actuator.urc721.ext;
 
 import org.unichain.api.GrpcAPI;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
-public interface Urc721Service {
+public interface Urc721 {
     Protocol.Transaction createContract(Contract.Urc721CreateContract contract) throws ContractValidateException;
     Protocol.Transaction createToken(Contract.Urc721MintContract contract) throws ContractValidateException;
     Protocol.Urc721Token getToken(Protocol.Urc721Token query);

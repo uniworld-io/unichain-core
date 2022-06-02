@@ -1,9 +1,8 @@
-package org.unichain.core.services.internal.impl;
+package org.unichain.core.actuator.posbridge.ext;
 
 import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
-import org.unichain.core.actuator.urc30.Urc30TokenTransferActuatorV4;
 import org.unichain.core.actuator.urc40.Urc40TransferActuator;
 import org.unichain.core.actuator.urc40.Urc40TransferFromActuator;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
@@ -13,18 +12,17 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.PredicateService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
-public class PredicateErc20Service implements PredicateService {
+public class Urc40Predicate implements Predicate {
     private final Manager dbManager;
     private final TransactionResultCapsule ret;
     private final PosBridgeConfigCapsule config;
 
-    public PredicateErc20Service(Manager dbManager,
-                                  TransactionResultCapsule ret,
-                                  PosBridgeConfigCapsule config) {
+    public Urc40Predicate(Manager dbManager,
+                          TransactionResultCapsule ret,
+                          PosBridgeConfigCapsule config) {
         this.dbManager = dbManager;
         this.ret = ret;
         this.config = config;

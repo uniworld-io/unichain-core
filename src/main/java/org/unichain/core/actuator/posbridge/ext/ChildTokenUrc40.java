@@ -1,9 +1,8 @@
-package org.unichain.core.services.internal.impl;
+package org.unichain.core.actuator.posbridge.ext;
 
 import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
-import org.unichain.core.actuator.urc30.Urc30TokenTransferActuatorV4;
 import org.unichain.core.actuator.urc40.Urc40BurnActuator;
 import org.unichain.core.actuator.urc40.Urc40MintActuator;
 import org.unichain.core.capsule.TransactionCapsule;
@@ -12,16 +11,15 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.ChildTokenService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
-public class ChildTokenErc20Service implements ChildTokenService {
+public class ChildTokenUrc40 implements ChildToken {
 
     private final Manager dbManager;
     private final TransactionResultCapsule ret;
 
-    public ChildTokenErc20Service(Manager dbManager, TransactionResultCapsule ret) {
+    public ChildTokenUrc40(Manager dbManager, TransactionResultCapsule ret) {
         this.dbManager = dbManager;
         this.ret = ret;
     }

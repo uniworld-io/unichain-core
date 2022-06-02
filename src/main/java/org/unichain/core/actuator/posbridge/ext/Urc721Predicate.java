@@ -1,4 +1,4 @@
-package org.unichain.core.services.internal.impl;
+package org.unichain.core.actuator.posbridge.ext;
 
 import com.google.protobuf.ByteString;
 import lombok.var;
@@ -10,18 +10,17 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.internal.PredicateService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
-public class PredicateErc721Service implements PredicateService {
+public class Urc721Predicate implements Predicate {
     private final Manager dbManager;
     private final TransactionResultCapsule ret;
     private final PosBridgeConfigCapsule config;
 
-    public PredicateErc721Service(Manager dbManager,
-                                 TransactionResultCapsule ret,
-                                 PosBridgeConfigCapsule config) {
+    public Urc721Predicate(Manager dbManager,
+                           TransactionResultCapsule ret,
+                           PosBridgeConfigCapsule config) {
         this.dbManager = dbManager;
         this.ret = ret;
         this.config = config;

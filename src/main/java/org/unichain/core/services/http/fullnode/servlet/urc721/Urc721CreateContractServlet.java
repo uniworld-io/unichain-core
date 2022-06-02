@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.unichain.common.utils.AddressUtil;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.services.internal.Urc721Service;
+import org.unichain.core.actuator.urc721.ext.Urc721;
 import org.unichain.protos.Contract;
 
 import javax.servlet.http.HttpServlet;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class Urc721CreateContractServlet extends HttpServlet {
 
   @Autowired
-  private Urc721Service urc721Service;
+  private Urc721 urc721;
 
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     try {
@@ -34,7 +34,7 @@ public class Urc721CreateContractServlet extends HttpServlet {
       //generate address
       build.setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()));
       JsonFormat.merge(contract, build, visible);
-      var tx = urc721Service.createContract(build.build());
+      var tx = urc721.createContract(build.build());
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

@@ -1,4 +1,4 @@
-package org.unichain.core.services.internal.impl;
+package org.unichain.core.actuator.posbridge.ext;
 
 import com.google.protobuf.ByteString;
 import lombok.var;
@@ -10,16 +10,15 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.internal.ChildTokenService;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
-public class ChildTokenErc721Service implements ChildTokenService {
+public class ChildTokenUrc721 implements ChildToken {
 
     private final Manager dbManager;
     private final TransactionResultCapsule ret;
 
-    public ChildTokenErc721Service(Manager dbManager, TransactionResultCapsule ret) {
+    public ChildTokenUrc721(Manager dbManager, TransactionResultCapsule ret) {
         this.dbManager = dbManager;
         this.ret = ret;
     }

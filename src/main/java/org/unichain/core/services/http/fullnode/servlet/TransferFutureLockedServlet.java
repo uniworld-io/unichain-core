@@ -35,7 +35,7 @@ public class TransferFutureLockedServlet extends HttpServlet {
       var build = Contract.FutureTransferContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var transferCtx = build.build();
-      var tx = wallet.createTransactionCapsule(transferCtx, Protocol.Transaction.Contract.ContractType.FutureTransferLockedContract).getInstance();
+      var tx = wallet.createTransactionCapsule(transferCtx, Protocol.Transaction.Contract.ContractType.TransferFutureDealContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

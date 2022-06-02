@@ -26,6 +26,7 @@ import org.unichain.common.overlay.discover.node.NodeManager;
 import org.unichain.common.utils.*;
 import org.unichain.core.Wallet;
 import org.unichain.core.WalletSolidity;
+import org.unichain.core.actuator.urc40.ext.Urc40;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
@@ -73,6 +74,9 @@ public class RpcApiService implements Service {
 
   @Autowired
   private Urc721 urc721;
+
+  @Autowired
+  private Urc40 urc40;
 
   @Autowired
   private NodeInfoService nodeInfoService;
@@ -380,63 +384,63 @@ public class RpcApiService implements Service {
      */
     @Override
     public void urc40FutureGet(Urc40FutureTokenQuery request, StreamObserver<Urc40FutureTokenPack> responseObserver) {
-      var reply = wallet.urc40FutureGet(request);
+      var reply = urc40.futureGet(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc40ContractList(Urc40ContractQuery request, io.grpc.stub.StreamObserver<Urc40ContractPage> responseObserver) {
-      var reply = wallet.urc40ContractList(request);
+      var reply = urc40.contractList(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc40Name(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
-      var reply = wallet.urc40Name(request);
+      var reply = urc40.name(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc40Symbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
-      var reply = wallet.urc40Symbol(request);
+      var reply = urc40.symbol(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc40Decimals(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
-      var reply = wallet.urc40Decimals(request);
+      var reply = urc40.decimals(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc40TotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
-      var reply = wallet.urc40TotalSupply(request);
+      var reply = urc40.totalSupply(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc40BalanceOf(Urc40BalanceOfQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
-      var reply = wallet.urc40BalanceOf(request);
+      var reply = urc40.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc40GetOwner(AddressMessage request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
-      var reply = wallet.urc40GetOwner(request);
+      var reply = urc40.getOwner(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc40Allowance(Urc40AllowanceQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
-      var reply = wallet.urc40Allowance(request);
+      var reply = urc40.allowance(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

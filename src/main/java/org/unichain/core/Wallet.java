@@ -56,7 +56,6 @@ import org.unichain.core.actuator.ActuatorFactory;
 import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
 import org.unichain.core.capsule.urc30.Urc30FutureTokenCapsule;
-import org.unichain.core.capsule.urc40.Urc40SpenderCapsule;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.*;
@@ -283,178 +282,6 @@ public class Wallet {
 
   public TokenPage getTokenPool(TokenPoolQuery query) {
     return dbManager.getTokenPoolStore().query(query);
-  }
-
-  public Urc40FutureTokenPack urc40FutureGet(Urc40FutureTokenQuery query) {
-    Assert.isTrue(query.hasField(URC40_QR_FIELD_OWNER_ADDR), "Missing owner address");
-    Assert.isTrue(query.hasField(URC40_QR_FIELD_ADDR), "Missing contract address");
-    var ownerAddr = query.getOwnerAddress().toByteArray();
-    var addr = query.getAddress().toByteArray();
-    Assert.isTrue(Wallet.addressValid(ownerAddr), "Invalid owner address");
-    Assert.isTrue(Wallet.addressValid(addr), "Invalid contract address");
-    var acc = dbManager.getAccountStore().get(ownerAddr);
-    Assert.notNull(acc, "Owner address not found: " + Wallet.encode58Check(ownerAddr));
-
-    var addrBase58 = Wallet.encode58Check(addr);
-    var contract = dbManager.getUrc40ContractStore().get(addr);
-    Assert.notNull(contract, "Contract not found: " + addrBase58);
-
-    if(!query.hasField(URC40_QR_FIELD_PAGE_SIZE))
-    {
-      query = query.toBuilder()
-              .setPageSize(DEFAULT_PAGE_SIZE)
-              .build();
-    }
-
-    if(!query.hasField(URC40_QR_FIELD_PAGE_INDEX))
-    {
-      query = query.toBuilder()
-              .setPageIndex(DEFAULT_PAGE_INDEX)
-              .build();
-    }
-
-    Assert.isTrue(query.getPageSize() > 0 &&  query.getPageIndex() >=0 && query.getPageSize() <= MAX_PAGE_SIZE, "invalid paging info");
-
-
-    var summary = acc.getUrc40FutureTokenSummary(addrBase58.toLowerCase());
-
-    //no deals
-    if(Objects.isNull(summary) || (summary.getTotalDeal() <= 0)){
-      return Urc40FutureTokenPack.newBuilder()
-              .setOwnerAddress(query.getOwnerAddress())
-              .setAddress(query.getAddress())
-              .setSymbol(contract.getSymbol())
-              .setTotalDeal(0)
-              .setTotalValue(0)
-              .clearLowerBoundTime()
-              .clearUpperBoundTime()
-              .clearDeals()
-              .build();
-    }
-
-    //validate query
-    var deals = new ArrayList<Urc40FutureToken>();
-
-    int pageSize = query.getPageSize();
-    int pageIndex = query.getPageIndex();
-    long start = (long) pageIndex * pageSize;
-    long end = start + pageSize;
-    if(start >= summary.getTotalDeal()){
-      //empty deals
-    }
-    else {
-      if(end >= summary.getTotalDeal())
-        end = summary.getTotalDeal();
-
-      //load sublist from [start -> end)
-      var futureStore = dbManager.getUrc40FutureTransferStore();
-      var tmpTickKeyBs = summary.getLowerTick();
-      int index = 0;
-      while (true){
-        var tmpTick = futureStore.get(tmpTickKeyBs.toByteArray());
-        if(index >= start && index < end)
-        {
-          deals.add(tmpTick.getInstance());
-        }
-        if(index >= end)
-          break;
-        tmpTickKeyBs = tmpTick.getNextTick();
-        index ++;
-      }
-    }
-
-    return Urc40FutureTokenPack.newBuilder()
-            .setOwnerAddress(query.getOwnerAddress())
-            .setAddress(query.getAddress())
-            .setSymbol(contract.getSymbol())
-            .setTotalDeal(summary.getTotalDeal())
-            .setTotalValue(summary.getTotalValue())
-            .setLowerBoundTime(summary.getLowerBoundTime())
-            .setUpperBoundTime(summary.getUpperBoundTime())
-            .addAllDeals(deals)
-            .build();
-  }
-
-
-  public NumberMessage urc40Allowance(Urc40AllowanceQuery query) {
-    var owner = query.getOwner().toByteArray();
-    var contract = query.getAddress().toByteArray();
-    var spender = query.getSpender().toByteArray();
-    Assert.isTrue(Wallet.addressValid(owner) && Wallet.addressValid(contract) && Wallet.addressValid(spender), "Bad owner|contract|spender address");
-
-    var spenderKey = Urc40SpenderCapsule.genKey(spender, contract);
-    var spenderStore = dbManager.getUrc40SpenderStore();
-    var avail = 0L;
-    if(spenderStore.has(spenderKey)){
-      var quota = spenderStore.get(spenderKey);
-      avail = Objects.isNull(quota) ? 0L : quota.getQuota(owner);
-    }
-
-    return NumberMessage.newBuilder().setNum(avail).build();
-  }
-
-  public NumberMessage urc40BalanceOf(Urc40BalanceOfQuery query) {
-    var owner = query.getOwnerAddress().toByteArray();
-    var contract = query.getAddress().toByteArray();
-    var contractBase58 = Wallet.encode58Check(contract);
-    var accStore = dbManager.getAccountStore();
-    var contractStore = dbManager.getContractStore();
-    Assert.isTrue(accStore.has(owner), "Not found address: " + Wallet.encode58Check(owner));
-    Assert.isTrue(contractStore.has(contract), "Not found contract: " + contractBase58);
-    var ownerCap = accStore.get(owner);
-    var futureSummary = ownerCap.getUrc40FutureTokenSummary(contractBase58);
-    var avail = ownerCap.getUrc40TokenAvailable(contractBase58.toLowerCase());
-    var future = (futureSummary == null ? 0L : futureSummary.getTotalValue());
-    return NumberMessage.newBuilder().setNum(avail + future).build();
-  }
-
-  public Urc40ContractPage urc40ContractList(Urc40ContractQuery query) {
-    return dbManager.getUrc40ContractStore().query(query);
-  }
-
-  public StringMessage urc40Name(AddressMessage query) {
-    var addr = query.getAddress().toByteArray();
-    var contractStore = dbManager.getUrc40ContractStore();
-    Assert.isTrue(contractStore.has(addr), "Not found urc40 contract: " + Wallet.encode58Check(addr));
-    return StringMessage.newBuilder()
-            .setValue(contractStore.get(addr).getName())
-            .build();
-  }
-
-  public StringMessage urc40Symbol(AddressMessage query) {
-    var addr = query.getAddress().toByteArray();
-    var contractStore = dbManager.getUrc40ContractStore();
-    Assert.isTrue(contractStore.has(addr), "Not found urc40 contract: " + Wallet.encode58Check(addr));
-    return StringMessage.newBuilder()
-            .setValue(contractStore.get(addr).getSymbol())
-            .build();
-  }
-
-  public NumberMessage urc40Decimals(AddressMessage query) {
-    var addr = query.getAddress().toByteArray();
-    var contractStore = dbManager.getUrc40ContractStore();
-    Assert.isTrue(contractStore.has(addr), "Not found urc40 contract: " + Wallet.encode58Check(addr));
-    return NumberMessage.newBuilder()
-            .setNum(contractStore.get(addr).getDecimals())
-            .build();
-  }
-
-  public NumberMessage urc40TotalSupply(AddressMessage query) {
-    var addr = query.getAddress().toByteArray();
-    var contractStore = dbManager.getUrc40ContractStore();
-    Assert.isTrue(contractStore.has(addr), "Not found urc40 contract: " + Wallet.encode58Check(addr));
-    return NumberMessage.newBuilder()
-            .setNum(contractStore.get(addr).getTotalSupply())
-            .build();
-  }
-
-  public AddressMessage urc40GetOwner(AddressMessage query) {
-    var addr = query.getAddress().toByteArray();
-    var contractStore = dbManager.getUrc40ContractStore();
-    Assert.isTrue(contractStore.has(addr), "Not found urc40 contract: " + Wallet.encode58Check(addr));
-    return AddressMessage.newBuilder()
-            .setAddress(contractStore.get(addr).getOwnerAddress())
-            .build();
   }
 
   public Account getAccountById(Account account) {
@@ -693,7 +520,7 @@ public class Wallet {
       }
       tswBuilder.setPermission(permission);
       if (unx.getSignatureCount() > 0) {
-        List<ByteString> approveList = new ArrayList<ByteString>();
+        List<ByteString> approveList = new ArrayList<>();
         long currentWeight = TransactionCapsule.checkWeight(permission, unx.getSignatureList(), Sha256Hash.hash(unx.getRawData().toByteArray()), approveList);
         tswBuilder.addAllApprovedList(approveList);
         tswBuilder.setCurrentWeight(currentWeight);
@@ -739,7 +566,7 @@ public class Wallet {
       }
 
       if (unx.getSignatureCount() > 0) {
-        List<ByteString> approveList = new ArrayList<ByteString>();
+        List<ByteString> approveList = new ArrayList<>();
         byte[] hash = Sha256Hash.hash(unx.getRawData().toByteArray());
         for (ByteString sig : unx.getSignatureList()) {
           if (sig.size() < 65) {

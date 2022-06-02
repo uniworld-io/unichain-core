@@ -9,15 +9,15 @@ import org.unichain.protos.Protocol;
 
 import java.util.Objects;
 
-public class ServiceUtil {
+public class ActuatorUtil {
 
-  public static void addFutureBalance(Manager dbManager, byte[] toAddress, long amount, long availableTime) {
+  public static void addFutureDeal(Manager dbManager, byte[] address, long amount, long availableTime) {
     var tickDay = Util.makeDayTick(availableTime);
-    var tickKey = Util.makeFutureTransferIndexKey(toAddress, tickDay);
+    var tickKey = Util.makeFutureTransferIndexKey(address, tickDay);
 
     var futureStore = dbManager.getFutureTransferStore();
     var accountStore = dbManager.getAccountStore();
-    var toAcc = accountStore.get(toAddress);
+    var toAcc = accountStore.get(address);
     var summary = toAcc.getFutureSummary();
     /*
       tick exist: the fasted way!
@@ -33,7 +33,7 @@ public class ServiceUtil {
               .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
               .build();
       toAcc.setFutureSummary(summary);
-      accountStore.put(toAddress, toAcc);
+      accountStore.put(address, toAcc);
       return;
     }
 
@@ -60,7 +60,7 @@ public class ServiceUtil {
               .setUpperTick(ByteString.copyFrom(tickKey))
               .build();
       toAcc.setFutureSummary(summary);
-      accountStore.put(toAddress, toAcc);
+      accountStore.put(address, toAcc);
       return;
     }
 
@@ -96,8 +96,8 @@ public class ServiceUtil {
               .setLowerTick(ByteString.copyFrom(tickKey))
               .build();
       toAcc.setFutureSummary(summary);
-      accountStore.put(toAddress, toAcc);
-      return ;
+      accountStore.put(address, toAcc);
+      return;
     }
 
     /*
@@ -127,7 +127,7 @@ public class ServiceUtil {
               .setUpperTime(tickDay)
               .build();
       toAcc.setFutureSummary(summary);
-      accountStore.put(toAddress, toAcc);
+      accountStore.put(address, toAcc);
       return;
     }
 
@@ -166,7 +166,7 @@ public class ServiceUtil {
                 .build();
 
         toAcc.setFutureSummary(summary);
-        accountStore.put(toAddress, toAcc);
+        accountStore.put(address, toAcc);
         return;
       }
       else {
@@ -175,7 +175,7 @@ public class ServiceUtil {
     }
   }
 
-  public static void removeFutureTick(Manager dbManager, byte[] ownerAddress, FutureTransferCapsule futureTick) {
+  public static void removeFutureDeal(Manager dbManager, byte[] ownerAddress, FutureTransferCapsule futureTick) {
     var futureStore = dbManager.getFutureTransferStore();
     var accountStore = dbManager.getAccountStore();
     var ownerAcc = accountStore.get(ownerAddress);

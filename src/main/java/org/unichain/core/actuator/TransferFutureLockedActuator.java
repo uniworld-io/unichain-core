@@ -6,7 +6,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.util.Assert;
-import org.unichain.common.utils.ServiceUtil;
+import org.unichain.common.utils.ActuatorUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
@@ -120,9 +120,11 @@ public class TransferFutureLockedActuator extends AbstractActuator {
     var currentTick = futureStore.get(ownerSummary.getLowerTick().toByteArray());
     while (currentTick != null) {
       if (currentTick.getData() == tick.getData()) {
-        ServiceUtil.removeFutureTick(dbManager, ownerAddress, currentTick);
+        ActuatorUtil.removeFutureDeal(dbManager, ownerAddress, currentTick);
+        // remove old tickKey
+        futureStore.delete(tickKey);
         // change currentTick of ownerAddress to toAddress
-        ServiceUtil.addFutureBalance(dbManager, toAddress, currentTick.getBalance(), availableTime);
+        ActuatorUtil.addFutureDeal(dbManager, toAddress, currentTick.getBalance(), availableTime);
         break;
       } else {
         currentTick = futureStore.get(currentTick.getNextTick().toByteArray());

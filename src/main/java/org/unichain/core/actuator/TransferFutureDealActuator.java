@@ -20,8 +20,8 @@ import org.unichain.protos.Protocol;
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
-public class TransferFutureLockedActuator extends AbstractActuator {
-  public TransferFutureLockedActuator(Any contract, Manager dbManager) {
+public class TransferFutureDealActuator extends AbstractActuator {
+  public TransferFutureDealActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -29,12 +29,12 @@ public class TransferFutureLockedActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(Contract.TransferFutureDealContract.class);
+      var ctx = contract.unpack(Contract.FutureDealTransferContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var toAddress = ctx.getToAddress().toByteArray();
       var dealId = ctx.getDealId();
       chargeFee(ownerAddress, fee);
-      transferFutureLocked(ownerAddress, toAddress, dealId);
+      transferFutureDeal(ownerAddress, toAddress, dealId);
       ret.setStatus(fee, Protocol.Transaction.Result.code.SUCESS);
       return true;
     } catch (Exception e) {
@@ -49,9 +49,9 @@ public class TransferFutureLockedActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(Contract.TransferFutureDealContract.class), "Contract type error,expected type [FutureLockedTransfer], real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Contract.FutureDealTransferContract.class), "Contract type error,expected type [FutureLockedTransfer], real type[" + contract.getClass() + "]");
 
-      var ctx = this.contract.unpack(Contract.TransferFutureDealContract.class);
+      var ctx = this.contract.unpack(Contract.FutureDealTransferContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
 
@@ -99,7 +99,7 @@ public class TransferFutureLockedActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(Contract.TransferFutureDealContract.class).getOwnerAddress();
+    return contract.unpack(Contract.FutureDealTransferContract.class).getOwnerAddress();
   }
 
   @Override
@@ -107,7 +107,7 @@ public class TransferFutureLockedActuator extends AbstractActuator {
     return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
   }
 
-  private void transferFutureLocked(byte[] ownerAddress, byte[] toAddress, long dealId) {
+  private void transferFutureDeal(byte[] ownerAddress, byte[] toAddress, long dealId) {
     var tickDay = Util.makeDayTick(dealId);
     var tickKey = Util.makeFutureTransferIndexKey(ownerAddress, tickDay);
 

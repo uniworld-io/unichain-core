@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
-public class TransferFutureLockedServlet extends HttpServlet {
+public class TransferFutureDealServlet extends HttpServlet {
   @Autowired
   private Wallet wallet;
 
@@ -35,7 +35,7 @@ public class TransferFutureLockedServlet extends HttpServlet {
       var build = Contract.FutureTransferContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
       var transferCtx = build.build();
-      var tx = wallet.createTransactionCapsule(transferCtx, Protocol.Transaction.Contract.ContractType.TransferFutureDealContract).getInstance();
+      var tx = wallet.createTransactionCapsule(transferCtx, Protocol.Transaction.Contract.ContractType.FutureDealTransferContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

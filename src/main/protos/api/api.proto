@@ -314,12 +314,12 @@ service Wallet {
     };
   };
 
-  rpc CreateFutureLockedTransferTransaction (TransferFutureDealContract) returns (Transaction) {
+  rpc CreateFutureDealTransferTransaction (FutureDealTransferContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/createfuturelockedtransaction"
+      post: "/wallet/createfuturedealtransaction"
       body: "*"
         additional_bindings {
-          get: "/wallet/createfuturelockedtransaction"
+          get: "/wallet/createfuturedealtransaction"
       }
     };
   };

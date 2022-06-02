@@ -499,7 +499,7 @@ message Transaction {
       Urc40ApproveContract = 119;
       Urc40TransferContract = 120;
 
-      TransferFutureDealContract = 121;
+      FutureDealTransferContract = 121;
     }
 
     ContractType type = 1;

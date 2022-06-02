@@ -64,8 +64,8 @@ public class ActuatorFactory {
           default:
             return new TransferFutureActuatorV4(contract.getParameter(), manager);
         }
-      case TransferFutureDealContract:
-        return new TransferFutureLockedActuator(contract.getParameter(), manager);
+      case FutureDealTransferContract:
+        return new TransferFutureDealActuator(contract.getParameter(), manager);
       case FutureWithdrawContract:
         switch (blockVersion){
           case BLOCK_VERSION_0:

@@ -44,7 +44,6 @@ public class TransferFutureLockedActuator extends AbstractActuator {
     }
   }
 
-  //@fixme validate future deal exist ?
   @Override
   public boolean validate() throws ContractValidateException {
     try {
@@ -73,6 +72,14 @@ public class TransferFutureLockedActuator extends AbstractActuator {
       if (toAccount == null) {
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
+
+      /*
+      Check if owner doesn't have locked tick
+      */
+      var tickDay = Util.makeDayTick(ctx.getExpireTime());
+      var tickKey = Util.makeFutureTransferIndexKey(ownerAddress, tickDay);
+      var futureStore = dbManager.getFutureTransferStore();
+      Assert.isTrue(futureStore.has(tickKey), "OwnerAddress doesn't have future locked with expired time " + ctx.getExpireTime());
 
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       var transferToSmartContract = (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1)
@@ -105,35 +112,13 @@ public class TransferFutureLockedActuator extends AbstractActuator {
     var tickKey = Util.makeFutureTransferIndexKey(ownerAddress, tickDay);
 
     var futureStore = dbManager.getFutureTransferStore();
-    /*
-      Check if owner doesn't have locked tick
-    */
-    if (!futureStore.has(tickKey)) {
-      //@fixme this case should never happen
-      //@fixme use logger
-      System.out.println("OwnerAddress doesn't have future locked with expired time " + availableTime);
-      return;
-    }
-
-    var accountStore = dbManager.getAccountStore();
-    var ownerAcc = accountStore.get(ownerAddress);
-    var ownerSummary = ownerAcc.getFutureSummary();
     var tick = futureStore.get(tickKey);
 
-    var currentTick = futureStore.get(ownerSummary.getLowerTick().toByteArray());
+    ActuatorUtil.removeFutureDeal(dbManager, ownerAddress, tick);
+    // remove old tickKey
+    futureStore.delete(tickKey);
+    // change currentTick of ownerAddress to toAddress
+    ActuatorUtil.addFutureDeal(dbManager, toAddress, tick.getBalance(), availableTime);
 
-    //@fixme don't loop, just access using key that composed by [ownerAddr_availableTime]
-    while (currentTick != null) {
-      if (currentTick.getData() == tick.getData()) {
-        ActuatorUtil.removeFutureDeal(dbManager, ownerAddress, currentTick);
-        // remove old tickKey
-        futureStore.delete(tickKey);
-        // change currentTick of ownerAddress to toAddress
-        ActuatorUtil.addFutureDeal(dbManager, toAddress, currentTick.getBalance(), availableTime);
-        break;
-      } else {
-        currentTick = futureStore.get(currentTick.getNextTick().toByteArray());
-      }
-    }
   }
 }

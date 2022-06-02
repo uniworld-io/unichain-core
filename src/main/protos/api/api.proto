@@ -314,7 +314,7 @@ service Wallet {
     };
   };
 
-  rpc CreateFutureLockedTransferTransaction (FutureLockedTransferContract) returns (Transaction) {
+  rpc CreateFutureLockedTransferTransaction (TransferFutureDealContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/createfuturelockedtransaction"
       body: "*"

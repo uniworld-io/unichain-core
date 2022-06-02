@@ -29,12 +29,12 @@ public class TransferFutureLockedActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
-      var ctx = contract.unpack(Contract.FutureLockedTransferContract.class);
+      var ctx = contract.unpack(Contract.TransferFutureDealContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var toAddress = ctx.getToAddress().toByteArray();
-      var expireTime = ctx.getExpireTime();
+      var dealId = ctx.getDealId();
       chargeFee(ownerAddress, fee);
-      transferFutureLocked(ownerAddress, toAddress, expireTime);
+      transferFutureLocked(ownerAddress, toAddress, dealId);
       ret.setStatus(fee, Protocol.Transaction.Result.code.SUCESS);
       return true;
     } catch (Exception e) {
@@ -49,9 +49,9 @@ public class TransferFutureLockedActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(Contract.FutureLockedTransferContract.class), "Contract type error,expected type [FutureLockedTransfer], real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Contract.TransferFutureDealContract.class), "Contract type error,expected type [FutureLockedTransfer], real type[" + contract.getClass() + "]");
 
-      var ctx = this.contract.unpack(Contract.FutureLockedTransferContract.class);
+      var ctx = this.contract.unpack(Contract.TransferFutureDealContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
 
@@ -59,8 +59,8 @@ public class TransferFutureLockedActuator extends AbstractActuator {
       Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
 
       var maxExpireTime = Math.addExact(dbManager.getHeadBlockTimeStamp(), dbManager.getMaxFutureTransferTimeDurationUnwV3());
-      Assert.isTrue((ctx.getExpireTime() > dbManager.getHeadBlockTimeStamp()) && (ctx.getExpireTime() <= maxExpireTime),
-              "expire time must greater current block time, lower than maximum timestamp:" + maxExpireTime);
+      Assert.isTrue((ctx.getDealId() > dbManager.getHeadBlockTimeStamp()) && (ctx.getDealId() <= maxExpireTime),
+              "deal id must greater current block time, lower than maximum timestamp:" + maxExpireTime);
 
       Assert.isTrue(!Arrays.equals(toAddress, ownerAddress), "Cannot transfer unw to yourself");
 
@@ -76,10 +76,10 @@ public class TransferFutureLockedActuator extends AbstractActuator {
       /*
       Check if owner doesn't have locked tick
       */
-      var tickDay = Util.makeDayTick(ctx.getExpireTime());
+      var tickDay = Util.makeDayTick(ctx.getDealId());
       var tickKey = Util.makeFutureTransferIndexKey(ownerAddress, tickDay);
       var futureStore = dbManager.getFutureTransferStore();
-      Assert.isTrue(futureStore.has(tickKey), "OwnerAddress doesn't have future locked with expired time " + ctx.getExpireTime());
+      Assert.isTrue(futureStore.has(tickKey), "OwnerAddress doesn't have future locked with deal id " + ctx.getDealId());
 
       //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
       var transferToSmartContract = (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1)
@@ -99,7 +99,7 @@ public class TransferFutureLockedActuator extends AbstractActuator {
 
   @Override
   public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
-    return contract.unpack(Contract.FutureLockedTransferContract.class).getOwnerAddress();
+    return contract.unpack(Contract.TransferFutureDealContract.class).getOwnerAddress();
   }
 
   @Override
@@ -107,8 +107,8 @@ public class TransferFutureLockedActuator extends AbstractActuator {
     return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
   }
 
-  private void transferFutureLocked(byte[] ownerAddress, byte[] toAddress, long availableTime) {
-    var tickDay = Util.makeDayTick(availableTime);
+  private void transferFutureLocked(byte[] ownerAddress, byte[] toAddress, long dealId) {
+    var tickDay = Util.makeDayTick(dealId);
     var tickKey = Util.makeFutureTransferIndexKey(ownerAddress, tickDay);
 
     var futureStore = dbManager.getFutureTransferStore();
@@ -118,7 +118,7 @@ public class TransferFutureLockedActuator extends AbstractActuator {
     // remove old tickKey
     futureStore.delete(tickKey);
     // change currentTick of ownerAddress to toAddress
-    ActuatorUtil.addFutureDeal(dbManager, toAddress, tick.getBalance(), availableTime);
+    ActuatorUtil.addFutureDeal(dbManager, toAddress, tick.getBalance(), dealId);
 
   }
 }

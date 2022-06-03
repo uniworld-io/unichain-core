@@ -175,13 +175,41 @@ public class ActuatorUtil {
     }
   }
 
-  //@fixme whats happen if only one deal in ownerAddress ? cause null pointer exception!
   public static void removeFutureDeal(Manager dbManager, byte[] ownerAddress, FutureTransferCapsule futureTick) {
     var futureStore = dbManager.getFutureTransferStore();
     var accountStore = dbManager.getAccountStore();
     var ownerAcc = accountStore.get(ownerAddress);
     var ownerSummary = ownerAcc.getFutureSummary();
 
+    // if ownerAddress has just this deal
+    if (ownerSummary.getTotalDeal() == 1) {
+      ownerAcc.clearFuture();
+      accountStore.put(ownerAddress, ownerAcc);
+      return;
+    }
+
+    // if this deal is head
+    var headKey = ownerSummary.getLowerTick().toByteArray();
+    var head = futureStore.get(headKey);
+    var headTime = head.getExpireTime();
+    if (futureTick.getExpireTime() == headTime) {
+      ownerSummary.toBuilder().setLowerTick(head.getNextTick());
+      ownerAcc.setFutureSummary(ownerSummary);
+      accountStore.put(ownerAddress, ownerAcc);
+      return;
+    }
+
+    // if this deal is tail
+    var tailKey = ownerSummary.getUpperTick().toByteArray();
+    var tail = futureStore.get(tailKey);
+    if (futureTick.getExpireTime() == tail.getExpireTime()) {
+      ownerSummary.toBuilder().setUpperTick(tail.getPrevTick());
+      ownerAcc.setFutureSummary(ownerSummary);
+      accountStore.put(ownerAddress, ownerAcc);
+      return;
+    }
+
+    // if this deal is middle
     // attach currentTick.prev tick to currentTick.next
     var prevTickPointer = futureTick.getPrevTick();
     var prevTick = futureStore.get(prevTickPointer.toByteArray());

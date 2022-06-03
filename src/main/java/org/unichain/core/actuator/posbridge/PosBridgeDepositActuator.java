@@ -57,7 +57,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
 
             //load token map
             var tokenMapStore = dbManager.getRootTokenMapStore();
-            var keyRoot = PosBridgeUtil.makeTokenMapKey(rootChainId, ctx.getRootToken());
+            var keyRoot = PosBridgeUtil.makeTokenMapKey(ctx.getChildChainid(), ctx.getRootToken());
             var tokenMapCap = tokenMapStore.get(keyRoot.getBytes());
             int tokenType = tokenMapCap.getTokenType();
 
@@ -103,7 +103,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
 
             if(!PosBridgeUtil.NativeToken.UNI.equalsIgnoreCase(ctx.getRootToken())){
                 var tokenMapStore = dbManager.getRootTokenMapStore();
-                var rootKey = PosBridgeUtil.makeTokenMapKey(Wallet.getChainId(), ctx.getRootToken());
+                var rootKey = PosBridgeUtil.makeTokenMapKey(ctx.getChildChainid(), ctx.getRootToken());
 
                 Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "TOKEN_NOT_MAPPED: " + rootKey);
                 var tokenMap = tokenMapStore.get(rootKey.getBytes());

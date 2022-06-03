@@ -116,7 +116,7 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             //make sure un-mapped token
             var tokenMapStore = dbManager.getRootTokenMapStore();
             Assert.isTrue(
-                    tokenMapStore.ensureNotMapped(ctx.getRootChainid(), ctx.getRootToken())
+                    tokenMapStore.ensureNotMapped(ctx.getChildChainid(), ctx.getRootToken())
                             && tokenMapStore.ensureNotMapped(ctx.getChildChainid(), ctx.getChildToken()),
                     "ALREADY_MAPPED"
             );

@@ -1773,6 +1773,9 @@ public class RpcApiService implements Service {
     @Override
     public void urc20ContractCreate(Contract.Urc20CreateContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
+        request = request.toBuilder()
+                .setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()))
+                .build();
         responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20CreateContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);

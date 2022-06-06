@@ -902,6 +902,69 @@ public class RpcApiService implements Service {
       responseObserver.onCompleted();
     }
 
+    @Override
+    public void urc20FutureGet(Urc20FutureTokenQuery request, StreamObserver<Urc20FutureTokenPack> responseObserver) {
+      var reply = urc20.futureGet(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20ContractList(Urc20ContractQuery request, io.grpc.stub.StreamObserver<Urc20ContractPage> responseObserver) {
+      var reply = urc20.contractList(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Name(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.name(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Symbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.symbol(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Decimals(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.decimals(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20TotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.totalSupply(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20BalanceOf(Urc20BalanceOfQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.balanceOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20GetOwner(AddressMessage request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc20.getOwner(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Allowance(Urc20AllowanceQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.allowance(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
     //POSBridge
     @Override
     public void getPosBridgeConfig(EmptyMessage req, StreamObserver<PosBridgeConfig> responseObserver) {

@@ -89,7 +89,7 @@ public class Urc20BurnActuator extends AbstractActuator {
 
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: "+ Utils.formatDateLong(contractCap.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
-      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwnerAddress().toByteArray()), "Burning limited only on contract's owner");
+//      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwnerAddress().toByteArray()), "Burning limited only on contract's owner");
       Assert.isTrue(ownerAccountCap.getUrc20TokenAvailable(contractAddrBase58.toLowerCase()) >= ctx.getAmount(), "Not enough contract balance of" + contractAddrBase58 + "at least " + ctx.getAmount());
       return true;
     }

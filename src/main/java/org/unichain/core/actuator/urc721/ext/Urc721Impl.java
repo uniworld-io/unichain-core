@@ -39,7 +39,7 @@ public class Urc721Impl implements Urc721 {
         return wallet.createTransactionCapsule(contract, ContractType.Urc721CreateContract).getInstance();
     }
 
-    private static Descriptors.FieldDescriptor CONTRACT_ADDR = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.ADDRESS_FIELD_NUMBER);
+    private static final Descriptors.FieldDescriptor CONTRACT_ADDR = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.ADDRESS_FIELD_NUMBER);
 
     @Override
     public Protocol.Urc721Contract getContract(Protocol.Urc721Contract query) {

@@ -115,17 +115,17 @@ public class PosBridgeSetupActuator extends AbstractActuator {
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_NATIVE)) {
                 var predicateAddr = Numeric.hexStringToByteArray(ctx.getPredicateNative());
-                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist native predicate addr");
+                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist Native predicate address");
             }
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_TOKEN)) {
                 var predicateAddr = Numeric.hexStringToByteArray(ctx.getPredicateToken());
-                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist token predicate addr");
+                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist URC40 predicate address");
             }
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_URC721)) {
                 var predicateAddr = Numeric.hexStringToByteArray(ctx.getPredicateNft());
-                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist NFT predicate addr");
+                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist URC721 predicate address");
             }
 
             if(ctx.hasField(POSBRIDGE_MIN_VALIDATOR)) {

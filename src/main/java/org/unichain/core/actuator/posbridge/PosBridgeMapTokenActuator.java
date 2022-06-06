@@ -136,13 +136,13 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
                 if (isRoot) {
                     Assert.isTrue(NativeToken.UNI.equalsIgnoreCase(token), "TOKEN_NATIVE_INVALID");
                 } else {
-                    var tokenIndex = dbManager.getTokenAddrSymbolIndexStore();
-                    Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
+                    var urc20ContractStore = dbManager.getUrc20ContractStore();
+                    Assert.isTrue(urc20ContractStore.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
                 }
                 break;
             case ERC20:
-                var tokenIndex = dbManager.getTokenAddrSymbolIndexStore();
-                Assert.isTrue(tokenIndex.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
+                var urc20ContractStore = dbManager.getUrc20ContractStore();
+                Assert.isTrue(urc20ContractStore.has(Numeric.hexStringToByteArray(token)), "TOKEN_NOT_FOUND: " + token);
                 break;
             case ERC721:
                 var urc721ContractStore = dbManager.getUrc721ContractStore();

@@ -34,7 +34,6 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
-//@todo urc20 should charge token only, not unw ???
 @Slf4j(topic = "actuator")
 public class Urc20ApproveActuator extends AbstractActuator {
 

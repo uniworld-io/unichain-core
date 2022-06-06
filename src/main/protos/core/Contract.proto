@@ -240,10 +240,10 @@ message Urc20CreateContract {
 }
 
 message Urc20TransferFromContract {
-  bytes owner_address = 1;
-  bytes from = 2;
-  bytes to = 3;
-  bytes address = 4;
+  bytes owner_address = 1; //spender
+  bytes from = 2; //owner
+  bytes to = 3; //target
+  bytes address = 4; //contract
   int64 amount = 5;
   int64 available_time = 6;
 }

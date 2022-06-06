@@ -1719,11 +1719,6 @@ public class Manager {
     forkController.reset();
   }
 
-  /**
-   * @todo verify ?
-   * @param block the block update signed witness. set witness who signed block the 1. the latest
-   * block num 2. pay the unx to witness. 3. the latest slot num.
-   */
   public void updateSignedWitness(BlockCapsule block) {
     var witnessAddr = block.getWitnessAddress();
     var witnessCapsule = witnessStore.getUnchecked(witnessAddr.toByteArray());
@@ -2053,7 +2048,6 @@ public class Manager {
     }
   }
 
-  //@todo review
   private void postContractTrigger(final TransactionTrace trace, boolean remove) {
     if (eventPluginLoaded && (EventPluginLoader.getInstance().isContractEventTriggerEnable() || EventPluginLoader.getInstance().isContractLogTriggerEnable())) {
       for (var trigger : trace.getRuntimeResult().getTriggerList()) {

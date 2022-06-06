@@ -63,9 +63,9 @@ public class Urc20TransferActuator extends AbstractActuator {
       var toAddr = ctx.getTo().toByteArray();
       var toAccountCap = dbManager.getAccountStore().get(toAddr);
 
-      var isCreateNewAcc = (toAccountCap == null);
+      var isCreateNewAcc = Objects.isNull(toAccountCap);
       if (isCreateNewAcc) {
-        var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
+        var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
         toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddr), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
         dbManager.getAccountStore().put(toAddr, toAccountCap);
       }
@@ -93,11 +93,11 @@ public class Urc20TransferActuator extends AbstractActuator {
           addUrc20Future(toAddr, contractAddr, ctx.getAmount(), ctx.getAvailableTime());
       }
       else {
-         /*
+         /**
           not owner of token, so:
           - if create new account, charge more fee on pool and more token fee on this account
           - charge more token fee on this account
-        */
+        **/
         var tokenFee = Math.addExact(contract.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), contract.getExtraFeeRate()), 100, RoundingMode.CEILING));
         if(isCreateNewAcc)
         {
@@ -110,18 +110,18 @@ public class Urc20TransferActuator extends AbstractActuator {
 
         ownerAccountCap.burnUrc20Token(contractAddr, ctx.getAmount());
         dbManager.getAccountStore().put(ownerAddr, ownerAccountCap);
-        var realTransfer = Math.subtractExact(ctx.getAmount(), tokenFee);
-        Assert.isTrue(realTransfer > 0, "Transfer amount must be greater than fee: " + tokenFee);
+        var receivedAmt = Math.subtractExact(ctx.getAmount(), tokenFee);
+        Assert.isTrue(receivedAmt > 0, "Transfer amount must be greater than fee: " + tokenFee);
         if(ctx.getAvailableTime() <= 0)
         {
-          toAccountCap.addUrc20Token(contractAddr, realTransfer);
+          toAccountCap.addUrc20Token(contractAddr, receivedAmt);
           dbManager.getAccountStore().put(toAddr, toAccountCap);
         }
         else
-          addUrc20Future(toAddr, contractAddr, realTransfer, ctx.getAvailableTime());
+          addUrc20Future(toAddr, contractAddr, receivedAmt, ctx.getAvailableTime());
       }
 
-      //charge pool fee
+      //charge pool fee by unw
       contract.setFeePool(Math.subtractExact(contract.getFeePool(), fee));
       contract.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getUrc20ContractStore().put(contractAddr, contract);

@@ -58,9 +58,7 @@ public class Urc20TransferFromActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc20TransferFromContract.class);
       var accStore = dbManager.getAccountStore();
       var contractStore = dbManager.getUrc20ContractStore();
-
       var spender = ctx.getOwnerAddress().toByteArray();
-      var spenderCap = accStore.get(spender);
 
       var from = ctx.getFrom().toByteArray();
       var fromCap = accStore.get(from);
@@ -72,7 +70,7 @@ public class Urc20TransferFromActuator extends AbstractActuator {
       var contractCap = contractStore.get(contractAddr);
       var contractOwnerAddr = contractCap.getOwnerAddress().toByteArray();
 
-      var isCreateNewAcc = (toAccountCap == null);
+      var isCreateNewAcc = Objects.isNull(toAccountCap);
       if (isCreateNewAcc) {
         var withDefaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
         toAccountCap = new AccountCapsule(ByteString.copyFrom(to), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
@@ -80,11 +78,11 @@ public class Urc20TransferFromActuator extends AbstractActuator {
       }
 
       if(Arrays.equals(from, contractOwnerAddr)){
-         /*
+         /**
           owner of token, so:
           - if create new account, charge more fee on owner
           - don't charge token fee
-        */
+        **/
         if(isCreateNewAcc)
         {
           dbManager.adjustBalanceNoPut(fromCap, -dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
@@ -99,14 +97,16 @@ public class Urc20TransferFromActuator extends AbstractActuator {
           accStore.put(to, toAccountCap);
         }
         else
+        {
           addUrc20Future(to, contractAddr, ctx.getAmount(), ctx.getAvailableTime());
+        }
       }
       else {
-         /*
+         /**
           not owner of token, so:
           - if create new account, charge more fee on pool and more token fee on this account
           - charge more token fee on this account
-        */
+        **/
         var tokenFee = Math.addExact(contractCap.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), contractCap.getExtraFeeRate()), 100, RoundingMode.CEILING));
         if(isCreateNewAcc)
         {
@@ -119,15 +119,15 @@ public class Urc20TransferFromActuator extends AbstractActuator {
 
         fromCap.burnUrc20Token(contractAddr, ctx.getAmount());
         accStore.put(from, fromCap);
-        var realTransfer = Math.subtractExact(ctx.getAmount(), tokenFee);
-        Assert.isTrue(realTransfer > 0, "Transfer amount must be greater than fee: " + tokenFee);
+        var receivedAmt = Math.subtractExact(ctx.getAmount(), tokenFee);
+        Assert.isTrue(receivedAmt > 0, "Transfer amount must be greater than fee: " + tokenFee);
         if(ctx.getAvailableTime() <= 0)
         {
-          toAccountCap.addUrc20Token(contractAddr, realTransfer);
+          toAccountCap.addUrc20Token(contractAddr, receivedAmt);
           accStore.put(to, toAccountCap);
         }
         else
-          addUrc20Future(to, contractAddr, realTransfer, ctx.getAvailableTime());
+          addUrc20Future(to, contractAddr, receivedAmt, ctx.getAvailableTime());
       }
 
       //update spender
@@ -155,9 +155,8 @@ public class Urc20TransferFromActuator extends AbstractActuator {
       Assert.isTrue(contract.is(Urc20TransferFromContract.class), "Contract type error,expected type [Urc20TransferFromContract], real type[" + contract.getClass() + "]");
 
       var fee = calcFee();
-      var accStore = dbManager.getAccountStore();
-
       val ctx = this.contract.unpack(Urc20TransferFromContract.class);
+      var accStore = dbManager.getAccountStore();
       var contractAddr = ctx.getAddress().toByteArray();
       var contractAddrBase58 = Wallet.encode58Check(contractAddr);
 
@@ -194,11 +193,10 @@ public class Urc20TransferFromActuator extends AbstractActuator {
         Assert.isTrue(ctx.getAmount() >= contractCap.getLot(),"Future transfer require minimum amount of : " + contractCap.getLot());
       }
 
-
       //check fee
       var toAccountCap = accStore.get(toAddr);
       var fromAccCap = accStore.get(fromAddr);
-      var isCreateNewAccount = (toAccountCap == null);
+      var isCreateNewAccount = Objects.isNull(toAccountCap);
       var ownerIsContractOwner = Arrays.equals(fromAddr, contractOwnerAddr);
       if(ownerIsContractOwner)
       {

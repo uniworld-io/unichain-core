@@ -111,7 +111,6 @@ public class EnergyProcessor extends ResourceProcessor {
 
     assert totalEnergyWeight > 0;
 
-    //@todo review
     return (long) (energyWeight * ((double) totalEnergyLimit / totalEnergyWeight));
   }
 

@@ -5,7 +5,6 @@ import org.unichain.common.logsfilter.IPluginEventListener;
 
 import java.util.Objects;
 
-//@todo review kafka listener
 @Slf4j
 public class KafkaEventListener implements IPluginEventListener {
     @Override

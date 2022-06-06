@@ -31,11 +31,9 @@ public class Urc20CreateContractServlet extends HttpServlet {
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
       var build = Urc20CreateContract.newBuilder();
-      JsonFormat.merge(contract, build, visible);
-      /**
-       *  generate address
-       */
+      //generate address
       build.setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()));
+      JsonFormat.merge(contract, build, visible);
       var contractCtx = build.build();
       var tx = urc20.createContract(contractCtx);
       var jsonObject = JSONObject.parseObject(contract);

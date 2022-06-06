@@ -87,6 +87,7 @@ import static org.unichain.core.services.http.utils.Util.*;
 public class Wallet {
   private static String addressPreFixString = Constant.ADD_PRE_FIX_STRING_MAINNET;
   private static byte addressPreFixByte = Constant.ADD_PRE_FIX_BYTE_MAINNET;
+
   //@todo move to constant file
   private static Set<Long> posBridgeSupportedChainIds;
   private final int minEffectiveConnection = Args.getInstance().getMinEffectiveConnection();
@@ -1630,7 +1631,6 @@ public class Wallet {
             .build();
   }
 
-  //@todo use right bandwidth processor with block version
   private BandwidthProcessor bandwidthProcessor(){
     return new BandwidthProcessor(dbManager);
   }

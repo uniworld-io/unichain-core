@@ -17,7 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-//@todo later
 @Component
 @Slf4j(topic = "API")
 public class PosBridgeDepositExecServlet extends HttpServlet {

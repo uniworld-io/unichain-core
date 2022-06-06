@@ -154,7 +154,6 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
         Assert.isTrue(!exchangeBalance, "Exchange balance is not enough");
         Assert.isTrue(anotherTokenQty > 0, "Withdraw another token quant must greater than zero");
 
-        //@todo review doing math compute
         var remainder = bigSecondTokenBalance.multiply(bigTokenQty)
                                                 .divide(bigFirstTokenBalance, 4, BigDecimal.ROUND_HALF_UP)
                                                 .doubleValue()
@@ -168,7 +167,6 @@ public class ExchangeWithdrawActuator extends AbstractActuator {
         Assert.isTrue(!(secondTokenBalance < tokenQty || firstTokenBalance < anotherTokenQty), "Exchange balance is not enough");
         Assert.isTrue(anotherTokenQty > 0, "Withdraw another token qty must greater than zero");
 
-        //@todo review doing math compute
         var remainder = bigFirstTokenBalance.multiply(bigTokenQty)
                                                 .divide(bigSecondTokenBalance, 4, BigDecimal.ROUND_HALF_UP)
                                                 .doubleValue()

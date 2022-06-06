@@ -43,7 +43,6 @@ public class EventPluginLoader {
   @Getter
   private boolean useNativeQueue = false;
 
-  //@todo set config
   @Getter
   private boolean solidityEventTriggerEnable = false;
 

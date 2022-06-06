@@ -56,25 +56,25 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
         var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
         var updateCriticalParams = false;
 
-        if(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE)) {
+        if(ctx.hasField(URC20_UPDATE_PARAMS_FIELD_FEE)) {
             contractCap.setFee(ctx.getFee());
             updateCriticalParams = true;
         }
 
-        if(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE_RATE)) {
+        if(ctx.hasField(URC20_UPDATE_PARAMS_FIELD_FEE_RATE)) {
             contractCap.setExtraFeeRate(ctx.getExtraFeeRate());
             updateCriticalParams = true;
         }
 
-        if(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_LOT)) {
+        if(ctx.hasField(URC20_UPDATE_PARAMS_FIELD_LOT)) {
             contractCap.setLot(ctx.getLot());
         }
 
-        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_URL)) {
+        if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_URL)) {
             contractCap.setUrl(ctx.getUrl());
         }
 
-        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
+        if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
             var newTotalSupply = ctx.getTotalSupply();
             var totalSupplyDiff = Math.subtractExact(newTotalSupply, contractCap.getTotalSupply());
             contractCap.setTotalSupply(newTotalSupply);
@@ -84,7 +84,7 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
             updateCriticalParams = true;
         }
 
-        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE_POOL)) {
+        if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_FEE_POOL)) {
             var newFeePool = ctx.getFeePool();
             var oldFeePool = contractCap.getOriginFeePool();
             var diffFeePool = Math.subtractExact(newFeePool, oldFeePool);
@@ -93,17 +93,17 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
             contractCap.setFeePool(Math.addExact(contractCap.getFeePool(), diffFeePool));
         }
 
-        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
+        if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
             contractCap.setExchUnwNum(ctx.getExchUnxNum());
             updateCriticalParams = true;
         }
 
-        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
+        if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
             contractCap.setExchTokenNum(ctx.getExchNum());
             updateCriticalParams = true;
         }
 
-        if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)) {
+        if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)) {
             contractCap.setCreateAccFee(ctx.getCreateAccFee());
             updateCriticalParams = true;
         }
@@ -135,8 +135,8 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
 
           val ctx = this.contract.unpack(Urc20UpdateParamsContract.class);
 
-          Assert.isTrue(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_OWNER_ADDR), "Missing owner address");
-          Assert.isTrue(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_ADDR), "Missing contract address");
+          Assert.isTrue(ctx.hasField(URC20_UPDATE_PARAMS_FIELD_OWNER_ADDR), "Missing owner address");
+          Assert.isTrue(ctx.hasField(URC20_UPDATE_PARAMS_FIELD_ADDR), "Missing contract address");
 
           var ownerAddr = ctx.getOwnerAddress().toByteArray();
           var accountCap = dbManager.getAccountStore().get(ownerAddr);
@@ -153,25 +153,25 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
           Assert.isTrue (dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
           Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
 
-          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE)) {
+          if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_FEE)) {
               var fee = ctx.getFee();
               Assert.isTrue (fee >= 0 && fee <= TOKEN_MAX_TRANSFER_FEE, "Invalid fee amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE + "]");
           }
 
-          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_LOT)) {
+          if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_LOT)) {
               Assert.isTrue (ctx.getLot() >= 0, "Invalid lot: require positive!");
           }
 
-          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE_RATE)) {
+          if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_FEE_RATE)) {
               var extraFeeRate = ctx.getExtraFeeRate();
               Assert.isTrue (extraFeeRate >= 0 && extraFeeRate <= 100 && extraFeeRate <= TOKEN_MAX_TRANSFER_FEE_RATE, "Invalid extra fee rate amount, should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
           }
 
-          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_URL)) {
+          if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_URL)) {
               Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
           }
 
-          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
+          if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
               var maxSupply = contractCap.getMaxSupply();
               var newTotalSupply = ctx.getTotalSupply();
               var oldTotalSupply = contractCap.getTotalSupply();
@@ -188,7 +188,7 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
               }
           }
 
-          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_FEE_POOL)) {
+          if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_FEE_POOL)) {
               var newFeePool = ctx.getFeePool();
               var oldFeePool = contractCap.getOriginFeePool();
               var availableFeePool = contractCap.getFeePool();
@@ -202,15 +202,15 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
               }
           }
 
-          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
+          if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM)) {
               Assert.isTrue(ctx.getExchUnxNum() > 0, "Exchange unw number must be positive");
           }
 
-          if (ctx.hasField(URC40_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
+          if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM)) {
               Assert.isTrue(ctx.getExchNum() > 0, "Exchange token number must be positive");
           }
 
-          if(ctx.hasField(URC40_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)){
+          if(ctx.hasField(URC20_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE)){
               Assert.isTrue(ctx.getCreateAccFee() > 0 && ctx.getCreateAccFee() <= TOKEN_MAX_CREATE_ACC_FEE, "Invalid create account fee");
           }
           return true;

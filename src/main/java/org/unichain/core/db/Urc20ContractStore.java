@@ -36,20 +36,20 @@ public class Urc20ContractStore extends UnichainStoreWithRevoking<Urc20ContractC
   }
 
   public Contract.Urc20ContractPage query(Protocol.Urc20ContractQuery query){
-    int pageSize = query.hasField(URC40_CONTRACT_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
-    int pageIndex = query.hasField(URC40_CONTRACT_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
+    int pageSize = query.hasField(URC20_CONTRACT_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
+    int pageIndex = query.hasField(URC20_CONTRACT_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
     Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
     Predicate<Contract.Urc20CreateContract> filter =  ctx -> {
-      return (!query.hasField(URC40_CONTRACT_QUERY_FIELD_TOKEN_SYMBOL) || StringUtils.containsIgnoreCase(ctx.getSymbol(), query.getSymbol()))
-              && (!query.hasField(URC40_CONTRACT_QUERY_FIELD_TOKEN_ADDR) || Arrays.equals(ctx.getAddress().toByteArray(), query.getAddress().toByteArray()));
+      return (!query.hasField(URC20_CONTRACT_QUERY_FIELD_TOKEN_SYMBOL) || StringUtils.containsIgnoreCase(ctx.getSymbol(), query.getSymbol()))
+              && (!query.hasField(URC20_CONTRACT_QUERY_FIELD_TOKEN_ADDR) || Arrays.equals(ctx.getAddress().toByteArray(), query.getAddress().toByteArray()));
     };
 
     var sorted = getAll().stream()
             .filter(Objects::nonNull)
             .map(Urc20ContractCapsule::getInstance)
             .filter(filter)
-            .map(item -> item.hasField(URC40_CREATE_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
+            .map(item -> item.hasField(URC20_CREATE_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
             .sorted(Comparator.comparing(Contract.Urc20CreateContract::getName))
             .collect(Collectors.toList());
 

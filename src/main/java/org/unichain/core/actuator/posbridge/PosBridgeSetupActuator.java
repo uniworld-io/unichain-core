@@ -120,7 +120,7 @@ public class PosBridgeSetupActuator extends AbstractActuator {
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_TOKEN)) {
                 var predicateAddr = Numeric.hexStringToByteArray(ctx.getPredicateToken());
-                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist URC40 predicate address");
+                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist URC20 predicate address");
             }
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_URC721)) {

@@ -58,18 +58,18 @@ public class Urc20CreateContractActuator extends AbstractActuator {
       var contractCap = new Urc20ContractCapsule(ctx);
       var contractAddr = contractCap.getAddress().toByteArray();
 
-      if(!ctx.hasField(URC40_CREATE_FIELD_START_TIME))
+      if(!ctx.hasField(URC20_CREATE_FIELD_START_TIME))
       {
         contractCap.setStartTime(dbManager.getHeadBlockTimeStamp());
       }
       var startTime = contractCap.getStartTime();
 
-      if(!ctx.hasField(URC40_CREATE_FIELD_END_TIME))
+      if(!ctx.hasField(URC20_CREATE_FIELD_END_TIME))
       {
         contractCap.setEndTime(Math.addExact(startTime , URC30_DEFAULT_AGE_V3));
       }
 
-      if(!ctx.hasField(URC40_CREATE_FIELD_ENABLE_EXCH))
+      if(!ctx.hasField(URC20_CREATE_FIELD_ENABLE_EXCH))
       {
         contractCap.setEnableExch(true);
       }
@@ -137,11 +137,11 @@ public class Urc20CreateContractActuator extends AbstractActuator {
       Assert.isTrue(!StringUtils.isEmpty(ctx.getName().isEmpty()) && TransactionUtil.validTokenName(ctx.getName().getBytes()), "Invalid token name");
       Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
 
-      var startTime = ctx.hasField(URC40_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
+      var startTime = ctx.hasField(URC20_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();
       var maxActive = Math.addExact(dbManager.getHeadBlockTimeStamp(), URC30_MAX_ACTIVE);
       Assert.isTrue((startTime >= dbManager.getHeadBlockTimeStamp()) && (startTime <= maxActive), "Invalid start time: must be greater than current block time and lower than limit timestamp:" +maxActive);
 
-      var endTime = ctx.hasField(URC40_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : Math.addExact(startTime, URC30_DEFAULT_AGE_V3);
+      var endTime = ctx.hasField(URC20_CREATE_FIELD_END_TIME) ? ctx.getEndTime() : Math.addExact(startTime, URC30_DEFAULT_AGE_V3);
       var maxAge = dbManager.getHeadBlockTimeStamp() + URC30_MAX_AGE_V3;
       Assert.isTrue((endTime > 0)
               && (endTime > startTime )

@@ -17,6 +17,7 @@ package org.unichain.core.actuator.urc20;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -25,17 +26,22 @@ import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
+import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.Urc20MintContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
 public class Urc20MintActuator extends AbstractActuator {
+
+  private static Descriptors.FieldDescriptor TO_ADDRESS_FIELD_NUMBER = Contract.Urc20MintContract.getDescriptor().findFieldByNumber(Urc20MintContract.TO_ADDRESS_FIELD_NUMBER);
 
   public Urc20MintActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -53,11 +59,32 @@ public class Urc20MintActuator extends AbstractActuator {
       contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getUrc20ContractStore().put(contractAddr, contractCap);
 
+
+      var accStore = dbManager.getAccountStore();
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var toAddress = ctx.getToAddress().toByteArray();
-      var accountCapsule = dbManager.getAccountStore().get(toAddress);
-      accountCapsule.addUrc20Token(toAddress, ctx.getAmount());
-      dbManager.getAccountStore().put(toAddress, accountCapsule);
+
+      AccountCapsule toAccountCap;
+      byte[] toAddress;
+
+      if(ctx.hasField(TO_ADDRESS_FIELD_NUMBER)){
+        toAddress = ctx.getToAddress().toByteArray();
+        if(!accStore.has(toAddress)){
+          fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+          var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
+          toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+        }
+        else
+        {
+          toAccountCap = accStore.get(toAddress);
+        }
+      }
+      else {
+        toAddress = ownerAddress;
+        toAccountCap = accStore.get(toAddress);
+      }
+
+      toAccountCap.addUrc20Token(contractAddr, ctx.getAmount());
+      accStore.put(toAddress, toAccountCap);
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
@@ -75,14 +102,24 @@ public class Urc20MintActuator extends AbstractActuator {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(contract.is(Urc20MintContract.class), "Contract type error,expected type [Urc20MintContract], real type[" + contract.getClass() + "]");
+      var accStore = dbManager.getAccountStore();
 
       val ctx = this.contract.unpack(Urc20MintContract.class);
-      var toAddress = ctx.getToAddress().toByteArray();
+      var fee = calcFee();
+
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = dbManager.getAccountStore().get(toAddress);
+      var ownerAccountCap = accStore.get(ownerAddr);
       Assert.notNull(ownerAccountCap, "Owner address not exist");
 
-      Assert.isTrue(ownerAccountCap.getBalance() >= calcFee(), "Fee exceed balance");
+      if(ctx.hasField(TO_ADDRESS_FIELD_NUMBER)){
+        var toAddress = ctx.getToAddress().toByteArray();
+        Assert.isTrue(Wallet.addressValid(toAddress) && !Arrays.equals(ownerAddr, toAddress), "Invalid to address");
+        if(!accStore.has(toAddress)){
+          fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+        }
+      }
+
+      Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Fee exceed balance");
 
       var contractAddr = ctx.getAddress().toByteArray();
       var contractAddrBase58 = Wallet.encode58Check(contractAddr);

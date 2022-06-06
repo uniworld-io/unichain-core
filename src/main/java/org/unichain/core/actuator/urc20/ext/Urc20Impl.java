@@ -103,8 +103,8 @@ public class Urc20Impl implements Urc20 {
 
   @Override
   public Protocol.Urc20FutureTokenPack futureGet(Protocol.Urc20FutureTokenQuery query) {
-    Assert.isTrue(query.hasField(URC40_QR_FIELD_OWNER_ADDR), "Missing owner address");
-    Assert.isTrue(query.hasField(URC40_QR_FIELD_ADDR), "Missing contract address");
+    Assert.isTrue(query.hasField(URC20_QR_FIELD_OWNER_ADDR), "Missing owner address");
+    Assert.isTrue(query.hasField(URC20_QR_FIELD_ADDR), "Missing contract address");
     var ownerAddr = query.getOwnerAddress().toByteArray();
     var addr = query.getAddress().toByteArray();
     Assert.isTrue(Wallet.addressValid(ownerAddr), "Invalid owner address");
@@ -116,14 +116,14 @@ public class Urc20Impl implements Urc20 {
     var contract = dbManager.getUrc20ContractStore().get(addr);
     Assert.notNull(contract, "Contract not found: " + addrBase58);
 
-    if(!query.hasField(URC40_QR_FIELD_PAGE_SIZE))
+    if(!query.hasField(URC20_QR_FIELD_PAGE_SIZE))
     {
       query = query.toBuilder()
               .setPageSize(DEFAULT_PAGE_SIZE)
               .build();
     }
 
-    if(!query.hasField(URC40_QR_FIELD_PAGE_INDEX))
+    if(!query.hasField(URC20_QR_FIELD_PAGE_INDEX))
     {
       query = query.toBuilder()
               .setPageIndex(DEFAULT_PAGE_INDEX)

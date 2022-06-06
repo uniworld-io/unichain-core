@@ -81,7 +81,7 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
   }
 
   public Long getCriticalUpdateTime() {
-    return this.ctx.hasField(URC40_CREATE_FIELD_CRITICAL_TIME) ? this.ctx.getCriticalUpdateTime() : 0;
+    return this.ctx.hasField(URC20_CREATE_FIELD_CRITICAL_TIME) ? this.ctx.getCriticalUpdateTime() : 0;
   }
 
   public String getUrl() {
@@ -113,7 +113,7 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
   }
 
   public long getCreateAccountFee() {
-    return this.ctx.hasField(URC40_CREATE_FIELD_CREATE_ACC_FEE) ? this.ctx.getCreateAccFee() : Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE;
+    return this.ctx.hasField(URC20_CREATE_FIELD_CREATE_ACC_FEE) ? this.ctx.getCreateAccFee() : Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE;
   }
 
   public long getExtraFeeRate() {

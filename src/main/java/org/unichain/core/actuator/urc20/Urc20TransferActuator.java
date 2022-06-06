@@ -174,7 +174,7 @@ public class Urc20TransferActuator extends AbstractActuator {
       Assert.isTrue(Wallet.addressValid(toAddr), "Invalid toAddress");
 
       var toAccountCap = dbManager.getAccountStore().get(toAddr);
-      var isCreateNewAccount = (toAccountCap == null);
+      var isCreateNewAccount = Objects.isNull(toAccountCap);
       var ownerIsContractOwner = Arrays.equals(ownerAddr, contractOwnerAddr);
       if(ownerIsContractOwner)
       {

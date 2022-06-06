@@ -1028,33 +1028,33 @@ public class Util {
   public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_CRITICAL_TIME = CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.CRITICAL_UPDATE_TIME_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_CREATE_ACC_FEE = CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_PAGE_INDEX= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.PAGE_INDEX_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_PAGE_SIZE= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.PAGE_SIZE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_TOKEN_ADDR= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.ADDRESS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_TOKEN_SYMBOL= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.SYMBOL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CONTRACT_QUERY_FIELD_PAGE_INDEX= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.PAGE_INDEX_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CONTRACT_QUERY_FIELD_PAGE_SIZE= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CONTRACT_QUERY_FIELD_TOKEN_ADDR= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CONTRACT_QUERY_FIELD_TOKEN_SYMBOL= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.SYMBOL_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_START_TIME= Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.START_TIME_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_END_TIME= Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.END_TIME_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_CRITICAL_TIME = Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.CRITICAL_UPDATE_TIME_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_CREATE_ACC_FEE = Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.CREATE_ACC_FEE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_ENABLE_EXCH = Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.EXCH_ENABLE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_START_TIME= Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.START_TIME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_END_TIME= Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.END_TIME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_CRITICAL_TIME = Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.CRITICAL_UPDATE_TIME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_CREATE_ACC_FEE = Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.CREATE_ACC_FEE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_ENABLE_EXCH = Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.EXCH_ENABLE_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_ADDR = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.ADDRESS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_OWNER_ADDR = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.OWNER_ADDRESS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_FEE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.FEE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_LOT = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.LOT_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_FEE_RATE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXTRA_FEE_RATE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_URL = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.URL_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.TOTAL_SUPPLY_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_FEE_POOL = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.FEE_POOL_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXCH_UNX_NUM_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXCH_NUM_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.CREATE_ACC_FEE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_ADDR = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_OWNER_ADDR = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.OWNER_ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_FEE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.FEE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_LOT = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.LOT_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_FEE_RATE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXTRA_FEE_RATE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_URL = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.URL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.TOTAL_SUPPLY_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_FEE_POOL = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.FEE_POOL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXCH_UNX_NUM_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXCH_NUM_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor URC40_QR_FIELD_ADDR = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.ADDRESS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_QR_FIELD_OWNER_ADDR = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.OWNER_ADDRESS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_QR_FIELD_PAGE_SIZE = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.PAGE_SIZE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_QR_FIELD_PAGE_INDEX = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.PAGE_INDEX_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_QR_FIELD_ADDR = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_QR_FIELD_OWNER_ADDR = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.OWNER_ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_QR_FIELD_PAGE_SIZE = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_QR_FIELD_PAGE_INDEX = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.PAGE_INDEX_FIELD_NUMBER);
 
   public static Descriptors.FieldDescriptor FUTURE_TRANSFER_FIELD_TO_ADDR = FutureTransferContract.getDescriptor().findFieldByNumber(FutureTransferContract.TO_ADDRESS_FIELD_NUMBER);
 

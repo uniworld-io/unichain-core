@@ -567,7 +567,6 @@ message PosBridgeCleanMapTokenContract{
     string root_token= 3; //hex address if token, symbol if native
     int64 child_chainid = 4;
     string child_token= 5;
-    uint32 type = 6; //1:native, 2:erc20, 3:erc721
 }
 
 //call from user

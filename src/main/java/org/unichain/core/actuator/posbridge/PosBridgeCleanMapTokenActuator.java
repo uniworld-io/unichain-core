@@ -75,7 +75,6 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
                                     .root_chainid(ctx.getRootChainid())
                                     .child_token(ctx.getChildToken())
                                     .child_chainid(ctx.getChildChainid())
-                                    .type(ctx.getType())
                                     .build())
                     .build();
             emitEvent(event, ret);

@@ -30,13 +30,10 @@ public class Urc20Predicate implements Predicate {
 
     @Override
     public void lockTokens(ByteString depositor, ByteString rootToken, String depositData) throws ContractExeException, ContractValidateException {
-        var symbol = dbManager.getTokenAddrSymbolIndexStore().get(rootToken.toByteArray()).getSymbol();
-        var tokenInfo = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(symbol));
-
         var wrapCtx = Contract.Urc20TransferFromContract.newBuilder()
                 .setFrom(depositor)
                 .setTo(config.getPredicateErc20())
-                .setAddress(tokenInfo.getAddress())
+                .setAddress(rootToken)
                 .setAmount(PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue())
                 .setOwnerAddress(config.getPredicateErc20())
                 .setAvailableTime(0L)
@@ -56,13 +53,11 @@ public class Urc20Predicate implements Predicate {
 
     @Override
     public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException, ContractValidateException {
-        var symbol = dbManager.getTokenAddrSymbolIndexStore().get(rootToken.toByteArray()).getSymbol();
-        var tokenInfo = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(symbol));
 
         var wrapCtx = Contract.Urc20TransferContract.newBuilder()
                 .setOwnerAddress(config.getPredicateErc20())
                 .setTo(withdrawer)
-                .setAddress(tokenInfo.getAddress())
+                .setAddress(rootToken)
                 .setAmount(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
                 .setAvailableTime(0L)
                 .build();

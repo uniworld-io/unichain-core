@@ -54,9 +54,10 @@ public class Urc20MintActuator extends AbstractActuator {
       dbManager.getUrc20ContractStore().put(contractAddr, contractCap);
 
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
-      accountCapsule.addUrc20Token(contractAddr, ctx.getAmount());
-      dbManager.getAccountStore().put(ownerAddress, accountCapsule);
+      var toAddress = ctx.getToAddress().toByteArray();
+      var accountCapsule = dbManager.getAccountStore().get(toAddress);
+      accountCapsule.addUrc20Token(toAddress, ctx.getAmount());
+      dbManager.getAccountStore().put(toAddress, accountCapsule);
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, code.SUCESS);
@@ -76,8 +77,9 @@ public class Urc20MintActuator extends AbstractActuator {
       Assert.isTrue(contract.is(Urc20MintContract.class), "Contract type error,expected type [Urc20MintContract], real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(Urc20MintContract.class);
+      var toAddress = ctx.getToAddress().toByteArray();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
+      var ownerAccountCap = dbManager.getAccountStore().get(toAddress);
       Assert.notNull(ownerAccountCap, "Owner address not exist");
 
       Assert.isTrue(ownerAccountCap.getBalance() >= calcFee(), "Fee exceed balance");

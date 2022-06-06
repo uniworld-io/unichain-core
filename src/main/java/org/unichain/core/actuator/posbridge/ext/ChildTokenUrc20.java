@@ -27,12 +27,11 @@ public class ChildTokenUrc20 implements ChildToken {
     @Override
     public void deposit(ByteString user, ByteString childToken, String depositData) throws ContractExeException, ContractValidateException {
         //load token and transfer from token owner to ...
-        var symbol = dbManager.getTokenAddrSymbolIndexStore().get(childToken.toByteArray()).getSymbol();
-        var tokenInfo = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(symbol));
-
+        var contract = dbManager.getUrc20ContractStore().get(childToken.toByteArray());
         var wrapCtx = Contract.Urc20MintContract.newBuilder()
-                .setOwnerAddress(user)
-                .setAddress(tokenInfo.getAddress())
+                .setOwnerAddress(contract.getOwnerAddress())
+                .setAddress(childToken)
+                .setToAddress(user)
                 .setAmount(PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue())
                 .build();
         var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc20MintContract)
@@ -47,13 +46,10 @@ public class ChildTokenUrc20 implements ChildToken {
 
     @Override
     public void withdraw(ByteString user, ByteString childToken, String withdrawData) throws ContractExeException, ContractValidateException {
-        var symbol = dbManager.getTokenAddrSymbolIndexStore().get(childToken.toByteArray()).getSymbol();
-        var tokenInfo = dbManager.getTokenPoolStore().get(Util.stringAsBytesUppercase(symbol));
-
         var wrapCtx = Contract.Urc20BurnContract.newBuilder()
                 .setAmount(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
                 .setOwnerAddress(user)
-                .setAddress(tokenInfo.getAddress())
+                .setAddress(childToken)
                 .build();
         var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc20BurnContract)
                 .getInstance()

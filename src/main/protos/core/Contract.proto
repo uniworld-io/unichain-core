@@ -267,6 +267,7 @@ message Urc20MintContract {
   bytes owner_address = 1;
   bytes address = 2;
   int64 amount = 3;
+  bytes to_address = 4;
 }
 
 message Urc20BurnContract {

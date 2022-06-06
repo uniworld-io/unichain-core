@@ -62,6 +62,7 @@ public class ChildTokenUrc721 implements ChildToken {
                 .getRawData()
                 .getContract(0)
                 .getParameter();
+
         var wrapActuator = new Urc721BurnActuator(wrapCap, dbManager);
         var wrapRet = new TransactionResultCapsule();
 

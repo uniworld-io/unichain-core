@@ -150,7 +150,9 @@ public class Urc721MintActuator extends AbstractActuator {
       Assert.isTrue(!(Arrays.equals(toAddr, contractCap.getOwner()) || Arrays.equals(toAddr, contractCap.getMinter())), "Can not create token for minter or owner!");
       Assert.isTrue(contractCap.getTokenIndex() < contractCap.getTotalSupply(), "Over slot token mint!");
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Not enough balance to cover transaction fee, require "+ fee + "ginza");
-      Assert.isTrue(TransactionUtil.validHttpURI(ctx.getUri()), "Invalid uri");
+
+      //@TODO require http ??
+//      Assert.isTrue(TransactionUtil.validHttpURI(ctx.getUri()), "Invalid uri");
 
       //make sure tokenId not allocated yet!
       if(ctx.hasField(URC721_MINT_FIELD_TOKEN_ID)){

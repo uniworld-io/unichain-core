@@ -56,7 +56,7 @@ public class Urc20Impl implements Urc20 {
     var contract = query.getAddress().toByteArray();
     var contractBase58 = Wallet.encode58Check(contract);
     var accStore = dbManager.getAccountStore();
-    var contractStore = dbManager.getContractStore();
+    var contractStore = dbManager.getUrc20ContractStore();
     Assert.isTrue(accStore.has(owner), "Not found address: " + Wallet.encode58Check(owner));
     Assert.isTrue(contractStore.has(contract), "Not found contract: " + contractBase58);
     var ownerCap = accStore.get(owner);

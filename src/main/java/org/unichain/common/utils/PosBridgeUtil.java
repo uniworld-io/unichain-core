@@ -114,7 +114,6 @@ public class PosBridgeUtil {
         public long childChainId;
         public String receiveAddr;
         public DynamicBytes depositData;
-        public String extHex;
     }
 
     @Builder

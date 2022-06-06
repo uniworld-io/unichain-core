@@ -116,7 +116,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             switch (assetType){
                 case NATIVE:
                 case ERC20:
-                    Assert.isTrue(dbManager.getTokenAddrSymbolIndexStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "token with address not found: " + decodedMsg);
+                    Assert.isTrue(dbManager.getUrc20ContractStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "token with address not found: " + decodedMsg);
                     break;
                 case ERC721:
                     Assert.isTrue(dbManager.getUrc721ContractStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "Erc721 with address not found: " + decodedMsg);

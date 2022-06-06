@@ -78,9 +78,9 @@ public class SolidityNodeHttpApiService implements Service {
   private GetFutureTransferServlet getFutureTransferServlet;
 
   @Autowired
-  private Urc20FutureGetServlet urc20FutureGetServlet;
-  @Autowired
   private Urc20ContractListServlet urc20ContractListServlet;
+  @Autowired
+  private Urc20FutureGetServlet urc20FutureGetServlet;
   @Autowired
   private Urc20NameServlet urc20NameServlet;
   @Autowired

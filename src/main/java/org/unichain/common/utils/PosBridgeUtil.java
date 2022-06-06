@@ -81,7 +81,7 @@ public class PosBridgeUtil {
                 return new UnwPredicate(dbManager, ret, config);
             }
             case ERC20: {
-                return new Urc40Predicate(dbManager, ret, config);
+                return new Urc20Predicate(dbManager, ret, config);
             }
             case ERC721: {
                 return new Urc721Predicate(dbManager, ret, config);
@@ -96,7 +96,7 @@ public class PosBridgeUtil {
         switch (assetType){
             case NATIVE:
             case ERC20: {
-                return new ChildTokenUrc40(dbManager, ret);
+                return new ChildTokenUrc20(dbManager, ret);
             }
             case ERC721: {
                 return new ChildTokenUrc721(dbManager, ret);

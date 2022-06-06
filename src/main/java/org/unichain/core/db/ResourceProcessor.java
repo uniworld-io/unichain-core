@@ -94,16 +94,16 @@ abstract class ResourceProcessor {
       }
   }
 
-  protected boolean consumeFeeUrc40Pool(byte[] contractAddr, long fee) {
+  protected boolean consumeFeeUrc20Pool(byte[] contractAddr, long fee) {
     try {
         var latestOperationTime = dbManager.getHeadBlockTimeStamp();
-        var contractStore = dbManager.getUrc40ContractStore();
+        var contractStore = dbManager.getUrc20ContractStore();
         var contract = contractStore.get(contractAddr);
         contract.setLatestOperationTime(latestOperationTime);
 
         if(contract.getFeePool() < fee)
         {
-          logger.error("not enough urc40 pool fee for token {} available {} require {}", contract.getName(), contract.getFeePool(), fee);
+          logger.error("not enough urc20 pool fee for token {} available {} require {}", contract.getName(), contract.getFeePool(), fee);
           return false;
         }
         else {
@@ -114,7 +114,7 @@ abstract class ResourceProcessor {
         }
     }
     catch (Exception e){
-      logger.warn("Exception while charge urc40 pool fee: ", e);
+      logger.warn("Exception while charge urc20 pool fee: ", e);
       return false;
     }
   }

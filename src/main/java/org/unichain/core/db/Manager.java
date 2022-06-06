@@ -55,10 +55,10 @@ import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.witness.ProposalController;
 import org.unichain.core.witness.WitnessController;
 import org.unichain.protos.Contract.TransferTokenContract;
-import org.unichain.protos.Contract.Urc40TransferFromContract;
-import org.unichain.protos.Contract.Urc40TransferContract;
+import org.unichain.protos.Contract.Urc20TransferFromContract;
+import org.unichain.protos.Contract.Urc20TransferContract;
 import org.unichain.protos.Contract.WithdrawFutureTokenContract;
-import org.unichain.protos.Contract.Urc40WithdrawFutureContract;
+import org.unichain.protos.Contract.Urc20WithdrawFutureContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction;
@@ -135,13 +135,13 @@ public class Manager {
   @Autowired
   private AssetIssueStore assetIssueStore;
 
-  //urc40
+  //urc20
   @Autowired
-  private Urc40FutureTransferStore urc40FutureTransferStore;
+  private Urc20FutureTransferStore urc20FutureTransferStore;
   @Autowired
-  private Urc40ContractStore urc40ContractStore;
+  private Urc20ContractStore urc20ContractStore;
   @Autowired
-  private Urc40SpenderStore urc40SpenderStore;
+  private Urc20SpenderStore urc20SpenderStore;
 
   //urc30
   @Autowired
@@ -799,15 +799,15 @@ public class Manager {
                 chargeFee4Urc30Pool(Util.stringAsBytesUppercase(ctx.getTokenName()), fee);
                 break;
             }
-            case Urc40TransferFromContract: {
-                var ctx = contract.getParameter().unpack(Urc40TransferFromContract.class);
-                chargeFee4Urc40Pool(ctx.getAddress().toByteArray(), fee);
+            case Urc20TransferFromContract: {
+                var ctx = contract.getParameter().unpack(Urc20TransferFromContract.class);
+                chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
                 break;
             }
             //@fixme transfer vs transferFrom
-            case Urc40TransferContract: {
-              var ctx = contract.getParameter().unpack(Urc40TransferContract.class);
-              chargeFee4Urc40Pool(ctx.getAddress().toByteArray(), fee);
+            case Urc20TransferContract: {
+              var ctx = contract.getParameter().unpack(Urc20TransferContract.class);
+              chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
               break;
             }
             case WithdrawFutureTokenContract: {
@@ -815,9 +815,9 @@ public class Manager {
                 chargeFee4Urc30Pool(Util.stringAsBytesUppercase(ctx.getTokenName()), fee);
                 break;
             }
-            case Urc40WithdrawFutureContract: {
-                var ctx = contract.getParameter().unpack(Urc40WithdrawFutureContract.class);
-                chargeFee4Urc40Pool(ctx.getAddress().toByteArray(), fee);
+            case Urc20WithdrawFutureContract: {
+                var ctx = contract.getParameter().unpack(Urc20WithdrawFutureContract.class);
+                chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
                 break;
             }
             default: {
@@ -1818,9 +1818,9 @@ public class Manager {
     closeOneStore(transactionRetStore);
     closeOneStore(tokenPoolStore);
     closeOneStore(futureTokenStore);
-    closeOneStore(urc40ContractStore);
-    closeOneStore(urc40SpenderStore);
-    closeOneStore(urc40FutureTransferStore);
+    closeOneStore(urc20ContractStore);
+    closeOneStore(urc20SpenderStore);
+    closeOneStore(urc20FutureTransferStore);
     closeOneStore(futureTransferStore);
 
     closeOneStore(tokenAddrSymbolIndexStore);
@@ -2092,8 +2092,8 @@ public class Manager {
     burnFee(fee);
   }
 
-  protected void chargeFee4Urc40Pool(byte[] contractAddr, long fee) throws BalanceInsufficientException {
-    var contractStore = getUrc40ContractStore();
+  protected void chargeFee4Urc20Pool(byte[] contractAddr, long fee) throws BalanceInsufficientException {
+    var contractStore = getUrc20ContractStore();
     var contractCap = contractStore.get(contractAddr);
     if(contractCap.getFeePool() < fee)
       throw new BalanceInsufficientException("not enough contract pool fee: " + Wallet.encode58Check(contractAddr));

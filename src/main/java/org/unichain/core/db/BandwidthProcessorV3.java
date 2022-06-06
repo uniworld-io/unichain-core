@@ -23,7 +23,7 @@ public class BandwidthProcessorV3 extends BandwidthProcessorV2 {
   }
 
   @Override
-  protected void consumeCreateNewAccountIfUrc40Transfer(AccountCapsule ownerAccountCapsule, Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
+  protected void consumeCreateNewAccountIfUrc20Transfer(AccountCapsule ownerAccountCapsule, Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
     consumeForCreateNewAccount(ownerAccountCapsule, trace);
   }
 }

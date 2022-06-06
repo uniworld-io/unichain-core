@@ -45,22 +45,22 @@ public class BandwidthProcessorV4 extends BandwidthProcessorV2 {
   }
 
   @Override
-  protected void consumeCreateNewAccountIfUrc40Transfer(AccountCapsule ownerAccountCapsule, Protocol.Transaction.Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
+  protected void consumeCreateNewAccountIfUrc20Transfer(AccountCapsule ownerAccountCapsule, Protocol.Transaction.Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
     try {
-      var isTransfer = (contract.getType() == Protocol.Transaction.Contract.ContractType.Urc40TransferContract);
+      var isTransfer = (contract.getType() == Protocol.Transaction.Contract.ContractType.Urc20TransferContract);
       byte[] contractAddr, ownerAddr;
       if(isTransfer){
-        var ctx = contract.getParameter().unpack(Contract.Urc40TransferContract.class);
+        var ctx = contract.getParameter().unpack(Contract.Urc20TransferContract.class);
         contractAddr = ctx.getAddress().toByteArray();
         ownerAddr = ctx.getOwnerAddress().toByteArray();
       }
       else {
-        var ctx = contract.getParameter().unpack(Contract.Urc40TransferFromContract.class);
+        var ctx = contract.getParameter().unpack(Contract.Urc20TransferFromContract.class);
         contractAddr = ctx.getAddress().toByteArray();
         ownerAddr = ctx.getOwnerAddress().toByteArray();
       }
-      var urc40Pool = dbManager.getUrc40ContractStore().get(contractAddr);
-      var poolOwnerAddr = urc40Pool.getOwnerAddress().toByteArray();
+      var urc20Pool = dbManager.getUrc20ContractStore().get(contractAddr);
+      var poolOwnerAddr = urc20Pool.getOwnerAddress().toByteArray();
 
       if(Arrays.equals(ownerAddr, poolOwnerAddr)){
         //direct charge owner account
@@ -68,7 +68,7 @@ public class BandwidthProcessorV4 extends BandwidthProcessorV2 {
       }
       else {
         //now owner, charge pool and in actuator charge token
-        super.consumeCreateNewAccountIfUrc40Transfer(ownerAccountCapsule, contract, trace);
+        super.consumeCreateNewAccountIfUrc20Transfer(ownerAccountCapsule, contract, trace);
       }
     }
     catch (InvalidProtocolBufferException e){

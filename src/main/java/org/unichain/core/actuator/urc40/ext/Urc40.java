@@ -5,7 +5,6 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
-//@TODO: Need review
 public interface Urc40 {
   GrpcAPI.NumberMessage allowance(Protocol.Urc40AllowanceQuery query);
   Protocol.Transaction approve(Contract.Urc40ApproveContract contract) throws ContractValidateException;

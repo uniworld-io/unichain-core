@@ -221,7 +221,6 @@ public class TransactionUtil {
     return description.length <= 200;
   }
 
-  //@todo later
   public static boolean validJsonString(byte[] jsonString) {
     if (ArrayUtils.isEmpty(jsonString)) {
       return true;   //jsonString can empty

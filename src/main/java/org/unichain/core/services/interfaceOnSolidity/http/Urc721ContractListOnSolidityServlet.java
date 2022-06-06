@@ -18,5 +18,4 @@ public class Urc721ContractListOnSolidityServlet extends Urc721ContractListServl
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     walletOnSolidity.futureGet(() -> super.doGet(request, response));
   }
-
 }

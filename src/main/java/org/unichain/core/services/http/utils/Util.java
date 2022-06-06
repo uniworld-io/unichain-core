@@ -151,8 +151,6 @@ public class Util {
     return Hash.sha3omit12(combined);
   }
 
-  //@todo move switch-case to mapping to prevent duplicated code
-  //@addon declare new tx
   public static JSONObject printTransactionToJSON(Transaction transaction, boolean selfType) {
     JSONObject jsonTransaction = JSONObject.parseObject(JsonFormat.printToString(transaction, selfType));
     JSONArray contracts = new JSONArray();
@@ -454,69 +452,69 @@ public class Util {
             break;
           }
 
-          //urc40
-          case Urc40CreateContract:{
-            var parsedContract = contractParameter.unpack(Urc40CreateContract.class);
+          //urc20
+          case Urc20CreateContract:{
+            var parsedContract = contractParameter.unpack(Urc20CreateContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
 
-          case Urc40ContributePoolFeeContract:{
-            var parsedContract = contractParameter.unpack(Urc40ContributePoolFeeContract.class);
+          case Urc20ContributePoolFeeContract:{
+            var parsedContract = contractParameter.unpack(Urc20ContributePoolFeeContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
 
-          case Urc40UpdateParamsContract:{
-            var parsedContract = contractParameter.unpack(Urc40UpdateParamsContract.class);
+          case Urc20UpdateParamsContract:{
+            var parsedContract = contractParameter.unpack(Urc20UpdateParamsContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
 
-          case Urc40MintContract:{
-            var parsedContract = contractParameter.unpack(Urc40MintContract.class);
+          case Urc20MintContract:{
+            var parsedContract = contractParameter.unpack(Urc20MintContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
 
-          case Urc40BurnContract:{
-            var parsedContract = contractParameter.unpack(Urc40BurnContract.class);
+          case Urc20BurnContract:{
+            var parsedContract = contractParameter.unpack(Urc20BurnContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
 
-          case Urc40TransferFromContract:{
-            var parsedContract = contractParameter.unpack(Urc40TransferFromContract.class);
+          case Urc20TransferFromContract:{
+            var parsedContract = contractParameter.unpack(Urc20TransferFromContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
 
-          case Urc40TransferContract:{
-            var parsedContract = contractParameter.unpack(Urc40TransferContract.class);
+          case Urc20TransferContract:{
+            var parsedContract = contractParameter.unpack(Urc20TransferContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
 
-          case Urc40WithdrawFutureContract:{
-            var parsedContract = contractParameter.unpack(Urc40WithdrawFutureContract.class);
+          case Urc20WithdrawFutureContract:{
+            var parsedContract = contractParameter.unpack(Urc20WithdrawFutureContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
 
-          case Urc40TransferOwnerContract:{
-            var parsedContract = contractParameter.unpack(Urc40TransferOwnerContract.class);
+          case Urc20TransferOwnerContract:{
+            var parsedContract = contractParameter.unpack(Urc20TransferOwnerContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
 
-          case Urc40ExchangeContract:{
-            var parsedContract = contractParameter.unpack(Urc40ExchangeContract.class);
+          case Urc20ExchangeContract:{
+            var parsedContract = contractParameter.unpack(Urc20ExchangeContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
 
-          case Urc40ApproveContract:{
-            var parsedContract = contractParameter.unpack(Urc40ApproveContract.class);
+          case Urc20ApproveContract:{
+            var parsedContract = contractParameter.unpack(Urc20ApproveContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
@@ -887,69 +885,69 @@ public class Util {
             any = Any.pack(builder.build());
             break;
           }
-          //Urc40
-          case "Urc40CreateContract":{
-            var builder = Urc40CreateContract.newBuilder();
+          //Urc20
+          case "Urc20CreateContract":{
+            var builder = Urc20CreateContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;
           }
-          case "Urc40ContributePoolFeeContract":{
-            var builder = Urc40ContributePoolFeeContract.newBuilder();
+          case "Urc20ContributePoolFeeContract":{
+            var builder = Urc20ContributePoolFeeContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;
           }
-          case "Urc40UpdateParamsContract":{
-            var builder = Urc40UpdateParamsContract.newBuilder();
+          case "Urc20UpdateParamsContract":{
+            var builder = Urc20UpdateParamsContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;
           }
-          case "Urc40MintContract":{
-            var builder = Urc40MintContract.newBuilder();
+          case "Urc20MintContract":{
+            var builder = Urc20MintContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;
           }
-          case "Urc40BurnContract":{
-            var builder = Urc40BurnContract.newBuilder();
+          case "Urc20BurnContract":{
+            var builder = Urc20BurnContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;
           }
-          case "Urc40TransferFromContract":{
-            var builder = Urc40TransferFromContract.newBuilder();
+          case "Urc20TransferFromContract":{
+            var builder = Urc20TransferFromContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;
           }
-          case "Urc40TransferContract":{
-            var builder = Urc40TransferContract.newBuilder();
+          case "Urc20TransferContract":{
+            var builder = Urc20TransferContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;
           }
-          case "Urc40WithdrawFutureContract":{
-            var builder = Urc40WithdrawFutureContract.newBuilder();
+          case "Urc20WithdrawFutureContract":{
+            var builder = Urc20WithdrawFutureContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;
           }
-          case "Urc40TransferOwnerContract":{
-            var builder = Urc40TransferOwnerContract.newBuilder();
+          case "Urc20TransferOwnerContract":{
+            var builder = Urc20TransferOwnerContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;
           }
-          case "Urc40ExchangeContract":{
-            var builder = Urc40ExchangeContract.newBuilder();
+          case "Urc20ExchangeContract":{
+            var builder = Urc20ExchangeContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;
           }
-          case "Urc40ApproveContract":{
-            var builder = Urc40ApproveContract.newBuilder();
+          case "Urc20ApproveContract":{
+            var builder = Urc20ApproveContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
             any = Any.pack(builder.build());
             break;
@@ -988,7 +986,7 @@ public class Util {
     return ((new String(ownerAddr)) + "_" + (new String(tokenKey)) + "_" + dayTick).getBytes();
   }
 
-  public static byte[] makeUrc40FutureTokenIndexKey(byte[] ownerAddr, String contractAddrBase58Lowercase, long dayTick){
+  public static byte[] makeUrc20FutureTokenIndexKey(byte[] ownerAddr, String contractAddrBase58Lowercase, long dayTick){
     return ((new String(ownerAddr)) + "_" + contractAddrBase58Lowercase + "_" + dayTick).getBytes();
   }
 
@@ -1030,33 +1028,33 @@ public class Util {
   public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_CRITICAL_TIME = CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.CRITICAL_UPDATE_TIME_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor TOKEN_CREATE_FIELD_CREATE_ACC_FEE = CreateTokenContract.getDescriptor().findFieldByNumber(CreateTokenContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_PAGE_INDEX= Protocol.Urc40ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc40ContractQuery.PAGE_INDEX_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_PAGE_SIZE= Protocol.Urc40ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc40ContractQuery.PAGE_SIZE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_TOKEN_ADDR= Protocol.Urc40ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc40ContractQuery.ADDRESS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_TOKEN_SYMBOL= Protocol.Urc40ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc40ContractQuery.SYMBOL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_PAGE_INDEX= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.PAGE_INDEX_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_PAGE_SIZE= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_TOKEN_ADDR= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_CONTRACT_QUERY_FIELD_TOKEN_SYMBOL= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.SYMBOL_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_START_TIME= Urc40CreateContract.getDescriptor().findFieldByNumber(Urc40CreateContract.START_TIME_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_END_TIME= Urc40CreateContract.getDescriptor().findFieldByNumber(Urc40CreateContract.END_TIME_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_CRITICAL_TIME = Urc40CreateContract.getDescriptor().findFieldByNumber(Urc40CreateContract.CRITICAL_UPDATE_TIME_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_CREATE_ACC_FEE = Urc40CreateContract.getDescriptor().findFieldByNumber(Urc40CreateContract.CREATE_ACC_FEE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_ENABLE_EXCH = Urc40CreateContract.getDescriptor().findFieldByNumber(Urc40CreateContract.EXCH_ENABLE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_START_TIME= Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.START_TIME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_END_TIME= Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.END_TIME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_CRITICAL_TIME = Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.CRITICAL_UPDATE_TIME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_CREATE_ACC_FEE = Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.CREATE_ACC_FEE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_CREATE_FIELD_ENABLE_EXCH = Urc20CreateContract.getDescriptor().findFieldByNumber(Urc20CreateContract.EXCH_ENABLE_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_ADDR = Urc40UpdateParamsContract.getDescriptor().findFieldByNumber(Urc40UpdateParamsContract.ADDRESS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_OWNER_ADDR = Urc40UpdateParamsContract.getDescriptor().findFieldByNumber(Urc40UpdateParamsContract.OWNER_ADDRESS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_FEE = Urc40UpdateParamsContract.getDescriptor().findFieldByNumber(Urc40UpdateParamsContract.FEE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_LOT = Urc40UpdateParamsContract.getDescriptor().findFieldByNumber(Urc40UpdateParamsContract.LOT_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_FEE_RATE = Urc40UpdateParamsContract.getDescriptor().findFieldByNumber(Urc40UpdateParamsContract.EXTRA_FEE_RATE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_URL = Urc40UpdateParamsContract.getDescriptor().findFieldByNumber(Urc40UpdateParamsContract.URL_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY = Urc40UpdateParamsContract.getDescriptor().findFieldByNumber(Urc40UpdateParamsContract.TOTAL_SUPPLY_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_FEE_POOL = Urc40UpdateParamsContract.getDescriptor().findFieldByNumber(Urc40UpdateParamsContract.FEE_POOL_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM = Urc40UpdateParamsContract.getDescriptor().findFieldByNumber(Urc40UpdateParamsContract.EXCH_UNX_NUM_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM = Urc40UpdateParamsContract.getDescriptor().findFieldByNumber(Urc40UpdateParamsContract.EXCH_NUM_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE = Urc40UpdateParamsContract.getDescriptor().findFieldByNumber(Urc40UpdateParamsContract.CREATE_ACC_FEE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_ADDR = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_OWNER_ADDR = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.OWNER_ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_FEE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.FEE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_LOT = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.LOT_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_FEE_RATE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXTRA_FEE_RATE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_URL = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.URL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.TOTAL_SUPPLY_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_FEE_POOL = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.FEE_POOL_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXCH_UNX_NUM_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXCH_NUM_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor URC40_QR_FIELD_ADDR = Protocol.Urc40FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc40FutureTokenQuery.ADDRESS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_QR_FIELD_OWNER_ADDR = Protocol.Urc40FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc40FutureTokenQuery.OWNER_ADDRESS_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_QR_FIELD_PAGE_SIZE = Protocol.Urc40FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc40FutureTokenQuery.PAGE_SIZE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC40_QR_FIELD_PAGE_INDEX = Protocol.Urc40FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc40FutureTokenQuery.PAGE_INDEX_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_QR_FIELD_ADDR = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_QR_FIELD_OWNER_ADDR = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.OWNER_ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_QR_FIELD_PAGE_SIZE = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC40_QR_FIELD_PAGE_INDEX = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.PAGE_INDEX_FIELD_NUMBER);
 
   public static Descriptors.FieldDescriptor FUTURE_TRANSFER_FIELD_TO_ADDR = FutureTransferContract.getDescriptor().findFieldByNumber(FutureTransferContract.TO_ADDRESS_FIELD_NUMBER);
 

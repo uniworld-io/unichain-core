@@ -16,7 +16,7 @@ import org.unichain.core.services.http.fullnode.servlet.posbridge.PosBridgeGetCo
 import org.unichain.core.services.http.fullnode.servlet.posbridge.PosBridgeGetTokenMapServlet;
 import org.unichain.core.services.http.fullnode.servlet.urc30.Urc30GetFutureTokenServlet;
 import org.unichain.core.services.http.fullnode.servlet.urc30.Urc30GetTokenPoolServlet;
-import org.unichain.core.services.http.fullnode.servlet.urc40.*;
+import org.unichain.core.services.http.fullnode.servlet.urc20.*;
 import org.unichain.core.services.http.fullnode.servlet.urc721.*;
 import org.unichain.core.services.http.solidity.servlet.GetTransactionByIdSolidityServlet;
 import org.unichain.core.services.http.solidity.servlet.GetTransactionInfoByIdSolidityServlet;
@@ -78,23 +78,23 @@ public class SolidityNodeHttpApiService implements Service {
   private GetFutureTransferServlet getFutureTransferServlet;
 
   @Autowired
-  private Urc40FutureGetServlet urc40FutureGetServlet;
+  private Urc20ContractListServlet urc20ContractListServlet;
   @Autowired
-  private Urc40ContractListServlet urc40ContractListServlet;
+  private Urc20FutureGetServlet urc20FutureGetServlet;
   @Autowired
-  private Urc40NameServlet urc40NameServlet;
+  private Urc20NameServlet urc20NameServlet;
   @Autowired
-  private Urc40SymbolServlet urc40SymbolServlet;
+  private Urc20SymbolServlet urc20SymbolServlet;
   @Autowired
-  private Urc40DecimalsServlet urc40DecimalsServlet;
+  private Urc20DecimalsServlet urc20DecimalsServlet;
   @Autowired
-  private Urc40TotalSupplyServlet urc40TotalSupplyServlet;
+  private Urc20TotalSupplyServlet urc20TotalSupplyServlet;
   @Autowired
-  private Urc40BalanceOfServlet urc40BalanceOfServlet;
+  private Urc20BalanceOfServlet urc20BalanceOfServlet;
   @Autowired
-  private Urc40GetOwnerServlet urc40GetOwnerServlet;
+  private Urc20GetOwnerServlet urc20GetOwnerServlet;
   @Autowired
-  private Urc40AllowanceServlet urc40AllowanceServlet;
+  private Urc20AllowanceServlet urc20AllowanceServlet;
 
   @Autowired
   private GetTransactionByIdSolidityServlet getTransactionByIdServlet;
@@ -201,16 +201,16 @@ public class SolidityNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(urc721IsApprovedForAllServlet), "/walletsolidity/urc721isapprovedforall");
       context.addServlet(new ServletHolder(urc721OwnerOfServlet), "/walletsolidity/urc721ownerof");
 
-      //urc40
-      context.addServlet(new ServletHolder(urc40ContractListServlet), "/walletsolidity/urc40contractlist");
-      context.addServlet(new ServletHolder(urc40FutureGetServlet), "/walletsolidity/urc40futureget");
-      context.addServlet(new ServletHolder(urc40NameServlet), "/walletsolidity/urc40name");
-      context.addServlet(new ServletHolder(urc40SymbolServlet), "/walletsolidity/urc40symbol");
-      context.addServlet(new ServletHolder(urc40DecimalsServlet), "/walletsolidity/urc40decimals");
-      context.addServlet(new ServletHolder(urc40TotalSupplyServlet), "/walletsolidity/urc40totalsupply");
-      context.addServlet(new ServletHolder(urc40BalanceOfServlet), "/walletsolidity/urc40balanceof");
-      context.addServlet(new ServletHolder(urc40GetOwnerServlet), "/walletsolidity/urc40getowner");
-      context.addServlet(new ServletHolder(urc40AllowanceServlet), "/walletsolidity/urc40allowance");
+      //urc20
+      context.addServlet(new ServletHolder(urc20ContractListServlet), "/walletsolidity/urc20contractlist");
+      context.addServlet(new ServletHolder(urc20FutureGetServlet), "/walletsolidity/urc20futureget");
+      context.addServlet(new ServletHolder(urc20NameServlet), "/walletsolidity/urc20name");
+      context.addServlet(new ServletHolder(urc20SymbolServlet), "/walletsolidity/urc20symbol");
+      context.addServlet(new ServletHolder(urc20DecimalsServlet), "/walletsolidity/urc20decimals");
+      context.addServlet(new ServletHolder(urc20TotalSupplyServlet), "/walletsolidity/urc20totalsupply");
+      context.addServlet(new ServletHolder(urc20BalanceOfServlet), "/walletsolidity/urc20balanceof");
+      context.addServlet(new ServletHolder(urc20GetOwnerServlet), "/walletsolidity/urc20getowner");
+      context.addServlet(new ServletHolder(urc20AllowanceServlet), "/walletsolidity/urc20allowance");
 
 
       context.addServlet(new ServletHolder(urc30GetFutureTokenServlet), "/walletsolidity/getfuturetoken");

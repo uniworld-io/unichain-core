@@ -40,7 +40,6 @@ import org.web3j.utils.Numeric;
 import static org.unichain.common.utils.PosBridgeUtil.cleanUniPrefix;
 import static org.unichain.common.utils.PosBridgeUtil.lookupChildToken;
 
-//@todo later
 @Slf4j(topic = "actuator")
 public class PosBridgeWithdrawActuator extends AbstractActuator {
 

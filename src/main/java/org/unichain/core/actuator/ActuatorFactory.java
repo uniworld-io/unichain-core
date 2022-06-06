@@ -8,7 +8,7 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.actuator.posbridge.*;
 import org.unichain.core.actuator.urc30.*;
-import org.unichain.core.actuator.urc40.*;
+import org.unichain.core.actuator.urc20.*;
 import org.unichain.core.actuator.urc721.*;
 import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
@@ -230,30 +230,30 @@ public class ActuatorFactory {
         return new PosBridgeWithdrawExecActuator(contract.getParameter(), manager);
 
       /**
-       * Urc40
+       * Urc20
        */
-      case Urc40CreateContract:
-          return new Urc40CreateContractActuator(contract.getParameter(), manager);
-      case Urc40ContributePoolFeeContract:
-        return new Urc40ContributePoolFeeActuator(contract.getParameter(), manager);
-      case Urc40UpdateParamsContract:
-        return new Urc40UpdateParamsActuator(contract.getParameter(), manager);
-      case Urc40MintContract:
-        return new Urc40MintActuator(contract.getParameter(), manager);
-      case Urc40BurnContract:
-        return new Urc40BurnActuator(contract.getParameter(), manager);
-      case Urc40TransferFromContract:
-        return new Urc40TransferFromActuator(contract.getParameter(), manager);
-      case Urc40TransferContract:
-        return new Urc40TransferActuator(contract.getParameter(), manager);
-      case Urc40WithdrawFutureContract:
-        return new Urc40WithdrawFutureActuator(contract.getParameter(), manager);
-      case Urc40TransferOwnerContract:
-        return new Urc40TransferOwnerActuator(contract.getParameter(), manager);
-      case Urc40ExchangeContract:
-        return new Urc40ExchangeActuator(contract.getParameter(), manager);
-      case Urc40ApproveContract:
-        return new Urc40ApproveActuator(contract.getParameter(), manager);
+      case Urc20CreateContract:
+          return new Urc20CreateContractActuator(contract.getParameter(), manager);
+      case Urc20ContributePoolFeeContract:
+        return new Urc20ContributePoolFeeActuator(contract.getParameter(), manager);
+      case Urc20UpdateParamsContract:
+        return new Urc20UpdateParamsActuator(contract.getParameter(), manager);
+      case Urc20MintContract:
+        return new Urc20MintActuator(contract.getParameter(), manager);
+      case Urc20BurnContract:
+        return new Urc20BurnActuator(contract.getParameter(), manager);
+      case Urc20TransferFromContract:
+        return new Urc20TransferFromActuator(contract.getParameter(), manager);
+      case Urc20TransferContract:
+        return new Urc20TransferActuator(contract.getParameter(), manager);
+      case Urc20WithdrawFutureContract:
+        return new Urc20WithdrawFutureActuator(contract.getParameter(), manager);
+      case Urc20TransferOwnerContract:
+        return new Urc20TransferOwnerActuator(contract.getParameter(), manager);
+      case Urc20ExchangeContract:
+        return new Urc20ExchangeActuator(contract.getParameter(), manager);
+      case Urc20ApproveContract:
+        return new Urc20ApproveActuator(contract.getParameter(), manager);
       default:
         logger.warn("un-supported contract type {}!", contract.getType().name());
         return null;

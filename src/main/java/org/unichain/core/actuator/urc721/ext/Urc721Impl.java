@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 import static org.unichain.core.services.http.utils.Util.*;
 
-//@todo urc721 reviewurcurc
 @Slf4j
 @Service
 public class Urc721Impl implements Urc721 {
@@ -104,7 +103,6 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public Protocol.Urc721IsApprovedForAll isApprovalForAll(Protocol.Urc721IsApprovedForAll query) {
-        //@todo urc721 review
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
         Assert.notNull(query.getOperator(), "Operator null");
         var relationStore = dbManager.getUrc721AccountTokenRelationStore();

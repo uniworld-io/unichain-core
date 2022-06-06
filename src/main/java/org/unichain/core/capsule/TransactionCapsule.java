@@ -520,40 +520,40 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           break;
 
         /**
-         * Urc40
+         * Urc20
          */
-        case Urc40CreateContract:
-          owner = contractParameter.unpack(Urc40CreateContract.class).getOwnerAddress();
+        case Urc20CreateContract:
+          owner = contractParameter.unpack(Urc20CreateContract.class).getOwnerAddress();
           break;
-        case Urc40ContributePoolFeeContract:
-          owner = contractParameter.unpack(Urc40ContributePoolFeeContract.class).getOwnerAddress();
+        case Urc20ContributePoolFeeContract:
+          owner = contractParameter.unpack(Urc20ContributePoolFeeContract.class).getOwnerAddress();
           break;
-        case Urc40UpdateParamsContract:
-          owner = contractParameter.unpack(Urc40UpdateParamsContract.class).getOwnerAddress();
+        case Urc20UpdateParamsContract:
+          owner = contractParameter.unpack(Urc20UpdateParamsContract.class).getOwnerAddress();
           break;
-        case Urc40MintContract:
-          owner = contractParameter.unpack(Urc40MintContract.class).getOwnerAddress();
+        case Urc20MintContract:
+          owner = contractParameter.unpack(Urc20MintContract.class).getOwnerAddress();
           break;
-        case Urc40BurnContract:
-          owner = contractParameter.unpack(Urc40BurnContract.class).getOwnerAddress();
+        case Urc20BurnContract:
+          owner = contractParameter.unpack(Urc20BurnContract.class).getOwnerAddress();
           break;
-        case Urc40TransferFromContract:
-          owner = contractParameter.unpack(Urc40TransferFromContract.class).getOwnerAddress();
+        case Urc20TransferFromContract:
+          owner = contractParameter.unpack(Urc20TransferFromContract.class).getOwnerAddress();
           break;
-        case Urc40TransferContract:
-          owner = contractParameter.unpack(Urc40TransferContract.class).getOwnerAddress();
+        case Urc20TransferContract:
+          owner = contractParameter.unpack(Urc20TransferContract.class).getOwnerAddress();
           break;
-        case Urc40WithdrawFutureContract:
-          owner = contractParameter.unpack(Urc40WithdrawFutureContract.class).getOwnerAddress();
+        case Urc20WithdrawFutureContract:
+          owner = contractParameter.unpack(Urc20WithdrawFutureContract.class).getOwnerAddress();
           break;
-        case Urc40TransferOwnerContract:
-          owner = contractParameter.unpack(Urc40TransferOwnerContract.class).getOwnerAddress();
+        case Urc20TransferOwnerContract:
+          owner = contractParameter.unpack(Urc20TransferOwnerContract.class).getOwnerAddress();
           break;
-        case Urc40ExchangeContract:
-          owner = contractParameter.unpack(Urc40ExchangeContract.class).getOwnerAddress();
+        case Urc20ExchangeContract:
+          owner = contractParameter.unpack(Urc20ExchangeContract.class).getOwnerAddress();
           break;
-        case Urc40ApproveContract:
-          owner = contractParameter.unpack(Urc40ApproveContract.class).getOwnerAddress();
+        case Urc20ApproveContract:
+          owner = contractParameter.unpack(Urc20ApproveContract.class).getOwnerAddress();
           break;
 
         default:
@@ -784,40 +784,40 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         break;
 
       /**
-       * Urc40
+       * Urc20
        */
-      case Urc40CreateContract:
-        clazz = Urc40CreateContract.class;
+      case Urc20CreateContract:
+        clazz = Urc20CreateContract.class;
         break;
-      case Urc40ContributePoolFeeContract:
-        clazz = Urc40ContributePoolFeeContract.class;
+      case Urc20ContributePoolFeeContract:
+        clazz = Urc20ContributePoolFeeContract.class;
         break;
-      case Urc40UpdateParamsContract:
-        clazz = Urc40UpdateParamsContract.class;
+      case Urc20UpdateParamsContract:
+        clazz = Urc20UpdateParamsContract.class;
         break;
-      case Urc40MintContract:
-        clazz = Urc40MintContract.class;
+      case Urc20MintContract:
+        clazz = Urc20MintContract.class;
         break;
-      case Urc40BurnContract:
-        clazz = Urc40BurnContract.class;
+      case Urc20BurnContract:
+        clazz = Urc20BurnContract.class;
         break;
-      case Urc40TransferFromContract:
-        clazz = Urc40TransferFromContract.class;
+      case Urc20TransferFromContract:
+        clazz = Urc20TransferFromContract.class;
         break;
-      case Urc40TransferContract:
-        clazz = Urc40TransferContract.class;
+      case Urc20TransferContract:
+        clazz = Urc20TransferContract.class;
         break;
-      case Urc40WithdrawFutureContract:
-        clazz = Urc40WithdrawFutureContract.class;
+      case Urc20WithdrawFutureContract:
+        clazz = Urc20WithdrawFutureContract.class;
         break;
-      case Urc40TransferOwnerContract:
-        clazz = Urc40TransferOwnerContract.class;
+      case Urc20TransferOwnerContract:
+        clazz = Urc20TransferOwnerContract.class;
         break;
-      case Urc40ExchangeContract:
-        clazz = Urc40ExchangeContract.class;
+      case Urc20ExchangeContract:
+        clazz = Urc20ExchangeContract.class;
         break;
-      case Urc40ApproveContract:
-        clazz = Urc40ApproveContract.class;
+      case Urc20ApproveContract:
+        clazz = Urc20ApproveContract.class;
         break;
 
       default:
@@ -1150,19 +1150,19 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case PosBridgeWithdrawExecContract:
         return BLOCK_VERSION_5;
       /**
-       * Urc40
+       * Urc20
        */
-      case Urc40CreateContract:
-      case Urc40ContributePoolFeeContract:
-      case Urc40UpdateParamsContract:
-      case Urc40MintContract:
-      case Urc40BurnContract:
-      case Urc40TransferFromContract:
-      case Urc40TransferContract:
-      case Urc40WithdrawFutureContract:
-      case Urc40TransferOwnerContract:
-      case Urc40ExchangeContract:
-      case Urc40ApproveContract:
+      case Urc20CreateContract:
+      case Urc20ContributePoolFeeContract:
+      case Urc20UpdateParamsContract:
+      case Urc20MintContract:
+      case Urc20BurnContract:
+      case Urc20TransferFromContract:
+      case Urc20TransferContract:
+      case Urc20WithdrawFutureContract:
+      case Urc20TransferOwnerContract:
+      case Urc20ExchangeContract:
+      case Urc20ApproveContract:
         return BLOCK_VERSION_5;
 
       case TransferTokenOwnerContract:

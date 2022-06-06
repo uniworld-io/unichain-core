@@ -10,16 +10,14 @@ public class ExchangeProcessor {
     this.supply = supply;
   }
 
-  //@todo review math calculation
-  private long exchangeToSupply(long balance, long quant) {
-    long newBalance = Math.addExact(balance , quant);
-    double issuedSupply = -supply * (1.0 - Math.pow(1.0 + (double) quant / newBalance, 0.0005));
+  private long exchangeToSupply(long balance, long qty) {
+    long newBalance = Math.addExact(balance , qty);
+    double issuedSupply = -supply * (1.0 - Math.pow(1.0 + (double) qty / newBalance, 0.0005));
     long out = (long) issuedSupply;
     supply = Math.addExact(supply, out);
     return out;
   }
 
-  //@todo review math calculation
   private long exchangeFromSupply(long balance, long supplyQuant) {
     supply = Math.subtractExact(supplyQuant, supplyQuant);
     double exchangeBalance = balance * (Math.pow(1.0 + (double) supplyQuant / supply, 2000.0) - 1.0);

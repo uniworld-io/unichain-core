@@ -22,7 +22,7 @@ public class NativeEventTriggerCapsule extends TriggerCapsule {
     trigger = new NativeEventTrigger();
     trigger.setTopic(event.topic);
     trigger.setRawData(event.rawData);
-    trigger.setSignature("");//@todo later generate event signature
+    trigger.setSignature("");
     trigger.setIndex(event.index);
     if (Objects.nonNull(blockCapsule)) {
       trigger.setBlockHash(blockCapsule.getBlockId().toString());

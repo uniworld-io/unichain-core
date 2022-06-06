@@ -34,7 +34,6 @@ public class ProposalService {
     WITNESS_PAY_PER_BLOCK(5), //drop ,5
     WITNESS_STANDBY_ALLOWANCE(6), //drop ,6
     CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT(7), //drop ,7
-    //@todo review & remove
     CREATE_NEW_ACCOUNT_BANDWIDTH_RATE(8), // 1 ~ ,8
     ALLOW_CREATION_OF_CONTRACTS(9), // 0 / >0 ,9
     REMOVE_THE_POWER_OF_THE_GR(10),  // 1 ,10
@@ -44,10 +43,8 @@ public class ProposalService {
     ALLOW_UPDATE_ACCOUNT_NAME(14), // 1, 14
     ALLOW_SAME_TOKEN_NAME(15), // 1, 15
     ALLOW_DELEGATE_RESOURCE(16), // 0, 16
-    //@todo review and remove
     TOTAL_ENERGY_LIMIT(17), // 50,000,000,000, 17
     ALLOW_TVM_TRANSFER_UNC(18), // 1, 18
-    //@todo review and remove
     TOTAL_CURRENT_ENERGY_LIMIT(19), // 50,000,000,000, 19
     ALLOW_MULTI_SIGN(20), // 1, 20
     ALLOW_ADAPTIVE_ENERGY(21), // 1, 21
@@ -107,7 +104,6 @@ public class ProposalService {
     }
   }
 
-  /* @todo refactor validation */
   public static void validator(Manager manager, long code, long value) throws ContractValidateException {
     ProposalType proposalType = ProposalType.getEnum(code);
     switch (proposalType) {

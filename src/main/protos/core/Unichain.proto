@@ -148,9 +148,9 @@ message FuturePack {
 }
 
 /**
-  urc40
+  urc20
  */
-message Urc40FutureTokenPack {
+message Urc20FutureTokenPack {
   bytes  owner_address = 1;
   bytes address = 2;
   string symbol = 3;
@@ -158,35 +158,35 @@ message Urc40FutureTokenPack {
   int64 lower_bound_time = 5;
   int64 upper_bound_time = 6;
   int64 total_value = 7;
-  repeated Urc40FutureToken deals = 8;
+  repeated Urc20FutureToken deals = 8;
 }
 
-message Urc40ContractQuery {
+message Urc20ContractQuery {
   bytes address = 1;
   string symbol = 2;
   int32  page_size = 3;
   int32 page_index = 4;
 }
 
-message Urc40FutureTokenQuery {
+message Urc20FutureTokenQuery {
   bytes  owner_address = 3;
   bytes address = 1;
   int32  page_size = 4;
   int32 page_index = 5;
 }
 
-message Urc40BalanceOfQuery {
+message Urc20BalanceOfQuery {
   bytes owner_address = 1;
   bytes address = 2;
 }
 
-message Urc40AllowanceQuery {
+message Urc20AllowanceQuery {
   bytes owner = 1;
   bytes address = 2;
   bytes spender = 3;
 }
 
-message Urc40FutureTokenSummary {
+message Urc20FutureTokenSummary {
   bytes address = 1;
   string symbol = 2;
   int64  total_deal = 3;
@@ -197,27 +197,27 @@ message Urc40FutureTokenSummary {
   bytes upper_tick = 8;
 }
 
-message Urc40FutureToken {
+message Urc20FutureToken {
   int64 future_balance = 1;
   int64 expire_time = 2;
   bytes prev_tick = 3;
   bytes next_tick = 4;
 }
 
-message Urc40SpenderQuota{
+message Urc20SpenderQuota{
     bytes owner = 1;
     int64 limit = 2;
     int64 spent = 3;
     int64 avail = 4;
 }
-message Urc40Spender {
+message Urc20Spender {
   bytes spender = 1;
   bytes contract = 2;
-  map<string, Urc40SpenderQuota> quotas = 3; //owner --> spend quota
+  map<string, Urc20SpenderQuota> quotas = 3; //owner --> spend quota
 }
 
 /**
-  used for both token urc40 & nft indexing
+  used for both token urc20 & nft indexing
  */
 message TokenAddressSymbolIndex{
   string  symbol = 1;
@@ -257,10 +257,10 @@ message Account {
   map<string, FutureTokenSummaryV2> token_future = 61;
 
   //token map, including all type
-  map<string, int64> urc40 = 62;
+  map<string, int64> urc20 = 62;
 
   //token future
-  map<string, Urc40FutureTokenSummary> urc40_future = 63;
+  map<string, Urc20FutureTokenSummary> urc20_future = 63;
 
   // the frozen balance for bandwidth
   repeated Frozen frozen = 7;
@@ -486,18 +486,18 @@ message Transaction {
       PosBridgeWithdrawContract =95;
       PosBridgeWithdrawExecContract = 96;
 
-      //token urc40
-      Urc40CreateContract = 110;
-      Urc40ContributePoolFeeContract = 111;
-      Urc40UpdateParamsContract = 112;
-      Urc40MintContract = 113;
-      Urc40BurnContract = 114;
-      Urc40TransferFromContract = 115;
-      Urc40WithdrawFutureContract = 116;
-      Urc40TransferOwnerContract = 117;
-      Urc40ExchangeContract = 118;
-      Urc40ApproveContract = 119;
-      Urc40TransferContract = 120;
+      //token urc20
+      Urc20CreateContract = 110;
+      Urc20ContributePoolFeeContract = 111;
+      Urc20UpdateParamsContract = 112;
+      Urc20MintContract = 113;
+      Urc20BurnContract = 114;
+      Urc20TransferFromContract = 115;
+      Urc20WithdrawFutureContract = 116;
+      Urc20TransferOwnerContract = 117;
+      Urc20ExchangeContract = 118;
+      Urc20ApproveContract = 119;
+      Urc20TransferContract = 120;
 
       FutureDealTransferContract = 121;
     }

@@ -26,7 +26,7 @@ import org.unichain.common.overlay.discover.node.NodeManager;
 import org.unichain.common.utils.*;
 import org.unichain.core.Wallet;
 import org.unichain.core.WalletSolidity;
-import org.unichain.core.actuator.urc40.ext.Urc40;
+import org.unichain.core.actuator.urc20.ext.Urc20;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
@@ -76,7 +76,7 @@ public class RpcApiService implements Service {
   private Urc721 urc721;
 
   @Autowired
-  private Urc40 urc40;
+  private Urc20 urc20;
 
   @Autowired
   private NodeInfoService nodeInfoService;
@@ -380,67 +380,67 @@ public class RpcApiService implements Service {
     }
 
     /**
-     * urc40
+     * urc20
      */
     @Override
-    public void urc40FutureGet(Urc40FutureTokenQuery request, StreamObserver<Urc40FutureTokenPack> responseObserver) {
-      var reply = urc40.futureGet(request);
+    public void urc20FutureGet(Urc20FutureTokenQuery request, StreamObserver<Urc20FutureTokenPack> responseObserver) {
+      var reply = urc20.futureGet(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc40ContractList(Urc40ContractQuery request, io.grpc.stub.StreamObserver<Urc40ContractPage> responseObserver) {
-      var reply = urc40.contractList(request);
+    public void urc20ContractList(Urc20ContractQuery request, io.grpc.stub.StreamObserver<Urc20ContractPage> responseObserver) {
+      var reply = urc20.contractList(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc40Name(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
-      var reply = urc40.name(request);
+    public void urc20Name(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.name(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc40Symbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
-      var reply = urc40.symbol(request);
+    public void urc20Symbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.symbol(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc40Decimals(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
-      var reply = urc40.decimals(request);
+    public void urc20Decimals(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.decimals(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc40TotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
-      var reply = urc40.totalSupply(request);
+    public void urc20TotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.totalSupply(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc40BalanceOf(Urc40BalanceOfQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
-      var reply = urc40.balanceOf(request);
+    public void urc20BalanceOf(Urc20BalanceOfQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc40GetOwner(AddressMessage request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
-      var reply = urc40.getOwner(request);
+    public void urc20GetOwner(AddressMessage request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc20.getOwner(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc40Allowance(Urc40AllowanceQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
-      var reply = urc40.allowance(request);
+    public void urc20Allowance(Urc20AllowanceQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.allowance(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -899,6 +899,69 @@ public class RpcApiService implements Service {
       } else {
         responseObserver.onNext(null);
       }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20FutureGet(Urc20FutureTokenQuery request, StreamObserver<Urc20FutureTokenPack> responseObserver) {
+      var reply = urc20.futureGet(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20ContractList(Urc20ContractQuery request, io.grpc.stub.StreamObserver<Urc20ContractPage> responseObserver) {
+      var reply = urc20.contractList(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Name(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.name(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Symbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.symbol(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Decimals(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.decimals(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20TotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.totalSupply(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20BalanceOf(Urc20BalanceOfQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.balanceOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20GetOwner(AddressMessage request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc20.getOwner(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Allowance(Urc20AllowanceQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.allowance(request);
+      responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
@@ -1767,13 +1830,16 @@ public class RpcApiService implements Service {
     }
 
     /**
-     * Urc40
+     * Urc20
      */
 
     @Override
-    public void urc40ContractCreate(Contract.Urc40CreateContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+    public void urc20ContractCreate(Contract.Urc20CreateContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40CreateContract).getInstance());
+        request = request.toBuilder()
+                .setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()))
+                .build();
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20CreateContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1782,9 +1848,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc40ContributePoolFee(Contract.Urc40ContributePoolFeeContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+    public void urc20ContributePoolFee(Contract.Urc20ContributePoolFeeContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40ContributePoolFeeContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20ContributePoolFeeContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1793,9 +1859,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc40UpdateParams(Contract.Urc40UpdateParamsContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+    public void urc20UpdateParams(Contract.Urc20UpdateParamsContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40UpdateParamsContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20UpdateParamsContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1804,9 +1870,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc40Mint(Contract.Urc40MintContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+    public void urc20Mint(Contract.Urc20MintContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40MintContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20MintContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1815,9 +1881,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc40Burn(Contract.Urc40BurnContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+    public void urc20Burn(Contract.Urc20BurnContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40BurnContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20BurnContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1826,9 +1892,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc40WithdrawFuture(Contract.Urc40WithdrawFutureContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+    public void urc20WithdrawFuture(Contract.Urc20WithdrawFutureContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40WithdrawFutureContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20WithdrawFutureContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1837,9 +1903,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc40TransferOwner(Contract.Urc40TransferOwnerContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+    public void urc20TransferOwner(Contract.Urc20TransferOwnerContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40TransferOwnerContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20TransferOwnerContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1848,9 +1914,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc40Exchange(Contract.Urc40ExchangeContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+    public void urc20Exchange(Contract.Urc20ExchangeContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40ExchangeContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20ExchangeContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1859,9 +1925,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc40Approve(Contract.Urc40ApproveContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+    public void urc20Approve(Contract.Urc20ApproveContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40ApproveContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20ApproveContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1870,9 +1936,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc40TransferFrom(Contract.Urc40TransferFromContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+    public void urc20TransferFrom(Contract.Urc20TransferFromContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40TransferFromContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20TransferFromContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1881,9 +1947,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc40Transfer(Contract.Urc40TransferContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+    public void urc20Transfer(Contract.Urc20TransferContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc40TransferContract).getInstance());
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20TransferContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());

@@ -29,6 +29,26 @@ public class HttpApiOnSolidityService implements Service {
   @Autowired
   private Urc30GetTokenPoolOnSolidityServlet tokenPoolOnSolidityServlet;
 
+  //urc20
+  @Autowired
+  private Urc20ContractListOnSolidityServlet urc20ContractListOnSolidityServlet;
+  @Autowired
+  private Urc20FutureGetOnSolidityServlet urc20FutureGetOnSolidityServlet;
+  @Autowired
+  private Urc20NameOnSolidityServlet urc20NameOnSolidityServlet;
+  @Autowired
+  private Urc20SymbolOnSolidityServlet urc20SymbolOnSolidityServlet;
+  @Autowired
+  private Urc20DecimalsOnSolidityServlet urc20DecimalsOnSolidityServlet;
+  @Autowired
+  private Urc20TotalSupplyOnSolidityServlet urc20TotalSupplyOnSolidityServlet;
+  @Autowired
+  private Urc20BalanceOfOnSolidityServlet urc20BalanceOfOnSolidityServlet;
+  @Autowired
+  private Urc20GetOwnerOnSolidityServlet urc20GetOwnerOnSolidityServlet;
+  @Autowired
+  private Urc20AllowanceOnSolidityServlet urc20AllowanceOnSolidityServlet;
+
   @Autowired
   private Urc721ContractListOnSolidityServlet urc721ListContractOnSolidityServlet;
   @Autowired
@@ -142,11 +162,11 @@ public class HttpApiOnSolidityService implements Service {
       context.addServlet(new ServletHolder(accountOnSolidityServlet), "/walletsolidity/getaccount");
       context.addServlet(new ServletHolder(tokenPoolOnSolidityServlet), "/walletsolidity/gettokenpool");
 
+      //urc721
       context.addServlet(new ServletHolder(urc721ListContractOnSolidityServlet), "/walletsolidity/urc721contractlist");
       context.addServlet(new ServletHolder(urc721ListTokenOnSolidityServlet), "/walletsolidity/urc721tokenlist");
       context.addServlet(new ServletHolder(urc721GetContractOnSolidityServlet), "/walletsolidity/urc721contractget");
       context.addServlet(new ServletHolder(urc721GetTokenOnSolidityServlet), "/walletsolidity/urc721tokenget");
-
       context.addServlet(new ServletHolder(urc721BalanceOfOnSolidityServlet), "/walletsolidity/urc721balanceof");
       context.addServlet(new ServletHolder(urc721GetApprovedOnSolidityServlet), "/walletsolidity/urc721getapproved");
       context.addServlet(new ServletHolder(urc721NameOnSolidityServlet), "/walletsolidity/urc721name");
@@ -155,6 +175,17 @@ public class HttpApiOnSolidityService implements Service {
       context.addServlet(new ServletHolder(urc721TotalSupplyOnSolidityServlet), "/walletsolidity/urc721totalsupply");
       context.addServlet(new ServletHolder(urc721IsApprovedForAllOnSolidityServlet), "/walletsolidity/urc721isapprovedforall");
       context.addServlet(new ServletHolder(urc721OwnerOfOnSolidityServlet), "/walletsolidity/urc721ownerof");
+
+      //urc20
+      context.addServlet(new ServletHolder(urc20ContractListOnSolidityServlet), "/walletsolidity/urc20contractlist");
+      context.addServlet(new ServletHolder(urc20FutureGetOnSolidityServlet), "/walletsolidity/urc20futureget");
+      context.addServlet(new ServletHolder(urc20NameOnSolidityServlet), "/walletsolidity/urc20name");
+      context.addServlet(new ServletHolder(urc20SymbolOnSolidityServlet), "/walletsolidity/urc20symbol");
+      context.addServlet(new ServletHolder(urc20DecimalsOnSolidityServlet), "/walletsolidity/urc20decimals");
+      context.addServlet(new ServletHolder(urc20TotalSupplyOnSolidityServlet), "/walletsolidity/urc20totalsupply");
+      context.addServlet(new ServletHolder(urc20BalanceOfOnSolidityServlet), "/walletsolidity/urc20balanceof");
+      context.addServlet(new ServletHolder(urc20GetOwnerOnSolidityServlet), "/walletsolidity/urc20getowner");
+      context.addServlet(new ServletHolder(urc20AllowanceOnSolidityServlet), "/walletsolidity/urc20allowance");
 
       context.addServlet(new ServletHolder(urc30GetFutureTokenServlet), "/walletsolidity/getfuturetoken");
       context.addServlet(new ServletHolder(getFutureTransferServlet), "/walletsolidity/getfuturetransfer");

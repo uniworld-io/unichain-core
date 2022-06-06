@@ -8,6 +8,7 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.ActuatorUtil;
 import org.unichain.core.Wallet;
+import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -18,6 +19,7 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 @Slf4j(topic = "actuator")
 public class TransferFutureDealActuator extends AbstractActuator {
@@ -32,6 +34,13 @@ public class TransferFutureDealActuator extends AbstractActuator {
       var ctx = contract.unpack(Contract.FutureDealTransferContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var toAddress = ctx.getToAddress().toByteArray();
+      var toAccount = dbManager.getAccountStore().get(toAddress);
+      if (Objects.isNull(toAccount)) {
+        var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
+        toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+        dbManager.getAccountStore().put(toAddress, toAccount);
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+      }
       var dealId = ctx.getDealId();
       chargeFee(ownerAddress, fee);
       transferFutureDeal(ownerAddress, toAddress, dealId);
@@ -49,7 +58,7 @@ public class TransferFutureDealActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
-      Assert.isTrue(contract.is(Contract.FutureDealTransferContract.class), "Contract type error,expected type [FutureLockedTransfer], real type[" + contract.getClass() + "]");
+      Assert.isTrue(contract.is(Contract.FutureDealTransferContract.class), "Contract type error,expected type [FutureDealTransferContract], real type[" + contract.getClass() + "]");
 
       var ctx = this.contract.unpack(Contract.FutureDealTransferContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
@@ -115,10 +124,9 @@ public class TransferFutureDealActuator extends AbstractActuator {
     var tick = futureStore.get(tickKey);
 
     ActuatorUtil.removeFutureDeal(dbManager, ownerAddress, tick);
-    // remove old tickKey
-    futureStore.delete(tickKey);
     // change currentTick of ownerAddress to toAddress
     ActuatorUtil.addFutureDeal(dbManager, toAddress, tick.getBalance(), dealId);
-
+    // remove old tickKey
+    futureStore.delete(tickKey);
   }
 }

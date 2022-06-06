@@ -153,6 +153,13 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
                 continue;
               break;
             }
+            case Urc20ApproveContract:
+            {
+              var tokenKey = contract.getParameter().unpack(Urc20ApproveContract.class).getAddress().toByteArray();
+              if (useTransactionFee4Urc20Pool(tokenKey, bytesSize, trace))
+                continue;
+              break;
+            }
             default:
             {
               if (useTransactionFee(ownerAccountCap, bytesSize, trace))
@@ -234,9 +241,18 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
 
   protected void consumeCreateNewAccountIfUrc20Transfer(AccountCapsule ownerAccountCapsule, Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
     try {
-      var isTransfer = (contract.getType() == Contract.ContractType.Urc20TransferContract);
-      var addr = isTransfer ? contract.getParameter().unpack(Urc20TransferContract.class).getAddress().toByteArray()
-              : contract.getParameter().unpack(Urc20TransferFromContract.class).getAddress().toByteArray();
+      byte[] addr;
+      switch (contract.getType()){
+        case Urc20TransferContract:
+          addr = contract.getParameter().unpack(Urc20TransferContract.class).getAddress().toByteArray();
+          break;
+        case Urc20TransferFromContract:
+          addr = contract.getParameter().unpack(Urc20TransferFromContract.class).getAddress().toByteArray();
+          break;
+        default:
+          throw new Exception("unexpected urc20 contract");
+      }
+
       var fee = dbManager.getDynamicPropertiesStore().getCreateAccountFee();
       if (consumeFeeUrc20Pool(addr, fee)) {
         trace.setNetBill(0, fee);
@@ -245,7 +261,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
       }
       throw new AccountResourceInsufficientException();
     }
-    catch (InvalidProtocolBufferException e){
+    catch (Exception e){
       logger.error("bad contract format {}", e.getMessage(), e);
       throw new ContractValidateException("bad contract format:" + e.getMessage());
     }

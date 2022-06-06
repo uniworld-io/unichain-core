@@ -109,15 +109,16 @@ public class Urc20SpenderCapsule implements ProtoCapsule<Urc20Spender> {
       }
   }
 
-  public boolean checkSetQuota(byte[] owner, long limit){
+  public void checkSetQuota(byte[] owner, long limit, long tokenAvailable){
     Assert.isTrue(limit >= 0, "Bad quota limit value: must be gte zero");
     var base58 = Wallet.encode58Check(owner);
     var quota = ctx.getQuotasMap().get(base58);
     if(Objects.isNull(quota)){
-      return true;
+      Assert.isTrue(limit <= tokenAvailable, "Spender amount reached out available token!");
     }
     else {
-      return (quota.getSpent() < limit);
+      Assert.isTrue(quota.getSpent() < limit, "Already spent amount larger than provided limit");
+      Assert.isTrue(Math.subtractExact(limit, quota.getSpent()) <= tokenAvailable, "Spender amount reached out available token!");
     }
   }
 

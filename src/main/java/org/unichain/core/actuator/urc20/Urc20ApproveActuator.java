@@ -34,6 +34,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
+//@todo review: owner that not token owner should not charge unw!
 @Slf4j(topic = "actuator")
 public class Urc20ApproveActuator extends AbstractActuator {
 
@@ -86,20 +87,29 @@ public class Urc20ApproveActuator extends AbstractActuator {
       val ctx = this.contract.unpack(Urc20ApproveContract.class);
 
       var owner = ctx.getOwnerAddress().toByteArray();
+      var ownerCap = accountStore.get(owner);
       var spender = ctx.getSpender().toByteArray();
       var contractAddr = ctx.getAddress().toByteArray();
-      var limit = ctx.getAmount();
+      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
+      var contractCap = contractStore.get(contractAddr);
 
       Assert.isTrue(Wallet.addressValid(spender) && Wallet.addressValid(contractAddr) && Wallet.addressValid(owner), "Bad owner|contract|spender address");
       Assert.isTrue(!Arrays.equals(owner, spender), "Spender must not be owner");
       Assert.isTrue(accountStore.has(owner) && accountStore.has(spender) && contractStore.has(contractAddr) , "Unrecognized owner|spender|contract address");
 
-      var contractCap = contractStore.get(contractAddr);
+      var tokenAvailable = ownerCap.getUrc20TokenAvailable(contractAddrBase58.toLowerCase());
+      Assert.isTrue(tokenAvailable > 0, "No available token amount found!");
+
+      var limit = ctx.getAmount();
+      Assert.isTrue(contractCap.getTotalSupply() >= limit, "Spender limit reached out contract total supply!");
+
       var spenderKey = Urc20SpenderCapsule.genKey(spender, contractAddr);
-      if(spenderStore.has(spenderKey))
-        Assert.isTrue(spenderStore.get(spenderKey).checkSetQuota(owner, limit), "Invalid limit value");
+      if(!spenderStore.has(spenderKey))
+      {
+        Assert.isTrue(tokenAvailable >= limit, "Spender amount reached out available token!");
+      }
       else {
-        Assert.isTrue(contractCap.getTotalSupply() >= limit, "Spender limit reached out contract total supply!");
+        spenderStore.get(spenderKey).checkSetQuota(owner, limit, tokenAvailable);
       }
       return true;
     }

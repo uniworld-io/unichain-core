@@ -40,8 +40,8 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
     super(contract, dbManager);
   }
 
-  @Override
-  public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
+    @Override
+    public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(Urc20WithdrawFutureContract.class);
@@ -61,10 +61,10 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-  }
+    }
 
-  @Override
-  public boolean validate() throws ContractValidateException {
+    @Override
+    public boolean validate() throws ContractValidateException {
     try {
       var fee = calcFee();
       Assert.notNull(contract, "No contract!");
@@ -91,19 +91,19 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
       logger.error("Urc20WithdrawFutureContract failed -->", e);
       throw new ContractValidateException(e.getMessage());
     }
-  }
+    }
 
-  @Override
-  public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
+    @Override
+    public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
     return contract.unpack(Urc20WithdrawFutureContract.class).getOwnerAddress();
-  }
+    }
 
-  @Override
-  public long calcFee() {
+    @Override
+    public long calcFee() {
     return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
-  }
+    }
 
-  private boolean availableToWithdraw(byte[] ownerAddress, String contractAddrBase58, long headBlockTime) {
+    private boolean availableToWithdraw(byte[] ownerAddress, String contractAddrBase58, long headBlockTime) {
       var headBlockTickDay = Util.makeDayTick(headBlockTime);
       var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
       var summary = ownerAcc.getUrc20FutureTokenSummary(contractAddrBase58);
@@ -111,9 +111,9 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
         return false;
       else
         return true;
-  }
+    }
 
-  private void withdraw(byte[] ownerAddress, byte[] contractAddr, long headBlockTime){
+    private void withdraw(byte[] ownerAddress, byte[] contractAddr, long headBlockTime){
       var headBlockTickDay = Util.makeDayTick(headBlockTime);
       var contractAddrBase58 = Wallet.encode58Check(contractAddr).toLowerCase();
       var futureStore = dbManager.getUrc20FutureTransferStore();
@@ -182,5 +182,5 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
       ownerAcc.setUrc20FutureTokenSummary(contractAddrBase58, summary);
       ownerAcc.addUrc20Token(contractAddr, withdrawAmount);
       accountStore.put(ownerAddress, ownerAcc);
-  }
+    }
 }

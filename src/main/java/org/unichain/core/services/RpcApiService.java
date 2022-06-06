@@ -1743,6 +1743,19 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
+    public void createFutureDealTransferTransaction(Contract.FutureDealTransferContract request, io.grpc.stub.StreamObserver<org.unichain.protos.Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.FutureDealTransferContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
     public void withdrawFutureTransaction(org.unichain.protos.Contract.FutureWithdrawContract request, io.grpc.stub.StreamObserver<org.unichain.protos.Protocol.Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.FutureWithdrawContract).getInstance());

@@ -314,6 +314,11 @@ public class Util {
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
             break;
           }
+          case FutureDealTransferContract:{
+            var parsedContract = contractParameter.unpack(FutureDealTransferContract.class);
+            contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));
+            break;
+          }
           case FutureWithdrawContract:{
             var parsedContract = contractParameter.unpack(FutureWithdrawContract.class);
             contractJson = JSONObject.parseObject(JsonFormat.printToString(parsedContract, selfType));

@@ -123,7 +123,7 @@ public class Urc20ExchangeActuator extends AbstractActuator {
       Assert.isTrue(exchUnwFactor > 0, "Exchange unw factor must be positive");
       Assert.isTrue(exchTokenFactor > 0, "Exchange token factor must be positive");
       var estimatedExchangeToken = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
-      Assert.isTrue(contractOwnerCap.getUrc20TokenAvailable(contractAddrBase58.toLowerCase()) >= estimatedExchangeToken, "Not enough token liquidity to exchange");
+      Assert.isTrue(contractOwnerCap.getUrc20TokenAvailable(contractAddrBase58) >= estimatedExchangeToken, "Not enough token liquidity to exchange");
       return true;
     }
     catch (Exception e){

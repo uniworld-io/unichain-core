@@ -83,7 +83,7 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
 
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
-      Assert.isTrue (availableToWithdraw(ownerAddr, contractAddrBase58.toLowerCase(), dbManager.getHeadBlockTimeStamp()), "Contract unavailable to withdraw");
+      Assert.isTrue (availableToWithdraw(ownerAddr, contractAddrBase58, dbManager.getHeadBlockTimeStamp()), "Contract unavailable to withdraw");
       Assert.isTrue (contractCap.getFeePool() >= fee, "Not enough contract pool fee balance");
       return true;
     }
@@ -115,7 +115,7 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
 
     private void withdraw(byte[] ownerAddress, byte[] contractAddr, long headBlockTime){
       var headBlockTickDay = Util.makeDayTick(headBlockTime);
-      var contractAddrBase58 = Wallet.encode58Check(contractAddr).toLowerCase();
+      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
       var futureStore = dbManager.getUrc20FutureTransferStore();
       var accountStore = dbManager.getAccountStore();
       var ownerAcc = accountStore.get(ownerAddress);

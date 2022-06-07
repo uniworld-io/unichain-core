@@ -88,7 +88,7 @@ public class Urc20TransferOwnerActuator extends AbstractActuator {
       Assert.isTrue(!Arrays.equals(ownerAddress, toAddress), "Transfer owner to itself not allowed");
 
       var contractAddr = ctx.getAddress().toByteArray();
-      var contractAddrBase58 = Wallet.encode58Check(contractAddr).toLowerCase();
+      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
       var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
       Assert.notNull(contractCap, "Contract not found: " + contractAddrBase58);
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));

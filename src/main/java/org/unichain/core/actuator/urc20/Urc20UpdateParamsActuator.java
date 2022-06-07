@@ -183,7 +183,7 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
                   Assert.isTrue(maxSupply >= newTotalSupply, "New total supply break max supply: " + maxSupply);
               }
               else if(diff < 0){
-                  var availableSupply = accountCap.getUrc20TokenAvailable(contractAddrBase58.toLowerCase());
+                  var availableSupply = accountCap.getUrc20TokenAvailable(contractAddrBase58);
                   Assert.isTrue(Math.addExact(availableSupply, diff) >= 0, "Max available token supply not enough to lower down total supply, minimum total supply is: " + (oldTotalSupply - availableSupply));
               }
           }

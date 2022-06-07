@@ -21,6 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.unichain.common.utils.AddressUtil;
+import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -29,6 +30,7 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract;
+import org.unichain.protos.Protocol;
 
 import java.util.function.Predicate;
 
@@ -110,11 +112,28 @@ public class Urc20UpgradeActuator extends AbstractActuator {
 
       var accounts = accStore.filter(filter);
       accounts.forEach(acc -> {
-          //@todo migrate urc30
+        //@todo migrate urc30: Need review
+        acc.getInstance().getTokenMap().forEach((key, value) -> {
+          acc.addUrc20Token(AddressUtil.genAssetAddrBySeed(key), value);
+        });
 
-          //@todo migrate urc30 future
+        //@todo migrate urc30 future: Need review
+        acc.getInstance().getTokenFutureMap().forEach((key, urc30TokenFuture) -> {
+          var urc20TokenSummary = Protocol.Urc20FutureTokenSummary.newBuilder()
+                  .setAddress(ByteString.copyFrom(AddressUtil.genAssetAddrBySeed(urc30TokenFuture.getTokenName())))
+                  .setSymbol(urc30TokenFuture.getTokenName())
+                  .setTotalDeal(urc30TokenFuture.getTotalDeal())
+                  .setLowerBoundTime(urc30TokenFuture.getLowerBoundTime())
+                  .setUpperBoundTime(urc30TokenFuture.getUpperBoundTime())
+                  .setTotalValue(urc30TokenFuture.getTotalValue())
+                  .setLowerTick(urc30TokenFuture.getLowerTick())
+                  .setUpperTick(urc30TokenFuture.getUpperTick())
+                  .build();
+          acc.setUrc20FutureTokenSummary(Wallet.encode58Check(ByteString.copyFromUtf8(key).toByteArray()), urc20TokenSummary);
+        });
 
-          //@todo migrate future store
+          //@todo migrate future store: Need review
+        accStore.put(acc.getAddress().toByteArray(), acc);
       });
     }
     catch (Exception e){

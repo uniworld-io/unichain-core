@@ -204,7 +204,6 @@ public class ActuatorUtil {
               .setTotalBalance(Math.subtractExact(ownerSummary.getTotalBalance(), futureTick.getBalance()))
               .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1));
       ownerAcc.setFutureSummary(ownerSummary);
-      ownerAcc.setBalance(Math.subtractExact(ownerAcc.getBalance(), futureTick.getBalance()));
       accountStore.put(ownerAddress, ownerAcc);
       return;
     }
@@ -224,7 +223,6 @@ public class ActuatorUtil {
               .setTotalBalance(Math.subtractExact(ownerSummary.getTotalDeal(), futureTick.getBalance()))
               .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1));
       ownerAcc.setFutureSummary(ownerSummary);
-      ownerAcc.setBalance(Math.subtractExact(ownerAcc.getBalance(), futureTick.getBalance()));
       accountStore.put(ownerAddress, ownerAcc);
       return;
     }
@@ -249,7 +247,6 @@ public class ActuatorUtil {
             .setTotalBalance(Math.subtractExact(ownerSummary.getTotalBalance(), futureTick.getBalance()))
             .build();
     ownerAcc.setFutureSummary(ownerSummary);
-    ownerAcc.setBalance(Math.subtractExact(ownerAcc.getBalance(), futureTick.getBalance()));
     accountStore.put(ownerAddress, ownerAcc);
   }
 }

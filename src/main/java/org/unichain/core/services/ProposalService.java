@@ -1,6 +1,7 @@
 package org.unichain.core.services;
 
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.actuator.ActuatorFactory;
 import org.unichain.core.capsule.ProposalCapsule;
@@ -510,9 +511,11 @@ public class ProposalService {
          * - the last proposal will win.
          */
         case HARD_FORK: {
-          logger.info("Saving upgrade proposal --> {}", entry.getValue());
-          manager.getDynamicPropertiesStore().saveHardForkVersion(entry.getValue());
-          ActuatorFactory.createUpgradeActuator(manager, entry.getValue().intValue())
+          Long blockVer = entry.getValue();
+          logger.info("Saving upgrade block proposal --> {}", blockVer);
+          var oldBlockVer = manager.getDynamicPropertiesStore().getBlockVersion();
+          manager.getDynamicPropertiesStore().saveHardForkVersion(blockVer);
+          ActuatorFactory.createUpgradeActuator(manager, blockVer.intValue(), oldBlockVer)
                   .forEach(actuator -> actuator.upgrade());
           break;
         }

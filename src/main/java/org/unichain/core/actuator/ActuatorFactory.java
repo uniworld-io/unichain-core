@@ -260,14 +260,11 @@ public class ActuatorFactory {
     }
   }
 
-  /**
-   *
-   * @param manager
-   * @param newBlockVer
-   * @return
-   */
-  public static List<Actuator> createUpgradeActuator(Manager manager, int newBlockVer){
+  public static List<Actuator> createUpgradeActuator(Manager manager, int newBlockVer, int oldBlockVer){
       var actuators = new ArrayList<Actuator>();
+      if((newBlockVer >= BLOCK_VERSION_5) && (oldBlockVer < BLOCK_VERSION_5)){
+        actuators.add(new Urc20UpgradeActuator(null, manager));
+      }
       return actuators;
   }
 }

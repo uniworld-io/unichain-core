@@ -45,12 +45,11 @@ public abstract class AbstractActuator implements Actuator {
 
   @Override
   public void upgrade(){
-      //@todo
   }
 
   protected AccountCapsule createDefaultAccount(byte[] address){
-    var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
-    var accountCap = new AccountCapsule(ByteString.copyFrom(address), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+    var defaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
+    var accountCap = new AccountCapsule(ByteString.copyFrom(address), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), defaultPermission, dbManager);
     dbManager.getAccountStore().put(address, accountCap);
     return accountCap;
   }

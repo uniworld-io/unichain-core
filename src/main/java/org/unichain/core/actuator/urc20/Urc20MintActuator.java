@@ -33,7 +33,6 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.Urc20MintContract;
-import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -51,42 +50,41 @@ public class Urc20MintActuator extends AbstractActuator {
   public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
+      var urc20Store = dbManager.getUrc20ContractStore();
       var ctx = contract.unpack(Urc20MintContract.class);
-      var contractAddr = ctx.getAddress().toByteArray();
-      var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
-      contractCap.setTotalSupply(Math.addExact(contractCap.getTotalSupply(), ctx.getAmount()));
-      contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
-      contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      dbManager.getUrc20ContractStore().put(contractAddr, contractCap);
-
+      var urc20Addr = ctx.getAddress().toByteArray();
+      var urc20Cap = urc20Store.get(urc20Addr);
+      urc20Cap.setTotalSupply(Math.addExact(urc20Cap.getTotalSupply(), ctx.getAmount()));
+      urc20Cap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+      urc20Cap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      urc20Store.put(urc20Addr, urc20Cap);
 
       var accStore = dbManager.getAccountStore();
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
       AccountCapsule toAccountCap;
-      byte[] toAddress;
+      byte[] toAddr;
 
       if(ctx.hasField(TO_ADDRESS_FIELD_NUMBER)){
-        toAddress = ctx.getToAddress().toByteArray();
-        if(!accStore.has(toAddress)){
+        toAddr = ctx.getToAddress().toByteArray();
+        if(!accStore.has(toAddr)){
           fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
-          var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
-          toAccountCap = new AccountCapsule(ByteString.copyFrom(toAddress), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+          toAccountCap = createDefaultAccount(toAddr);
         }
         else
         {
-          toAccountCap = accStore.get(toAddress);
+          toAccountCap = accStore.get(toAddr);
         }
       }
       else {
-        toAddress = ownerAddress;
-        toAccountCap = accStore.get(toAddress);
+        toAddr = ownerAddr;
+        toAccountCap = accStore.get(toAddr);
       }
 
-      toAccountCap.addUrc20Token(contractAddr, ctx.getAmount());
-      accStore.put(toAddress, toAccountCap);
+      toAccountCap.addUrc20Token(urc20Addr, ctx.getAmount());
+      accStore.put(toAddr, toAccountCap);
 
-      chargeFee(ownerAddress, fee);
+      chargeFee(ownerAddr, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (Exception e) {
@@ -112,29 +110,30 @@ public class Urc20MintActuator extends AbstractActuator {
       Assert.notNull(ownerAccountCap, "Owner address not exist");
 
       if(ctx.hasField(TO_ADDRESS_FIELD_NUMBER)){
-        var toAddress = ctx.getToAddress().toByteArray();
-        Assert.isTrue(Wallet.addressValid(toAddress) && !Arrays.equals(ownerAddr, toAddress), "Invalid to address");
-        if(!accStore.has(toAddress)){
+        var toAddr = ctx.getToAddress().toByteArray();
+        Assert.isTrue(Wallet.addressValid(toAddr) && !Arrays.equals(ownerAddr, toAddr), "Invalid to address");
+        if(!accStore.has(toAddr)){
           fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
         }
       }
 
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Fee exceed balance");
 
-      var contractAddr = ctx.getAddress().toByteArray();
-      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
-      var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
-      Assert.notNull(contractCap, "Contract not exist :" + contractAddrBase58);
+      var urc20Addr = ctx.getAddress().toByteArray();
+      var urc20AddrBase58 = Wallet.encode58Check(urc20Addr);
+      var urc20Cap = dbManager.getUrc20ContractStore().get(urc20Addr);
+      Assert.notNull(urc20Cap, "Contract not exist :" + urc20AddrBase58);
 
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
-      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() < urc20Cap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(urc20Cap.getEndTime()));
+      Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= urc20Cap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(urc20Cap.getStartTime()));
 
-      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwnerAddress().toByteArray()), "Mismatched Contract owner not allowed to mine");
+      //limit on owner only
+      Assert.isTrue(Arrays.equals(ownerAddr, urc20Cap.getOwnerAddress().toByteArray()), "Mismatched Contract owner not allowed to mine");
 
-      Assert.isTrue(ctx.getAmount() >= contractCap.getLot(), "Mined amount at least equal lot: " + contractCap.getLot());
+      Assert.isTrue(ctx.getAmount() >= urc20Cap.getLot(), "Mined amount at least equal lot: " + urc20Cap.getLot());
 
       //avail to mine = max - total - burned
-      var availableToMine = Math.subtractExact(contractCap.getMaxSupply(), Math.addExact(contractCap.getTotalSupply(), contractCap.getBurnedToken()));
+      var availableToMine = Math.subtractExact(urc20Cap.getMaxSupply(), Math.addExact(urc20Cap.getTotalSupply(), urc20Cap.getBurnedToken()));
       Assert.isTrue(ctx.getAmount() <= availableToMine, "Not enough frozen token to mine, maximum allowed: " + availableToMine);
 
       return true;

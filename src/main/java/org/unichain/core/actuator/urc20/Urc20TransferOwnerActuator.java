@@ -34,31 +34,30 @@ public class Urc20TransferOwnerActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(Urc20TransferOwnerContract.class);
       var accountStore = dbManager.getAccountStore();
-      var contractStore = dbManager.getUrc20ContractStore();
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var toAddress = ctx.getToAddress().toByteArray();
-      var contractAddr = ctx.getAddress().toByteArray();
-      var contractCap = contractStore.get(contractAddr);
+      var urc20Store = dbManager.getUrc20ContractStore();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var toAddr = ctx.getToAddress().toByteArray();
+      var urc20Addr = ctx.getAddress().toByteArray();
+      var urc20Cap = urc20Store.get(urc20Addr);
 
-      var toAccount = accountStore.get(toAddress);
+      var toAccount = accountStore.get(toAddr);
       if (Objects.isNull(toAccount)) {
-        var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
-        toAccount = new AccountCapsule(ByteString.copyFrom(toAddress), AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+        toAccount = createDefaultAccount(toAddr);
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
-      contractCap.setOwnerAddress(ctx.getToAddress());
-      contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
-      contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      contractStore.put(contractAddr, contractCap);
+      urc20Cap.setOwnerAddress(ctx.getToAddress());
+      urc20Cap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+      urc20Cap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+      urc20Store.put(urc20Addr, urc20Cap);
 
-      var ownerAccount = accountStore.get(ownerAddress);
-      var tokenAvail = ownerAccount.burnUrc20AllAvailableToken(contractAddr);
-      toAccount.addUrc20Token(contractAddr, tokenAvail);
-      accountStore.put(toAddress, toAccount);
-      accountStore.put(ownerAddress, ownerAccount);
+      var ownerAccount = accountStore.get(ownerAddr);
+      var tokenAvail = ownerAccount.burnUrc20AllAvailableToken(urc20Addr);
+      toAccount.addUrc20Token(urc20Addr, tokenAvail);
+      accountStore.put(toAddr, toAccount);
+      accountStore.put(ownerAddr, ownerAccount);
 
-      chargeFee(ownerAddress, fee);
+      chargeFee(ownerAddr, fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (Exception e) {

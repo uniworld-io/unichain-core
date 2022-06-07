@@ -198,11 +198,12 @@ public class ActuatorUtil {
       nextTick.clearPrevTick();;
       futureStore.put(nextTickKey, nextTick);
 
-      ownerSummary.toBuilder()
+      ownerSummary = ownerSummary.toBuilder()
               .setLowerTick(head.getNextTick())
               .setLowerTime(nextTick.getExpireTime())
               .setTotalBalance(Math.subtractExact(ownerSummary.getTotalBalance(), futureTick.getBalance()))
-              .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1));
+              .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1))
+              .build();
       ownerAcc.setFutureSummary(ownerSummary);
       accountStore.put(ownerAddress, ownerAcc);
       return;
@@ -217,11 +218,12 @@ public class ActuatorUtil {
       prevTick.clearNextTick();
       futureStore.put(prevTickKey, prevTick);
 
-      ownerSummary.toBuilder()
+      ownerSummary = ownerSummary.toBuilder()
               .setUpperTick(tail.getPrevTick())
               .setUpperTime(prevTick.getExpireTime())
               .setTotalBalance(Math.subtractExact(ownerSummary.getTotalDeal(), futureTick.getBalance()))
-              .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1));
+              .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1))
+              .build();
       ownerAcc.setFutureSummary(ownerSummary);
       accountStore.put(ownerAddress, ownerAcc);
       return;
@@ -242,7 +244,7 @@ public class ActuatorUtil {
     futureStore.put(prevTickPointer.toByteArray(), prevTick);
     futureStore.put(nextTickPointer.toByteArray(), nextTick);
 
-    ownerSummary.toBuilder()
+    ownerSummary = ownerSummary.toBuilder()
             .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1))
             .setTotalBalance(Math.subtractExact(ownerSummary.getTotalBalance(), futureTick.getBalance()))
             .build();

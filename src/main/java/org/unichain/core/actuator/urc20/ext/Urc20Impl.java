@@ -61,7 +61,7 @@ public class Urc20Impl implements Urc20 {
     Assert.isTrue(contractStore.has(contract), "Not found contract: " + contractBase58);
     var ownerCap = accStore.get(owner);
     var futureSummary = ownerCap.getUrc20FutureTokenSummary(contractBase58);
-    var avail = ownerCap.getUrc20TokenAvailable(contractBase58.toLowerCase());
+    var avail = ownerCap.getUrc20TokenAvailable(contractBase58);
     var future = (futureSummary == null ? 0L : futureSummary.getTotalValue());
     return GrpcAPI.NumberMessage.newBuilder().setNum(avail + future).build();
   }
@@ -133,7 +133,7 @@ public class Urc20Impl implements Urc20 {
     Assert.isTrue(query.getPageSize() > 0 &&  query.getPageIndex() >=0 && query.getPageSize() <= MAX_PAGE_SIZE, "invalid paging info");
 
 
-    var summary = acc.getUrc20FutureTokenSummary(addrBase58.toLowerCase());
+    var summary = acc.getUrc20FutureTokenSummary(addrBase58);
 
     //no deals
     if(Objects.isNull(summary) || (summary.getTotalDeal() <= 0)){

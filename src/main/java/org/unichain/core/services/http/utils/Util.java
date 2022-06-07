@@ -986,8 +986,8 @@ public class Util {
     return ((new String(ownerAddr)) + "_" + (new String(tokenKey)) + "_" + dayTick).getBytes();
   }
 
-  public static byte[] makeUrc20FutureTokenIndexKey(byte[] ownerAddr, String contractAddrBase58Lowercase, long dayTick){
-    return ((new String(ownerAddr)) + "_" + contractAddrBase58Lowercase + "_" + dayTick).getBytes();
+  public static byte[] makeUrc20FutureTokenIndexKey(byte[] ownerAddr, String contractAddrBase58, long dayTick){
+    return ((new String(ownerAddr)) + "_" + contractAddrBase58 + "_" + dayTick).getBytes();
   }
 
   public static byte[] makeFutureTransferIndexKey(byte[] ownerAddr, long dayTick){

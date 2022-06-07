@@ -32,8 +32,6 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.Urc20BurnContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.util.Arrays;
-
 @Slf4j(topic = "actuator")
 public class Urc20BurnActuator extends AbstractActuator {
 
@@ -89,8 +87,7 @@ public class Urc20BurnActuator extends AbstractActuator {
 
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: "+ Utils.formatDateLong(contractCap.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
-//      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwnerAddress().toByteArray()), "Burning limited only on contract's owner");
-      Assert.isTrue(ownerAccountCap.getUrc20TokenAvailable(contractAddrBase58.toLowerCase()) >= ctx.getAmount(), "Not enough contract balance of" + contractAddrBase58 + "at least " + ctx.getAmount());
+      Assert.isTrue(ownerAccountCap.getUrc20TokenAvailable(contractAddrBase58) >= ctx.getAmount(), "Not enough contract balance of" + contractAddrBase58 + "at least " + ctx.getAmount());
       return true;
     }
     catch (Exception e){

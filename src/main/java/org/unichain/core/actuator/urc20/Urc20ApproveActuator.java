@@ -97,7 +97,7 @@ public class Urc20ApproveActuator extends AbstractActuator {
       Assert.isTrue(!Arrays.equals(owner, spender), "Spender must not be owner");
       Assert.isTrue(accountStore.has(owner) && accountStore.has(spender) && contractStore.has(contractAddr) , "Unrecognized owner|spender|contract address");
 
-      var tokenAvailable = ownerCap.getUrc20TokenAvailable(contractAddrBase58.toLowerCase());
+      var tokenAvailable = ownerCap.getUrc20TokenAvailable(contractAddrBase58);
       Assert.isTrue(tokenAvailable > 0, "No available token amount found!");
 
       var limit = ctx.getAmount();

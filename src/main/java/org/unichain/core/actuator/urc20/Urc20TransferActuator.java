@@ -192,7 +192,7 @@ public class Urc20TransferActuator extends AbstractActuator {
       Assert.isTrue(contractCap.getFeePool() >= fee, "Not enough token pool fee balance, require at least " + fee);
 
       Assert.isTrue (ctx.getAmount() > 0, "Invalid transfer amount, expect positive number");
-      Assert.isTrue(ownerAccountCap.getUrc20TokenAvailable(contractAddrBase58.toLowerCase()) >= ctx.getAmount(), "Not enough token balance");
+      Assert.isTrue(ownerAccountCap.getUrc20TokenAvailable(contractAddrBase58) >= ctx.getAmount(), "Not enough token balance");
 
       //validate transfer amount vs fee
       if(!Arrays.equals(ownerAddr, contractOwnerAddr)){
@@ -229,15 +229,15 @@ public class Urc20TransferActuator extends AbstractActuator {
   }
 
   private void addUrc20Future(byte[] toAddress, byte[] contractAddr, long amount, long availableTime){
-    var addrBase58Lowercase = Wallet.encode58Check(contractAddr).toLowerCase();
+    var addrBase58 = Wallet.encode58Check(contractAddr);
     var tickDay = Util.makeDayTick(availableTime);
-    var tickKey = Util.makeUrc20FutureTokenIndexKey(toAddress, addrBase58Lowercase, tickDay);
+    var tickKey = Util.makeUrc20FutureTokenIndexKey(toAddress, addrBase58, tickDay);
 
     var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
     var futureStore = dbManager.getUrc20FutureTransferStore();
     var accountStore = dbManager.getAccountStore();
     var toAcc = accountStore.get(toAddress);
-    var summary = toAcc.getUrc20FutureTokenSummary(addrBase58Lowercase);
+    var summary = toAcc.getUrc20FutureTokenSummary(addrBase58);
 
     /*
       tick exist: the fasted way!
@@ -250,7 +250,7 @@ public class Urc20TransferActuator extends AbstractActuator {
 
         //update account summary
         summary = summary.toBuilder().setTotalValue(Math.addExact(summary.getTotalValue(), amount)).build();
-        toAcc.setUrc20FutureTokenSummary(addrBase58Lowercase, summary);
+        toAcc.setUrc20FutureTokenSummary(addrBase58, summary);
         accountStore.put(toAddress, toAcc);
         return;
     }
@@ -279,7 +279,7 @@ public class Urc20TransferActuator extends AbstractActuator {
               .setLowerTick(ByteString.copyFrom(tickKey))
               .setUpperTick(ByteString.copyFrom(tickKey))
               .build();
-      toAcc.setUrc20FutureTokenSummary(addrBase58Lowercase, summary);
+      toAcc.setUrc20FutureTokenSummary(addrBase58, summary);
       accountStore.put(toAddress, toAcc);
       return;
     }
@@ -314,7 +314,7 @@ public class Urc20TransferActuator extends AbstractActuator {
               .setTotalValue(Math.addExact(summary.getTotalValue(), amount))
               .setLowerTick(ByteString.copyFrom(tickKey))
               .build();
-      toAcc.setUrc20FutureTokenSummary(addrBase58Lowercase, summary);
+      toAcc.setUrc20FutureTokenSummary(addrBase58, summary);
       accountStore.put(toAddress, toAcc);
       return ;
     }
@@ -346,7 +346,7 @@ public class Urc20TransferActuator extends AbstractActuator {
               .setUpperTick(ByteString.copyFrom(tickKey))
               .setUpperBoundTime(tickDay)
               .build();
-      toAcc.setUrc20FutureTokenSummary(addrBase58Lowercase, summary);
+      toAcc.setUrc20FutureTokenSummary(addrBase58, summary);
       accountStore.put(toAddress, toAcc);
       return;
     }
@@ -385,7 +385,7 @@ public class Urc20TransferActuator extends AbstractActuator {
                 .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
                 .build();
 
-        toAcc.setUrc20FutureTokenSummary(addrBase58Lowercase, summary);
+        toAcc.setUrc20FutureTokenSummary(addrBase58, summary);
         accountStore.put(toAddress, toAcc);
         return;
       }

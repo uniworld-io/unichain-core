@@ -20,6 +20,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 import org.unichain.common.crypto.ECKey;
 import org.unichain.common.crypto.ECKey.ECDSASignature;
 import org.unichain.common.overlay.message.Message;
@@ -1126,60 +1127,95 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     return this.transaction.getRet(0).getContractRet();
   }
 
-  public static int getMinSupportedBlockVersion(ContractType txType){
-    switch (txType){
-      case Urc721CreateContract:
-      case Urc721MintContract:
-      case Urc721AddMinterContract:
-      case Urc721RemoveMinterContract:
-      case Urc721RenounceMinterContract:
-      case Urc721BurnContract:
-      case Urc721ApproveContract:
-      case Urc721SetApprovalForAllContract:
-      case Urc721TransferFromContract:
-        return BLOCK_VERSION_5;
-      /**
-       * POSBridge
-       */
-      case PosBridgeSetupContract:
-      case PosBridgeMapTokenContract:
-      case PosBridgeCleanMapTokenContract:
-      case PosBridgeDepositContract:
-      case PosBridgeDepositExecContract:
-      case PosBridgeWithdrawContract:
-      case PosBridgeWithdrawExecContract:
-        return BLOCK_VERSION_5;
-      /**
-       * Urc20
-       */
-      case Urc20CreateContract:
-      case Urc20ContributePoolFeeContract:
-      case Urc20UpdateParamsContract:
-      case Urc20MintContract:
-      case Urc20BurnContract:
-      case Urc20TransferFromContract:
-      case Urc20TransferContract:
-      case Urc20WithdrawFutureContract:
-      case Urc20TransferOwnerContract:
-      case Urc20ExchangeContract:
-      case Urc20ApproveContract:
-        return BLOCK_VERSION_5;
+  public static void checkMinSupportedBlockVersion(ContractType txType, int blockNum) throws ContractValidateException{
+    try {
+      switch (txType) {
+        case Urc721CreateContract:
+        case Urc721MintContract:
+        case Urc721AddMinterContract:
+        case Urc721RemoveMinterContract:
+        case Urc721RenounceMinterContract:
+        case Urc721BurnContract:
+        case Urc721ApproveContract:
+        case Urc721SetApprovalForAllContract:
+        case Urc721TransferFromContract:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_5, "not supported by block version: " + blockNum + " anymore!");
+          break;
+        /**
+         * POSBridge
+         */
+        case PosBridgeSetupContract:
+        case PosBridgeMapTokenContract:
+        case PosBridgeCleanMapTokenContract:
+        case PosBridgeDepositContract:
+        case PosBridgeDepositExecContract:
+        case PosBridgeWithdrawContract:
+        case PosBridgeWithdrawExecContract:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_5, "not supported by block version: " + blockNum + " anymore!");
+          break;
+        /**
+         * Urc20
+         */
+        case Urc20CreateContract:
+        case Urc20ContributePoolFeeContract:
+        case Urc20UpdateParamsContract:
+        case Urc20MintContract:
+        case Urc20BurnContract:
+        case Urc20TransferFromContract:
+        case Urc20TransferContract:
+        case Urc20WithdrawFutureContract:
+        case Urc20TransferOwnerContract:
+        case Urc20ExchangeContract:
+        case Urc20ApproveContract:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_5);
+          break;
 
-      case TransferTokenOwnerContract:
-      case ExchangeTokenContract:
-        return BLOCK_VERSION_3;
-      case CreateTokenContract:
-      case ContributeTokenPoolFeeContract:
-      case UpdateTokenParamsContract:
-      case MineTokenContract:
-      case BurnTokenContract:
-      case TransferTokenContract:
-      case WithdrawFutureTokenContract:
-      case FutureTransferContract:
-      case FutureWithdrawContract:
-        return BLOCK_VERSION_2;
-      default:
-        return BLOCK_VERSION_1;
+        case TransferTokenOwnerContract:
+        case ExchangeTokenContract:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_3);
+          break;
+        case CreateTokenContract:
+        case ContributeTokenPoolFeeContract:
+        case UpdateTokenParamsContract:
+        case MineTokenContract:
+        case BurnTokenContract:
+        case TransferTokenContract:
+        case WithdrawFutureTokenContract:
+        case FutureTransferContract:
+        case FutureWithdrawContract:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_2);
+          break;
+        default:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_1);
+          break;
+      }
+    }
+    catch (Exception e){
+      String msg = String.format("transaction type %s not supported by this block version %s", txType, blockNum);
+      throw new ContractValidateException(msg);
+    }
+  }
+
+  public static void checkMaxSupportedBlockVersion(ContractType txType, int blockNum) throws ContractValidateException{
+    try {
+      switch (txType){
+        case BurnTokenContract:
+        case ContributeTokenPoolFeeContract:
+        case CreateTokenContract:
+        case ExchangeTokenContract:
+        case MineTokenContract:
+        case TransferTokenContract:
+        case TransferTokenOwnerContract:
+        case UpdateTokenParamsContract:
+        case WithdrawFutureTokenContract:
+          Assert.isTrue(blockNum <= BLOCK_VERSION_4);
+        default:
+          break;
+      }
+    }
+    catch (Exception e){
+      String msg = String.format("transaction type %s not supported by this block version %s", txType, blockNum);
+      throw new ContractValidateException(msg);
     }
   }
 }

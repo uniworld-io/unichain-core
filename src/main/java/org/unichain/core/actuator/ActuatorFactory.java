@@ -101,7 +101,7 @@ public class ActuatorFactory {
           case BLOCK_VERSION_4:
             return new Urc30TokenCreateActuatorV4(contract.getParameter(), manager);
           default:
-            return new Urc30TokenCreateActuatorV5(contract.getParameter(), manager);
+            throw new RuntimeException("current block version do not support this contract anymore!");
         }
       case ExchangeTokenContract:
         return new Urc30TokenExchangeActuator(contract.getParameter(), manager);

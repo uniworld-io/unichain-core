@@ -139,11 +139,6 @@ public class Manager {
   @Autowired
   private Urc20SpenderStore urc20SpenderStore;
 
-  //urc30
-  @Autowired
-  private TokenAddrSymbolIndexStore tokenAddrSymbolIndexStore;
-  @Autowired
-  private TokenSymbolAddrIndexStore tokenSymbolAddrIndexStore;
   @Autowired
   private FutureTokenStore futureTokenStore;
   @Autowired
@@ -671,8 +666,8 @@ public class Manager {
     val blockVersion = findBlockVersion(block);
     var txs = unx.getInstance().getRawData().getContractList();
     for(var tx : txs){
-        if(blockVersion < TransactionCapsule.getMinSupportedBlockVersion(tx.getType()))
-          throw new ContractValidateException(String.format("transaction type %s not supported by this block version %s", tx.getType(), blockVersion));
+        TransactionCapsule.checkMinSupportedBlockVersion(tx.getType(), blockVersion);
+        TransactionCapsule.checkMaxSupportedBlockVersion(tx.getType(), blockVersion);
     }
   }
 
@@ -1817,9 +1812,6 @@ public class Manager {
     closeOneStore(urc20SpenderStore);
     closeOneStore(urc20FutureTransferStore);
     closeOneStore(futureTransferStore);
-
-    closeOneStore(tokenAddrSymbolIndexStore);
-    closeOneStore(tokenSymbolAddrIndexStore);
 
     logger.info("******** end to close db ********");
   }

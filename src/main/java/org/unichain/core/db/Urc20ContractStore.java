@@ -49,7 +49,7 @@ public class Urc20ContractStore extends UnichainStoreWithRevoking<Urc20ContractC
             .filter(Objects::nonNull)
             .map(Urc20ContractCapsule::getInstance)
             .filter(filter)
-            .map(item -> item.hasField(URC20_CREATE_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
+            .map(item -> item.hasField(Urc20ContractCapsule.URC20_CREATE_FIELD_CREATE_ACC_FEE) ? item : item.toBuilder().setCreateAccFee(Parameter.ChainConstant.TOKEN_DEFAULT_CREATE_ACC_FEE).build())
             .sorted(Comparator.comparing(Contract.Urc20CreateContract::getName))
             .collect(Collectors.toList());
 

@@ -101,15 +101,16 @@ public class TransactionUtil {
     return true;
   }
 
-  public static boolean validTokenName(byte[] tokenName) {
-    if (ArrayUtils.isEmpty(tokenName)) {
+  public static boolean validTokenSymbol(String symbol){
+    byte[] chars = symbol.getBytes();
+    if (ArrayUtils.isEmpty(chars)) {
       return false;
     }
-    if (tokenName.length > 32) {
+    if (chars.length > 32) {
       return false;
     }
     // b must read able.
-    for (byte b : tokenName) {
+    for (byte b : chars) {
       if (b < 0x21) {
         return false; // 0x21 = '!'
       }
@@ -120,15 +121,8 @@ public class TransactionUtil {
     return true;
   }
 
-  public static boolean validContract(byte[] contract){
-    if (ArrayUtils.isEmpty(contract) || contract.length > 32)
-      return false;
-
-    for (byte c : contract) {
-      if (isCharSpecial(c) || c == 0x20) //0x20~space
-        return false;
-    }
-    return true;
+  public static boolean validTokenName(String name){
+    return validCharSpecial(name);
   }
 
   public static boolean validCharSpecial(String name) {
@@ -193,39 +187,17 @@ public class TransactionUtil {
     return validUrl(uri.getBytes()) && StringUtils.startsWith(url.getProtocol(), "http");
   }
 
-  public static boolean validTokenAbbrName(byte[] abbrName) {
-    if (ArrayUtils.isEmpty(abbrName)) {
-      return false;
-    }
-    if (abbrName.length > 5) {
-      return false;
-    }
-    // b must read able.
-    for (byte b : abbrName) {
-      if (b < 0x21) {
-        return false; // 0x21 = '!'
-      }
-      if (b > 0x7E) {
-        return false; // 0x7E = '~'
-      }
-    }
-    return true;
-  }
-
-
   public static boolean validAssetDescription(byte[] description) {
     if (ArrayUtils.isEmpty(description)) {
-      return true;   //description can empty
+      return true;
     }
-
     return description.length <= 200;
   }
 
   public static boolean validJsonString(byte[] jsonString) {
     if (ArrayUtils.isEmpty(jsonString)) {
-      return true;   //jsonString can empty
+      return true;
     }
-
     return jsonString.length <= 10*1024L;
   }
 
@@ -245,26 +217,15 @@ public class TransactionUtil {
         return false;
       }
     }
-
     return !(id.length > 1 && id[0] == '0');
   }
 
-  /**
-   * Get sender.
-   */
- /* public static byte[] getSender(Transaction tx) {
-    byte[] pubKey = tx.getRawData().getVin(0).getRawData().getPubKey().toByteArray();
-    return ECKey.computeAddress(pubKey);
-  } */
-
   public static boolean isGenesisAddress(byte[] address) {
     var genericsBlock = Args.getInstance().getGenesisBlock();
-
     for (Account acc : genericsBlock.getAssets()){
       if(Arrays.equals(acc.getAddress(), address))
         return true;
     }
-
     return false;
   }
 }

@@ -107,8 +107,8 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       var ownerAccountCap = accountStore.get(ownerAddr);
 
       Assert.isTrue(Wallet.addressValid(addr), "Invalid contract address");
-      Assert.isTrue(TransactionUtil.validCharSpecial(symbol), "Invalid contract symbol");
-      Assert.isTrue(TransactionUtil.validCharSpecial(name), "Invalid contract name");
+      Assert.isTrue(TransactionUtil.validTokenSymbol(symbol), "Invalid contract symbol");
+      Assert.isTrue(TransactionUtil.validTokenName(name), "Invalid contract name");
 
       Assert.isTrue(!dbManager.getUrc721ContractStore().has(addr), "Contract address has existed");
 

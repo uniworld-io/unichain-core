@@ -132,9 +132,9 @@ public class Urc20CreateContractActuator extends AbstractActuator {
       var contractAddrBase58 = Wallet.encode58Check(contractAddr);
       Assert.isTrue(!dbManager.getAccountStore().has(contractAddr) && !dbManager.getUrc20ContractStore().has(contractAddr), "Contract address exists: " + contractAddrBase58);
 
-      Assert.isTrue(!ctx.getSymbol().isEmpty() && TransactionUtil.validTokenName(ctx.getSymbol().getBytes()), "Invalid contract symbol");
+      Assert.isTrue(!ctx.getSymbol().isEmpty() && TransactionUtil.validTokenSymbol(ctx.getSymbol()), "Invalid contract symbol");
       Assert.isTrue(!ctx.getSymbol().equalsIgnoreCase("UNX"), "Token symbol can't be UNX");
-      Assert.isTrue(!StringUtils.isEmpty(ctx.getName().isEmpty()) && TransactionUtil.validTokenName(ctx.getName().getBytes()), "Invalid token name");
+      Assert.isTrue(!StringUtils.isEmpty(ctx.getName().isEmpty()) && TransactionUtil.validTokenName(ctx.getName()), "Invalid token name");
       Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
 
       var startTime = ctx.hasField(URC20_CREATE_FIELD_START_TIME) ? ctx.getStartTime() : dbManager.getHeadBlockTimeStamp();

@@ -1,14 +1,17 @@
 package org.unichain.core.actuator;
 
 import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.var;
 import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.storage.Deposit;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.BalanceInsufficientException;
+import org.unichain.protos.Protocol;
 
 public abstract class AbstractActuator implements Actuator {
   protected Any contract;
@@ -42,6 +45,13 @@ public abstract class AbstractActuator implements Actuator {
 
   @Override
   public void upgrade(){
+      //@todo
+  }
 
+  protected AccountCapsule createDefaultAccount(byte[] address){
+    var withDefaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
+    var accountCap = new AccountCapsule(ByteString.copyFrom(address), Protocol.AccountType.Normal, dbManager.getHeadBlockTimeStamp(), withDefaultPermission, dbManager);
+    dbManager.getAccountStore().put(address, accountCap);
+    return accountCap;
   }
 }

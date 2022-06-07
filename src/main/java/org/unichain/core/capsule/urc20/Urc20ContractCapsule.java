@@ -16,18 +16,21 @@
 package org.unichain.core.capsule.urc20;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.exception.ContractExeException;
+import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.Urc20CreateContract;
-
-import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "capsule")
 public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
+  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_CRITICAL_TIME = Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.CRITICAL_UPDATE_TIME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_CREATE_ACC_FEE = Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.CREATE_ACC_FEE_FIELD_NUMBER);
+
   private Urc20CreateContract ctx;
 
   public Urc20ContractCapsule(byte[] data) {

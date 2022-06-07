@@ -61,8 +61,14 @@ public class BandwidthProcessorV4 extends BandwidthProcessorV2 {
           ownerAddr = ctx.getOwnerAddress().toByteArray();
           break;
         }
+        case Urc20ApproveContract: {
+          var ctx = contract.getParameter().unpack(Contract.Urc20ApproveContract.class);
+          contractAddr = ctx.getAddress().toByteArray();
+          ownerAddr = ctx.getOwnerAddress().toByteArray();
+          break;
+        }
         default:
-          throw new Exception("invalid contract, expect: Urc20TransferContract or Urc20TransferFromContract!");
+          throw new Exception("invalid contract, expect: Urc20TransferContract|Urc20TransferFromContract|Urc20ApproveContract!");
       }
 
       var urc20Pool = dbManager.getUrc20ContractStore().get(contractAddr);

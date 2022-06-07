@@ -78,7 +78,8 @@ public class Urc20TransferActuator extends AbstractActuator {
         */
         if(isCreateNewAcc)
         {
-          dbManager.adjustBalanceNoPut(ownerAccountCap, -dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+          var moreFee = dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+          dbManager.adjustBalanceNoPut(ownerAccountCap, -moreFee);
         }
 
         ownerAccountCap.burnUrc20Token(contractAddr, ctx.getAmount());
@@ -181,6 +182,7 @@ public class Urc20TransferActuator extends AbstractActuator {
         if(isCreateNewAccount)
         {
           var moreFee = dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract();
+          //@fixme why charge unw ?
           Assert.isTrue(ownerAccountCap.getBalance() >= moreFee, "Owner not enough balance to create new account fee, require at least "+ moreFee + "ginza");
         }
       }

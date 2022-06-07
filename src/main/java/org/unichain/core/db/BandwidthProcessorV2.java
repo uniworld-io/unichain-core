@@ -98,6 +98,7 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
               break;
             case Urc20TransferFromContract:
             case Urc20TransferContract:
+            case Urc20ApproveContract:
               consumeCreateNewAccountIfUrc20Transfer(ownerAccountCap, contract, trace);
               break;
             default:
@@ -241,20 +242,23 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
 
   protected void consumeCreateNewAccountIfUrc20Transfer(AccountCapsule ownerAccountCapsule, Contract contract, TransactionTrace trace) throws AccountResourceInsufficientException, ContractValidateException {
     try {
-      byte[] addr;
+      byte[] contractAddr;
       switch (contract.getType()){
         case Urc20TransferContract:
-          addr = contract.getParameter().unpack(Urc20TransferContract.class).getAddress().toByteArray();
+          contractAddr = contract.getParameter().unpack(Urc20TransferContract.class).getAddress().toByteArray();
           break;
         case Urc20TransferFromContract:
-          addr = contract.getParameter().unpack(Urc20TransferFromContract.class).getAddress().toByteArray();
+          contractAddr = contract.getParameter().unpack(Urc20TransferFromContract.class).getAddress().toByteArray();
+          break;
+        case Urc20ApproveContract:
+          contractAddr = contract.getParameter().unpack(Urc20ApproveContract.class).getAddress().toByteArray();
           break;
         default:
           throw new Exception("unexpected urc20 contract");
       }
 
       var fee = dbManager.getDynamicPropertiesStore().getCreateAccountFee();
-      if (consumeFeeUrc20Pool(addr, fee)) {
+      if (consumeFeeUrc20Pool(contractAddr, fee)) {
         trace.setNetBill(0, fee);
         dbManager.getDynamicPropertiesStore().addTotalCreateAccountCost(fee);
         return;
@@ -296,6 +300,11 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         {
           var ctx= contract.getParameter().unpack(Urc20TransferContract.class);
           return !dbManager.getAccountStore().has(ctx.getTo().toByteArray());
+        }
+        case Urc20ApproveContract:
+        {
+          var ctx= contract.getParameter().unpack(Urc20ApproveContract.class);
+          return !dbManager.getAccountStore().has(ctx.getSpender().toByteArray());
         }
         default:
           return false;

@@ -54,11 +54,7 @@ import org.unichain.core.services.WitnessService;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.witness.ProposalController;
 import org.unichain.core.witness.WitnessController;
-import org.unichain.protos.Contract.TransferTokenContract;
-import org.unichain.protos.Contract.Urc20TransferFromContract;
-import org.unichain.protos.Contract.Urc20TransferContract;
-import org.unichain.protos.Contract.WithdrawFutureTokenContract;
-import org.unichain.protos.Contract.Urc20WithdrawFutureContract;
+import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction;
@@ -804,9 +800,13 @@ public class Manager {
                 chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
                 break;
             }
-            //@fixme transfer vs transferFrom
             case Urc20TransferContract: {
               var ctx = contract.getParameter().unpack(Urc20TransferContract.class);
+              chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
+              break;
+            }
+            case Urc20ApproveContract: {
+              var ctx = contract.getParameter().unpack(Urc20ApproveContract.class);
               chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
               break;
             }

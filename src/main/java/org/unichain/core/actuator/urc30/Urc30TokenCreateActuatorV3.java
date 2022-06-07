@@ -104,13 +104,13 @@ public class Urc30TokenCreateActuatorV3 extends AbstractActuator {
       var accountCap = dbManager.getAccountStore().get(ownerAddress);
       Assert.notNull(accountCap, "Account not exists");
 
-      Assert.isTrue(!ctx.getName().isEmpty() && TransactionUtil.validTokenName(ctx.getName().getBytes()), "Invalid token name");
+      Assert.isTrue(!ctx.getName().isEmpty() && TransactionUtil.validTokenSymbol(ctx.getName()), "Invalid token name");
       Assert.isTrue(!ctx.getName().equalsIgnoreCase("UNX"), "Token name can't be UNX");
 
       var tokenKey = Util.stringAsBytesUppercase(ctx.getName());
       Assert.isTrue(!this.dbManager.getTokenPoolStore().has(tokenKey), "Token exists");
 
-      Assert.isTrue(!StringUtils.isEmpty(ctx.getAbbr().isEmpty()) && TransactionUtil.validTokenName(ctx.getAbbr().getBytes()), "Invalid token abbreviation");
+      Assert.isTrue(!StringUtils.isEmpty(ctx.getAbbr().isEmpty()) && TransactionUtil.validTokenSymbol(ctx.getAbbr()), "Invalid token abbreviation");
       Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
       Assert.isTrue(TransactionUtil.validAssetDescription(ByteString.copyFrom(ctx.getDescription().getBytes()).toByteArray()), "Invalid description");
 

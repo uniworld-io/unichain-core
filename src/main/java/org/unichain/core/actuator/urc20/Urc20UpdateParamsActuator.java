@@ -43,10 +43,10 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
 
     public Urc20UpdateParamsActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
-  }
+    }
 
-  @Override
-  public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
+    @Override
+    public boolean execute(TransactionResultCapsule ret) throws ContractExeException {
     var fee = calcFee();
     try {
         var ctx = contract.unpack(Urc20UpdateParamsContract.class);
@@ -124,10 +124,10 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
       ret.setStatus(fee, code.FAILED);
       throw new ContractExeException(e.getMessage());
     }
-  }
+    }
 
-  @Override
-  public boolean validate() throws ContractValidateException {
+    @Override
+    public boolean validate() throws ContractValidateException {
       try {
           Assert.notNull(contract, "No contract!");
           Assert.notNull(dbManager, "No dbManager!");
@@ -219,15 +219,15 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
           logger.error("Actuator error: {} --> ", e.getMessage(), e);
           throw new ContractValidateException(e.getMessage());
       }
-  }
+    }
 
-  @Override
-  public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
+    @Override
+    public ByteString getOwnerAddress() throws InvalidProtocolBufferException {
     return contract.unpack(Urc20UpdateParamsContract.class).getOwnerAddress();
-  }
+    }
 
-  @Override
-  public long calcFee() {
+    @Override
+    public long calcFee() {
       return dbManager.getDynamicPropertiesStore().getAssetUpdateFee();//2UNW default
-  }
+    }
 }

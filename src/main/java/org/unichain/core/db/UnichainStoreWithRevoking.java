@@ -26,10 +26,8 @@ import org.unichain.core.exception.ItemNotFoundException;
 import javax.annotation.PostConstruct;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j(topic = "DB")
@@ -170,6 +168,20 @@ public abstract class UnichainStoreWithRevoking<T extends ProtoCapsule> implemen
     return Streams.stream(iterator())
             .map(Map.Entry::getValue)
             .collect(Collectors.toList());
+  }
+
+  /**
+   * for filter small amount on large DB
+   */
+  public List<T> filter(Predicate filter) {
+      var it = iterator();
+      var out = new ArrayList<T>();
+      while (it.hasNext()){
+        var v = it.next().getValue();
+        if(filter.test(v))
+          out.add(v);
+      }
+      return out;
   }
 
   public DataPage<T> getDataPage(int pageSize, int pageIndex){

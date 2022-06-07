@@ -30,23 +30,22 @@ public class Urc20Predicate implements Predicate {
     //@todo review should not use Urc20TransferFromContract
     @Override
     public void lockTokens(ByteString depositor, ByteString rootToken, String depositData) throws ContractExeException, ContractValidateException {
-        var wrapCtx = Contract.Urc20TransferFromContract.newBuilder()
-                .setFrom(depositor)
+        var wrapCtx = Contract.Urc20TransferContract.newBuilder()
+                .setOwnerAddress(depositor)
                 .setTo(config.getPredicateErc20())
                 .setAddress(rootToken)
                 .setAmount(PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue())
-                .setOwnerAddress(config.getPredicateErc20())
                 .setAvailableTime(0L)
                 .build();
 
 
-        var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc20TransferFromContract)
+        var contract = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc20TransferContract)
                 .getInstance()
                 .getRawData()
                 .getContract(0)
                 .getParameter();
 
-        var actuator = new Urc20TransferFromActuator(contract, dbManager);
+        var actuator = new Urc20TransferActuator(contract, dbManager);
         actuator.validate();
         actuator.execute(ret);
     }

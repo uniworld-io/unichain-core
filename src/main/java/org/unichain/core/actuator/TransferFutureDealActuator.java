@@ -124,7 +124,6 @@ public class TransferFutureDealActuator extends AbstractActuator {
     var tick = futureStore.get(tickKey);
 
     ActuatorUtil.removeFutureDeal(dbManager, ownerAddress, tick);
-    // change currentTick of ownerAddress to toAddress
     ActuatorUtil.addFutureDeal(dbManager, toAddress, tick.getBalance(), dealId);
     // remove old tickKey
     futureStore.delete(tickKey);

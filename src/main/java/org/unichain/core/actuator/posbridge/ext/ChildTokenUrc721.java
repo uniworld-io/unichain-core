@@ -1,6 +1,7 @@
 package org.unichain.core.actuator.posbridge.ext;
 
 import com.google.protobuf.ByteString;
+import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.actuator.urc721.Urc721BurnActuator;
@@ -12,7 +13,7 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
-
+@Slf4j
 public class ChildTokenUrc721 implements ChildToken {
 
     private final Manager dbManager;
@@ -30,6 +31,7 @@ public class ChildTokenUrc721 implements ChildToken {
         var contractCap = contractStore.get(contractKey);
 
         PosBridgeUtil.ERC721Decode erc721Decode = PosBridgeUtil.abiDecodeToErc721(depositData);
+        logger.info("========>Deposit 721 decode data  {}", erc721Decode);
 
         var wrapCtx = Contract.Urc721MintContract.newBuilder()
                 .setOwnerAddress(ByteString.copyFrom(contractCap.getOwner()))

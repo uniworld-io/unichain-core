@@ -193,13 +193,18 @@ public class ActuatorUtil {
     var head = futureStore.get(headKey);
     var headTime = head.getExpireTime();
     if (futureTick.getExpireTime() == headTime) {
-      var nextTick = futureStore.get(head.getNextTick().toByteArray());
+      var nextTickKey = head.getNextTick().toByteArray();
+      var nextTick = futureStore.get(nextTickKey);
+      nextTick.clearPrevTick();;
+      futureStore.put(nextTickKey, nextTick);
+
       ownerSummary.toBuilder()
               .setLowerTick(head.getNextTick())
               .setLowerTime(nextTick.getExpireTime())
               .setTotalBalance(Math.subtractExact(ownerSummary.getTotalBalance(), futureTick.getBalance()))
               .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1));
       ownerAcc.setFutureSummary(ownerSummary);
+      ownerAcc.setBalance(Math.subtractExact(ownerAcc.getBalance(), futureTick.getBalance()));
       accountStore.put(ownerAddress, ownerAcc);
       return;
     }
@@ -208,13 +213,18 @@ public class ActuatorUtil {
     var tailKey = ownerSummary.getUpperTick().toByteArray();
     var tail = futureStore.get(tailKey);
     if (futureTick.getExpireTime() == tail.getExpireTime()) {
-      var prevTick = futureStore.get(tail.getPrevTick().toByteArray());
+      var prevTickKey = tail.getPrevTick().toByteArray();
+      var prevTick = futureStore.get(prevTickKey);
+      prevTick.clearNextTick();
+      futureStore.put(prevTickKey, prevTick);
+
       ownerSummary.toBuilder()
               .setUpperTick(tail.getPrevTick())
               .setUpperTime(prevTick.getExpireTime())
               .setTotalBalance(Math.subtractExact(ownerSummary.getTotalDeal(), futureTick.getBalance()))
               .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1));
       ownerAcc.setFutureSummary(ownerSummary);
+      ownerAcc.setBalance(Math.subtractExact(ownerAcc.getBalance(), futureTick.getBalance()));
       accountStore.put(ownerAddress, ownerAcc);
       return;
     }
@@ -239,6 +249,7 @@ public class ActuatorUtil {
             .setTotalBalance(Math.subtractExact(ownerSummary.getTotalBalance(), futureTick.getBalance()))
             .build();
     ownerAcc.setFutureSummary(ownerSummary);
+    ownerAcc.setBalance(Math.subtractExact(ownerAcc.getBalance(), futureTick.getBalance()));
     accountStore.put(ownerAddress, ownerAcc);
   }
 }

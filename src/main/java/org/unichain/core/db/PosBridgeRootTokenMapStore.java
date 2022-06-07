@@ -53,13 +53,13 @@ public class PosBridgeRootTokenMapStore extends UnichainStoreWithRevoking<PosBri
         if(has(keyRoot.getBytes())){
             var capsule = get(keyRoot.getBytes());
             delete(PosBridgeUtil.makeTokenMapKey(capsule.getChildChainId(), capsule.getChildToken()).getBytes());
-            delete(PosBridgeUtil.makeTokenMapKey(Wallet.getChainId(), capsule.getRootToken()).getBytes());
+            delete(PosBridgeUtil.makeTokenMapKey(capsule.getChildChainId(), capsule.getRootToken()).getBytes());
         }
 
         if(has(keyChild.getBytes())){
             var capsule = get(keyChild.getBytes());
             delete(PosBridgeUtil.makeTokenMapKey(capsule.getChildChainId(), capsule.getChildToken()).getBytes());
-            delete(PosBridgeUtil.makeTokenMapKey(Wallet.getChainId(), capsule.getRootToken()).getBytes());
+            delete(PosBridgeUtil.makeTokenMapKey(capsule.getChildChainId(), capsule.getRootToken()).getBytes());
         }
     }
 }

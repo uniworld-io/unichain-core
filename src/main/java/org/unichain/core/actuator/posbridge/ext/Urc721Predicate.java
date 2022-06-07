@@ -32,7 +32,6 @@ public class Urc721Predicate implements Predicate {
     public void lockTokens(ByteString depositor, ByteString rootToken, String depositData) throws ContractExeException, ContractValidateException {
 
         PosBridgeUtil.ERC721Decode erc721Decode = PosBridgeUtil.abiDecodeToErc721(depositData);
-        logger.info("LockTokens  {}", erc721Decode);
         var wrapCtx = Contract.Urc721TransferFromContract.newBuilder()
                 .setOwnerAddress(depositor)
                 .setTo(config.getPredicateErc721())

@@ -157,8 +157,8 @@ public class Urc20TransferFromActuator extends AbstractActuator {
       var fee = calcFee();
       val ctx = this.contract.unpack(Urc20TransferFromContract.class);
       var accStore = dbManager.getAccountStore();
-      var contractAddr = ctx.getAddress().toByteArray();
-      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
+      var urc20Addr = ctx.getAddress().toByteArray();
+      var urc20AddrBase58 = Wallet.encode58Check(urc20Addr);
 
       var spenderAddr = ctx.getOwnerAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(spenderAddr), "Invalid spenderAddr");
@@ -172,11 +172,11 @@ public class Urc20TransferFromActuator extends AbstractActuator {
       Assert.isTrue(!Arrays.equals(spenderAddr, toAddr) && !Arrays.equals(fromAddr, toAddr), "Transfer to itself not allowed");
 
       //check spender
-      dbManager.getUrc20SpenderStore().checkSpend(spenderAddr, contractAddr, fromAddr, ctx.getAmount());
+      dbManager.getUrc20SpenderStore().checkSpend(spenderAddr, urc20Addr, fromAddr, ctx.getAmount());
 
       //check contract active
-      var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
-      Assert.notNull(contractCap, "Contract not found: " + contractAddrBase58);
+      var contractCap = dbManager.getUrc20ContractStore().get(urc20Addr);
+      Assert.notNull(contractCap, "Contract not found: " + urc20AddrBase58);
       var contractOwnerAddr = contractCap.getOwnerAddress().toByteArray();
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
@@ -214,7 +214,7 @@ public class Urc20TransferFromActuator extends AbstractActuator {
 
       Assert.isTrue(contractCap.getFeePool() >= fee, "Not enough token pool fee balance, require at least " + fee);
       Assert.isTrue (ctx.getAmount() > 0, "Invalid transfer amount, expect positive number");
-      Assert.isTrue(fromAccCap.getUrc20TokenAvailable(contractAddrBase58) >= ctx.getAmount(), "Not enough token balance");
+      Assert.isTrue(fromAccCap.getUrc20TokenAvailable(urc20AddrBase58) >= ctx.getAmount(), "Not enough token balance");
 
       //validate transfer amount vs fee
       if(!Arrays.equals(fromAddr, contractOwnerAddr)){

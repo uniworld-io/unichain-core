@@ -1,6 +1,7 @@
 package org.unichain.core.actuator.posbridge.ext;
 
 import com.google.protobuf.ByteString;
+import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.actuator.urc721.Urc721TransferFromActuator;
@@ -13,6 +14,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
+@Slf4j
 public class Urc721Predicate implements Predicate {
     private final Manager dbManager;
     private final TransactionResultCapsule ret;
@@ -30,12 +32,24 @@ public class Urc721Predicate implements Predicate {
     public void lockTokens(ByteString depositor, ByteString rootToken, String depositData) throws ContractExeException, ContractValidateException {
 
         PosBridgeUtil.ERC721Decode erc721Decode = PosBridgeUtil.abiDecodeToErc721(depositData);
-
+        logger.info("LockTokens  {}", erc721Decode);
         var wrapCtx = Contract.Urc721TransferFromContract.newBuilder()
                 .setOwnerAddress(depositor)
                 .setTo(config.getPredicateErc721())
                 .setAddress(rootToken)
                 .setTokenId(erc721Decode.tokenId)
+                .build();
+        buildThenExecContract(wrapCtx);
+    }
+
+
+    @Override
+    public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException, ContractValidateException {
+        var wrapCtx = Contract.Urc721TransferFromContract.newBuilder()
+                .setOwnerAddress(config.getPredicateErc721())
+                .setTo(withdrawer)
+                .setAddress(rootToken)
+                .setTokenId(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
                 .build();
         buildThenExecContract(wrapCtx);
     }
@@ -51,17 +65,6 @@ public class Urc721Predicate implements Predicate {
         wrapActuator.validate();
         wrapActuator.execute(wrapRet);
         ret.setFee(wrapRet.getFee());
-    }
-
-    @Override
-    public void unlockTokens(ByteString withdrawer, ByteString rootToken, String withdrawData) throws ContractExeException, ContractValidateException {
-        var wrapCtx = Contract.Urc721TransferFromContract.newBuilder()
-                .setOwnerAddress(config.getPredicateErc721())
-                .setTo(withdrawer)
-                .setAddress(rootToken)
-                .setTokenId(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
-                .build();
-        buildThenExecContract(wrapCtx);
     }
 
 }

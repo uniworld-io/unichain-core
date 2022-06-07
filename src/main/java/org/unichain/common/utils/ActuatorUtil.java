@@ -193,7 +193,11 @@ public class ActuatorUtil {
     var head = futureStore.get(headKey);
     var headTime = head.getExpireTime();
     if (futureTick.getExpireTime() == headTime) {
-      var nextTick = futureStore.get(head.getNextTick().toByteArray());
+      var nextTickKey = head.getNextTick().toByteArray();
+      var nextTick = futureStore.get(nextTickKey);
+      nextTick.clearPrevTick();;
+      futureStore.put(nextTickKey, nextTick);
+
       ownerSummary.toBuilder()
               .setLowerTick(head.getNextTick())
               .setLowerTime(nextTick.getExpireTime())
@@ -208,7 +212,11 @@ public class ActuatorUtil {
     var tailKey = ownerSummary.getUpperTick().toByteArray();
     var tail = futureStore.get(tailKey);
     if (futureTick.getExpireTime() == tail.getExpireTime()) {
-      var prevTick = futureStore.get(tail.getPrevTick().toByteArray());
+      var prevTickKey = tail.getPrevTick().toByteArray();
+      var prevTick = futureStore.get(prevTickKey);
+      prevTick.clearNextTick();
+      futureStore.put(prevTickKey, prevTick);
+
       ownerSummary.toBuilder()
               .setUpperTick(tail.getPrevTick())
               .setUpperTime(prevTick.getExpireTime())

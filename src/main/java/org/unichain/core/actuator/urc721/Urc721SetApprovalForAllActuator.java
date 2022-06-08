@@ -47,18 +47,23 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc721SetApprovalForAllContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
+      var contractAddr = ctx.getAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
       var relationStore = dbManager.getUrc721AccountTokenRelationStore();
-      if(ctx.getApprove())
-        relationStore.approveForAll(ownerAddr, toAddr);
-      else
-        relationStore.disApproveForAll(ownerAddr, toAddr);
 
       //create new account
       if (!accountStore.has(toAddr)) {
-        fee = Math.addExact(fee, dbManager.createNewAccount(ctx.getToAddress()));
+        createDefaultAccount(toAddr);
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
+      //approve or dis-approve
+      if(ctx.getApprove())
+        relationStore.approveForAll(ownerAddr, toAddr, contractAddr);
+      else
+        relationStore.disApproveForAll(ownerAddr, toAddr, contractAddr);
+
+      //charge fee
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
@@ -78,22 +83,31 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
       Assert.isTrue(contract.is(Urc721SetApprovalForAllContract.class), "contract type error,expected type [Urc721SetApprovalForAllContract],real type[" + contract.getClass() + "]");
       var fee = calcFee();
       val ctx = this.contract.unpack(Urc721SetApprovalForAllContract.class);
+
       var accountStore = dbManager.getAccountStore();
       var relationStore = dbManager.getUrc721AccountTokenRelationStore();
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var toAddr = ctx.getToAddress().toByteArray();
+      var contractStore = dbManager.getUrc721ContractStore();
 
-      Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
-      Assert.isTrue(Wallet.addressValid(toAddr), "Target address not exists or not active");
-      Assert.isTrue(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0, "Not found any token");
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var contractAddr = ctx.getAddress().toByteArray();
+      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
+      var toAddr = ctx.getToAddress().toByteArray();
+      var toAddrBase58 = Wallet.encode58Check(toAddr);
+
+      Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and operator cannot be the same");
+      Assert.isTrue(accountStore.has(ownerAddr) && contractStore.has(contractAddr), "Owner|Urc721 contract not exist");
+      Assert.isTrue(Wallet.addressValid(toAddr), "To address not exists or not active");
+
+      //check has token to approve for all
+      Assert.isTrue(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal(contractAddrBase58) > 0, "Not found any token of urc721 contract: " + contractAddrBase58);
+
       var relation = relationStore.get(ownerAddr);
 
+      //approve or not
       if(ctx.getApprove()){
-        if(relation.hasApprovalForAll()) {
-          Assert.isTrue(!Arrays.equals(toAddr, relation.getApprovedForAll()), "The address has already been approver all");
-        }
+        Assert.isTrue(!relation.hasApprovalForAll(toAddrBase58, contractAddrBase58), "To address has already been approved for all with contract: " + contractAddrBase58);
       } else {
-        Assert.isTrue(relation.hasApprovalForAll() && Arrays.equals(toAddr, relation.getApprovedForAll()), "Not approved yet");
+        Assert.isTrue(relation.hasApprovalForAll(toAddrBase58, contractAddrBase58), "To address not approved for all with contract: " + contractAddrBase58);
       }
 
       if(!accountStore.has(toAddr)){
@@ -101,7 +115,7 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
       }
 
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover transaction fee, require " + fee + "ginza");
-      Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and approver cannot be the same");
+
       return true;
     }
     catch (Exception e){

@@ -111,8 +111,8 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             var relation = relationStore.get(tokenOwner);
 
             Assert.isTrue(Arrays.equals(fromAddr, tokenOwner)
-                    || (relation.hasApprovalForAll() && Arrays.equals(fromAddr, relation.getApprovedForAll()))
-                    || (token.hasApproval() && Arrays.equals(fromAddr, token.getApproval())), "Transfer token not allowed: must be owner or approved");
+                    || relation.isApprovedForAll(contractAddr, fromAddr)
+                    || token.isApproval(fromAddr), "Transfer token not allowed: must be owner or approved");
 
             if (!accountStore.has(toAddr)) {
                 fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());

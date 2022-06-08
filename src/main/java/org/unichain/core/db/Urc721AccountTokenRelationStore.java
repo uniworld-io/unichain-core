@@ -8,11 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import org.unichain.common.utils.ByteArray;
+import org.unichain.core.Wallet;
 import org.unichain.core.capsule.urc721.Urc721AccountTokenRelationCapsule;
 import org.unichain.protos.Protocol;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -37,33 +36,34 @@ public class Urc721AccountTokenRelationStore extends UnichainStoreWithRevoking<U
                 .collect(Collectors.toList());
     }
 
-    public void disApproveForAll(byte[] ownerAddr, byte[] toAddr) {
+    public void disApproveForAll(byte[] ownerAddr, byte[] operatorAddr, byte[] contractAddr) {
+        //update owner relation
         Urc721AccountTokenRelationCapsule ownerRelation;
         if (has(ownerAddr)) {
             ownerRelation = get(ownerAddr);
-            Assert.isTrue(Arrays.equals(ownerRelation.getApprovedForAll(), toAddr), "approved address miss-matched!");
-            ownerRelation.clearApprovedForAll();
+            Assert.isTrue(ownerRelation.isApprovedForAll(contractAddr, operatorAddr), "approved address miss-matched!");
+            ownerRelation.clearApprovedForAll(contractAddr, operatorAddr);
             put(ownerAddr, ownerRelation);
         }
 
         Urc721AccountTokenRelationCapsule toRelation;
-        if (has(toAddr)) {
-            toRelation = get(toAddr);
+        if (has(operatorAddr)) {
+            toRelation = get(operatorAddr);
             var ownerAddrBs = ByteString.copyFrom(ownerAddr);
-            Assert.isTrue(toRelation.hasApproveAll(ownerAddrBs), "approve address miss-matched!");
-            toRelation.removeApproveAll(ownerAddrBs);
-            put(toAddr, toRelation);
+            Assert.isTrue(toRelation.hasApproveAll(ownerAddr, contractAddr), "approve address miss-matched!");
+            toRelation.removeApproveAll(ownerAddr, contractAddr);
+            put(operatorAddr, toRelation);
         }
     }
 
-    public void approveForAll(byte[] ownerAddr, byte[] toAddr) {
+
+
+    public void approveForAll(byte[] ownerAddr, byte[] operatorAddr, byte[] contractAddr) {
+        //update owner relation
         Urc721AccountTokenRelationCapsule ownerRelation;
         if (has(ownerAddr)) {
             ownerRelation = get(ownerAddr);
-            if (ownerRelation.hasApprovalForAll()) {
-                disApproveForAll(ownerAddr, ownerRelation.getApprovedForAll());
-            }
-            ownerRelation.setApprovedForAll(ByteString.copyFrom(toAddr));
+            ownerRelation.setApprovedForAll(contractAddr, operatorAddr);
         } else {
             ownerRelation = new Urc721AccountTokenRelationCapsule(ownerAddr,
                     Protocol.Urc721AccountTokenRelation.newBuilder()
@@ -71,25 +71,28 @@ public class Urc721AccountTokenRelationStore extends UnichainStoreWithRevoking<U
                             .clearHead()
                             .clearTail()
                             .setTotal(0L)
-                            .setApprovedForAll(ByteString.copyFrom(toAddr))
+                            .clearTotals()
+                            .putApprovedForAlls(Wallet.encode58Check(contractAddr), Wallet.encode58Check(operatorAddr))
                             .build());
         }
         put(ownerAddr, ownerRelation);
 
-        Urc721AccountTokenRelationCapsule toRelation;
-        if (has(toAddr)) {
-            toRelation = get(toAddr);
-            toRelation.addApproveAll(ByteString.copyFrom(ownerAddr));
+        //update to relation
+        Urc721AccountTokenRelationCapsule operatorRelation;
+        if (has(operatorAddr)) {
+            operatorRelation = get(operatorAddr);
+            operatorRelation.addApproveAll(ownerAddr, contractAddr);
         } else {
-            toRelation = new Urc721AccountTokenRelationCapsule(toAddr,
+            operatorRelation = new Urc721AccountTokenRelationCapsule(operatorAddr,
                     Protocol.Urc721AccountTokenRelation.newBuilder()
-                            .setOwnerAddress(ByteString.copyFrom(toAddr))
+                            .setOwnerAddress(ByteString.copyFrom(operatorAddr))
                             .clearHead()
                             .clearTail()
                             .setTotal(0L)
-                            .putApproveAll(ByteArray.toHexString(ownerAddr), true)
+                            .clearTotals()
                             .build());
+            operatorRelation.addApproveAll(ownerAddr, contractAddr);
         }
-        put(toAddr, toRelation);
+        put(operatorAddr, operatorRelation);
     }
 }

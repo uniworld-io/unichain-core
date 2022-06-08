@@ -250,7 +250,7 @@ service Wallet {
     };
   };
 
-  rpc Urc721GetIsApprovedForAll (Urc721IsApprovedForAllQuery) returns (BoolMessage) {
+  rpc Urc721IsApprovedForAll (Urc721IsApprovedForAllQuery) returns (BoolMessage) {
     option (google.api.http) = {
       post: "/wallet/urc721isapprovedforall"
       body: "*"
@@ -1562,7 +1562,7 @@ service WalletSolidity {
     };
   };
 
-  rpc Urc721GetIsApprovedForAll (Urc721IsApprovedForAllQuery) returns (BoolMessage) {
+  rpc Urc721IsApprovedForAll (Urc721IsApprovedForAllQuery) returns (BoolMessage) {
     option (google.api.http) = {
       post: "/walletsolidity/urc721isapprovedforall"
       body: "*"

@@ -34,6 +34,7 @@ public class Urc721Impl implements Urc721 {
 
     private static final Descriptors.FieldDescriptor URC721_IS_APPROVE_FOR_ALL_FIELD_OWNER= Protocol.Urc721IsApprovedForAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721IsApprovedForAllQuery.OWNER_ADDRESS_FIELD_NUMBER);
     private static final Descriptors.FieldDescriptor URC721_IS_APPROVE_FOR_ALL_FIELD_OPERATOR = Protocol.Urc721IsApprovedForAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721IsApprovedForAllQuery.OPERATOR_FIELD_NUMBER);
+    private static final Descriptors.FieldDescriptor URC721_IS_APPROVE_FOR_ALL_FIELD_CONTRACT = Protocol.Urc721IsApprovedForAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721IsApprovedForAllQuery.ADDRESS_FIELD_NUMBER);
 
     private static final Descriptors.FieldDescriptor URC721_TOKEN_LIST_QUERY_FIELD_OWNER = Protocol.Urc721TokenListQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenListQuery.OWNER_ADDRESS_FIELD_NUMBER);
     private static final Descriptors.FieldDescriptor URC721_TOKEN_LIST_QUERY_FIELD_TYPE = Protocol.Urc721TokenListQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenListQuery.OWNER_TYPE_FIELD_NUMBER);
@@ -122,19 +123,20 @@ public class Urc721Impl implements Urc721 {
     }
 
     @Override
-    public Protocol.BoolMessage isApprovalForAll(Protocol.Urc721IsApprovedForAllQuery query) {
+    public Protocol.BoolMessage isApprovedForAll(Protocol.Urc721IsApprovedForAllQuery query) {
         Assert.isTrue(query.hasField(URC721_IS_APPROVE_FOR_ALL_FIELD_OWNER), "Owner address null");
         Assert.isTrue(query.hasField(URC721_IS_APPROVE_FOR_ALL_FIELD_OPERATOR), "Operator null");
+        Assert.isTrue(query.hasField(URC721_IS_APPROVE_FOR_ALL_FIELD_CONTRACT), "Contract null");
+
         var relationStore = dbManager.getUrc721AccountTokenRelationStore();
-        var isApproved = false;
-        if(relationStore.has(query.getOwnerAddress().toByteArray())){
-            var relation = relationStore.get(query.getOwnerAddress().toByteArray());
-            if(relation.hasApprovalForAll() && Arrays.equals(relation.getApprovedForAll(), query.getOperator().toByteArray()))
-                isApproved = true;
-        }
+        var ownerAddr = query.getOwnerAddress().toByteArray();
+        var operatorAddr = query.getOperator().toByteArray();
+        var contractAddr = query.getAddress().toByteArray();
+        var isApproved4All = !relationStore.has(ownerAddr) ? false :
+                relationStore.get(ownerAddr).isApprovedForAll(contractAddr, operatorAddr);
 
         return Protocol.BoolMessage.newBuilder()
-                .setValue(isApproved)
+                .setValue(isApproved4All)
                 .build();
     }
 
@@ -305,19 +307,20 @@ public class Urc721Impl implements Urc721 {
         return result;
     }
 
-    private List<Protocol.Urc721Token> listTokenByApprovedForAll(byte[] ownerAddr, Predicate<Urc721TokenCapsule> filter){
+    private List<Protocol.Urc721Token> listTokenByApprovedForAll(byte[] operatorAddr, Predicate<Urc721TokenCapsule> filter){
         var result = new ArrayList<Protocol.Urc721Token>();
         var relationStore = dbManager.getUrc721AccountTokenRelationStore();
-        relationStore.get(ownerAddr).getApproveAllMap().forEach((owner, isApprovedAll) -> {
-            var tokenOwner = ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray();
-            if (isApprovedAll && relationStore.has(tokenOwner)) {
-                var ownerRelationCap = relationStore.get(tokenOwner);
-                var tokenRelation = Protocol.Urc721AccountTokenRelation.newBuilder()
-                        .setOwnerAddress(ownerRelationCap.getInstance().getOwnerAddress())
-                        .setTotal(ownerRelationCap.getInstance().getTotal())
-                        .build();
-                result.addAll(listTokenByOwner(tokenRelation.getOwnerAddress().toByteArray(), filter));
-            }
+        relationStore.get(operatorAddr).getApproveAllMap().forEach((ownerBase58, contracts) -> {
+            contracts.getContractsMap().forEach((contractBase58, approved) -> {
+                if(approved){
+                    var owner = Wallet.decodeFromBase58Check(ownerBase58);
+                    if (relationStore.has(owner)) {
+                        var ownerRelationCap = relationStore.get(owner);
+                        Predicate<Urc721TokenCapsule> filter0 = cap -> (Arrays.equals(cap.getAddr(), Wallet.decodeFromBase58Check(contractBase58))) && filter.test(cap);
+                        result.addAll(listTokenByOwner(ownerRelationCap.getInstance().getOwnerAddress().toByteArray(), filter0));
+                    }
+                }
+            });
         });
 
         return result;

@@ -73,7 +73,8 @@ public class Urc721BurnActuator extends AbstractActuator {
       var tokenStore = dbManager.getUrc721TokenStore();
       var relationStore = dbManager.getUrc721AccountTokenRelationStore();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var tokenKey = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
+      var contractAddr = ctx.getAddress().toByteArray();
+      var tokenKey = ArrayUtils.addAll(contractAddr, ByteArray.fromLong(ctx.getTokenId()));
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner address not exist");
       Assert.isTrue(tokenStore.has(tokenKey), "Token not exist");
@@ -82,8 +83,9 @@ public class Urc721BurnActuator extends AbstractActuator {
       var relation = relationStore.get(tokenOwner);
 
       Assert.isTrue(Arrays.equals(ownerAddr, tokenOwner)
-              || (relation.hasApprovalForAll() && Arrays.equals(ownerAddr, relation.getApprovedForAll()))
-              || (token.hasApproval() && Arrays.equals(ownerAddr, token.getApproval())), "Not allowed to burn token");
+                      || (relation.isApprovedForAll(contractAddr, ownerAddr))
+                      || token.isApproval(ownerAddr),
+              "Not allowed to burn token");
 
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
       return true;

@@ -24,6 +24,8 @@ import org.unichain.common.utils.ByteArray;
 import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol;
 
+import java.util.Arrays;
+
 @Slf4j(topic = "capsule")
 public class Urc721TokenCapsule implements ProtoCapsule<Protocol.Urc721Token> {
   private static Descriptors.FieldDescriptor URC721_TOKEN_FIELD_APPROVAL = Protocol.Urc721Token.getDescriptor().findFieldByNumber(Protocol.Urc721Token.APPROVAL_FIELD_NUMBER);
@@ -71,6 +73,10 @@ public class Urc721TokenCapsule implements ProtoCapsule<Protocol.Urc721Token> {
 
   public boolean hasApproval(){
     return token.hasField(URC721_TOKEN_FIELD_APPROVAL);
+  }
+
+  public boolean isApproval(byte[] operator){
+    return hasApproval() ? Arrays.equals(getApproval(), operator) : false;
   }
 
   public void setApproval(ByteString approval){

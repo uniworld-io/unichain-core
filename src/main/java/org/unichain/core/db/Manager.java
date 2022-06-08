@@ -2161,6 +2161,7 @@ public class Manager {
     var tokenStore = getUrc721TokenStore();
     var relationStore = getUrc721AccountTokenRelationStore();
     var relationKey = tokenCap.getOwner();
+    var contractAddr = Wallet.encode58Check(tokenCap.getAddr());
 
     if (!relationStore.has(relationKey)) {
       //save token
@@ -2169,6 +2170,7 @@ public class Manager {
       tokenCap.clearPrev();
       tokenStore.put(tokenKey, tokenCap);
 
+
       //save relation
       var relation = new Urc721AccountTokenRelationCapsule(relationKey,
               Protocol.Urc721AccountTokenRelation.newBuilder()
@@ -2176,9 +2178,10 @@ public class Manager {
                       .setHead(ByteString.copyFrom(tokenKey))
                       .setTail(ByteString.copyFrom(tokenKey))
                       .setTotal(1L)
-                      .clearApproveAll()
-                      .clearApprovedForAll()
+                      .clearApproveAlls()
+                      .clearApprovedForAlls()
                       .build());
+      relation.increaseTotal(contractAddr, 1L);
       relationStore.put(relation.getKey(), relation);
     } else {
       var relation = relationStore.get(relationKey);
@@ -2190,6 +2193,7 @@ public class Manager {
         tokenStore.put(tokenKey, tokenCap);
 
         relation.setTotal(Math.incrementExact(relation.getTotal()));
+        relation.increaseTotal(contractAddr, 1L);
         relation.setHead(ByteString.copyFrom(tokenKey));
         relation.setTail(ByteString.copyFrom(tokenKey));
         relationStore.put(relationKey, relation);
@@ -2199,6 +2203,7 @@ public class Manager {
 
         var tokenKey = tokenCap.getKey();
         relation.setTotal(Math.incrementExact(relation.getTotal()));
+        relation.increaseTotal(contractAddr, 1L);
         relation.setTail(ByteString.copyFrom(tokenKey));
         relationStore.put(relationKey, relation);
 
@@ -2215,6 +2220,7 @@ public class Manager {
   /**
    * remove then disapprove
    * @param tokenKey
+   * @todo update approve all ?
    */
   public void removeUrc721Token(byte[] tokenKey){
     var tokenStore = getUrc721TokenStore();
@@ -2222,6 +2228,8 @@ public class Manager {
 
     Assert.isTrue(tokenStore.has(tokenKey), "not found token with id " + tokenKey);
     val tokenCap = tokenStore.get(tokenKey);
+    var contractAddr  = tokenCap.getAddr();
+    var contractBase58 = Wallet.encode58Check(contractAddr);
 
     var hasPrev = tokenCap.hasPrev();
     var hasNext = tokenCap.hasNext();
@@ -2248,6 +2256,7 @@ public class Manager {
         tokenStore.put(prevKey, prev);
         //update relation
         relation.setTotal(Math.decrementExact(relation.getTotal()));
+        relation.decreaseTotal(contractBase58, 1);
       }
       else {
         var next = tokenStore.get(nextKey);
@@ -2257,6 +2266,7 @@ public class Manager {
 
         //update relation
         relation.setTotal(Math.decrementExact(relation.getTotal()));
+        relation.decreaseTotal(contractBase58, 1);
         relation.setHead(ByteString.copyFrom(nextKey));
       }
     }
@@ -2271,11 +2281,13 @@ public class Manager {
 
         //relation
         relation.setTotal(Math.decrementExact(relation.getTotal()));
+        relation.decreaseTotal(contractBase58, 1);
         relation.setTail(ByteString.copyFrom(prevKey));
       }
       else {
         //only one node
         relation.setTotal(0L);
+        relation.clearTotal(contractBase58);
         relation.clearTail();
         relation.clearHead();
       }
@@ -2310,8 +2322,9 @@ public class Manager {
                       .clearHead()
                       .clearTail()
                       .setTotal(0L)
-                      .clearApproveAll()
-                      .clearApprovedForAll()
+                      .clearApproveAlls()
+                      .clearApprovedForAlls()
+                      .clearTotals()
                       .setApproveHead(ByteString.copyFrom(approve.getKey()))
                       .setApproveTail(ByteString.copyFrom(approve.getKey()))
                       .setApproveTotal(1L)
@@ -2355,7 +2368,7 @@ public class Manager {
     }
   }
 
-  public void disapproveToken(byte[] tokenId, byte[] toAddress){
+  public void disapproveToken(byte[] tokenId, byte[] operatorAddr){
     var approveStore = getUrc721TokenApproveRelationStore();
     var relationStore = getUrc721AccountTokenRelationStore();
 
@@ -2365,7 +2378,7 @@ public class Manager {
     var hasPrev = approveCap.hasPrev();
     var hasNext = approveCap.hasNext();
     var owner = approveCap.getOwner();
-    Assert.isTrue(Arrays.equals(toAddress, owner), "mismatched approval address");
+    Assert.isTrue(Arrays.equals(operatorAddr, owner), "mismatched approval address");
     Assert.isTrue(relationStore.has(owner), "missing account-token relation of address: " + owner);
     var relation = relationStore.get(owner);
 

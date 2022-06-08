@@ -325,8 +325,8 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc721GetIsApprovedForAll(Urc721IsApprovedForAllQuery request, io.grpc.stub.StreamObserver<BoolMessage> responseObserver) {
-      var reply = urc721.isApprovalForAll(request);
+    public void urc721IsApprovedForAll(Urc721IsApprovedForAllQuery request, io.grpc.stub.StreamObserver<BoolMessage> responseObserver) {
+      var reply = urc721.isApprovedForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -884,8 +884,8 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc721GetIsApprovedForAll(Urc721IsApprovedForAllQuery request, io.grpc.stub.StreamObserver<BoolMessage> responseObserver) {
-      var reply = urc721.isApprovalForAll(request);
+    public void urc721IsApprovedForAll(Urc721IsApprovedForAllQuery request, io.grpc.stub.StreamObserver<BoolMessage> responseObserver) {
+      var reply = urc721.isApprovedForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

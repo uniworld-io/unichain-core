@@ -933,17 +933,21 @@ message Urc721Token{
   bytes prev = 8;
   bytes address = 9;
 }
+message Urc721ApproveAllMap {
+   map<string, bool> contracts = 1; //[contract base58 --> bool]
+}
 
 message Urc721AccountTokenRelation{
   bytes owner_address = 1;
   bytes head = 2;
   bytes tail = 3;
-  int64 total = 4;
-  map<string, bool> approve_all = 5;
-  bytes approved_for_all = 6;
+  int64 total = 4;//owner only
+  map<string, int64> totals = 5; //owner --> [contract addr --> total], base58
+  map<string, Urc721ApproveAllMap> approve_alls = 6; //operator --> [owner --> contract addr map], base58
   bytes approve_head = 7;
   bytes approve_tail = 8;
   int64 approve_total = 9;
+  map<string, string> approved_for_alls = 10; //owner --> [contract addr --> operator], base58
 }
 
 message Urc721AccountContractRelation{
@@ -996,8 +1000,8 @@ message Urc721BalanceOfQuery{
 
 message Urc721IsApprovedForAllQuery{
   bytes owner_address = 1;
-  bytes operator = 2;
   bytes address = 3;
+  bytes operator = 2;
 }
 
 message Urc721TokenApproveRelation{

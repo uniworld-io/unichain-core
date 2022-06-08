@@ -34,7 +34,7 @@ public class Urc721IsApprovedForAllServlet extends HttpServlet {
       jsonObject.put("operator", operator);
       jsonObject.put("is_approved", isApproved);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
-      var reply = urc721.isApprovalForAll(builder.build());
+      var reply = urc721.isApprovedForAll(builder.build());
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {

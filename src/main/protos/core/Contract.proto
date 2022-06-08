@@ -527,6 +527,7 @@ message Urc721ApproveContract{
 message Urc721SetApprovalForAllContract{
   bytes owner_address = 1;
   bytes to_address = 2;
+  bytes address = 4;
   bool approve = 3;
 }
 

@@ -327,7 +327,9 @@ public class Urc721Impl implements Urc721 {
 //
 //        var firstAccTokenRelation = accountTokenStore.get(owner);
 //        return result.setCount(firstAccTokenRelation.getTotal()).build();
-        return GrpcAPI.NumberMessage.newBuilder().build();
+        return GrpcAPI.NumberMessage.newBuilder()
+                .setNum(0L)
+                .build();
     }
 
     @Override

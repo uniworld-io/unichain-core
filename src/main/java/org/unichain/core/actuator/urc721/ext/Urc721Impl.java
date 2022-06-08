@@ -178,14 +178,14 @@ public class Urc721Impl implements Urc721 {
         var ownerAddr = query.getOwnerAddress().toByteArray();
         List<Protocol.Urc721Contract> unsorted = new ArrayList<>();
         var relationStore = dbManager.getUrc721AccountContractRelationStore();
-        var templateStore = dbManager.getUrc721ContractStore();
+        var contractStore = dbManager.getUrc721ContractStore();
 
         if ("owner".equalsIgnoreCase(query.getOwnerType()) && relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0) {
-            var start = templateStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
+            var start = contractStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
             while (true) {
                 unsorted.add(start.getInstance());
                 if (start.hasNext()) {
-                    start = templateStore.get(start.getNext());
+                    start = contractStore.get(start.getNext());
                 } else {
                     break;
                 }
@@ -194,11 +194,11 @@ public class Urc721Impl implements Urc721 {
         var minterRelationStore = dbManager.getUrc721MinterContractRelationStore();
         if("minter".equalsIgnoreCase(query.getOwnerType()) && minterRelationStore.has(ownerAddr) && minterRelationStore.get(ownerAddr).getTotal() > 0){
             var relation = minterRelationStore.get(ownerAddr);
-            var start = templateStore.get(relation.getHead().toByteArray());
+            var start = contractStore.get(relation.getHead().toByteArray());
             while (true){
                 unsorted.add(start.getInstance());
                 if(start.hasNextOfMinter()){
-                    start = templateStore.get(start.getNextOfMinter());
+                    start = contractStore.get(start.getNextOfMinter());
                 }else {
                     break;
                 }
@@ -280,14 +280,14 @@ public class Urc721Impl implements Urc721 {
         return unsorted;
     }
 
-    private List<Protocol.Urc721Token> listTokenByApproved(byte[] ownerAddr, Predicate<Urc721TokenCapsule> filter){
+    private List<Protocol.Urc721Token> listTokenByApproved(byte[] operatorAddr, Predicate<Urc721TokenCapsule> filter){
         var tokenStore = dbManager.getUrc721TokenStore();
         var approvedStore = dbManager.getUrc721TokenApproveRelationStore();
         var accTokenRelationStore = dbManager.getUrc721AccountTokenRelationStore();
         var result = new ArrayList<Protocol.Urc721Token>();
 
-        if(accTokenRelationStore.has(ownerAddr) && accTokenRelationStore.get(ownerAddr).getTotalApprove() > 0){
-            var accTokenRelation = accTokenRelationStore.get(ownerAddr);
+        if(accTokenRelationStore.has(operatorAddr) && accTokenRelationStore.get(operatorAddr).getTotalApprove() > 0){
+            var accTokenRelation = accTokenRelationStore.get(operatorAddr);
             var approveRelation = approvedStore.get(accTokenRelation.getHeadApprove());
             while (true){
                 if(tokenStore.has(approveRelation.getKey()))
@@ -334,10 +334,18 @@ public class Urc721Impl implements Urc721 {
     @Override
     public GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOfQuery query) {
         Assert.isTrue(query.hasField(URC721_BALANCE_OF_QUERY_FIELD_OWNER) && query.hasField(URC721_BALANCE_OF_QUERY_FIELD_CONTRACT), "Owner address | urc721 address is null");
-        Predicate<Urc721TokenCapsule> filter = cap -> Arrays.equals(cap.getAddr(), query.getAddress().toByteArray());
-        var tokens = listTokenByOwner(query.getOwnerAddress().toByteArray(), filter);
+
+        var owner = query.getOwnerAddress().toByteArray();
+        var contract = query.getAddress().toByteArray();
+        Assert.isTrue(Wallet.addressValid(owner) && Wallet.addressValid(contract), "Bad owner|contract address");
+        Assert.isTrue(dbManager.getAccountStore().has(owner), "Unrecognized owner address");
+        Assert.isTrue(dbManager.getUrc721ContractStore().has(contract), "Unrecognized contract address");
+
+        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
+        var balance = relationStore.has(owner) ? relationStore.get(owner).getTotal(Wallet.encode58Check(contract)) : 0L;
+
         return GrpcAPI.NumberMessage.newBuilder()
-                .setNum(tokens.size())
+                .setNum(balance)
                 .build();
     }
 

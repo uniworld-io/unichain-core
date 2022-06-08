@@ -205,7 +205,11 @@ public class TransactionUtil {
     if (ArrayUtils.isEmpty(url)) {
       return false;
     }
-    return url.length <= 256;
+    return url.length <= 1024*10;
+  }
+
+  public static boolean validUrl(String url) {
+     return validUrl(url.getBytes());
   }
 
   public static boolean isNumber(byte[] id) {

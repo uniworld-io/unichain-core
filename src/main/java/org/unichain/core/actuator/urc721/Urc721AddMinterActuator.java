@@ -53,7 +53,8 @@ public class Urc721AddMinterActuator extends AbstractActuator {
 
       //create new account
       if (!accStore.has(minterAddr)) {
-        fee = Math.addExact(fee, dbManager.createNewAccount(ByteString.copyFrom(minterAddr)));
+        createDefaultAccount(minterAddr);
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
       //save relation

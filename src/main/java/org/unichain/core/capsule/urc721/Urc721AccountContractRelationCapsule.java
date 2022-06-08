@@ -62,6 +62,10 @@ public class Urc721AccountContractRelationCapsule implements ProtoCapsule<Urc721
     this.relation = relation.toBuilder().setTotal(total).build();
   }
 
+  public void increaseTotal(long amt){
+    this.relation = relation.toBuilder().setTotal(Math.addExact(relation.getTotal(), amt)).build();
+  }
+
   public long getTotal(){
     return relation.getTotal();
   }

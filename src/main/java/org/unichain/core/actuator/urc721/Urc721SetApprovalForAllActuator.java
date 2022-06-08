@@ -96,7 +96,7 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
 
       Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and operator cannot be the same");
       Assert.isTrue(accountStore.has(ownerAddr) && contractStore.has(contractAddr), "Owner|Urc721 contract not exist");
-      Assert.isTrue(Wallet.addressValid(toAddr), "To address not exists or not active");
+      Assert.isTrue(Wallet.addressValid(toAddr), "To address invalid");
 
       //check has token to approve for all
       Assert.isTrue(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal(contractAddrBase58) > 0, "Not found any token of urc721 contract: " + contractAddrBase58);

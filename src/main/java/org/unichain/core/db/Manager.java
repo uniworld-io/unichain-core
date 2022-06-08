@@ -2170,7 +2170,6 @@ public class Manager {
       tokenCap.clearPrev();
       tokenStore.put(tokenKey, tokenCap);
 
-
       //save relation
       var relation = new Urc721AccountTokenRelationCapsule(relationKey,
               Protocol.Urc721AccountTokenRelation.newBuilder()
@@ -2220,7 +2219,6 @@ public class Manager {
   /**
    * remove then disapprove
    * @param tokenKey
-   * @todo update approve all ?
    */
   public void removeUrc721Token(byte[] tokenKey){
     var tokenStore = getUrc721TokenStore();
@@ -2256,7 +2254,7 @@ public class Manager {
         tokenStore.put(prevKey, prev);
         //update relation
         relation.setTotal(Math.decrementExact(relation.getTotal()));
-        relation.decreaseTotal(contractBase58, 1);
+        relation.decreaseTotal(contractBase58, 1L);
       }
       else {
         var next = tokenStore.get(nextKey);
@@ -2266,7 +2264,7 @@ public class Manager {
 
         //update relation
         relation.setTotal(Math.decrementExact(relation.getTotal()));
-        relation.decreaseTotal(contractBase58, 1);
+        relation.decreaseTotal(contractBase58, 1L);
         relation.setHead(ByteString.copyFrom(nextKey));
       }
     }
@@ -2281,7 +2279,7 @@ public class Manager {
 
         //relation
         relation.setTotal(Math.decrementExact(relation.getTotal()));
-        relation.decreaseTotal(contractBase58, 1);
+        relation.decreaseTotal(contractBase58, 1L);
         relation.setTail(ByteString.copyFrom(prevKey));
       }
       else {
@@ -2342,7 +2340,7 @@ public class Manager {
                 .build());
         approveStore.put(approve.getKey(), approve);
 
-        relation.setTotalApprove(Math.incrementExact(relation.getTotalApprove()));
+        relation.increaseTotalApprove(1L);
         relation.setHeadApprove(ByteString.copyFrom(approve.getKey()));
         relation.setTailApprove(ByteString.copyFrom(approve.getKey()));
         relationStore.put(toAddress, relation);
@@ -2350,7 +2348,7 @@ public class Manager {
         var tailKey = relation.getTailApprove().toByteArray();
         var tailApproveCap = approveStore.get(tailKey);
 
-        relation.setTotalApprove(Math.incrementExact(relation.getTotalApprove()));
+        relation.increaseTotalApprove(1L);
         relation.setTailApprove(ByteString.copyFrom(tokenKey));
         relationStore.put(toAddress, relation);
 
@@ -2459,7 +2457,7 @@ public class Manager {
       urc721ContractStore.put(contractCap.getKey(), contractCap);
 
       relationCap.setTail(ByteString.copyFrom(contractCap.getKey()));
-      relationCap.setTotal(Math.incrementExact(relationCap.getTotal()));
+      relationCap.increaseTotal(1L);
       urc721MinterContractRelationStore.put(relationCap.getKey(), relationCap);
     }
   }

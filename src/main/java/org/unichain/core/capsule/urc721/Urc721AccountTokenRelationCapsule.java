@@ -33,9 +33,10 @@ import java.util.Objects;
 public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721AccountTokenRelation> {
 
   private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.TAIL_FIELD_NUMBER);
-  private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALLS = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Urc721AccountTokenRelation.APPROVED_FOR_ALLS_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_APPROVED_FOR_ALLS = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Urc721AccountTokenRelation.APPROVED_FOR_ALLS_FIELD_NUMBER);
   private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.APPROVE_TAIL_FIELD_NUMBER);
   private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_APPROVE_ALLS = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Urc721AccountTokenRelation.APPROVE_ALLS_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_TOTALS = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Urc721AccountTokenRelation.TOTALS_FIELD_NUMBER);
 
 
   private Urc721AccountTokenRelation relation;
@@ -82,7 +83,7 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
   }
 
   public long getTotal(String contractBase58){
-    return relation.getTotalsMap().get(contractBase58);
+    return relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_TOTALS) ? relation.getTotalsMap().get(contractBase58) : 0L;
   }
 
   public void decreaseTotal(String contractBase58, long amt){
@@ -135,6 +136,10 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
     relation = relation.toBuilder().setApproveTotal(total).build();
   }
 
+  public void increaseTotalApprove(long amt){
+    relation = relation.toBuilder().setApproveTotal(Math.addExact(relation.getApproveTotal(), amt)).build();
+  }
+
   public ByteString getHead(){
     return relation.getHead();
   }
@@ -176,16 +181,15 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
   }
 
   public boolean hasApprovalForAll(String operatorBase58, String contractBase58){
-    var hasApprovedForAlls =  relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALLS);
-    if(!hasApprovedForAlls)
-      return false;
-    else
-      return operatorBase58.equals(relation.getApprovedForAllsMap().get(contractBase58));
+    return !relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_APPROVED_FOR_ALLS) ? false :
+            operatorBase58.equals(relation.getApprovedForAllsMap().get(contractBase58));
   }
 
   public  boolean isApprovedForAll(byte[] contractAddr, byte[] operatorAddr){
+    if(!relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_APPROVED_FOR_ALLS))
+      return false;
     var operator =  relation.getApprovedForAllsMap().get(Wallet.encode58Check(contractAddr));
-    return  (operator == null) ? false : Wallet.encode58Check(operatorAddr).equals(operator);
+    return  (operator == null) ? false : operator.equals(Wallet.encode58Check(operatorAddr));
   }
 
   public void clearApprovedForAll(byte[] contract, byte[] _operator){
@@ -239,7 +243,7 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
   public boolean hasApproveAll(byte[] owner, byte[] contract){
     var ownerBase58 = Wallet.encode58Check(owner);
     var approveAllMap = relation.getApproveAllsMap();
-    return  approveAllMap == null ? false :
+    return  (approveAllMap == null) ? false :
             (!approveAllMap.containsKey(ownerBase58) ? false :
                     (approveAllMap.get(ownerBase58).getContractsMap().get(Wallet.encode58Check(contract)) == true));
   }

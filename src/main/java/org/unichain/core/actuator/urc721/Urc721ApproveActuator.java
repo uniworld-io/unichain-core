@@ -53,23 +53,23 @@ public class Urc721ApproveActuator extends AbstractActuator {
       var contractAddr = ctx.getAddress().toByteArray();
       var tokenKey = ArrayUtils.addAll(contractAddr, ByteArray.fromLong(ctx.getTokenId()));
       var token = tokenStore.get(tokenKey);
+      var toAddr = ctx.getTo().toByteArray();
 
       if(ctx.getApprove()){
-        token.setApproval(ctx.getTo());
+        token.setApproval(toAddr);
         tokenStore.put(tokenKey, token);
 
-        dbManager.addApproveToken(tokenKey, ctx.getTo().toByteArray());
+        dbManager.addApproveToken(tokenKey, toAddr);
 
-        var toAddr = ctx.getTo();
-        if(!accountStore.has(toAddr.toByteArray())){
-            var moreFee = dbManager.createNewAccount(toAddr);
-            fee = Math.addExact(fee, moreFee);
+        if(!accountStore.has(toAddr)){
+            createDefaultAccount(toAddr);
+            fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
         }
       }
       else {
         token.clearApproval();
         tokenStore.put(tokenKey, token);
-        dbManager.disapproveToken(tokenKey, ctx.getTo().toByteArray());
+        dbManager.disapproveToken(tokenKey, toAddr);
       }
 
       chargeFee(owner, fee);
@@ -98,6 +98,7 @@ public class Urc721ApproveActuator extends AbstractActuator {
 
       var toAddr = ctx.getTo().toByteArray();
       Assert.isTrue(Wallet.addressValid(toAddr), "Target address not active or not exists");
+
       if(!accountStore.has(toAddr)){
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
@@ -108,10 +109,8 @@ public class Urc721ApproveActuator extends AbstractActuator {
 
       var token = tokenStore.get(tokenId);
       if(ctx.getApprove()){
-        if(token.hasApproval()){
           //approve: just override exception: already approved
-          Assert.isTrue(!Arrays.equals(ctx.getTo().toByteArray(), token.getApproval()), "The address has already been approver");
-        }
+          Assert.isTrue(!token.hasApproval() || !Arrays.equals(ctx.getTo().toByteArray(), token.getApproval()), "The address has already been approver");
       }
       else {
         //disapprove
@@ -119,7 +118,7 @@ public class Urc721ApproveActuator extends AbstractActuator {
       }
 
       Assert.isTrue(Arrays.equals(token.getOwner(), ownerAddr), "Not owner of token");
-      Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and approver cannot be the same");
+      Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and operator cannot be the same");
 
       return true;
     }

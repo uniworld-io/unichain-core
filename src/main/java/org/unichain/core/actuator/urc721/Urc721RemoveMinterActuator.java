@@ -45,10 +45,10 @@ public class Urc721RemoveMinterActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(Urc721RemoveMinterContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var contractKey = ctx.getAddress().toByteArray();
-      var contractCap = dbManager.getUrc721ContractStore().get(contractKey);
+      var contractAddr = ctx.getAddress().toByteArray();
+      var contractCap = dbManager.getUrc721ContractStore().get(contractAddr);
 
-      dbManager.removeMinterContract(contractCap.getMinter(), contractKey);
+      dbManager.removeMinterContract(contractCap.getMinter(), contractAddr);
 
       chargeFee(ownerAddress, fee);
       dbManager.burnFee(fee);

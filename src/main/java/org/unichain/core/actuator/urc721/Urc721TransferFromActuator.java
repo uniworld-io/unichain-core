@@ -94,13 +94,13 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             var tokenStore = dbManager.getUrc721TokenStore();
             var contractStore = dbManager.getUrc721ContractStore();
             var relationStore = dbManager.getUrc721AccountTokenRelationStore();
-            var fromAddr = ctx.getOwnerAddress().toByteArray();
+            var operatorAddr = ctx.getOwnerAddress().toByteArray();
             var toAddr = ctx.getTo().toByteArray();
             var contractAddr = ctx.getAddress().toByteArray();
 
-            Assert.isTrue(Wallet.addressValid(fromAddr) && Wallet.addressValid(toAddr) && Wallet.addressValid(contractAddr), "Invalid  from|to|contract address");
-            Assert.isTrue(!Arrays.equals(fromAddr, toAddr), "Owner address and to address must be not the same");
-            Assert.isTrue(accountStore.has(fromAddr), "Operator address not exist");
+            Assert.isTrue(Wallet.addressValid(operatorAddr) && Wallet.addressValid(toAddr) && Wallet.addressValid(contractAddr), "Invalid  from|to|contract address");
+            Assert.isTrue(!Arrays.equals(operatorAddr, toAddr), "Owner address and to address must be not the same");
+            Assert.isTrue(accountStore.has(operatorAddr), "Operator address not exist");
             Assert.isTrue(contractStore.has(contractAddr), "Contract address not exist");
 
             var tokenKey = Urc721TokenCapsule.genTokenKey(contractAddr, ctx.getTokenId());
@@ -110,14 +110,14 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             var tokenOwner = token.getOwner();
             var relation = relationStore.get(tokenOwner);
 
-            Assert.isTrue(Arrays.equals(fromAddr, tokenOwner)
-                    || relation.isApprovedForAll(contractAddr, fromAddr)
-                    || token.isApproval(fromAddr), "Transfer token not allowed: must be owner or approved");
+            Assert.isTrue(Arrays.equals(operatorAddr, tokenOwner)
+                    || relation.isApprovedForAll(contractAddr, operatorAddr)
+                    || token.isApproval(operatorAddr), "Transfer token not allowed: must be owner or approved");
 
             if (!accountStore.has(toAddr)) {
                 fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
             }
-            Assert.isTrue(accountStore.get(fromAddr).getBalance() >= fee, "Not enough balance to cover fee, required gas: " + fee + "ginza");
+            Assert.isTrue(accountStore.get(operatorAddr).getBalance() >= fee, "Not enough balance to cover fee, required gas: " + fee + "ginza");
             return true;
         } catch (Exception e) {
             logger.error("Actuator error: {} --> ", e.getMessage(), e);

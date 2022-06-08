@@ -2,12 +2,13 @@ package org.unichain.core.db;
 
 import com.google.common.collect.Streams;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.unichain.core.capsule.urc721.Urc721ContractCapsule;
 
-import java.util.*;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -32,7 +33,7 @@ public class Urc721ContractStore extends UnichainStoreWithRevoking<Urc721Contrac
   }
 
   public void clearMinterOf(byte[] key) {
-    Urc721ContractCapsule capsule = get(key);
+    var capsule = get(key);
     capsule.clearMinter();
     put(key, capsule);
   }

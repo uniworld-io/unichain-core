@@ -28,6 +28,7 @@ import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.urc721.Urc721ContractCapsule;
 import org.unichain.core.capsule.urc721.Urc721TokenCapsule;
+import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -60,7 +61,8 @@ public class Urc721MintActuator extends AbstractActuator {
 
       //create new account
       if (!accountStore.has(toAddr)) {
-        fee = Math.addExact(fee, dbManager.createNewAccount(ByteString.copyFrom(toAddr)));
+        createDefaultAccount(toAddr);
+        fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
       //save token
@@ -151,8 +153,7 @@ public class Urc721MintActuator extends AbstractActuator {
       Assert.isTrue(contractCap.getTokenIndex() < contractCap.getTotalSupply(), "Over slot token mint!");
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Not enough balance to cover transaction fee, require "+ fee + "ginza");
 
-      //@TODO require http ??
-//      Assert.isTrue(TransactionUtil.validHttpURI(ctx.getUri()), "Invalid uri");
+      Assert.isTrue(TransactionUtil.validUrl(ctx.getUri()), "Invalid uri");
 
       //make sure tokenId not allocated yet!
       if(ctx.hasField(URC721_MINT_FIELD_TOKEN_ID)){

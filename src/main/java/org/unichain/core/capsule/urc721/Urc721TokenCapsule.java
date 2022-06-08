@@ -79,8 +79,8 @@ public class Urc721TokenCapsule implements ProtoCapsule<Protocol.Urc721Token> {
     return hasApproval() ? Arrays.equals(getApproval(), operator) : false;
   }
 
-  public void setApproval(ByteString approval){
-    token = token.toBuilder().setApproval(approval).build();
+  public void setApproval(byte[] approval){
+    token = token.toBuilder().setApproval(ByteString.copyFrom(approval)).build();
   }
 
   public void setOwner(ByteString owner){

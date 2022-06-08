@@ -3,12 +3,10 @@ package org.unichain.core.db;
 import com.google.common.collect.Streams;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import org.unichain.core.Wallet;
 import org.unichain.core.capsule.urc721.Urc721AccountTokenRelationCapsule;
 import org.unichain.protos.Protocol;
 
@@ -49,7 +47,6 @@ public class Urc721AccountTokenRelationStore extends UnichainStoreWithRevoking<U
         Urc721AccountTokenRelationCapsule toRelation;
         if (has(operatorAddr)) {
             toRelation = get(operatorAddr);
-            var ownerAddrBs = ByteString.copyFrom(ownerAddr);
             Assert.isTrue(toRelation.hasApproveAll(ownerAddr, contractAddr), "approve address miss-matched!");
             toRelation.removeApproveAll(ownerAddr, contractAddr);
             put(operatorAddr, toRelation);
@@ -61,7 +58,7 @@ public class Urc721AccountTokenRelationStore extends UnichainStoreWithRevoking<U
     public void approveForAll(byte[] ownerAddr, byte[] operatorAddr, byte[] contractAddr) {
         //update owner relation
         Urc721AccountTokenRelationCapsule ownerRelation;
-        if (has(ownerAddr)) {
+        if(has(ownerAddr)) {
             ownerRelation = get(ownerAddr);
             ownerRelation.setApprovedForAll(contractAddr, operatorAddr);
         } else {
@@ -72,14 +69,16 @@ public class Urc721AccountTokenRelationStore extends UnichainStoreWithRevoking<U
                             .clearTail()
                             .setTotal(0L)
                             .clearTotals()
-                            .putApprovedForAlls(Wallet.encode58Check(contractAddr), Wallet.encode58Check(operatorAddr))
+                            .clearApprovedForAlls()
+                            .clearApproveAlls()
                             .build());
+            ownerRelation.setApprovedForAll(contractAddr, operatorAddr);
         }
         put(ownerAddr, ownerRelation);
 
         //update to relation
         Urc721AccountTokenRelationCapsule operatorRelation;
-        if (has(operatorAddr)) {
+        if(has(operatorAddr)) {
             operatorRelation = get(operatorAddr);
             operatorRelation.addApproveAll(ownerAddr, contractAddr);
         } else {
@@ -90,6 +89,8 @@ public class Urc721AccountTokenRelationStore extends UnichainStoreWithRevoking<U
                             .clearTail()
                             .setTotal(0L)
                             .clearTotals()
+                            .clearApprovedForAlls()
+                            .clearApproveAlls()
                             .build());
             operatorRelation.addApproveAll(ownerAddr, contractAddr);
         }

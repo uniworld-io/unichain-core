@@ -27,7 +27,7 @@ public class Urc721GetApprovedServlet extends HttpServlet {
       var visible = Util.getVisible(request);
       var contractAddr = request.getParameter("address");
       var tokenId = request.getParameter("id");
-      var builder = Protocol.Urc721Token.newBuilder();
+      var builder = Protocol.Urc721TokenQuery.newBuilder();
       var jsonObject = new JSONObject();
       jsonObject.put("address", contractAddr);
       jsonObject.put("id", tokenId);

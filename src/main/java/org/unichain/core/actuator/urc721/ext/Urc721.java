@@ -8,7 +8,7 @@ import org.unichain.protos.Protocol;
 public interface Urc721 {
     Protocol.Transaction createContract(Contract.Urc721CreateContract contract) throws ContractValidateException;
     Protocol.Transaction mint(Contract.Urc721MintContract contract) throws ContractValidateException;
-    Protocol.Urc721Token getToken(Protocol.Urc721Token query);
+    Protocol.Urc721Token getToken(Protocol.Urc721TokenQuery query);
     Protocol.Transaction burnToken(Contract.Urc721BurnContract contract) throws ContractValidateException;
 
     Protocol.Transaction addMinter(Contract.Urc721AddMinterContract contract) throws ContractValidateException;
@@ -18,15 +18,15 @@ public interface Urc721 {
     Protocol.Transaction setApprovalForAll(Contract.Urc721SetApprovalForAllContract approvalAll) throws ContractValidateException;
     Protocol.Transaction transfer(Contract.Urc721TransferFromContract contract) throws ContractValidateException;
 
-    GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOf query);
+    GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOfQuery query);
     GrpcAPI.StringMessage getName(Protocol.AddressMessage msg);
     GrpcAPI.StringMessage getSymbol(Protocol.AddressMessage msg);
     GrpcAPI.NumberMessage getTotalSupply(Protocol.AddressMessage msg);
-    GrpcAPI.StringMessage getTokenUri(Protocol.Urc721Token msg);
-    Protocol.AddressMessage getOwnerOf(Protocol.Urc721Token msg);
-    Protocol.AddressMessage getApproved(Protocol.Urc721Token query);
-    Protocol.Urc721IsApprovedForAll isApprovalForAll(Protocol.Urc721IsApprovedForAll query);
-    Protocol.Urc721Contract getContract(Protocol.Urc721Contract query);
+    GrpcAPI.StringMessage getTokenUri(Protocol.Urc721TokenQuery msg);
+    Protocol.AddressMessage getOwnerOf(Protocol.Urc721TokenQuery msg);
+    Protocol.AddressMessage getApproved(Protocol.Urc721TokenQuery query);
+    Protocol.BoolMessage isApprovalForAll(Protocol.Urc721IsApprovedForAllQuery query);
+    Protocol.Urc721Contract getContract(Protocol.AddressMessage query);
     Protocol.Urc721ContractPage listContract(Protocol.Urc721ContractQuery query);
-    Protocol.Urc721TokenPage listToken(Protocol.Urc721TokenQuery query);
+    Protocol.Urc721TokenPage listToken(Protocol.Urc721TokenListQuery query);
 }

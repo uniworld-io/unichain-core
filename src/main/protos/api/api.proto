@@ -150,7 +150,7 @@ service Wallet {
     };
   };
 
-  rpc Urc721ListToken (Urc721TokenQuery) returns (Urc721TokenPage) {
+  rpc Urc721ListToken (Urc721TokenListQuery) returns (Urc721TokenPage) {
     option (google.api.http) = {
       post: "/wallet/urc721tokenlist"
       body: "*"
@@ -160,7 +160,7 @@ service Wallet {
     };
   };
 
-  rpc Urc721GetContract (Urc721Contract) returns (Urc721Contract) {
+  rpc Urc721GetContract (AddressMessage) returns (Urc721Contract) {
     option (google.api.http) = {
       post: "/wallet/urc721contractget"
       body: "*"
@@ -170,7 +170,7 @@ service Wallet {
     };
   };
 
-  rpc Urc721GetToken (Urc721Token) returns (Urc721Token) {
+  rpc Urc721GetToken (Urc721TokenQuery) returns (Urc721Token) {
     option (google.api.http) = {
       post: "/wallet/urc721tokenget"
       body: "*"
@@ -180,7 +180,7 @@ service Wallet {
     };
   };
 
-  rpc Urc721GetBalanceOf (Urc721BalanceOf) returns (NumberMessage) {
+  rpc Urc721GetBalanceOf (Urc721BalanceOfQuery) returns (NumberMessage) {
     option (google.api.http) = {
       post: "/wallet/urc721balanceof"
       body: "*"
@@ -220,7 +220,7 @@ service Wallet {
     };
   };
 
-  rpc Urc721GetTokenUri (Urc721Token) returns (StringMessage) {
+  rpc Urc721GetTokenUri (Urc721TokenQuery) returns (StringMessage) {
     option (google.api.http) = {
       post: "/wallet/urc721tokenuri"
       body: "*"
@@ -230,7 +230,7 @@ service Wallet {
     };
   };
 
-  rpc Urc721GetOwnerOf (Urc721Token) returns (AddressMessage) {
+  rpc Urc721GetOwnerOf (Urc721TokenQuery) returns (AddressMessage) {
     option (google.api.http) = {
       post: "/wallet/urc721ownerof"
       body: "*"
@@ -240,7 +240,7 @@ service Wallet {
     };
   };
 
-  rpc Urc721GetApproved (Urc721Token) returns (AddressMessage) {
+  rpc Urc721GetApproved (Urc721TokenQuery) returns (AddressMessage) {
     option (google.api.http) = {
       post: "/wallet/urc721getapproved"
       body: "*"
@@ -250,7 +250,7 @@ service Wallet {
     };
   };
 
-  rpc Urc721GetIsApprovedForAll (Urc721IsApprovedForAll) returns (Urc721IsApprovedForAll) {
+  rpc Urc721GetIsApprovedForAll (Urc721IsApprovedForAllQuery) returns (BoolMessage) {
     option (google.api.http) = {
       post: "/wallet/urc721isapprovedforall"
       body: "*"
@@ -1452,8 +1452,6 @@ service WalletSolidity {
   /**
      urc721
     */
-
-
   rpc Urc721ListContract (Urc721ContractQuery) returns (Urc721ContractPage) {
     option (google.api.http) = {
       post: "/walletsolidity/urc721contractlist"
@@ -1464,7 +1462,7 @@ service WalletSolidity {
     };
   };
 
-  rpc Urc721ListToken (Urc721TokenQuery) returns (Urc721TokenPage) {
+  rpc Urc721ListToken (Urc721TokenListQuery) returns (Urc721TokenPage) {
     option (google.api.http) = {
       post: "/walletsolidity/urc721tokenlist"
       body: "*"
@@ -1474,7 +1472,7 @@ service WalletSolidity {
     };
   };
 
-  rpc Urc721GetContract (Urc721Contract) returns (Urc721Contract) {
+  rpc Urc721GetContract (AddressMessage) returns (Urc721Contract) {
     option (google.api.http) = {
       post: "/walletsolidity/urc721contractget"
       body: "*"
@@ -1484,7 +1482,7 @@ service WalletSolidity {
     };
   };
 
-  rpc Urc721GetToken (Urc721Token) returns (Urc721Token) {
+  rpc Urc721GetToken (Urc721TokenQuery) returns (Urc721Token) {
     option (google.api.http) = {
       post: "/walletsolidity/urc721tokenget"
       body: "*"
@@ -1494,7 +1492,7 @@ service WalletSolidity {
     };
   };
 
-  rpc Urc721GetBalanceOf (Urc721BalanceOf) returns (NumberMessage) {
+  rpc Urc721GetBalanceOf (Urc721BalanceOfQuery) returns (NumberMessage) {
     option (google.api.http) = {
       post: "/walletsolidity/urc721balanceof"
       body: "*"
@@ -1534,14 +1532,7 @@ service WalletSolidity {
     };
   };
 
-  /**
-    required msg
-    message Urc721Token{
-      int64 id = 2;
-      bytes address = 9;
-    }
-   */
-  rpc Urc721GetTokenUri (Urc721Token) returns (StringMessage) {
+  rpc Urc721GetTokenUri (Urc721TokenQuery) returns (StringMessage) {
     option (google.api.http) = {
       post: "/walletsolidity/urc721tokenuri"
       body: "*"
@@ -1551,14 +1542,7 @@ service WalletSolidity {
     };
   };
 
-  /**
-      required msg
-      message Urc721Token{
-        int64 id = 2;
-        bytes address = 9;
-      }
-     */
-  rpc Urc721GetOwnerOf (Urc721Token) returns (AddressMessage) {
+  rpc Urc721GetOwnerOf (Urc721TokenQuery) returns (AddressMessage) {
     option (google.api.http) = {
       post: "/walletsolidity/urc721ownerof"
       body: "*"
@@ -1568,14 +1552,7 @@ service WalletSolidity {
     };
   };
 
-  /**
-    required msg
-    message Urc721Token{
-      int64 id = 2;
-      bytes address = 9;
-    }
-   */
-  rpc Urc721GetApproved (Urc721Token) returns (AddressMessage) {
+  rpc Urc721GetApproved (Urc721TokenQuery) returns (AddressMessage) {
     option (google.api.http) = {
       post: "/walletsolidity/urc721getapproved"
       body: "*"
@@ -1585,7 +1562,7 @@ service WalletSolidity {
     };
   };
 
-  rpc Urc721GetIsApprovedForAll (Urc721IsApprovedForAll) returns (Urc721IsApprovedForAll) {
+  rpc Urc721GetIsApprovedForAll (Urc721IsApprovedForAllQuery) returns (BoolMessage) {
     option (google.api.http) = {
       post: "/walletsolidity/urc721isapprovedforall"
       body: "*"

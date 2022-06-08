@@ -27,7 +27,7 @@ public class Urc721BalanceOfServlet extends HttpServlet {
       var visible = Util.getVisible(request);
       var ownerAddress = request.getParameter("owner_address");
       var contractAddr = request.getParameter("address");
-      var builder = Protocol.Urc721BalanceOf.newBuilder();
+      var builder = Protocol.Urc721BalanceOfQuery.newBuilder();
       var jsonObject = new JSONObject();
       jsonObject.put("owner_address", ownerAddress);
       jsonObject.put("address", contractAddr);

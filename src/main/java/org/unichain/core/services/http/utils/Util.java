@@ -1077,9 +1077,9 @@ public class Util {
   public static Descriptors.FieldDescriptor URC721_TOKEN_APPROVE_RELATION_FIELD_PREV = Protocol.Urc721TokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveRelation.PREV_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor URC721_TOKEN_APPROVE_RELATION_FIELD_NEXT = Protocol.Urc721TokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveRelation.NEXT_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor URC721_TOKEN_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721TokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenQuery.PAGE_SIZE_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC721_TOKEN_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721TokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenQuery.PAGE_INDEX_FIELD_NUMBER);
-  public static Descriptors.FieldDescriptor URC721_TOKEN_QUERY_FIELD_ADDR = Protocol.Urc721TokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenQuery.ADDRESS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC721_TOKEN_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721TokenListQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenListQuery.PAGE_SIZE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC721_TOKEN_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721TokenListQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenListQuery.PAGE_INDEX_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC721_TOKEN_QUERY_FIELD_ADDR = Protocol.Urc721TokenListQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenListQuery.ADDRESS_FIELD_NUMBER);
 
   public static Descriptors.FieldDescriptor URC721_CONTRACT_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.PAGE_SIZE_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor URC721_CONTRACT_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.PAGE_INDEX_FIELD_NUMBER);

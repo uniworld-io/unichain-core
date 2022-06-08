@@ -304,35 +304,35 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc721ListToken(Urc721TokenQuery request, io.grpc.stub.StreamObserver<Urc721TokenPage> responseObserver) {
+    public void urc721ListToken(Urc721TokenListQuery request, io.grpc.stub.StreamObserver<Urc721TokenPage> responseObserver) {
       Urc721TokenPage reply = urc721.listToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetContract(Urc721Contract request, io.grpc.stub.StreamObserver<Urc721Contract> responseObserver) {
+    public void urc721GetContract(AddressMessage request, io.grpc.stub.StreamObserver<Urc721Contract> responseObserver) {
       Urc721Contract reply = urc721.getContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetToken(Urc721Token request, io.grpc.stub.StreamObserver<Urc721Token> responseObserver) {
+    public void urc721GetToken(Urc721TokenQuery request, io.grpc.stub.StreamObserver<Urc721Token> responseObserver) {
       var reply = urc721.getToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetIsApprovedForAll(Urc721IsApprovedForAll request, io.grpc.stub.StreamObserver<Urc721IsApprovedForAll> responseObserver) {
-      Urc721IsApprovedForAll reply = urc721.isApprovalForAll(request);
+    public void urc721GetIsApprovedForAll(Urc721IsApprovedForAllQuery request, io.grpc.stub.StreamObserver<BoolMessage> responseObserver) {
+      var reply = urc721.isApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetBalanceOf(Urc721BalanceOf request, io.grpc.stub.StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
+    public void urc721GetBalanceOf(Urc721BalanceOfQuery request, io.grpc.stub.StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
       var reply = urc721.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
@@ -359,21 +359,21 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc721GetTokenUri(Urc721Token request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+    public void urc721GetTokenUri(Urc721TokenQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
       var reply = urc721.getTokenUri(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetOwnerOf(Urc721Token request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+    public void urc721GetOwnerOf(Urc721TokenQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
       var reply = urc721.getOwnerOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetApproved(Urc721Token request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+    public void urc721GetApproved(Urc721TokenQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
       var reply = urc721.getApproved(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
@@ -856,36 +856,36 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc721ListToken(Urc721TokenQuery request, io.grpc.stub.StreamObserver<Urc721TokenPage> responseObserver) {
+    public void urc721ListToken(Urc721TokenListQuery request, io.grpc.stub.StreamObserver<Urc721TokenPage> responseObserver) {
       Urc721TokenPage reply = urc721.listToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetContract(Urc721Contract request, io.grpc.stub.StreamObserver<Urc721Contract> responseObserver) {
+    public void urc721GetContract(AddressMessage request, io.grpc.stub.StreamObserver<Urc721Contract> responseObserver) {
       Urc721Contract reply = urc721.getContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetToken(Urc721Token request, io.grpc.stub.StreamObserver<Urc721Token> responseObserver) {
+    public void urc721GetToken(Urc721TokenQuery request, io.grpc.stub.StreamObserver<Urc721Token> responseObserver) {
       Urc721Token reply = urc721.getToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetBalanceOf(Urc721BalanceOf request, io.grpc.stub.StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
+    public void urc721GetBalanceOf(Urc721BalanceOfQuery request, io.grpc.stub.StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
       var reply = urc721.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc721GetIsApprovedForAll(Urc721IsApprovedForAll request, io.grpc.stub.StreamObserver<Urc721IsApprovedForAll> responseObserver) {
-      Urc721IsApprovedForAll reply = urc721.isApprovalForAll(request);
+    public void urc721GetIsApprovedForAll(Urc721IsApprovedForAllQuery request, io.grpc.stub.StreamObserver<BoolMessage> responseObserver) {
+      var reply = urc721.isApprovalForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

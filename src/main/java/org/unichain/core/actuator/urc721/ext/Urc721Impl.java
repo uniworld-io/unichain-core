@@ -43,8 +43,8 @@ public class Urc721Impl implements Urc721 {
     }
 
     @Override
-    public Protocol.Urc721Contract getContract(Protocol.Urc721Contract query) {
-        Assert.isTrue(query.hasField(CONTRACT_ADDR), "Contract address missing");
+    public Protocol.Urc721Contract getContract(Protocol.AddressMessage query) {
+        Assert.isTrue(Objects.nonNull(query.getAddress()) && (query.getAddress().size() > 0), "Contract address missing");
         return dbManager.getUrc721ContractStore().get(query.getAddress().toByteArray()).getInstance();
     }
 
@@ -54,7 +54,7 @@ public class Urc721Impl implements Urc721 {
     }
 
     @Override
-    public Protocol.Urc721Token getToken(Protocol.Urc721Token query) {
+    public Protocol.Urc721Token getToken(Protocol.Urc721TokenQuery query) {
         Assert.notNull(query.getAddress(), "Token address empty");
         var id = Urc721TokenCapsule.genTokenKey(query.getAddress().toByteArray(), query.getId());
 
@@ -102,7 +102,7 @@ public class Urc721Impl implements Urc721 {
     }
 
     @Override
-    public Protocol.Urc721IsApprovedForAll isApprovalForAll(Protocol.Urc721IsApprovedForAll query) {
+    public Protocol.BoolMessage isApprovalForAll(Protocol.Urc721IsApprovedForAllQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
         Assert.notNull(query.getOperator(), "Operator null");
         var relationStore = dbManager.getUrc721AccountTokenRelationStore();
@@ -113,15 +113,13 @@ public class Urc721Impl implements Urc721 {
                 isApproved = true;
         }
 
-        return Protocol.Urc721IsApprovedForAll.newBuilder()
-                .setOwnerAddress(query.getOwnerAddress())
-                .setOperator(query.getOperator())
-                .setIsApproved(isApproved)
+        return Protocol.BoolMessage.newBuilder()
+                .setValue(isApproved)
                 .build();
     }
 
     @Override
-    public Protocol.AddressMessage getApproved(Protocol.Urc721Token query) {
+    public Protocol.AddressMessage getApproved(Protocol.Urc721TokenQuery query) {
         try {
             var tokenStore = dbManager.getUrc721TokenStore();
             var contractAddr = query.getAddress().toByteArray();
@@ -201,7 +199,7 @@ public class Urc721Impl implements Urc721 {
     }
 
     @Override
-    public Protocol.Urc721TokenPage listToken(Protocol.Urc721TokenQuery query) {
+    public Protocol.Urc721TokenPage listToken(Protocol.Urc721TokenListQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
         Assert.isTrue(Objects.nonNull(query.getOwnerType()) && TOKEN_LIST_OWNER_TYPES.contains(query.getOwnerType().toLowerCase()), "Owner type null or invalid type");
 
@@ -314,7 +312,7 @@ public class Urc721Impl implements Urc721 {
      * @todo implement
      */
     @Override
-    public GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOf query) {
+    public GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOfQuery query) {
         Assert.isTrue(Objects.nonNull(query.getOwnerAddress()) && Objects.nonNull(query.getAddress()), "Owner address | urc721 address is null");
         var accountTokenStore = dbManager.getUrc721AccountTokenRelationStore();
 //        var owner = query.getOwnerAddress().toByteArray();
@@ -334,46 +332,34 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public GrpcAPI.StringMessage getName(Protocol.AddressMessage msg) {
-        //@todo urc721 review
-        var contract = Protocol.Urc721Contract.newBuilder()
-                .setAddress(msg.getAddress())
-                .build();
         return GrpcAPI.StringMessage.newBuilder()
-                .setValue(getContract(contract).getName())
+                .setValue(getContract(msg).getName())
                 .build();
     }
 
     @Override
     public GrpcAPI.StringMessage getSymbol(Protocol.AddressMessage msg) {
-        //@todo urc721 review
-        var contract = Protocol.Urc721Contract.newBuilder()
-                .setAddress(msg.getAddress())
-                .build();
         return GrpcAPI.StringMessage.newBuilder()
-                .setValue(getContract(contract).getSymbol())
+                .setValue(getContract(msg).getSymbol())
                 .build();
     }
 
     @Override
     public GrpcAPI.NumberMessage getTotalSupply(Protocol.AddressMessage msg) {
-        //@todo urc721 review
-        var contract = Protocol.Urc721Contract.newBuilder()
-                .setAddress(msg.getAddress())
-                .build();
         return GrpcAPI.NumberMessage.newBuilder()
-                .setNum(getContract(contract).getTotalSupply())
+                .setNum(getContract(msg).getTotalSupply())
                 .build();
     }
 
     @Override
-    public GrpcAPI.StringMessage getTokenUri(Protocol.Urc721Token msg) {
+    public GrpcAPI.StringMessage getTokenUri(Protocol.Urc721TokenQuery msg) {
         return GrpcAPI.StringMessage.newBuilder()
                 .setValue(getToken(msg).getUri())
                 .build();
     }
 
     @Override
-    public Protocol.AddressMessage getOwnerOf(Protocol.Urc721Token msg) {
+    public Protocol.AddressMessage getOwnerOf(Protocol.Urc721TokenQuery msg) {
         return Protocol.AddressMessage.newBuilder()
                 .setAddress(getToken(msg).getOwnerAddress())
                 .build();

@@ -28,7 +28,7 @@ public class Urc721IsApprovedForAllServlet extends HttpServlet {
       var address = request.getParameter("owner_address");
       var operator = request.getParameter("operator");
       var isApproved = Boolean.parseBoolean(request.getParameter("is_approved"));
-      var builder = Protocol.Urc721IsApprovedForAll.newBuilder();
+      var builder = Protocol.Urc721IsApprovedForAllQuery.newBuilder();
       var jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
       jsonObject.put("operator", operator);

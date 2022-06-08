@@ -2,11 +2,12 @@ package org.unichain.core.services.http.fullnode.servlet.urc721;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.unichain.core.actuator.urc721.ext.Urc721;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.actuator.urc721.ext.Urc721;
 import org.unichain.protos.Protocol;
 
 import javax.servlet.http.HttpServlet;
@@ -25,12 +26,12 @@ public class Urc721TokenGetServlet extends HttpServlet {
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("address");
       Integer tokenId = Integer.valueOf(request.getParameter("id"));
-      Protocol.Urc721Token.Builder build = Protocol.Urc721Token.newBuilder();
+      var builder = Protocol.Urc721TokenQuery.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("address", address);
       jsonObject.put("id", tokenId);
-      JsonFormat.merge(jsonObject.toJSONString(), build, visible);
-      Protocol.Urc721Token reply = urc721.getToken(build.build());
+      JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
+      Protocol.Urc721Token reply = urc721.getToken(builder.build());
       if (reply != null) {
         response.getWriter().println(JsonFormat.printToString(reply, visible));
       } else {

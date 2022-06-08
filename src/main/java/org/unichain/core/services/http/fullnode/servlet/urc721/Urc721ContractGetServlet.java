@@ -25,7 +25,7 @@ public class Urc721ContractGetServlet extends HttpServlet {
     try {
       var visible = Util.getVisible(request);
       var address = request.getParameter("address");
-      var builder = Protocol.Urc721Contract.newBuilder();
+      var builder = Protocol.AddressMessage.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("address", address);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);

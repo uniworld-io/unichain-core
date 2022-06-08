@@ -29,7 +29,7 @@ public class Urc721TokenListServlet extends HttpServlet {
       String ownerType = request.getParameter("owner_type");
       long pageSize = Long.parseLong(request.getParameter("page_size"));
       long pageIndex = Long.parseLong(request.getParameter("page_index"));
-      Protocol.Urc721TokenQuery.Builder build = Protocol.Urc721TokenQuery.newBuilder();
+      Protocol.Urc721TokenListQuery.Builder build = Protocol.Urc721TokenListQuery.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
       jsonObject.put("address", contract);

@@ -531,7 +531,7 @@ message Urc721SetApprovalForAllContract{
 }
 
 message Urc721TransferFromContract{
-  bytes owner_address = 1;
+  bytes owner_address = 1; //owner or operator
   bytes address = 3;
   bytes to = 2;
   int64 token_id = 4;

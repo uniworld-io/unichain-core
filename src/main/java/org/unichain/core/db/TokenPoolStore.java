@@ -1,5 +1,6 @@
 package org.unichain.core.db;
 
+import com.google.protobuf.Descriptors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.apache.commons.codec.binary.Hex;
@@ -24,6 +25,11 @@ import static org.unichain.core.services.http.utils.Util.*;
 @Slf4j(topic = "DB")
 @Component
 public class TokenPoolStore extends UnichainStoreWithRevoking<Urc30TokenPoolCapsule> {
+
+  private static Descriptors.FieldDescriptor TOKEN_QUERY_FIELD_PAGE_INDEX= Protocol.TokenPoolQuery.getDescriptor().findFieldByNumber(Protocol.TokenPoolQuery.PAGE_INDEX_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor TOKEN_QUERY_FIELD_PAGE_SIZE= Protocol.TokenPoolQuery.getDescriptor().findFieldByNumber(Protocol.TokenPoolQuery.PAGE_SIZE_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor TOKEN_QUERY_FIELD_TOKEN_NAME= Protocol.TokenPoolQuery.getDescriptor().findFieldByNumber(Protocol.TokenPoolQuery.TOKEN_NAME_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor TOKEN_QUERY_FIELD_TOKEN_ADDR= Protocol.TokenPoolQuery.getDescriptor().findFieldByNumber(Protocol.TokenPoolQuery.TOKEN_ADDR_FIELD_NUMBER);
 
   @Autowired
   protected TokenPoolStore(@Value("token-pool") String dbName) {

@@ -17,6 +17,7 @@ package org.unichain.core.actuator.urc30;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -24,8 +25,8 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.actuator.AbstractActuator;
-import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -39,10 +40,22 @@ import java.util.Arrays;
 
 import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE;
 import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE_RATE;
-import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "actuator")
 public class Urc30TokenUpdateParamsActuator extends AbstractActuator {
+
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_OWNER_ADDR = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.OWNER_ADDRESS_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_NAME = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.TOKEN_NAME_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_FEE = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.AMOUNT_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_LOT = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.LOT_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_FEE_RATE = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.EXTRA_FEE_RATE_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_URL = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.URL_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_DESCRIPTION = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.DESCRIPTION_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.TOTAL_SUPPLY_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_FEE_POOL = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.FEE_POOL_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.EXCH_UNX_NUM_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.EXCH_NUM_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor TOKEN_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE = UpdateTokenParamsContract.getDescriptor().findFieldByNumber(UpdateTokenParamsContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
     public Urc30TokenUpdateParamsActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);

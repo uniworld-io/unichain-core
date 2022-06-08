@@ -37,7 +37,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 
 import static org.unichain.core.config.Parameter.ChainConstant.*;
-import static org.unichain.core.services.http.utils.Util.*;
+import static org.unichain.core.actuator.urc30.Urc30TokenUpdateParamsActuator.*;
 
 @Slf4j(topic = "actuator")
 public class Urc30TokenUpdateParamsActuatorV4 extends AbstractActuator {

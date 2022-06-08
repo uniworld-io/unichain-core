@@ -16,18 +16,23 @@
 package org.unichain.core.capsule.urc721;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.capsule.ProtoCapsule;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Urc721AccountTokenRelation;
 
 import java.util.Map;
 
-import static org.unichain.core.services.http.utils.Util.*;
-
 @Slf4j(topic = "capsule")
 public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721AccountTokenRelation> {
+
+  private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.TAIL_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_APPROVAL_FOR_ALL = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.APPROVED_FOR_ALL_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.APPROVE_TAIL_FIELD_NUMBER);
+
   private Urc721AccountTokenRelation relation;
   private byte[] key;
 

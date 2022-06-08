@@ -38,7 +38,7 @@ import java.util.Arrays;
 
 import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE;
 import static org.unichain.core.config.Parameter.ChainConstant.TOKEN_MAX_TRANSFER_FEE_RATE;
-import static org.unichain.core.services.http.utils.Util.*;
+import static org.unichain.core.actuator.urc30.Urc30TokenUpdateParamsActuator.*;
 
 @Slf4j(topic = "actuator")
 public class Urc30TokenUpdateParamsActuatorV3 extends AbstractActuator {

@@ -1,5 +1,6 @@
 package org.unichain.core.db;
 
+import com.google.protobuf.Descriptors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +25,11 @@ import static org.unichain.core.services.http.utils.Util.*;
 @Slf4j(topic = "DB")
 @Component
 public class Urc20ContractStore extends UnichainStoreWithRevoking<Urc20ContractCapsule> {
+
+  private static Descriptors.FieldDescriptor URC20_CONTRACT_QUERY_FIELD_PAGE_INDEX= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.PAGE_INDEX_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC20_CONTRACT_QUERY_FIELD_PAGE_SIZE= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.PAGE_SIZE_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC20_CONTRACT_QUERY_FIELD_TOKEN_ADDR= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.ADDRESS_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC20_CONTRACT_QUERY_FIELD_TOKEN_SYMBOL= Protocol.Urc20ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc20ContractQuery.SYMBOL_FIELD_NUMBER);
 
   @Autowired
   protected Urc20ContractStore(@Value("urc20-contract") String dbName) {

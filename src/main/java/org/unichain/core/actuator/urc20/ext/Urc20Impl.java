@@ -1,5 +1,6 @@
 package org.unichain.core.actuator.urc20.ext;
 
+import com.google.protobuf.Descriptors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,12 @@ import static org.unichain.core.services.http.utils.Util.*;
 @Slf4j
 @Service
 public class Urc20Impl implements Urc20 {
+
+  private static Descriptors.FieldDescriptor URC20_QR_FIELD_ADDR = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.ADDRESS_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC20_QR_FIELD_OWNER_ADDR = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.OWNER_ADDRESS_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC20_QR_FIELD_PAGE_SIZE = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.PAGE_SIZE_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC20_QR_FIELD_PAGE_INDEX = Protocol.Urc20FutureTokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc20FutureTokenQuery.PAGE_INDEX_FIELD_NUMBER);
+
   @Autowired
   private Wallet wallet;
 

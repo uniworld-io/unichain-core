@@ -17,6 +17,7 @@ package org.unichain.core.actuator.posbridge;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -34,10 +35,15 @@ import org.web3j.utils.Numeric;
 
 import java.util.Arrays;
 
-import static org.unichain.core.services.http.utils.Util.*;
-
 @Slf4j(topic = "actuator")
 public class PosBridgeSetupActuator extends AbstractActuator {
+
+    private static Descriptors.FieldDescriptor POSBRIDGE_NEW_OWNER = PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.NEW_OWNER_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor POSBRIDGE_MIN_VALIDATOR = PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.MIN_VALIDATOR_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor POSBRIDGE_CONSENSUS_RATE= PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.CONSENSUS_RATE_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor POSBRIDGE_PREDICATE_NATIVE= PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.PREDICATE_NATIVE_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor POSBRIDGE_PREDICATE_TOKEN= PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.PREDICATE_TOKEN_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor POSBRIDGE_PREDICATE_URC721 = PosBridgeSetupContract.getDescriptor().findFieldByNumber(PosBridgeSetupContract.PREDICATE_NFT_FIELD_NUMBER);
 
     public PosBridgeSetupActuator(Any contract, Manager dbManager) {
         super(contract, dbManager);

@@ -29,7 +29,27 @@ import static org.unichain.core.services.http.utils.Util.*;
 @Service
 public class Urc721Impl implements Urc721 {
     private static final Set<String> TOKEN_LIST_OWNER_TYPES = new HashSet<>(Arrays.asList("owner","approved", "approved_all"));
-    private static final Descriptors.FieldDescriptor CONTRACT_ADDR = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.ADDRESS_FIELD_NUMBER);
+
+    private static final Descriptors.FieldDescriptor ADDR_MSG_ADDR_FIELD = Protocol.AddressMessage.getDescriptor().findFieldByNumber(Protocol.AddressMessage.ADDRESS_FIELD_NUMBER);
+
+    private static final Descriptors.FieldDescriptor URC721_IS_APPROVE_FOR_ALL_FIELD_OWNER= Protocol.Urc721IsApprovedForAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721IsApprovedForAllQuery.OWNER_ADDRESS_FIELD_NUMBER);
+    private static final Descriptors.FieldDescriptor URC721_IS_APPROVE_FOR_ALL_FIELD_OPERATOR = Protocol.Urc721IsApprovedForAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721IsApprovedForAllQuery.OPERATOR_FIELD_NUMBER);
+
+    private static final Descriptors.FieldDescriptor URC721_TOKEN_LIST_QUERY_FIELD_OWNER = Protocol.Urc721TokenListQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenListQuery.OWNER_ADDRESS_FIELD_NUMBER);
+    private static final Descriptors.FieldDescriptor URC721_TOKEN_LIST_QUERY_FIELD_TYPE = Protocol.Urc721TokenListQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenListQuery.OWNER_TYPE_FIELD_NUMBER);
+    private static final Descriptors.FieldDescriptor URC721_TOKEN_LIST_QUERY_FIELD_ADDR = Protocol.Urc721TokenListQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenListQuery.ADDRESS_FIELD_NUMBER);
+    private static final Descriptors.FieldDescriptor URC721_TOKEN_LIST_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721TokenListQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenListQuery.PAGE_SIZE_FIELD_NUMBER);
+    private static final Descriptors.FieldDescriptor URC721_TOKEN_LIST_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721TokenListQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenListQuery.PAGE_INDEX_FIELD_NUMBER);
+
+    private static final Descriptors.FieldDescriptor URC721_BALANCE_OF_QUERY_FIELD_OWNER = Protocol.Urc721BalanceOfQuery.getDescriptor().findFieldByNumber(Protocol.Urc721BalanceOfQuery.OWNER_ADDRESS_FIELD_NUMBER);
+    private static final Descriptors.FieldDescriptor URC721_BALANCE_OF_QUERY_FIELD_CONTRACT = Protocol.Urc721BalanceOfQuery.getDescriptor().findFieldByNumber(Protocol.Urc721BalanceOfQuery.ADDRESS_FIELD_NUMBER);
+
+    public static Descriptors.FieldDescriptor URC721_CONTRACT_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.PAGE_SIZE_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor URC721_CONTRACT_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.PAGE_INDEX_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor URC721_CONTRACT_QUERY_FIELD_OWNER_ADDR = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.OWNER_ADDRESS_FIELD_NUMBER);
+
+    public static Descriptors.FieldDescriptor URC721_TOKEN_QUERY_FIELD_ADDR = Protocol.Urc721TokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenQuery.ADDRESS_FIELD_NUMBER);
+
 
     @Autowired
     private Manager dbManager;
@@ -44,7 +64,7 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public Protocol.Urc721Contract getContract(Protocol.AddressMessage query) {
-        Assert.isTrue(Objects.nonNull(query.getAddress()) && (query.getAddress().size() > 0), "Contract address missing");
+        Assert.isTrue(query.hasField(ADDR_MSG_ADDR_FIELD), "Contract address missing");
         return dbManager.getUrc721ContractStore().get(query.getAddress().toByteArray()).getInstance();
     }
 
@@ -55,7 +75,7 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public Protocol.Urc721Token getToken(Protocol.Urc721TokenQuery query) {
-        Assert.notNull(query.getAddress(), "Token address empty");
+        Assert.isTrue(query.hasField(URC721_TOKEN_QUERY_FIELD_ADDR), "Contract address missing");
         var id = Urc721TokenCapsule.genTokenKey(query.getAddress().toByteArray(), query.getId());
 
         if(!dbManager.getUrc721TokenStore().has(id))
@@ -103,8 +123,8 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public Protocol.BoolMessage isApprovalForAll(Protocol.Urc721IsApprovedForAllQuery query) {
-        Assert.notNull(query.getOwnerAddress(), "Owner address null");
-        Assert.notNull(query.getOperator(), "Operator null");
+        Assert.isTrue(query.hasField(URC721_IS_APPROVE_FOR_ALL_FIELD_OWNER), "Owner address null");
+        Assert.isTrue(query.hasField(URC721_IS_APPROVE_FOR_ALL_FIELD_OPERATOR), "Operator null");
         var relationStore = dbManager.getUrc721AccountTokenRelationStore();
         var isApproved = false;
         if(relationStore.has(query.getOwnerAddress().toByteArray())){
@@ -124,7 +144,7 @@ public class Urc721Impl implements Urc721 {
             var tokenStore = dbManager.getUrc721TokenStore();
             var contractAddr = query.getAddress().toByteArray();
             var tokenKey = ArrayUtils.addAll(contractAddr, ByteArray.fromLong(query.getId()));
-            Assert.isTrue(tokenStore.has(tokenKey), "token not found!");
+            Assert.isTrue(tokenStore.has(tokenKey), "Token not found!");
 
             var token = tokenStore.get(tokenKey);
             var addrMsg = Protocol.AddressMessage.newBuilder();
@@ -147,11 +167,11 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public Protocol.Urc721ContractPage listContract(Protocol.Urc721ContractQuery query) {
-        Assert.notNull(query.getOwnerAddress(), "Owner address null");
+        Assert.isTrue(query.hasField(URC721_CONTRACT_QUERY_FIELD_OWNER_ADDR), "Owner address null");
 
         int pageSize = query.hasField(URC721_CONTRACT_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
         int pageIndex = query.hasField(URC721_CONTRACT_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
-        Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
+        Assert.isTrue((pageSize > 0) && (pageIndex >= 0) && (pageSize <= MAX_PAGE_SIZE), "Invalid paging info");
 
         var ownerAddr = query.getOwnerAddress().toByteArray();
         List<Protocol.Urc721Contract> unsorted = new ArrayList<>();
@@ -200,18 +220,18 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public Protocol.Urc721TokenPage listToken(Protocol.Urc721TokenListQuery query) {
-        Assert.notNull(query.getOwnerAddress(), "Owner address null");
-        Assert.isTrue(Objects.nonNull(query.getOwnerType()) && TOKEN_LIST_OWNER_TYPES.contains(query.getOwnerType().toLowerCase()), "Owner type null or invalid type");
+        Assert.isTrue(query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_OWNER), "Owner address null");
+        Assert.isTrue(query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_TYPE) && TOKEN_LIST_OWNER_TYPES.contains(query.getOwnerType().toLowerCase()), "Owner type null or invalid type");
 
-        int pageSize = query.hasField(URC721_TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
-        int pageIndex = query.hasField(URC721_TOKEN_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
+        int pageSize = query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
+        int pageIndex = query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
         Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
         var ownerAddr = query.getOwnerAddress().toByteArray();
         var ownerType = query.getOwnerType();
 
         var contractAddr = query.getAddress();
-        var hasContractAddr = query.hasField(URC721_TOKEN_QUERY_FIELD_ADDR);
+        var hasContractAddr = query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_ADDR);
 
         List<Protocol.Urc721Token> unsorted = new ArrayList<>();
         Predicate<Urc721TokenCapsule> filter = cap -> !hasContractAddr || Arrays.equals(cap.getAddr(), contractAddr.toByteArray());
@@ -308,19 +328,13 @@ public class Urc721Impl implements Urc721 {
         return wallet.createTransactionCapsule(contract, ContractType.Urc721TransferFromContract).getInstance();
     }
 
-    /**
-     * @todo implement
-     */
     @Override
     public GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOfQuery query) {
-        Assert.isTrue((Objects.nonNull(query.getOwnerAddress()) && (query.getOwnerAddress().size() > 0))
-                && (Objects.nonNull(query.getAddress()) && (query.getAddress().size() > 0)),
-                "Owner address | urc721 address is null");
-
+        Assert.isTrue(query.hasField(URC721_BALANCE_OF_QUERY_FIELD_OWNER) && query.hasField(URC721_BALANCE_OF_QUERY_FIELD_CONTRACT), "Owner address | urc721 address is null");
         Predicate<Urc721TokenCapsule> filter = cap -> Arrays.equals(cap.getAddr(), query.getAddress().toByteArray());
         var tokens = listTokenByOwner(query.getOwnerAddress().toByteArray(), filter);
         return GrpcAPI.NumberMessage.newBuilder()
-                .setNum(0L)
+                .setNum(tokens.size())
                 .build();
     }
 

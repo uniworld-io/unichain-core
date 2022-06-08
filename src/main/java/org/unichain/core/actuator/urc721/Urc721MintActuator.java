@@ -17,6 +17,7 @@ package org.unichain.core.actuator.urc721;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -24,10 +25,9 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
+import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.urc721.Urc721ContractCapsule;
 import org.unichain.core.capsule.urc721.Urc721TokenCapsule;
-import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -38,10 +38,10 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static org.unichain.core.services.http.utils.Util.URC721_MINT_FIELD_TOKEN_ID;
-
 @Slf4j(topic = "actuator")
 public class Urc721MintActuator extends AbstractActuator {
+
+  private static Descriptors.FieldDescriptor URC721_MINT_FIELD_TOKEN_ID = Contract.Urc721MintContract.getDescriptor().findFieldByNumber(Contract.Urc721MintContract.TOKEN_ID_FIELD_NUMBER);
 
   public Urc721MintActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);

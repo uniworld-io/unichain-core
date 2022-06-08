@@ -16,16 +16,17 @@
 package org.unichain.core.capsule.urc721;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Urc721AccountContractRelation;
 
-import static org.unichain.core.services.http.utils.Util.URC721_CONTRACT_ACCOUNT_FIELD_TAIL;
-
 @Slf4j(topic = "capsule")
 public class Urc721AccountContractRelationCapsule implements ProtoCapsule<Urc721AccountContractRelation> {
+  private static Descriptors.FieldDescriptor URC721_CONTRACT_ACCOUNT_FIELD_TAIL = Protocol.Urc721AccountContractRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountContractRelation.TAIL_FIELD_NUMBER);
+
   private Urc721AccountContractRelation relation;
   private byte[] key;
 

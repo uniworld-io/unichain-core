@@ -17,6 +17,7 @@ package org.unichain.core.actuator.urc20;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -36,10 +37,20 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.util.Arrays;
 
 import static org.unichain.core.config.Parameter.ChainConstant.*;
-import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "actuator")
 public class Urc20UpdateParamsActuator extends AbstractActuator {
+    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_ADDR = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.ADDRESS_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_OWNER_ADDR = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.OWNER_ADDRESS_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_FEE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.FEE_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_LOT = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.LOT_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_FEE_RATE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXTRA_FEE_RATE_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_URL = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.URL_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.TOTAL_SUPPLY_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_FEE_POOL = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.FEE_POOL_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_EXCH_UNW_NUM = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXCH_UNX_NUM_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_EXCH_TOKEN_NUM = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXCH_NUM_FIELD_NUMBER);
+    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_CREATE_ACC_FEE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.CREATE_ACC_FEE_FIELD_NUMBER);
 
     public Urc20UpdateParamsActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);

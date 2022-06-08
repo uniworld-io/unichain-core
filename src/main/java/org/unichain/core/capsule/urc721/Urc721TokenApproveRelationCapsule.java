@@ -16,16 +16,18 @@
 package org.unichain.core.capsule.urc721;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol;
 
-import static org.unichain.core.services.http.utils.Util.URC721_TOKEN_APPROVE_RELATION_FIELD_NEXT;
-import static org.unichain.core.services.http.utils.Util.URC721_TOKEN_APPROVE_RELATION_FIELD_PREV;
-
 @Slf4j(topic = "capsule")
 public class Urc721TokenApproveRelationCapsule implements ProtoCapsule<Protocol.Urc721TokenApproveRelation> {
+
+  private static Descriptors.FieldDescriptor URC721_TOKEN_APPROVE_RELATION_FIELD_PREV = Protocol.Urc721TokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveRelation.PREV_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC721_TOKEN_APPROVE_RELATION_FIELD_NEXT = Protocol.Urc721TokenApproveRelation.getDescriptor().findFieldByNumber(Protocol.Urc721TokenApproveRelation.NEXT_FIELD_NUMBER);
+
   private Protocol.Urc721TokenApproveRelation token;
   private byte[] key;
 

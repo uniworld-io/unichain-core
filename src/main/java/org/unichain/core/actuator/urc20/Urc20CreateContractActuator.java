@@ -17,6 +17,7 @@ package org.unichain.core.actuator.urc20;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -40,10 +41,13 @@ import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import static org.unichain.core.config.Parameter.ChainConstant.*;
-import static org.unichain.core.services.http.utils.Util.*;
 
 @Slf4j(topic = "actuator")
 public class Urc20CreateContractActuator extends AbstractActuator {
+
+  private static Descriptors.FieldDescriptor URC20_CREATE_FIELD_START_TIME= Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.START_TIME_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC20_CREATE_FIELD_END_TIME= Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.END_TIME_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor URC20_CREATE_FIELD_ENABLE_EXCH = Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.EXCH_ENABLE_FIELD_NUMBER);
 
   public Urc20CreateContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);

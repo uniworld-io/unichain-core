@@ -987,7 +987,6 @@ message Urc721TokenPage{
 message Urc721BalanceOf{
   bytes owner_address = 1;
   bytes address = 2;
-  int64 count = 3;
 }
 
 message Urc721IsApprovedForAll{

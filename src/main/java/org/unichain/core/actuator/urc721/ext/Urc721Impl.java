@@ -28,6 +28,9 @@ import static org.unichain.core.services.http.utils.Util.*;
 @Slf4j
 @Service
 public class Urc721Impl implements Urc721 {
+    private static final Set<String> TOKEN_LIST_OWNER_TYPES = new HashSet<>(Arrays.asList("owner","approved", "approved_all"));
+    private static final Descriptors.FieldDescriptor CONTRACT_ADDR = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.ADDRESS_FIELD_NUMBER);
+
     @Autowired
     private Manager dbManager;
 
@@ -39,8 +42,6 @@ public class Urc721Impl implements Urc721 {
         return wallet.createTransactionCapsule(contract, ContractType.Urc721CreateContract).getInstance();
     }
 
-    private static final Descriptors.FieldDescriptor CONTRACT_ADDR = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.ADDRESS_FIELD_NUMBER);
-
     @Override
     public Protocol.Urc721Contract getContract(Protocol.Urc721Contract query) {
         Assert.isTrue(query.hasField(CONTRACT_ADDR), "Contract address missing");
@@ -48,7 +49,7 @@ public class Urc721Impl implements Urc721 {
     }
 
     @Override
-    public Protocol.Transaction createToken(Contract.Urc721MintContract contract) throws ContractValidateException {
+    public Protocol.Transaction mint(Contract.Urc721MintContract contract) throws ContractValidateException {
         return wallet.createTransactionCapsule(contract, ContractType.Urc721MintContract).getInstance();
     }
 
@@ -59,8 +60,7 @@ public class Urc721Impl implements Urc721 {
 
         if(!dbManager.getUrc721TokenStore().has(id))
         {
-            return Protocol.Urc721Token.newBuilder()
-                    .build();
+            return Protocol.Urc721Token.newBuilder().build();
         }
         else {
             var token = dbManager.getUrc721TokenStore().get(id).getInstance();
@@ -200,8 +200,6 @@ public class Urc721Impl implements Urc721 {
                 .build();
     }
 
-    private static final Set<String> TOKEN_LIST_OWNER_TYPES = new HashSet<>(Arrays.asList("owner","approved", "approved_all"));
-
     @Override
     public Protocol.Urc721TokenPage listToken(Protocol.Urc721TokenQuery query) {
         Assert.notNull(query.getOwnerAddress(), "Owner address null");
@@ -312,21 +310,24 @@ public class Urc721Impl implements Urc721 {
         return wallet.createTransactionCapsule(contract, ContractType.Urc721TransferFromContract).getInstance();
     }
 
-    //@todo urc721: count token of provided urc721 address only
+    /**
+     * @todo implement
+     */
     @Override
-    public Protocol.Urc721BalanceOf balanceOf(Protocol.Urc721BalanceOf query) {
-        Assert.notNull(query.getOwnerAddress(), "Owner address null");
+    public GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOf query) {
+        Assert.isTrue(Objects.nonNull(query.getOwnerAddress()) && Objects.nonNull(query.getAddress()), "Owner address | urc721 address is null");
         var accountTokenStore = dbManager.getUrc721AccountTokenRelationStore();
-        var owner = query.getOwnerAddress().toByteArray();
-        var result = Protocol.Urc721BalanceOf.newBuilder()
-                .setCount(0)
-                .setOwnerAddress(query.getOwnerAddress());
-
-        if(accountTokenStore.has(owner))
-            return result.build();
-
-        var firstAccTokenRelation = accountTokenStore.get(owner);
-        return result.setCount(firstAccTokenRelation.getTotal()).build();
+//        var owner = query.getOwnerAddress().toByteArray();
+//        var result = Protocol.Urc721BalanceOf.newBuilder()
+//                .setCount(0)
+//                .setOwnerAddress(query.getOwnerAddress());
+//
+//        if(accountTokenStore.has(owner))
+//            return result.build();
+//
+//        var firstAccTokenRelation = accountTokenStore.get(owner);
+//        return result.setCount(firstAccTokenRelation.getTotal()).build();
+        return GrpcAPI.NumberMessage.newBuilder().build();
     }
 
     @Override

@@ -34,8 +34,7 @@ public class Urc721MintServlet extends HttpServlet {
       var visible = Util.getVisiblePost(contract);
       var build = Contract.Urc721MintContract.newBuilder();
       JsonFormat.merge(contract, build, visible);
-      var tokenCtx = build.build();
-      var tx = urc721.createToken(tokenCtx);
+      var tx = urc721.mint(build.build());
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

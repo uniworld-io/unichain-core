@@ -332,8 +332,8 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc721GetBalanceOf(Urc721BalanceOf request, io.grpc.stub.StreamObserver<Urc721BalanceOf> responseObserver) {
-      Urc721BalanceOf reply = urc721.balanceOf(request);
+    public void urc721GetBalanceOf(Urc721BalanceOf request, io.grpc.stub.StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
+      var reply = urc721.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -877,8 +877,8 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc721GetBalanceOf(Urc721BalanceOf request, io.grpc.stub.StreamObserver<Urc721BalanceOf> responseObserver) {
-      Urc721BalanceOf reply = urc721.balanceOf(request);
+    public void urc721GetBalanceOf(Urc721BalanceOf request, io.grpc.stub.StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
+      var reply = urc721.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

@@ -7,7 +7,7 @@ import org.unichain.protos.Protocol;
 
 public interface Urc721 {
     Protocol.Transaction createContract(Contract.Urc721CreateContract contract) throws ContractValidateException;
-    Protocol.Transaction createToken(Contract.Urc721MintContract contract) throws ContractValidateException;
+    Protocol.Transaction mint(Contract.Urc721MintContract contract) throws ContractValidateException;
     Protocol.Urc721Token getToken(Protocol.Urc721Token query);
     Protocol.Transaction burnToken(Contract.Urc721BurnContract contract) throws ContractValidateException;
 
@@ -18,7 +18,7 @@ public interface Urc721 {
     Protocol.Transaction setApprovalForAll(Contract.Urc721SetApprovalForAllContract approvalAll) throws ContractValidateException;
     Protocol.Transaction transfer(Contract.Urc721TransferFromContract contract) throws ContractValidateException;
 
-    Protocol.Urc721BalanceOf balanceOf(Protocol.Urc721BalanceOf query);
+    GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOf query);
     GrpcAPI.StringMessage getName(Protocol.AddressMessage msg);
     GrpcAPI.StringMessage getSymbol(Protocol.AddressMessage msg);
     GrpcAPI.NumberMessage getTotalSupply(Protocol.AddressMessage msg);

@@ -25,10 +25,12 @@ public class Urc721BalanceOfServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       var visible = Util.getVisible(request);
-      var address = request.getParameter("owner_address");
+      var ownerAddress = request.getParameter("owner_address");
+      var contractAddr = request.getParameter("address");
       var builder = Protocol.Urc721BalanceOf.newBuilder();
       var jsonObject = new JSONObject();
-      jsonObject.put("owner_address", address);
+      jsonObject.put("owner_address", ownerAddress);
+      jsonObject.put("address", contractAddr);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
       var reply = urc721.balanceOf(builder.build());
       if (reply != null) {

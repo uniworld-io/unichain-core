@@ -994,13 +994,6 @@ message Urc721BalanceOfQuery{
   bytes address = 2;
 }
 
-message Urc721IsApprovedForAll{
-  bytes owner_address = 1;
-  bytes operator = 2;
-  bytes address = 3;
-  bool is_approved = 4;
-}
-
 message Urc721IsApprovedForAllQuery{
   bytes owner_address = 1;
   bytes operator = 2;

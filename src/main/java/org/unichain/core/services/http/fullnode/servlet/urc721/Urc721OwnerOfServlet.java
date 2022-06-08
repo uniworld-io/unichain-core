@@ -32,7 +32,7 @@ public class Urc721OwnerOfServlet extends HttpServlet {
       jsonObject.put("id", tokenId);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
 
-      var msg = urc721.getOwnerOf(builder.build());
+      var msg = urc721.ownerOf(builder.build());
       if (msg != null) {
         response.getWriter().println(JsonFormat.printToString(msg, visible));
       } else {

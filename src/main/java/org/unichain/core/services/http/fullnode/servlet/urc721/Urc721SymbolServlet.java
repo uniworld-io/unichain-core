@@ -29,7 +29,7 @@ public class Urc721SymbolServlet extends HttpServlet {
       var jsonObject = new JSONObject();
       jsonObject.put("address", address);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
-      var msg = urc721.getSymbol(builder.build());
+      var msg = urc721.symbol(builder.build());
       if (msg != null) {
         response.getWriter().println(JsonFormat.printToString(msg, visible));
       } else {

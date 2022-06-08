@@ -2163,11 +2163,13 @@ public class Manager {
     var relationKey = tokenCap.getOwner();
 
     if (!relationStore.has(relationKey)) {
+      //save token
       var tokenKey = tokenCap.getKey();
       tokenCap.clearNext();
       tokenCap.clearPrev();
       tokenStore.put(tokenKey, tokenCap);
 
+      //save relation
       var relation = new Urc721AccountTokenRelationCapsule(relationKey,
               Protocol.Urc721AccountTokenRelation.newBuilder()
                       .setOwnerAddress(ByteString.copyFrom(tokenCap.getOwner()))

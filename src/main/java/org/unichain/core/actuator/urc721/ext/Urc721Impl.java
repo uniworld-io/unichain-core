@@ -313,53 +313,47 @@ public class Urc721Impl implements Urc721 {
      */
     @Override
     public GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOfQuery query) {
-        Assert.isTrue(Objects.nonNull(query.getOwnerAddress()) && Objects.nonNull(query.getAddress()), "Owner address | urc721 address is null");
-        var accountTokenStore = dbManager.getUrc721AccountTokenRelationStore();
-//        var owner = query.getOwnerAddress().toByteArray();
-//        var result = Protocol.Urc721BalanceOf.newBuilder()
-//                .setCount(0)
-//                .setOwnerAddress(query.getOwnerAddress());
-//
-//        if(accountTokenStore.has(owner))
-//            return result.build();
-//
-//        var firstAccTokenRelation = accountTokenStore.get(owner);
-//        return result.setCount(firstAccTokenRelation.getTotal()).build();
+        Assert.isTrue((Objects.nonNull(query.getOwnerAddress()) && (query.getOwnerAddress().size() > 0))
+                && (Objects.nonNull(query.getAddress()) && (query.getAddress().size() > 0)),
+                "Owner address | urc721 address is null");
+
+        Predicate<Urc721TokenCapsule> filter = cap -> Arrays.equals(cap.getAddr(), query.getAddress().toByteArray());
+        var tokens = listTokenByOwner(query.getOwnerAddress().toByteArray(), filter);
         return GrpcAPI.NumberMessage.newBuilder()
                 .setNum(0L)
                 .build();
     }
 
     @Override
-    public GrpcAPI.StringMessage getName(Protocol.AddressMessage msg) {
+    public GrpcAPI.StringMessage name(Protocol.AddressMessage msg) {
         return GrpcAPI.StringMessage.newBuilder()
                 .setValue(getContract(msg).getName())
                 .build();
     }
 
     @Override
-    public GrpcAPI.StringMessage getSymbol(Protocol.AddressMessage msg) {
+    public GrpcAPI.StringMessage symbol(Protocol.AddressMessage msg) {
         return GrpcAPI.StringMessage.newBuilder()
                 .setValue(getContract(msg).getSymbol())
                 .build();
     }
 
     @Override
-    public GrpcAPI.NumberMessage getTotalSupply(Protocol.AddressMessage msg) {
+    public GrpcAPI.NumberMessage totalSupply(Protocol.AddressMessage msg) {
         return GrpcAPI.NumberMessage.newBuilder()
                 .setNum(getContract(msg).getTotalSupply())
                 .build();
     }
 
     @Override
-    public GrpcAPI.StringMessage getTokenUri(Protocol.Urc721TokenQuery msg) {
+    public GrpcAPI.StringMessage tokenUri(Protocol.Urc721TokenQuery msg) {
         return GrpcAPI.StringMessage.newBuilder()
                 .setValue(getToken(msg).getUri())
                 .build();
     }
 
     @Override
-    public Protocol.AddressMessage getOwnerOf(Protocol.Urc721TokenQuery msg) {
+    public Protocol.AddressMessage ownerOf(Protocol.Urc721TokenQuery msg) {
         return Protocol.AddressMessage.newBuilder()
                 .setAddress(getToken(msg).getOwnerAddress())
                 .build();

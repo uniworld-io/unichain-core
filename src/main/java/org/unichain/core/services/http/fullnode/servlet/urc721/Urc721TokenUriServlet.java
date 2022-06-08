@@ -32,7 +32,7 @@ public class Urc721TokenUriServlet extends HttpServlet {
       jsonObject.put("id", tokenId);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
 
-      var msg = urc721.getTokenUri(builder.build());
+      var msg = urc721.tokenUri(builder.build());
       if (msg != null) {
         response.getWriter().println(JsonFormat.printToString(msg, visible));
       } else {

@@ -29,7 +29,7 @@ public class Urc721TotalSupplyServlet extends HttpServlet {
       var jsonObject = new JSONObject();
       jsonObject.put("address", address);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
-      var msg = urc721.getTotalSupply(builder.build());
+      var msg = urc721.totalSupply(builder.build());
       if (msg != null) {
         response.getWriter().println(JsonFormat.printToString(msg, visible));
       } else {

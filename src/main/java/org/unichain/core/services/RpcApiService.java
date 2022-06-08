@@ -339,35 +339,35 @@ public class RpcApiService implements Service {
     }
     @Override
     public void urc721GetName(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
-      var reply = urc721.getName(request);
+      var reply = urc721.name(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc721GetSymbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
-      var reply = urc721.getSymbol(request);
+      var reply = urc721.symbol(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc721GetTotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
-      var reply = urc721.getTotalSupply(request);
+      var reply = urc721.totalSupply(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc721GetTokenUri(Urc721TokenQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
-      var reply = urc721.getTokenUri(request);
+      var reply = urc721.tokenUri(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
     public void urc721GetOwnerOf(Urc721TokenQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
-      var reply = urc721.getOwnerOf(request);
+      var reply = urc721.ownerOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

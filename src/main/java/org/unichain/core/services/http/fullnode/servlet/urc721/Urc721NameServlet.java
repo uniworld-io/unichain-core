@@ -29,7 +29,7 @@ public class Urc721NameServlet extends HttpServlet {
       var jsonObject = new JSONObject();
       jsonObject.put("address", address);
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
-      var msg = urc721.getName(builder.build());
+      var msg = urc721.name(builder.build());
       if (msg != null) {
         response.getWriter().println(JsonFormat.printToString(msg, visible));
       } else {

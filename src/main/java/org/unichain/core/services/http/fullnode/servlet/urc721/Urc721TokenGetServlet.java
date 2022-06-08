@@ -25,7 +25,7 @@ public class Urc721TokenGetServlet extends HttpServlet {
     try {
       boolean visible = Util.getVisible(request);
       String address = request.getParameter("address");
-      Integer tokenId = Integer.valueOf(request.getParameter("id"));
+      var tokenId = Long.valueOf(request.getParameter("id"));
       var builder = Protocol.Urc721TokenQuery.newBuilder();
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("address", address);

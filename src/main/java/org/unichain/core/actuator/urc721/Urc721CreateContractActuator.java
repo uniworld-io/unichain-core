@@ -39,7 +39,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
 
-import static org.unichain.core.services.http.utils.Util.URC721_CREATE_CONTRACT_FIELD_MINTER;
+import static org.unichain.core.capsule.urc721.Urc721ContractCapsule.URC721_CREATE_CONTRACT_FIELD_MINTER;
 
 @Slf4j(topic = "actuator")
 public class Urc721CreateContractActuator extends AbstractActuator {
@@ -101,14 +101,14 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       var fee = calcFee();
 
       var contractAddr = ctx.getAddress().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var symbol = ctx.getSymbol();
       var name = ctx.getName();
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = accountStore.get(ownerAddr);
 
       Assert.isTrue(Wallet.addressValid(contractAddr)
               && !accountStore.has(contractAddr)
-              && !contractStore.has(contractAddr), "Bad contract address: invalid or exist");
+              && !contractStore.has(contractAddr), "Bad contract address: invalid or already exist");
 
       Assert.isTrue(Wallet.addressValid(ownerAddr)
                       && accountStore.has(ownerAddr)

@@ -25,8 +25,6 @@ import org.unichain.protos.Contract.Urc721CreateContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Urc721Contract;
 
-import static org.unichain.core.services.http.utils.Util.*;
-
 @Slf4j(topic = "capsule")
 public class Urc721ContractCapsule implements ProtoCapsule<Urc721Contract> {
 
@@ -34,6 +32,7 @@ public class Urc721ContractCapsule implements ProtoCapsule<Urc721Contract> {
   private static Descriptors.FieldDescriptor URC721_CONTRACT_FIELD_MINTER = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.MINTER_FIELD_NUMBER);
   private static Descriptors.FieldDescriptor URC721_CONTRACT_FIELD_NEXT_OF_MINTER = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.NEXT_OF_MINTER_FIELD_NUMBER);
   private static Descriptors.FieldDescriptor URC721_CONTRACT_FIELD_PREV_OF_MINTER = Protocol.Urc721Contract.getDescriptor().findFieldByNumber(Protocol.Urc721Contract.PREV_OF_MINTER_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC721_CREATE_CONTRACT_FIELD_MINTER = Urc721CreateContract.getDescriptor().findFieldByNumber(Urc721CreateContract.MINTER_FIELD_NUMBER);
 
   private Urc721Contract contract;
 

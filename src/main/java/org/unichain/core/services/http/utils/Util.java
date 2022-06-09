@@ -1010,8 +1010,6 @@ public class Util {
 
   public static Descriptors.FieldDescriptor FUTURE_TRANSFER_FIELD_TO_ADDR = FutureTransferContract.getDescriptor().findFieldByNumber(FutureTransferContract.TO_ADDRESS_FIELD_NUMBER);
 
-  public static Descriptors.FieldDescriptor URC721_CREATE_CONTRACT_FIELD_MINTER = Urc721CreateContract.getDescriptor().findFieldByNumber(Urc721CreateContract.MINTER_FIELD_NUMBER);
-
 
   public static int DEFAULT_PAGE_SIZE = 20;
   public static int DEFAULT_PAGE_INDEX = 0;

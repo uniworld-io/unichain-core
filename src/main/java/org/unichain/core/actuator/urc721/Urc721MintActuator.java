@@ -55,6 +55,7 @@ public class Urc721MintActuator extends AbstractActuator {
       var ctx = contract.unpack(Contract.Urc721MintContract.class);
       var accountStore = dbManager.getAccountStore();
       var contractStore = dbManager.getUrc721ContractStore();
+
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
       val contractKey =  ctx.getAddress().toByteArray();
@@ -128,29 +129,34 @@ public class Urc721MintActuator extends AbstractActuator {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(contract.is(Contract.Urc721MintContract.class), "contract type error,expected type [Urc721MintContract],real type[" + contract.getClass() + "]");
+
       var fee = calcFee();
       val ctx = this.contract.unpack(Contract.Urc721MintContract.class);
-      var accountStore = dbManager.getAccountStore();
-
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = accountStore.get(ownerAddr);
-      Assert.notNull(ownerAccountCap, "Owner account[" + Wallet.encode58Check(ownerAddr) + "] not exists");
-
+      var operatorAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(toAddr), "Invalid toAddress");
-      var toAccountCap = dbManager.getAccountStore().get(toAddr);
+      var contractAddr = ctx.getAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(operatorAddr) && Wallet.addressValid(toAddr) && Wallet.addressValid(contractAddr), "Invalid owner | to | contract address");
+
+      var accountStore = dbManager.getAccountStore();
+      var contractStore = dbManager.getUrc721ContractStore();
+
+      var ownerAccountCap = accountStore.get(operatorAddr);
+      Assert.notNull(ownerAccountCap, "Owner account[" + Wallet.encode58Check(operatorAddr) + "] not exists");
+
+      var toAccountCap = accountStore.get(toAddr);
       if(Objects.isNull(toAccountCap)){
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       } else {
-         Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Mint to itself not allowed!");
+         Assert.isTrue(!Arrays.equals(toAddr, operatorAddr), "Mint to itself not allowed!");
       }
 
-      var contractAddr = ctx.getAddress().toByteArray();
-      Assert.isTrue(dbManager.getUrc721ContractStore().has(contractAddr), "Contract symbol not existed!");
-      var contractCap = dbManager.getUrc721ContractStore().get(contractAddr);
-      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwner()) || (contractCap.hasMinter() && Arrays.equals(ownerAddr, contractCap.getMinter())), "Only owner or minter allowed to mint token");
+      Assert.isTrue(contractStore.has(contractAddr), "Contract symbol not existed!");
+      var contractCap = contractStore.get(contractAddr);
+      Assert.isTrue(Arrays.equals(operatorAddr, contractCap.getOwner())
+              || (contractCap.hasMinter() && Arrays.equals(operatorAddr, contractCap.getMinter())), "Only owner or minter allowed to mint token");
+
       Assert.isTrue(!(Arrays.equals(toAddr, contractCap.getOwner()) || (contractCap.hasMinter() && Arrays.equals(toAddr, contractCap.getMinter()))), "Can not create token for minter or owner!");
-      Assert.isTrue(contractCap.getTokenIndex() < contractCap.getTotalSupply(), "Over slot token mint!");
+      Assert.isTrue(contractCap.getTokenIndex() < contractCap.getTotalSupply(), "Over slot token id to mint!");
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Not enough balance to cover transaction fee, require "+ fee + "ginza");
 
       Assert.isTrue(TransactionUtil.validUrl(ctx.getUri()), "Invalid uri");

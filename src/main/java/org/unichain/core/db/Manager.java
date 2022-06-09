@@ -2170,11 +2170,11 @@ public class Manager {
 
   public void saveUrc721Token(Urc721TokenCapsule tokenCap) {
     var tokenStore = getUrc721TokenStore();
-    var relationStore = getUrc721AccountTokenRelationStore();
-    var relationKey = tokenCap.getOwner();
+    var summaryStore = getUrc721AccountTokenRelationStore();
+    var summaryKey = tokenCap.getOwner();
     var contractAddr = Wallet.encode58Check(tokenCap.getAddr());
 
-    if (!relationStore.has(relationKey)) {
+    if (!summaryStore.has(summaryKey)) {
       //save token
       var tokenKey = tokenCap.getKey();
       tokenCap.clearNext();
@@ -2182,7 +2182,7 @@ public class Manager {
       tokenStore.put(tokenKey, tokenCap);
 
       //save relation
-      var relation = new Urc721AccountTokenRelationCapsule(relationKey,
+      var relation = new Urc721AccountTokenRelationCapsule(summaryKey,
               Protocol.Urc721AccountTokenRelation.newBuilder()
                       .setOwnerAddress(ByteString.copyFrom(tokenCap.getOwner()))
                       .setHead(ByteString.copyFrom(tokenKey))
@@ -2192,30 +2192,30 @@ public class Manager {
                       .clearApprovedForAlls()
                       .build());
       relation.increaseTotal(contractAddr, 1L);
-      relationStore.put(relation.getKey(), relation);
+      summaryStore.put(relation.getKey(), relation);
     } else {
-      var relation = relationStore.get(relationKey);
-      if (!relation.hasTail()) {
+      var summary = summaryStore.get(summaryKey);
+      if (!summary.hasTail()) {
         //in the case that the relation created to store approve list only
         var tokenKey = tokenCap.getKey();
         tokenCap.clearNext();
         tokenCap.clearPrev();
         tokenStore.put(tokenKey, tokenCap);
 
-        relation.setTotal(Math.incrementExact(relation.getTotal()));
-        relation.increaseTotal(contractAddr, 1L);
-        relation.setHead(ByteString.copyFrom(tokenKey));
-        relation.setTail(ByteString.copyFrom(tokenKey));
-        relationStore.put(relationKey, relation);
+        summary.setTotal(Math.incrementExact(summary.getTotal()));
+        summary.increaseTotal(contractAddr, 1L);
+        summary.setHead(ByteString.copyFrom(tokenKey));
+        summary.setTail(ByteString.copyFrom(tokenKey));
+        summaryStore.put(summaryKey, summary);
       } else {
-        var tailKey = relation.getTail().toByteArray();
+        var tailKey = summary.getTail().toByteArray();
         var tailTokenCap = tokenStore.get(tailKey);
 
         var tokenKey = tokenCap.getKey();
-        relation.setTotal(Math.incrementExact(relation.getTotal()));
-        relation.increaseTotal(contractAddr, 1L);
-        relation.setTail(ByteString.copyFrom(tokenKey));
-        relationStore.put(relationKey, relation);
+        summary.setTotal(Math.incrementExact(summary.getTotal()));
+        summary.increaseTotal(contractAddr, 1L);
+        summary.setTail(ByteString.copyFrom(tokenKey));
+        summaryStore.put(summaryKey, summary);
 
         tokenCap.clearNext();
         tokenCap.setPrev(tailKey);

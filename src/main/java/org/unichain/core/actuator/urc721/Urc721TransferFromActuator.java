@@ -17,6 +17,7 @@ package org.unichain.core.actuator.urc721;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -24,13 +25,15 @@ import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
-import org.unichain.core.capsule.urc721.Urc721TokenCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.urc721.Urc721TokenCapsule;
+import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.Urc721TransferFromContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -49,6 +52,7 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             val ctx = this.contract.unpack(Urc721TransferFromContract.class);
             var accountStore = dbManager.getAccountStore();
             var tokenStore = dbManager.getUrc721TokenStore();
+
             var fromAddr = ctx.getOwnerAddress().toByteArray();
             var toAddr = ctx.getTo().toByteArray();
             var tokenKey = Urc721TokenCapsule.genTokenKey(ctx.getAddress().toByteArray(), ctx.getTokenId());
@@ -82,6 +86,9 @@ public class Urc721TransferFromActuator extends AbstractActuator {
         }
     }
 
+    public static Descriptors.FieldDescriptor URC721_TRANSFER_FROM_FIELD_TOKEN_ID = Urc721TransferFromContract.getDescriptor().findFieldByNumber(Urc721TransferFromContract.TOKEN_ID_FIELD_NUMBER);
+
+
     @Override
     public boolean validate() throws ContractValidateException {
         try {
@@ -89,17 +96,26 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             Assert.notNull(dbManager, "No dbManager!");
             Assert.isTrue(contract.is(Urc721TransferFromContract.class), "contract type error,expected type [Urc721TransferFromContract], real type[" + contract.getClass() + "]");
             var fee = calcFee();
+
             val ctx = this.contract.unpack(Urc721TransferFromContract.class);
-            var accountStore = dbManager.getAccountStore();
-            var tokenStore = dbManager.getUrc721TokenStore();
-            var contractStore = dbManager.getUrc721ContractStore();
-            var relationStore = dbManager.getUrc721AccountTokenRelationStore();
             var operatorAddr = ctx.getOwnerAddress().toByteArray();
             var toAddr = ctx.getTo().toByteArray();
             var contractAddr = ctx.getAddress().toByteArray();
 
-            Assert.isTrue(Wallet.addressValid(operatorAddr) && Wallet.addressValid(toAddr) && Wallet.addressValid(contractAddr), "Invalid  from|to|contract address");
-            Assert.isTrue(!Arrays.equals(operatorAddr, toAddr), "Owner address and to address must be not the same");
+            Assert.isTrue(Wallet.addressValid(operatorAddr)
+                    && Wallet.addressValid(toAddr)
+                    && Wallet.addressValid(contractAddr),
+                    "Invalid  from|to|contract address");
+            Assert.isTrue(!TransactionUtil.isGenesisAddress(toAddr), "To address can not be genesis account");
+
+            Assert.isTrue(ctx.hasField(URC721_TRANSFER_FROM_FIELD_TOKEN_ID) && ctx.getTokenId() >= 0, "Missing or bad token id");
+
+            var accountStore = dbManager.getAccountStore();
+            var tokenStore = dbManager.getUrc721TokenStore();
+            var contractStore = dbManager.getUrc721ContractStore();
+            var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
+
+            Assert.isTrue(!Arrays.equals(operatorAddr, toAddr), "Can not transfer to it self");
             Assert.isTrue(accountStore.has(operatorAddr), "Operator address not exist");
             Assert.isTrue(contractStore.has(contractAddr), "Contract address not exist");
 
@@ -108,14 +124,20 @@ public class Urc721TransferFromActuator extends AbstractActuator {
 
             var token = tokenStore.get(tokenKey);
             var tokenOwner = token.getOwner();
-            var relation = relationStore.get(tokenOwner);
+            var relation = summaryStore.get(tokenOwner);
 
+            Assert.isTrue(!Arrays.equals(toAddr, tokenOwner),"Can not transfer to it self");
+
+            //check permission
             Assert.isTrue(Arrays.equals(operatorAddr, tokenOwner)
                     || relation.isApprovedForAll(contractAddr, operatorAddr)
                     || token.isApproval(operatorAddr), "Transfer token not allowed: must be owner or approved");
 
             if (!accountStore.has(toAddr)) {
                 fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+            }
+            {
+                Assert.isTrue(accountStore.get(toAddr).getType() == Protocol.AccountType.Normal, "Transfer token to normal address only");
             }
             Assert.isTrue(accountStore.get(operatorAddr).getBalance() >= fee, "Not enough balance to cover fee, required gas: " + fee + "ginza");
             return true;

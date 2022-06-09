@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
+import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -71,12 +72,13 @@ public class Urc721RemoveMinterActuator extends AbstractActuator {
       val ctx = this.contract.unpack(Urc721RemoveMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contractAddr = ctx.getAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddr) && Wallet.addressValid(contractAddr), "Invalid owner|contract address");
       var accountStore = dbManager.getAccountStore();
+      var contractStore = dbManager.getUrc721ContractStore();
 
-      Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
+      Assert.isTrue(accountStore.has(ownerAddr) && contractStore.has(contractAddr), "Owner account | contract not exist");
 
-      var contractCap = dbManager.getUrc721ContractStore().get(contractAddr);
-      Assert.notNull(contractCap, "Contract not found");
+      var contractCap = contractStore.get(contractAddr);
       Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwner()), "Not owner of contract");
       Assert.isTrue(contractCap.hasMinter(), "Minter not set");
       long fee = calcFee();

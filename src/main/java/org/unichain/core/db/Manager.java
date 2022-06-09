@@ -2314,9 +2314,10 @@ public class Manager {
 
   public void addApproveToken(byte[] tokenKey, byte[] toAddress){
     var approveStore = getUrc721TokenApproveRelationStore();
-    var relationStore = getUrc721AccountTokenRelationStore();
+    var summaryStore = getUrc721AccountTokenRelationStore();
 
-    if (!relationStore.has(toAddress)) {
+    if (!summaryStore.has(toAddress)) {
+      //save approve
       var approve = new Urc721TokenApproveRelationCapsule(Protocol.Urc721TokenApproveRelation.newBuilder()
               .clearNext()
               .clearPrev()
@@ -2325,7 +2326,8 @@ public class Manager {
               .build());
       approveStore.put(approve.getKey(), approve);
 
-      var relation = new Urc721AccountTokenRelationCapsule(toAddress,
+      //save summary
+      var summary = new Urc721AccountTokenRelationCapsule(toAddress,
               Protocol.Urc721AccountTokenRelation.newBuilder()
                       .setOwnerAddress(ByteString.copyFrom(toAddress))
                       .clearHead()
@@ -2338,11 +2340,12 @@ public class Manager {
                       .setApproveTail(ByteString.copyFrom(approve.getKey()))
                       .setApproveTotal(1L)
                       .build());
-      relationStore.put(relation.getKey(), relation);
+      summaryStore.put(summary.getKey(), summary);
     } else {
-      var relation = relationStore.get(toAddress);
-      if (!relation.hasTailApprove()) {
-        //in the case that the relation created to store approve list only
+      var summary = summaryStore.get(toAddress);
+      if (!summary.hasTailApprove()) {
+        //has summary but no approval
+        //save approve
         var approve = new Urc721TokenApproveRelationCapsule(Protocol.Urc721TokenApproveRelation.newBuilder()
                 .clearNext()
                 .clearPrev()
@@ -2351,18 +2354,22 @@ public class Manager {
                 .build());
         approveStore.put(approve.getKey(), approve);
 
-        relation.increaseTotalApprove(1L);
-        relation.setHeadApprove(ByteString.copyFrom(approve.getKey()));
-        relation.setTailApprove(ByteString.copyFrom(approve.getKey()));
-        relationStore.put(toAddress, relation);
+        //save summary
+        summary.increaseTotalApprove(1L);
+        summary.setHeadApprove(ByteString.copyFrom(approve.getKey()));
+        summary.setTailApprove(ByteString.copyFrom(approve.getKey()));
+        summaryStore.put(toAddress, summary);
       } else {
-        var tailKey = relation.getTailApprove().toByteArray();
+        //load links
+        var tailKey = summary.getTailApprove().toByteArray();
         var tailApproveCap = approveStore.get(tailKey);
 
-        relation.increaseTotalApprove(1L);
-        relation.setTailApprove(ByteString.copyFrom(tokenKey));
-        relationStore.put(toAddress, relation);
+        //save summary
+        summary.increaseTotalApprove(1L);
+        summary.setTailApprove(ByteString.copyFrom(tokenKey));
+        summaryStore.put(toAddress, summary);
 
+        //save approval
         var approve = new Urc721TokenApproveRelationCapsule(Protocol.Urc721TokenApproveRelation.newBuilder()
                 .clearNext()
                 .setPrev(ByteString.copyFrom(tailKey))
@@ -2379,18 +2386,20 @@ public class Manager {
 
   public void disapproveToken(byte[] tokenId, byte[] operatorAddr){
     var approveStore = getUrc721TokenApproveRelationStore();
-    var relationStore = getUrc721AccountTokenRelationStore();
+    var summaryStore = getUrc721AccountTokenRelationStore();
+    Assert.isTrue(approveStore.has(tokenId), "missing token id: " + tokenId);
 
-    Assert.isTrue(approveStore.has(tokenId), "not found token with id" + tokenId);
     val approveCap = approveStore.get(tokenId);
-
     var hasPrev = approveCap.hasPrev();
     var hasNext = approveCap.hasNext();
     var owner = approveCap.getOwner();
-    Assert.isTrue(Arrays.equals(operatorAddr, owner), "mismatched approval address");
-    Assert.isTrue(relationStore.has(owner), "missing account-token relation of address: " + owner);
-    var relation = relationStore.get(owner);
 
+    Assert.isTrue(Arrays.equals(operatorAddr, owner), "mismatched approval address");
+    Assert.isTrue(summaryStore.has(owner), "missing account-token relation of address: " + owner);
+
+    var summary = summaryStore.get(owner);
+
+    //update links
     if(hasNext){
       var nextKey = approveCap.getNext();
       if(hasPrev) {
@@ -2406,17 +2415,17 @@ public class Manager {
         prev.setNext(nextKey);
         approveStore.put(nextKey, next);
         approveStore.put(prevKey, prev);
-        //update relation
-        relation.setTotalApprove(Math.decrementExact(relation.getTotalApprove()));
+        //update summary
+        summary.setTotalApprove(Math.decrementExact(summary.getTotalApprove()));
       }
       else {
         var next = approveStore.get(nextKey);
         next.clearPrev();
         approveStore.put(nextKey, next);
 
-        //update relation
-        relation.setTotalApprove(Math.decrementExact(relation.getTotalApprove()));
-        relation.setHeadApprove(ByteString.copyFrom(nextKey));
+        //update summary
+        summary.setTotalApprove(Math.decrementExact(summary.getTotalApprove()));
+        summary.setHeadApprove(ByteString.copyFrom(nextKey));
       }
     }
     else {
@@ -2427,18 +2436,18 @@ public class Manager {
         prev.clearNext();
         approveStore.put(prevKey, prev);
 
-        //relation
-        relation.setTotalApprove(Math.decrementExact(relation.getTotalApprove()));
-        relation.setTailApprove(ByteString.copyFrom(prevKey));
+        //update summary
+        summary.setTotalApprove(Math.decrementExact(summary.getTotalApprove()));
+        summary.setTailApprove(ByteString.copyFrom(prevKey));
       }
       else {
         //only one node
-        relation.setTotalApprove(0L);
-        relation.clearTailApprove();
-        relation.clearHeadApprove();
+        summary.setTotalApprove(0L);
+        summary.clearTailApprove();
+        summary.clearHeadApprove();
       }
     }
-    relationStore.put(owner, relation);
+    summaryStore.put(owner, summary);
     approveStore.delete(tokenId);
   }
 

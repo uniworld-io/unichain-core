@@ -27,10 +27,12 @@ import org.unichain.common.utils.ByteArray;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.Urc721ApproveContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -48,17 +50,20 @@ public class Urc721ApproveActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(Urc721ApproveContract.class);
       var owner = ctx.getOwnerAddress().toByteArray();
+      var contractAddr = ctx.getAddress().toByteArray();
+      var toAddr = ctx.getTo().toByteArray();
       var accountStore = dbManager.getAccountStore();
       var tokenStore = dbManager.getUrc721TokenStore();
-      var contractAddr = ctx.getAddress().toByteArray();
+
       var tokenKey = ArrayUtils.addAll(contractAddr, ByteArray.fromLong(ctx.getTokenId()));
       var token = tokenStore.get(tokenKey);
-      var toAddr = ctx.getTo().toByteArray();
 
       if(ctx.getApprove()){
+        //set approval
         token.setApproval(toAddr);
         tokenStore.put(tokenKey, token);
 
+        //indexing approval
         dbManager.addApproveToken(tokenKey, toAddr);
 
         if(!accountStore.has(toAddr)){
@@ -67,8 +72,11 @@ public class Urc721ApproveActuator extends AbstractActuator {
         }
       }
       else {
+        //clear approval
         token.clearApproval();
         tokenStore.put(tokenKey, token);
+
+        //clear indexing approval
         dbManager.disapproveToken(tokenKey, toAddr);
       }
 
@@ -89,37 +97,46 @@ public class Urc721ApproveActuator extends AbstractActuator {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(contract.is(Urc721ApproveContract.class), "Contract type error,expected type [Urc721ApproveContract], real type[" + contract.getClass() + "]");
+
+      val ctx = this.contract.unpack(Urc721ApproveContract.class);
       var fee = calcFee();
       var accountStore = dbManager.getAccountStore();
       var tokenStore = dbManager.getUrc721TokenStore();
-      val ctx = this.contract.unpack(Urc721ApproveContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
-
       var toAddr = ctx.getTo().toByteArray();
+
+      Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
       Assert.isTrue(Wallet.addressValid(toAddr), "Target address not active or not exists");
+
+      Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and operator cannot be the same");
+      Assert.isTrue(!TransactionUtil.isGenesisAddress(toAddr), "Operator can not be Genesis account");
 
       if(!accountStore.has(toAddr)){
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
+      else {
+        //must be normal account
+        Assert.isTrue(accountStore.get(toAddr).getType() == Protocol.AccountType.Normal, "Must be normal account");
+      }
+
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee,"Not enough Balance to cover transaction fee, require " + fee + "ginza");
 
-      var tokenId = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
-      Assert.isTrue(tokenStore.has(tokenId), "Not found token");
+      var tokenKey = ArrayUtils.addAll(ctx.getAddress().toByteArray(), ByteArray.fromLong(ctx.getTokenId()));
+      Assert.isTrue(tokenStore.has(tokenKey), "Not found token");
 
-      var token = tokenStore.get(tokenId);
+      var token = tokenStore.get(tokenKey);
       if(ctx.getApprove()){
-          //approve: just override exception: already approved
-          Assert.isTrue(!token.hasApproval() || !Arrays.equals(ctx.getTo().toByteArray(), token.getApproval()), "The address has already been approver");
+        //approve: add or override approval
+        Assert.isTrue(!token.hasApproval() || !Arrays.equals(toAddr, token.getApproval()), "Already approved");
       }
       else {
         //disapprove
-        Assert.isTrue(token.hasApproval() && Arrays.equals(ctx.getTo().toByteArray(), token.getApproval()), "Unmatched approval address");
+        Assert.isTrue(accountStore.has(toAddr)
+                && token.hasApproval()
+                && Arrays.equals(toAddr, token.getApproval()),
+                "Unmatched approval address");
       }
-
-      Assert.isTrue(Arrays.equals(token.getOwner(), ownerAddr), "Not owner of token");
-      Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and operator cannot be the same");
-
+      Assert.isTrue(Arrays.equals(token.getOwner(), ownerAddr), "Not token owner");
       return true;
     }
     catch (Exception e){

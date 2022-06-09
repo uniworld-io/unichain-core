@@ -25,14 +25,15 @@ public class Urc721IsApprovedForAllServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     try {
       var visible = Util.getVisible(request);
-      var address = request.getParameter("owner_address");
+      var ownerAddr = request.getParameter("owner_address");
       var operator = request.getParameter("operator");
-      var isApproved = Boolean.parseBoolean(request.getParameter("is_approved"));
-      var builder = Protocol.Urc721IsApprovedForAllQuery.newBuilder();
+      var contract = request.getParameter("address");
       var jsonObject = new JSONObject();
-      jsonObject.put("owner_address", address);
+      jsonObject.put("owner_address", ownerAddr);
       jsonObject.put("operator", operator);
-      jsonObject.put("is_approved", isApproved);
+      jsonObject.put("address", contract);
+
+      var builder = Protocol.Urc721IsApprovedForAllQuery.newBuilder();
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
       var reply = urc721.isApprovedForAll(builder.build());
       if (reply != null) {

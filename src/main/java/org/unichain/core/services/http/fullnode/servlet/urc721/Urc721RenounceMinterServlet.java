@@ -29,10 +29,9 @@ public class Urc721RenounceMinterServlet extends HttpServlet {
       String contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.Urc721RenounceMinterContract.newBuilder();
-      JsonFormat.merge(contract, build, visible);
-      var tokenCtx = build.build();
-      var tx = urc721.renounceMinter(tokenCtx);
+      var builder = Contract.Urc721RenounceMinterContract.newBuilder();
+      JsonFormat.merge(contract, builder, visible);
+      var tx = urc721.renounceMinter(builder.build());
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

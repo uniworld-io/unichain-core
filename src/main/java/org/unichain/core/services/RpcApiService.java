@@ -71,19 +71,18 @@ public class RpcApiService implements Service {
   private WalletSolidity walletSolidity;
   @Autowired
   private Wallet wallet;
+  @Autowired
+  private NodeInfoService nodeInfoService;
+  @Getter
+  private DatabaseApi databaseApi = new DatabaseApi();
+
+  private WalletApi walletApi = new WalletApi();
 
   @Autowired
   private Urc721 urc721;
-
   @Autowired
   private Urc20 urc20;
 
-  @Autowired
-  private NodeInfoService nodeInfoService;
-
-  @Getter
-  private DatabaseApi databaseApi = new DatabaseApi();
-  private WalletApi walletApi = new WalletApi();
   @Getter
   private WalletSolidityApi walletSolidityApi = new WalletSolidityApi();
 
@@ -337,6 +336,7 @@ public class RpcApiService implements Service {
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
+
     @Override
     public void urc721GetName(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
       var reply = urc721.name(request);
@@ -879,6 +879,48 @@ public class RpcApiService implements Service {
     @Override
     public void urc721GetBalanceOf(Urc721BalanceOfQuery request, io.grpc.stub.StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
       var reply = urc721.balanceOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetName(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721.name(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetSymbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721.symbol(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetTotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc721.totalSupply(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetTokenUri(Urc721TokenQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721.tokenUri(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetOwnerOf(Urc721TokenQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc721.ownerOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetApproved(Urc721TokenQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc721.getApproved(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -1461,9 +1503,6 @@ public class RpcApiService implements Service {
       responseObserver.onCompleted();
     }
 
-    @Autowired
-    Urc721 urc721;
-
     /**
      */
     @Override
@@ -1482,7 +1521,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc721Mint(Contract.Urc721MintContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721MintContract).getInstance());
+        responseObserver.onNext(urc721.mint(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1495,7 +1534,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc721RemoveMinter(Contract.Urc721RemoveMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721RemoveMinterContract).getInstance());
+        responseObserver.onNext(urc721.removeMinter(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1508,7 +1547,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc721AddMinter(Contract.Urc721AddMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721AddMinterContract).getInstance());
+        responseObserver.onNext(urc721.addMinter(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1521,7 +1560,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc721RenounceMinter(Contract.Urc721RenounceMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721RenounceMinterContract).getInstance());
+        responseObserver.onNext(urc721.renounceMinter(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1534,7 +1573,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc721Burn(Contract.Urc721BurnContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721BurnContract).getInstance());
+        responseObserver.onNext(urc721.burn(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1547,7 +1586,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc721Approve(Contract.Urc721ApproveContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721ApproveContract).getInstance());
+        responseObserver.onNext(urc721.approve(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1560,7 +1599,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc721SetApprovalForAll(Contract.Urc721SetApprovalForAllContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721SetApprovalForAllContract).getInstance());
+        responseObserver.onNext(urc721.setApprovalForAll(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1573,7 +1612,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc721TransferFrom(Contract.Urc721TransferFromContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721TransferFromContract).getInstance());
+        responseObserver.onNext(urc721.transferFrom(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());

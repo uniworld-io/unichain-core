@@ -51,6 +51,7 @@ public class Urc721Impl implements Urc721 {
     public static Descriptors.FieldDescriptor URC721_CONTRACT_QUERY_FIELD_OWNER_ADDR = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.OWNER_ADDRESS_FIELD_NUMBER);
 
     public static Descriptors.FieldDescriptor URC721_TOKEN_QUERY_FIELD_ADDR = Protocol.Urc721TokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenQuery.ADDRESS_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor URC721_TOKEN_QUERY_FIELD_ID = Protocol.Urc721TokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenQuery.ID_FIELD_NUMBER);
 
 
     @Autowired
@@ -80,15 +81,19 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public Protocol.Urc721Token getToken(Protocol.Urc721TokenQuery query) {
-        Assert.isTrue(query.hasField(URC721_TOKEN_QUERY_FIELD_ADDR), "Contract address missing");
-        var id = Urc721TokenCapsule.genTokenKey(query.getAddress().toByteArray(), query.getId());
+        Assert.isTrue(query.hasField(URC721_TOKEN_QUERY_FIELD_ADDR)
+                && query.hasField(URC721_TOKEN_QUERY_FIELD_ID)
+                && query.getId() >= 0,
+                "Missing or bad contract address | token id");
 
-        if(!dbManager.getUrc721TokenStore().has(id))
+        var tokenKey = Urc721TokenCapsule.genTokenKey(query.getAddress().toByteArray(), query.getId());
+
+        if(!dbManager.getUrc721TokenStore().has(tokenKey))
         {
             return Protocol.Urc721Token.newBuilder().build();
         }
         else {
-            var token = dbManager.getUrc721TokenStore().get(id).getInstance();
+            var token = dbManager.getUrc721TokenStore().get(tokenKey).getInstance();
             return  Protocol.Urc721Token.newBuilder()
                     .setId(token.getId())
                     .setAddress(token.getAddress())
@@ -128,16 +133,24 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public Protocol.BoolMessage isApprovedForAll(Protocol.Urc721IsApprovedForAllQuery query) {
-        Assert.isTrue(query.hasField(URC721_IS_APPROVE_FOR_ALL_FIELD_OWNER), "Owner address null");
-        Assert.isTrue(query.hasField(URC721_IS_APPROVE_FOR_ALL_FIELD_OPERATOR), "Operator null");
-        Assert.isTrue(query.hasField(URC721_IS_APPROVE_FOR_ALL_FIELD_CONTRACT), "Contract null");
+        Assert.isTrue(query.hasField(URC721_IS_APPROVE_FOR_ALL_FIELD_OWNER)
+                && query.hasField(URC721_IS_APPROVE_FOR_ALL_FIELD_OPERATOR)
+                && query.hasField(URC721_IS_APPROVE_FOR_ALL_FIELD_CONTRACT),
+                "Owner|operator|contract address null");
 
-        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
         var ownerAddr = query.getOwnerAddress().toByteArray();
         var operatorAddr = query.getOperator().toByteArray();
         var contractAddr = query.getAddress().toByteArray();
-        var isApproved4All = !relationStore.has(ownerAddr) ? false :
-                relationStore.get(ownerAddr).isApprovedForAll(contractAddr, operatorAddr);
+
+        Assert.isTrue(Wallet.addressValid(ownerAddr)
+                && Wallet.addressValid(operatorAddr)
+                && Wallet.addressValid(contractAddr),
+                "Invalid owner|contract|operator address");
+
+        var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
+
+        var isApproved4All = !summaryStore.has(ownerAddr) ? false :
+                summaryStore.get(ownerAddr).isApprovedForAll(contractAddr, operatorAddr);
 
         return Protocol.BoolMessage.newBuilder()
                 .setValue(isApproved4All)
@@ -167,7 +180,7 @@ public class Urc721Impl implements Urc721 {
     }
 
     @Override
-    public Protocol.Transaction burnToken(Contract.Urc721BurnContract contract) throws ContractValidateException {
+    public Protocol.Transaction burn(Contract.Urc721BurnContract contract) throws ContractValidateException {
         return wallet.createTransactionCapsule(contract, ContractType.Urc721BurnContract).getInstance();
     }
 
@@ -331,17 +344,20 @@ public class Urc721Impl implements Urc721 {
     }
 
     @Override
-    public Protocol.Transaction transfer(Contract.Urc721TransferFromContract contract) throws ContractValidateException {
+    public Protocol.Transaction transferFrom(Contract.Urc721TransferFromContract contract) throws ContractValidateException {
         return wallet.createTransactionCapsule(contract, ContractType.Urc721TransferFromContract).getInstance();
     }
 
     @Override
     public GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOfQuery query) {
-        Assert.isTrue(query.hasField(URC721_BALANCE_OF_QUERY_FIELD_OWNER) && query.hasField(URC721_BALANCE_OF_QUERY_FIELD_CONTRACT), "Owner address | urc721 address is null");
+        Assert.isTrue(query.hasField(URC721_BALANCE_OF_QUERY_FIELD_OWNER)
+                && query.hasField(URC721_BALANCE_OF_QUERY_FIELD_CONTRACT),
+                "Owner address | urc721 address is null");
 
         var owner = query.getOwnerAddress().toByteArray();
         var contract = query.getAddress().toByteArray();
         Assert.isTrue(Wallet.addressValid(owner) && Wallet.addressValid(contract), "Bad owner|contract address");
+
         Assert.isTrue(dbManager.getAccountStore().has(owner), "Unrecognized owner address");
         Assert.isTrue(dbManager.getUrc721ContractStore().has(contract), "Unrecognized contract address");
 

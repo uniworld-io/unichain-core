@@ -9,13 +9,13 @@ public interface Urc721 {
     //contracts
     Protocol.Transaction createContract(Contract.Urc721CreateContract contract) throws ContractValidateException;
     Protocol.Transaction mint(Contract.Urc721MintContract contract) throws ContractValidateException;
-    Protocol.Transaction burnToken(Contract.Urc721BurnContract contract) throws ContractValidateException;
+    Protocol.Transaction burn(Contract.Urc721BurnContract contract) throws ContractValidateException;
     Protocol.Transaction addMinter(Contract.Urc721AddMinterContract contract) throws ContractValidateException;
     Protocol.Transaction removeMinter(Contract.Urc721RemoveMinterContract contract) throws ContractValidateException;
     Protocol.Transaction renounceMinter(Contract.Urc721RenounceMinterContract contract) throws ContractValidateException;
     Protocol.Transaction approve(Contract.Urc721ApproveContract contract) throws ContractValidateException;
     Protocol.Transaction setApprovalForAll(Contract.Urc721SetApprovalForAllContract approvalAll) throws ContractValidateException;
-    Protocol.Transaction transfer(Contract.Urc721TransferFromContract contract) throws ContractValidateException;
+    Protocol.Transaction transferFrom(Contract.Urc721TransferFromContract contract) throws ContractValidateException;
 
     //listing
     GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOfQuery query);

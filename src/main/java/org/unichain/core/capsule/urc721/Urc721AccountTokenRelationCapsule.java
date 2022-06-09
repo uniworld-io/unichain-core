@@ -189,7 +189,7 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
     if(!relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_APPROVED_FOR_ALLS))
       return false;
     var operator =  relation.getApprovedForAllsMap().get(Wallet.encode58Check(contractAddr));
-    return  (operator == null) ? false : operator.equals(Wallet.encode58Check(operatorAddr));
+    return  Objects.isNull(operator) ? false : operator.equals(Wallet.encode58Check(operatorAddr));
   }
 
   public void clearApprovedForAll(byte[] contract, byte[] _operator){

@@ -2233,9 +2233,9 @@ public class Manager {
    */
   public void removeUrc721Token(byte[] tokenKey){
     var tokenStore = getUrc721TokenStore();
-    var relationStore = getUrc721AccountTokenRelationStore();
+    var summaryStore = getUrc721AccountTokenRelationStore();
 
-    Assert.isTrue(tokenStore.has(tokenKey), "not found token with id " + tokenKey);
+    Assert.isTrue(tokenStore.has(tokenKey), "missing token with id: " + tokenKey);
     val tokenCap = tokenStore.get(tokenKey);
     var contractAddr  = tokenCap.getAddr();
     var contractBase58 = Wallet.encode58Check(contractAddr);
@@ -2243,8 +2243,9 @@ public class Manager {
     var hasPrev = tokenCap.hasPrev();
     var hasNext = tokenCap.hasNext();
     var owner = tokenCap.getOwner();
-    Assert.isTrue(relationStore.has(owner), "missing account-token relation of owner: "+ owner);
-    var relation = relationStore.get(owner);
+    var ownerBase58 = Wallet.encode58Check(owner);
+    Assert.isTrue(summaryStore.has(owner), "missing account-token summary of: "+ ownerBase58);
+    var summary = summaryStore.get(owner);
 
     if(hasNext){
       var nextKey = tokenCap.getNext();
@@ -2264,8 +2265,8 @@ public class Manager {
         tokenStore.put(nextKey, next);
         tokenStore.put(prevKey, prev);
         //update relation
-        relation.setTotal(Math.decrementExact(relation.getTotal()));
-        relation.decreaseTotal(contractBase58, 1L);
+        summary.setTotal(Math.decrementExact(summary.getTotal()));
+        summary.decreaseTotal(contractBase58, 1L);
       }
       else {
         var next = tokenStore.get(nextKey);
@@ -2273,10 +2274,10 @@ public class Manager {
         next.setLastOperation(getHeadBlockTimeStamp());
         tokenStore.put(nextKey, next);
 
-        //update relation
-        relation.setTotal(Math.decrementExact(relation.getTotal()));
-        relation.decreaseTotal(contractBase58, 1L);
-        relation.setHead(ByteString.copyFrom(nextKey));
+        //update summary
+        summary.setTotal(Math.decrementExact(summary.getTotal()));
+        summary.decreaseTotal(contractBase58, 1L);
+        summary.setHead(ByteString.copyFrom(nextKey));
       }
     }
     else {
@@ -2288,20 +2289,20 @@ public class Manager {
         prev.setLastOperation(getHeadBlockTimeStamp());
         tokenStore.put(prevKey, prev);
 
-        //relation
-        relation.setTotal(Math.decrementExact(relation.getTotal()));
-        relation.decreaseTotal(contractBase58, 1L);
-        relation.setTail(ByteString.copyFrom(prevKey));
+        //update summary
+        summary.setTotal(Math.decrementExact(summary.getTotal()));
+        summary.decreaseTotal(contractBase58, 1L);
+        summary.setTail(ByteString.copyFrom(prevKey));
       }
       else {
         //only one node
-        relation.setTotal(0L);
-        relation.clearTotal(contractBase58);
-        relation.clearTail();
-        relation.clearHead();
+        summary.setTotal(0L);
+        summary.clearTotal(contractBase58);
+        summary.clearTail();
+        summary.clearHead();
       }
     }
-    relationStore.put(owner, relation);
+    summaryStore.put(owner, summary);
     tokenStore.delete(tokenKey);
 
     //update approve relation store

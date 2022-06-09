@@ -27,10 +27,9 @@ public class Urc20WithdrawFutureServlet extends HttpServlet {
       var contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Urc20WithdrawFutureContract.newBuilder();
-      JsonFormat.merge(contract, build, visible);
-      var withdrawCtx = build.build();
-      var tx = urc20.withdrawFuture(withdrawCtx);
+      var builder = Urc20WithdrawFutureContract.newBuilder();
+      JsonFormat.merge(contract, builder, visible);
+      var tx = urc20.withdrawFuture(builder.build());
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

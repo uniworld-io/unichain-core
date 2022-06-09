@@ -6,17 +6,17 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
 public interface Urc20 {
-  Protocol.Transaction transferFrom(Contract.Urc20TransferFromContract contract) throws ContractValidateException;
-  Protocol.Transaction transferOwner(Contract.Urc20TransferOwnerContract contract) throws ContractValidateException;
-  Protocol.Transaction transfer(Contract.Urc20TransferContract contract) throws ContractValidateException;
-  Protocol.Transaction updateParams(Contract.Urc20UpdateParamsContract contract) throws ContractValidateException;
-  Protocol.Transaction withdrawFuture(Contract.Urc20WithdrawFutureContract contract) throws ContractValidateException;
-  Protocol.Transaction burn(Contract.Urc20BurnContract contract) throws ContractValidateException;
-  Protocol.Transaction approve(Contract.Urc20ApproveContract contract) throws ContractValidateException;
-  Protocol.Transaction contributePoolFee(Contract.Urc20ContributePoolFeeContract contract) throws ContractValidateException;
   Protocol.Transaction createContract(Contract.Urc20CreateContract contract) throws ContractValidateException;
-  Protocol.Transaction exchange(Contract.Urc20ExchangeContract contract) throws ContractValidateException;
+  Protocol.Transaction contributePoolFee(Contract.Urc20ContributePoolFeeContract contract) throws ContractValidateException;
+  Protocol.Transaction updateParams(Contract.Urc20UpdateParamsContract contract) throws ContractValidateException;
   Protocol.Transaction mint(Contract.Urc20MintContract contract) throws ContractValidateException;
+  Protocol.Transaction burn(Contract.Urc20BurnContract contract) throws ContractValidateException;
+  Protocol.Transaction withdrawFuture(Contract.Urc20WithdrawFutureContract contract) throws ContractValidateException;
+  Protocol.Transaction transferOwner(Contract.Urc20TransferOwnerContract contract) throws ContractValidateException;
+  Protocol.Transaction exchange(Contract.Urc20ExchangeContract contract) throws ContractValidateException;
+  Protocol.Transaction approve(Contract.Urc20ApproveContract contract) throws ContractValidateException;
+  Protocol.Transaction transferFrom(Contract.Urc20TransferFromContract contract) throws ContractValidateException;
+  Protocol.Transaction transfer(Contract.Urc20TransferContract contract) throws ContractValidateException;
 
   GrpcAPI.NumberMessage allowance(Protocol.Urc20AllowanceQuery query);
   GrpcAPI.NumberMessage balanceOf(Protocol.Urc20BalanceOfQuery query);
@@ -25,7 +25,6 @@ public interface Urc20 {
   GrpcAPI.StringMessage name(Protocol.AddressMessage query);
   GrpcAPI.StringMessage symbol(Protocol.AddressMessage query);
   GrpcAPI.NumberMessage totalSupply(Protocol.AddressMessage query);
-
   Contract.Urc20ContractPage contractList(Protocol.Urc20ContractQuery query);
   Protocol.Urc20FutureTokenPack futureGet(Protocol.Urc20FutureTokenQuery query);
 }

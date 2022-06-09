@@ -1872,13 +1872,13 @@ public class RpcApiService implements Service {
      * Urc20
      */
 
+    @Autowired
+    Urc20 urc20;
+
     @Override
     public void urc20ContractCreate(Contract.Urc20CreateContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        request = request.toBuilder()
-                .setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()))
-                .build();
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20CreateContract).getInstance());
+        responseObserver.onNext(urc20.createContract(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1889,7 +1889,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc20ContributePoolFee(Contract.Urc20ContributePoolFeeContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20ContributePoolFeeContract).getInstance());
+        responseObserver.onNext(urc20.contributePoolFee(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1900,7 +1900,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc20UpdateParams(Contract.Urc20UpdateParamsContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20UpdateParamsContract).getInstance());
+        responseObserver.onNext(urc20.updateParams(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1911,7 +1911,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc20Mint(Contract.Urc20MintContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20MintContract).getInstance());
+        responseObserver.onNext(urc20.mint(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1922,7 +1922,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc20Burn(Contract.Urc20BurnContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20BurnContract).getInstance());
+        responseObserver.onNext(urc20.burn(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1933,7 +1933,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc20WithdrawFuture(Contract.Urc20WithdrawFutureContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20WithdrawFutureContract).getInstance());
+        responseObserver.onNext(urc20.withdrawFuture(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1944,7 +1944,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc20TransferOwner(Contract.Urc20TransferOwnerContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20TransferOwnerContract).getInstance());
+        responseObserver.onNext(urc20.transferOwner(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1955,7 +1955,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc20Exchange(Contract.Urc20ExchangeContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20ExchangeContract).getInstance());
+        responseObserver.onNext(urc20.exchange(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1966,7 +1966,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc20Approve(Contract.Urc20ApproveContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20ApproveContract).getInstance());
+        responseObserver.onNext(urc20.approve(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1977,7 +1977,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc20TransferFrom(Contract.Urc20TransferFromContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20TransferFromContract).getInstance());
+        responseObserver.onNext(urc20.transferFrom(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1988,7 +1988,7 @@ public class RpcApiService implements Service {
     @Override
     public void urc20Transfer(Contract.Urc20TransferContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc20TransferContract).getInstance());
+        responseObserver.onNext(urc20.transfer(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());

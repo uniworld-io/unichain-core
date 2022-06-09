@@ -1,5 +1,6 @@
 package org.unichain.core.actuator.urc20.ext;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.unichain.api.GrpcAPI;
+import org.unichain.common.utils.AddressUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.capsule.urc20.Urc20SpenderCapsule;
 import org.unichain.core.db.Manager;
@@ -39,7 +41,9 @@ public class Urc20Impl implements Urc20 {
     var owner = query.getOwner().toByteArray();
     var contract = query.getAddress().toByteArray();
     var spender = query.getSpender().toByteArray();
-    Assert.isTrue(Wallet.addressValid(owner) && Wallet.addressValid(contract) && Wallet.addressValid(spender), "Bad owner|contract|spender address");
+    Assert.isTrue(Wallet.addressValid(owner)
+            && Wallet.addressValid(contract)
+            && Wallet.addressValid(spender), "Bad owner|contract|spender address");
 
     var spenderKey = Urc20SpenderCapsule.genKey(spender, contract);
     var spenderStore = dbManager.getUrc20SpenderStore();
@@ -90,6 +94,12 @@ public class Urc20Impl implements Urc20 {
 
   @Override
   public Protocol.Transaction createContract(Contract.Urc20CreateContract contract) throws ContractValidateException {
+    /**
+     * Critical: generate address
+     */
+    contract = contract.toBuilder()
+            .setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()))
+            .build();
     return wallet.createTransactionCapsule(contract, Protocol.Transaction.Contract.ContractType.Urc20CreateContract).getInstance();
   }
 

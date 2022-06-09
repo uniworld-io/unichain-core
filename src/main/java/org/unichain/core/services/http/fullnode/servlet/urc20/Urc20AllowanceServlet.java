@@ -35,7 +35,6 @@ public class Urc20AllowanceServlet extends HttpServlet {
       var builder = Protocol.Urc20AllowanceQuery.newBuilder();
       JsonFormat.merge(tokenFilter, builder, visible);
       var query = builder.build();
-      logger.info("Urc20Allowance --> {}" , query);
       var reply = urc20.allowance(query);
       if (reply != null) {
         response.getWriter().println(visible ? JsonFormat.printToString(reply, true) :convertOutput(reply));

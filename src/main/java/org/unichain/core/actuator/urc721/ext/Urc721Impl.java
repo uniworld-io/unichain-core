@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.unichain.api.GrpcAPI;
+import org.unichain.common.utils.AddressUtil;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
@@ -60,6 +61,9 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public Protocol.Transaction createContract(Contract.Urc721CreateContract contract) throws ContractValidateException {
+        contract = contract.toBuilder()
+                .setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()))
+                .build();
         return wallet.createTransactionCapsule(contract, ContractType.Urc721CreateContract).getInstance();
     }
 

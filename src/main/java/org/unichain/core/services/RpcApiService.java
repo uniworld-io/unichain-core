@@ -1461,15 +1461,15 @@ public class RpcApiService implements Service {
       responseObserver.onCompleted();
     }
 
+    @Autowired
+    Urc721 urc721;
+
     /**
      */
     @Override
     public void createUrc721Contract(Contract.Urc721CreateContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        request = request.toBuilder()
-                .setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()))
-                .build();
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.Urc721CreateContract).getInstance());
+        responseObserver.onNext(urc721.createContract(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());

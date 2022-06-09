@@ -1,15 +1,13 @@
 package org.unichain.core.services.http.fullnode.servlet.urc721;
 
 import com.alibaba.fastjson.JSONObject;
-import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.unichain.common.utils.AddressUtil;
+import org.unichain.core.actuator.urc721.ext.Urc721;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
-import org.unichain.core.actuator.urc721.ext.Urc721;
 import org.unichain.protos.Contract;
 
 import javax.servlet.http.HttpServlet;
@@ -31,8 +29,6 @@ public class Urc721CreateContractServlet extends HttpServlet {
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
       var build = Contract.Urc721CreateContract.newBuilder();
-      //generate address
-      build.setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()));
       JsonFormat.merge(contract, build, visible);
       var tx = urc721.createContract(build.build());
       var jsonObject = JSONObject.parseObject(contract);

@@ -2497,21 +2497,21 @@ public class Manager {
       return;
 
     var contractCap = urc721ContractStore.get(contractAddr);
-    var relationCap = urc721MinterContractRelationStore.get(minterAddress);
+    var minterSummary = urc721MinterContractRelationStore.get(minterAddress);
     if(!contractCap.hasPrevOfMinter() && contractCap.hasNextOfMinter()){
       var next = urc721ContractStore.get(contractCap.getNextOfMinter());
       next.clearPrevOfMinter();
       urc721ContractStore.put(next.getKey(), next);
 
-      relationCap.setHead(ByteString.copyFrom(contractCap.getNextOfMinter()));
-      relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
-      urc721MinterContractRelationStore.put(relationCap.getKey(), relationCap);
+      minterSummary.setHead(ByteString.copyFrom(contractCap.getNextOfMinter()));
+      minterSummary.setTotal(Math.subtractExact(minterSummary.getTotal(), 1L));
+      urc721MinterContractRelationStore.put(minterSummary.getKey(), minterSummary);
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();
       urc721ContractStore.put(contractCap.getKey(), contractCap);
     }else if(!contractCap.hasPrevOfMinter() && !contractCap.hasNextOfMinter()){
-      urc721MinterContractRelationStore.delete(relationCap.getKey());
+      urc721MinterContractRelationStore.delete(minterSummary.getKey());
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();
@@ -2521,9 +2521,9 @@ public class Manager {
       prev.clearNextOfMinter();
       urc721ContractStore.put(prev.getKey(), prev);
 
-      relationCap.setTail(ByteString.copyFrom(contractCap.getPrevOfMinter()));
-      relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
-      urc721MinterContractRelationStore.put(relationCap.getKey(), relationCap);
+      minterSummary.setTail(ByteString.copyFrom(contractCap.getPrevOfMinter()));
+      minterSummary.setTotal(Math.subtractExact(minterSummary.getTotal(), 1L));
+      urc721MinterContractRelationStore.put(minterSummary.getKey(), minterSummary);
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();
@@ -2537,8 +2537,8 @@ public class Manager {
       urc721ContractStore.put(prev.getKey(), prev);
       urc721ContractStore.put(next.getKey(), next);
 
-      relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
-      urc721MinterContractRelationStore.put(relationCap.getKey(), relationCap);
+      minterSummary.setTotal(Math.subtractExact(minterSummary.getTotal(), 1L));
+      urc721MinterContractRelationStore.put(minterSummary.getKey(), minterSummary);
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();

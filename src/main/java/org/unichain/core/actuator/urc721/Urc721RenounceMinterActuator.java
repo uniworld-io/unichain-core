@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
+import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
@@ -45,8 +46,8 @@ public class Urc721RenounceMinterActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(Urc721RenounceMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var contractKey = ctx.getAddress().toByteArray();
-      dbManager.removeMinterContract(ownerAddr, contractKey);
+      var contractAddress = ctx.getAddress().toByteArray();
+      dbManager.removeMinterContract(ownerAddr, contractAddress);
       chargeFee(ownerAddr, fee);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
@@ -67,13 +68,15 @@ public class Urc721RenounceMinterActuator extends AbstractActuator {
 
       val ctx = this.contract.unpack(Urc721RenounceMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var contractKey = ctx.getAddress().toByteArray();
+      var contractAddr = ctx.getAddress().toByteArray();
+
       var accountStore = dbManager.getAccountStore();
       var contractStore = dbManager.getUrc721ContractStore();
 
-      Assert.isTrue(accountStore.has(ownerAddr), "Not found owner account");
-      Assert.isTrue(contractStore.has(contractKey), "Not found contract");
-      var contract = contractStore.get(contractKey);
+      Assert.isTrue(Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
+              && Wallet.addressValid(contractAddr) && contractStore.has(contractAddr), "Bad owner|contract address: invalid or missing" );
+
+      var contract = contractStore.get(contractAddr);
       Assert.isTrue(contract.hasMinter() && Arrays.equals(ownerAddr, contract.getMinter()), "Minter not exist or un-matched");
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= calcFee(), "Not enough balance to cover fee");
       return true;

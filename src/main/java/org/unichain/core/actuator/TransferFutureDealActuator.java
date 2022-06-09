@@ -2,6 +2,7 @@ package org.unichain.core.actuator;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
@@ -19,9 +20,11 @@ import org.unichain.protos.Protocol;
 
 import java.util.Arrays;
 
-//@todo add amount to break future deal to smaller deals
 @Slf4j(topic = "actuator")
 public class TransferFutureDealActuator extends AbstractActuator {
+  private static Descriptors.FieldDescriptor TRANSFER_FUTURE_DEAL_FIELD_AMT = Contract.FutureDealTransferContract.getDescriptor().findFieldByNumber(Contract.FutureDealTransferContract.AMOUNT_FIELD_NUMBER);
+  private static Descriptors.FieldDescriptor TRANSFER_FUTURE_DEAL_FIELD_DEAL_ID = Contract.FutureDealTransferContract.getDescriptor().findFieldByNumber(Contract.FutureDealTransferContract.DEAL_ID_FIELD_NUMBER);
+
   public TransferFutureDealActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
@@ -31,18 +34,26 @@ public class TransferFutureDealActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var accountStore = dbManager.getAccountStore();
+      var futureStore = dbManager.getFutureTransferStore();
 
       var ctx = contract.unpack(Contract.FutureDealTransferContract.class);
       var ownerAddress = ctx.getOwnerAddress().toByteArray();
       var toAddress = ctx.getToAddress().toByteArray();
       var dealId = ctx.getDealId();
 
+      //create toAddress
       if (!accountStore.has(toAddress)) {
         createDefaultAccount(toAddress);
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
-      transferFutureDeal(ownerAddress, toAddress, dealId);
+      //real amount
+      var dealKey = Util.makeFutureTransferIndexKey(ownerAddress, Util.makeDayTick(dealId));
+      var futureDeal = futureStore.get(dealKey);
+      var amt = ctx.hasField(TRANSFER_FUTURE_DEAL_FIELD_AMT) ? ctx.getAmount() : futureDeal.getBalance();
+
+      ActuatorUtil.detachFutureDeal(dbManager, ownerAddress, dealKey, amt);
+      ActuatorUtil.addFutureDeal(dbManager, toAddress, amt, dealId);
 
       chargeFee(ownerAddress, fee);
       ret.setStatus(fee, Protocol.Transaction.Result.code.SUCESS);
@@ -62,36 +73,39 @@ public class TransferFutureDealActuator extends AbstractActuator {
       Assert.isTrue(contract.is(Contract.FutureDealTransferContract.class), "Contract type error,expected type [FutureDealTransferContract], real type[" + contract.getClass() + "]");
 
       var ctx = this.contract.unpack(Contract.FutureDealTransferContract.class);
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var toAddress = ctx.getToAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-      Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var toAddr = ctx.getToAddress().toByteArray();
+      Assert.isTrue(ctx.hasField(TRANSFER_FUTURE_DEAL_FIELD_DEAL_ID) && ctx.getDealId() > 0, "Missing or invalid dealId");
 
-      Assert.isTrue(!Arrays.equals(toAddress, ownerAddress), "Cannot transfer to yourself");
+      Assert.isTrue(Wallet.addressValid(ownerAddr), "Invalid ownerAddress");
+      Assert.isTrue(Wallet.addressValid(toAddr), "Invalid toAddress");
+      Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Cannot transfer to yourself");
 
-      var ownerAccount = dbManager.getAccountStore().get(ownerAddress);
-      Assert.notNull(ownerAccount, "no OwnerAccount found");
+      var accountStore = dbManager.getAccountStore();
+      Assert.isTrue(accountStore.has(ownerAddr), "Unrecognized owner account");
 
-      var toAccount = dbManager.getAccountStore().get(toAddress);
+      var toAccount = accountStore.get(toAddr);
+
       var fee = calcFee();
       if (toAccount == null) {
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+      }
+      else {
+        Assert.isTrue(toAccount.getType() == Protocol.AccountType.Normal, "Allow transfer to normal account only!");
       }
 
       /**
         Check if owner doesn't have locked tick
       */
-      var tickDay = Util.makeDayTick(ctx.getDealId());
-      var tickKey = Util.makeFutureTransferIndexKey(ownerAddress, tickDay);
+      var dealId = Util.makeFutureTransferIndexKey(ownerAddr, Util.makeDayTick(ctx.getDealId()));
       var futureStore = dbManager.getFutureTransferStore();
-      Assert.isTrue(futureStore.has(tickKey), "OwnerAddress doesn't have future locked with deal id " + ctx.getDealId());
+      Assert.isTrue(futureStore.has(dealId) && futureStore.get(dealId).getBalance() > 0, "No future deal or not enough balance " + ctx.getDealId());
 
-      if(toAccount != null){
-        Assert.isTrue(toAccount.getType() == Protocol.AccountType.Normal, "Transfer to normal account only");
+      if(ctx.hasField(TRANSFER_FUTURE_DEAL_FIELD_AMT)){
+        Assert.isTrue(ctx.getAmount() > 0 && ctx.getAmount() <= futureStore.get(dealId).getBalance(), "Invalid amount");
       }
 
-      var balance = ownerAccount.getBalance();
-      Assert.isTrue(balance > fee, "Validate TransferContract error, balance is not sufficient");
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() > fee, "Validate TransferContract error, balance is not sufficient");
 
       return true;
     } catch (Exception e) {
@@ -108,19 +122,5 @@ public class TransferFutureDealActuator extends AbstractActuator {
   @Override
   public long calcFee() {
     return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
-  }
-
-  private void transferFutureDeal(byte[] ownerAddress, byte[] toAddress, long dealId) {
-    var tickDay = Util.makeDayTick(dealId);
-    var tickKey = Util.makeFutureTransferIndexKey(ownerAddress, tickDay);
-
-    var futureStore = dbManager.getFutureTransferStore();
-    var futureDeal = futureStore.get(tickKey);
-
-    //@todo review
-    ActuatorUtil.removeFutureDeal(dbManager, ownerAddress, futureDeal);
-    ActuatorUtil.addFutureDeal(dbManager, toAddress, futureDeal.getBalance(), dealId);
-
-    futureStore.delete(tickKey);
   }
 }

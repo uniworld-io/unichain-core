@@ -36,6 +36,7 @@ public class Urc721TokenListServlet extends HttpServlet {
       jsonObject.put("owner_type", ownerType);
       jsonObject.put("page_size", pageSize);
       jsonObject.put("page_index", pageIndex);
+
       JsonFormat.merge(jsonObject.toJSONString(), build, visible);
       Protocol.Urc721TokenPage reply = urc721.listToken(build.build());
       if (reply != null) {

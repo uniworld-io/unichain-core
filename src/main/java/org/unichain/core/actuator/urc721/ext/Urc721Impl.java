@@ -49,6 +49,8 @@ public class Urc721Impl implements Urc721 {
     public static Descriptors.FieldDescriptor URC721_CONTRACT_QUERY_FIELD_PAGE_SIZE = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.PAGE_SIZE_FIELD_NUMBER);
     public static Descriptors.FieldDescriptor URC721_CONTRACT_QUERY_FIELD_PAGE_INDEX = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.PAGE_INDEX_FIELD_NUMBER);
     public static Descriptors.FieldDescriptor URC721_CONTRACT_QUERY_FIELD_OWNER_ADDR = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.OWNER_ADDRESS_FIELD_NUMBER);
+    public static Descriptors.FieldDescriptor URC721_CONTRACT_QUERY_FIELD_TYPE = Protocol.Urc721ContractQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ContractQuery.OWNER_TYPE_FIELD_NUMBER);
+
 
     public static Descriptors.FieldDescriptor URC721_TOKEN_QUERY_FIELD_ADDR = Protocol.Urc721TokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenQuery.ADDRESS_FIELD_NUMBER);
     public static Descriptors.FieldDescriptor URC721_TOKEN_QUERY_FIELD_ID = Protocol.Urc721TokenQuery.getDescriptor().findFieldByNumber(Protocol.Urc721TokenQuery.ID_FIELD_NUMBER);
@@ -187,31 +189,41 @@ public class Urc721Impl implements Urc721 {
     @Override
     public Protocol.Urc721ContractPage listContract(Protocol.Urc721ContractQuery query) {
         Assert.isTrue(query.hasField(URC721_CONTRACT_QUERY_FIELD_OWNER_ADDR), "Owner address null");
+        Assert.isTrue(query.hasField(URC721_CONTRACT_QUERY_FIELD_TYPE)
+                && ("owner".equalsIgnoreCase(query.getOwnerType()) || "minter".equalsIgnoreCase(query.getOwnerType())),
+                "Bad type: missing or invalid value, required minter|owner");
 
         int pageSize = query.hasField(URC721_CONTRACT_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
         int pageIndex = query.hasField(URC721_CONTRACT_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
+
         Assert.isTrue((pageSize > 0) && (pageIndex >= 0) && (pageSize <= MAX_PAGE_SIZE), "Invalid paging info");
 
         var ownerAddr = query.getOwnerAddress().toByteArray();
+        Assert.isTrue(Wallet.addressValid(ownerAddr), "Invalid owner address");
+
         List<Protocol.Urc721Contract> unsorted = new ArrayList<>();
-        var relationStore = dbManager.getUrc721AccountContractRelationStore();
+        var summaryStore = dbManager.getUrc721AccountContractRelationStore();
+        var minterSummaryStore = dbManager.getUrc721MinterContractRelationStore();
         var contractStore = dbManager.getUrc721ContractStore();
 
-        if ("owner".equalsIgnoreCase(query.getOwnerType()) && relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0) {
-            var start = contractStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
+        if ("owner".equalsIgnoreCase(query.getOwnerType()) && summaryStore.has(ownerAddr) && summaryStore.get(ownerAddr).getTotal() > 0) {
+            var summary = summaryStore.get(ownerAddr);
+            var start = contractStore.get(summary.getHead().toByteArray());
             while (true) {
                 unsorted.add(start.getInstance());
                 if (start.hasNext()) {
                     start = contractStore.get(start.getNext());
+                    continue;
                 } else {
                     break;
                 }
             }
         }
-        var minterRelationStore = dbManager.getUrc721MinterContractRelationStore();
-        if("minter".equalsIgnoreCase(query.getOwnerType()) && minterRelationStore.has(ownerAddr) && minterRelationStore.get(ownerAddr).getTotal() > 0){
-            var relation = minterRelationStore.get(ownerAddr);
-            var start = contractStore.get(relation.getHead().toByteArray());
+
+
+        if("minter".equalsIgnoreCase(query.getOwnerType()) && minterSummaryStore.has(ownerAddr) && minterSummaryStore.get(ownerAddr).getTotal() > 0){
+            var minterSummary = minterSummaryStore.get(ownerAddr);
+            var start = contractStore.get(minterSummary.getHead().toByteArray());
             while (true){
                 unsorted.add(start.getInstance());
                 if(start.hasNextOfMinter()){
@@ -222,6 +234,7 @@ public class Urc721Impl implements Urc721 {
             }
         }
 
+        //because new builder: clear action dont modify root info!
         unsorted = unsorted.stream()
                 .map(item -> item.toBuilder()
                         .clearNext()
@@ -247,7 +260,7 @@ public class Urc721Impl implements Urc721 {
         Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
         var ownerAddr = query.getOwnerAddress().toByteArray();
-        var ownerType = query.getOwnerType();
+        var ownerType = query.getOwnerType().toLowerCase();
 
         var contractAddr = query.getAddress();
         var hasContractAddr = query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_ADDR);
@@ -279,11 +292,11 @@ public class Urc721Impl implements Urc721 {
 
     private List<Protocol.Urc721Token> listTokenByOwner(byte[] ownerAddr, Predicate<Urc721TokenCapsule> filter){
         var unsorted = new ArrayList<Protocol.Urc721Token>();
-        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
+        var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
         var tokenStore = dbManager.getUrc721TokenStore();
 
-        if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0){
-            var start = tokenStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
+        if(summaryStore.has(ownerAddr) && summaryStore.get(ownerAddr).getTotal() > 0){
+            var start = tokenStore.get(summaryStore.get(ownerAddr).getHead().toByteArray());
             while (true){
                 if(filter.test(start))
                     unsorted.add(start.getInstance());
@@ -300,22 +313,22 @@ public class Urc721Impl implements Urc721 {
     private List<Protocol.Urc721Token> listTokenByApproved(byte[] operatorAddr, Predicate<Urc721TokenCapsule> filter){
         var tokenStore = dbManager.getUrc721TokenStore();
         var approvedStore = dbManager.getUrc721TokenApproveRelationStore();
-        var accTokenRelationStore = dbManager.getUrc721AccountTokenRelationStore();
+        var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
         var result = new ArrayList<Protocol.Urc721Token>();
 
-        if(accTokenRelationStore.has(operatorAddr) && accTokenRelationStore.get(operatorAddr).getTotalApprove() > 0){
-            var accTokenRelation = accTokenRelationStore.get(operatorAddr);
-            var approveRelation = approvedStore.get(accTokenRelation.getHeadApprove());
+        if(summaryStore.has(operatorAddr) && summaryStore.get(operatorAddr).getTotalApprove() > 0){
+            var summary = summaryStore.get(operatorAddr);
+            var approveIndex = approvedStore.get(summary.getHeadApprove());
             while (true){
-                if(tokenStore.has(approveRelation.getKey()))
+                if(tokenStore.has(approveIndex.getKey()))
                 {
-                    var tmpToken = tokenStore.get(approveRelation.getKey());
+                    var tmpToken = tokenStore.get(approveIndex.getKey());
                     if(filter.test(tmpToken))
                         result.add(tmpToken.getInstance());
                 }
 
-                if(approveRelation.hasNext()) {
-                    approveRelation = approvedStore.get(approveRelation.getNext());
+                if(approveIndex.hasNext()) {
+                    approveIndex = approvedStore.get(approveIndex.getNext());
                 } else {
                     break;
                 }
@@ -326,13 +339,13 @@ public class Urc721Impl implements Urc721 {
 
     private List<Protocol.Urc721Token> listTokenByApprovedForAll(byte[] operatorAddr, Predicate<Urc721TokenCapsule> filter){
         var result = new ArrayList<Protocol.Urc721Token>();
-        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
-        relationStore.get(operatorAddr).getApproveAllMap().forEach((ownerBase58, contracts) -> {
+        var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
+        summaryStore.get(operatorAddr).getApproveAllMap().forEach((ownerBase58, contracts) -> {
             contracts.getContractsMap().forEach((contractBase58, approved) -> {
                 if(approved){
                     var owner = Wallet.decodeFromBase58Check(ownerBase58);
-                    if (relationStore.has(owner)) {
-                        var ownerRelationCap = relationStore.get(owner);
+                    if (summaryStore.has(owner)) {
+                        var ownerRelationCap = summaryStore.get(owner);
                         Predicate<Urc721TokenCapsule> filter0 = cap -> (Arrays.equals(cap.getAddr(), Wallet.decodeFromBase58Check(contractBase58))) && filter.test(cap);
                         result.addAll(listTokenByOwner(ownerRelationCap.getInstance().getOwnerAddress().toByteArray(), filter0));
                     }

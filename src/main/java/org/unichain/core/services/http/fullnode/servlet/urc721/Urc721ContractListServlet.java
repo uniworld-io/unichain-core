@@ -30,12 +30,14 @@ public class Urc721ContractListServlet extends HttpServlet {
       var pageSize = Long.parseLong(request.getParameter("page_size"));
       var pageIndex = Long.parseLong(request.getParameter("page_index"));
       var ownerType = request.getParameter("owner_type");
-      var builder = Protocol.Urc721ContractQuery.newBuilder();
+
       var jsonObject = new JSONObject();
       jsonObject.put("owner_address", address);
       jsonObject.put("page_size", pageSize);
       jsonObject.put("page_index", pageIndex);
       jsonObject.put("owner_type", StringUtils.isEmpty(ownerType) ? "OWNER" : ownerType);
+
+      var builder = Protocol.Urc721ContractQuery.newBuilder();
       JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
 
       var reply = urc721.listContract(builder.build());

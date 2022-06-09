@@ -28,9 +28,9 @@ public class Urc20ExchangeServlet extends HttpServlet {
       var contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Urc20ExchangeContract.newBuilder();
-      JsonFormat.merge(contract, build, visible);
-      var tx = urc20.exchange(build.build());
+      var builder = Urc20ExchangeContract.newBuilder();
+      JsonFormat.merge(contract, builder, visible);
+      var tx = urc20.exchange(builder.build());
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

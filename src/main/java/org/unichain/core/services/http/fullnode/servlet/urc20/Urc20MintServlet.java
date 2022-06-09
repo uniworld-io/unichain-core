@@ -27,10 +27,9 @@ public class Urc20MintServlet extends HttpServlet {
       var contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.Urc20MintContract.newBuilder();
-      JsonFormat.merge(contract, build, visible);
-      var mineCtx = build.build();
-      var tx = urc20.mint(mineCtx);
+      var builder = Contract.Urc20MintContract.newBuilder();
+      JsonFormat.merge(contract, builder, visible);
+      var tx = urc20.mint(builder.build());
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

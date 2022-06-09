@@ -732,6 +732,9 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       /**
        * Urc721
        */
+      case FutureDealTransferContract:
+        clazz = FutureDealTransferContract.class;
+        break;
       case Urc721CreateContract:
         clazz = Urc721CreateContract.class;
         break;
@@ -1130,6 +1133,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
   public static void checkMinSupportedBlockVersion(ContractType txType, int blockNum) throws ContractValidateException{
     try {
       switch (txType) {
+        case FutureDealTransferContract:
         case Urc721CreateContract:
         case Urc721MintContract:
         case Urc721AddMinterContract:

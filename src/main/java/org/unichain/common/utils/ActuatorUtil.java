@@ -175,6 +175,7 @@ public class ActuatorUtil {
     }
   }
 
+  //@todo review
   public static void removeFutureDeal(Manager dbManager, byte[] ownerAddress, FutureTransferCapsule futureTick) {
     var futureStore = dbManager.getFutureTransferStore();
     var accountStore = dbManager.getAccountStore();

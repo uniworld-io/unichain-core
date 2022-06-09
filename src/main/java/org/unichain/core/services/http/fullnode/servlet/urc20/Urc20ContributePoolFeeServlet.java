@@ -27,10 +27,9 @@ public class Urc20ContributePoolFeeServlet extends HttpServlet {
       var contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Urc20ContributePoolFeeContract.newBuilder();
-      JsonFormat.merge(contract, build, visible);
-      var contributeCtx = build.build();
-      var tx = urc20.contributePoolFee(contributeCtx);
+      var builder = Urc20ContributePoolFeeContract.newBuilder();
+      JsonFormat.merge(contract, builder, visible);
+      var tx = urc20.contributePoolFee(builder.build());
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);
       response.getWriter().println(Util.printCreateTransaction(tx, visible));

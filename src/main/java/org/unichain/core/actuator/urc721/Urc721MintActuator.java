@@ -149,7 +149,7 @@ public class Urc721MintActuator extends AbstractActuator {
       Assert.isTrue(dbManager.getUrc721ContractStore().has(contractAddr), "Contract symbol not existed!");
       var contractCap = dbManager.getUrc721ContractStore().get(contractAddr);
       Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwner()) || (contractCap.hasMinter() && Arrays.equals(ownerAddr, contractCap.getMinter())), "Only owner or minter allowed to mint token");
-      Assert.isTrue(!(Arrays.equals(toAddr, contractCap.getOwner()) || Arrays.equals(toAddr, contractCap.getMinter())), "Can not create token for minter or owner!");
+      Assert.isTrue(!(Arrays.equals(toAddr, contractCap.getOwner()) || (contractCap.hasMinter() && Arrays.equals(toAddr, contractCap.getMinter()))), "Can not create token for minter or owner!");
       Assert.isTrue(contractCap.getTokenIndex() < contractCap.getTotalSupply(), "Over slot token mint!");
       Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Not enough balance to cover transaction fee, require "+ fee + "ginza");
 

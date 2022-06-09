@@ -2114,44 +2114,55 @@ public class Manager {
     }
   }
 
-  public void saveUrc721Contract(Urc721ContractCapsule contractCap){
+  /**
+   *  - just store one summary of owner-contracts relations: [ owner, head, tail, total]
+   *  - the summary point to head and tail of contract list that stored on contract store
+   *  - contract store save contracts as list by owner:  [...next, prev...]
+   *  - indexing minter if exist
+   */
+  public void saveUrc721Contract(final Urc721ContractCapsule contractCap){
     var contractStore = getUrc721ContractStore();
-    var accCtxRelStore = getUrc721AccountContractRelationStore();
+    var accContractSummaryStore = getUrc721AccountContractRelationStore();
 
-    var relKey = contractCap.getOwner();
+    var summaryKey = contractCap.getOwner();
 
-    if(!accCtxRelStore.has(relKey)){
-      var templateKey = contractCap.getKey();
+    if(!accContractSummaryStore.has(summaryKey)){
+      //save contract
+      var contractAddr = contractCap.getKey();
       contractCap.clearNext();
       contractCap.clearPrev();
-      contractStore.put(templateKey, contractCap);
+      contractStore.put(contractAddr, contractCap);
 
-      var relation = new Urc721AccountContractRelationCapsule(relKey,
+      //save relation
+      var summary = new Urc721AccountContractRelationCapsule(summaryKey,
               Protocol.Urc721AccountContractRelation.newBuilder()
-                      .setOwnerAddress(ByteString.copyFrom(relKey))
-                      .setHead(ByteString.copyFrom(templateKey))
-                      .setTail(ByteString.copyFrom(templateKey))
+                      .setOwnerAddress(ByteString.copyFrom(summaryKey))
+                      .setHead(ByteString.copyFrom(contractAddr))
+                      .setTail(ByteString.copyFrom(contractAddr))
                       .setTotal(1L)
                       .build());
-      accCtxRelStore.put(relKey, relation);
+      accContractSummaryStore.put(summaryKey, summary);
     }
     else {
-      var relation = accCtxRelStore.get(relKey);
-      var tailKey = relation.getTail().toByteArray();
-      var tailCap = contractStore.get(tailKey);
+      var summary = accContractSummaryStore.get(summaryKey);
+      var currentTailKey = summary.getTail().toByteArray();
+      var currentTailCap = contractStore.get(currentTailKey);
 
-      var templateKey = contractCap.getKey();
-      relation.setTotal(Math.incrementExact(relation.getTotal()));
-      relation.setTail(ByteString.copyFrom(templateKey));
-      accCtxRelStore.put(relKey, relation);
+      var newContractAddr = contractCap.getKey();
+
+      summary.setTotal(Math.incrementExact(summary.getTotal()));
+      summary.setTail(ByteString.copyFrom(newContractAddr));
+      accContractSummaryStore.put(summaryKey, summary);
 
       contractCap.clearNext();
-      contractCap.setPrev(tailKey);
-      contractStore.put(templateKey, contractCap);
+      contractCap.setPrev(currentTailKey);
+      contractStore.put(newContractAddr, contractCap);
 
-      tailCap.setNext(templateKey);
-      contractStore.put(tailKey, tailCap);
+      currentTailCap.setNext(newContractAddr);
+      contractStore.put(currentTailKey, currentTailCap);
     }
+
+    //indexing minter
     if(contractCap.hasMinter()){
       addMinterContractRelation(contractCap);
     }
@@ -2431,29 +2442,37 @@ public class Manager {
     approveStore.delete(tokenId);
   }
 
-  public void addMinterContractRelation(Urc721ContractCapsule contractCap){
+  /**
+   * Indexing minter
+   * @param contractCap
+   */
+  public void addMinterContractRelation(final Urc721ContractCapsule contractCap){
+    Assert.isTrue(contractCap.hasMinter(), "Minter not set");
     var minterAddress = contractCap.getMinter();
     if(!urc721MinterContractRelationStore.has(minterAddress)){
+      //update minter index
       contractCap.clearNextOfMinter();
       contractCap.clearPrevOfMinter();
       urc721ContractStore.put(contractCap.getKey(), contractCap);
 
-      var relation = Protocol.Urc721AccountContractRelation.newBuilder()
-              .setOwnerAddress(ByteString.copyFrom(minterAddress))
-              .setHead(ByteString.copyFrom(contractCap.getKey()))
-              .setTail(ByteString.copyFrom(contractCap.getKey()))
-              .setTotal(1L)
-              .build();
-      urc721MinterContractRelationStore.put(minterAddress, new Urc721AccountContractRelationCapsule(minterAddress, relation));
+      //save relation
+      var summary = new Urc721AccountContractRelationCapsule(minterAddress,
+              Protocol.Urc721AccountContractRelation.newBuilder()
+                      .setOwnerAddress(ByteString.copyFrom(minterAddress))
+                      .setHead(ByteString.copyFrom(contractCap.getKey()))
+                      .setTail(ByteString.copyFrom(contractCap.getKey()))
+                      .setTotal(1L)
+                      .build());
+      urc721MinterContractRelationStore.put(minterAddress, summary);
     }else {
       var relationCap = urc721MinterContractRelationStore.get(minterAddress);
-      var tail  = urc721ContractStore.get(relationCap.getTail().toByteArray());
+      var currentTailContract  = urc721ContractStore.get(relationCap.getTail().toByteArray());
 
-      tail.setNextOfMinter(contractCap.getKey());
-      urc721ContractStore.put(tail.getKey(), tail);
+      currentTailContract.setNextOfMinter(contractCap.getKey());
+      urc721ContractStore.put(currentTailContract.getKey(), currentTailContract);
 
       contractCap.clearNextOfMinter();
-      contractCap.setPrevOfMinter(tail.getKey());
+      contractCap.setPrevOfMinter(currentTailContract.getKey());
       urc721ContractStore.put(contractCap.getKey(), contractCap);
 
       relationCap.setTail(ByteString.copyFrom(contractCap.getKey()));
@@ -2464,11 +2483,10 @@ public class Manager {
 
   public void removeMinterContract(byte[] minterAddress, byte[] contractAddr){
     urc721ContractStore.clearMinterOf(contractAddr);
-    var contractCap = urc721ContractStore.get(contractAddr);
-
-    if(!urc721MinterContractRelationStore.has(minterAddress))
+    if(Objects.isNull(minterAddress) || !urc721MinterContractRelationStore.has(minterAddress))
       return;
 
+    var contractCap = urc721ContractStore.get(contractAddr);
     var relationCap = urc721MinterContractRelationStore.get(minterAddress);
     if(!contractCap.hasPrevOfMinter() && contractCap.hasNextOfMinter()){
       var next = urc721ContractStore.get(contractCap.getNextOfMinter());

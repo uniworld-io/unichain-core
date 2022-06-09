@@ -70,12 +70,12 @@ public class Urc721RemoveMinterActuator extends AbstractActuator {
 
       val ctx = this.contract.unpack(Urc721RemoveMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var contractKey = ctx.getAddress().toByteArray();
+      var contractAddr = ctx.getAddress().toByteArray();
       var accountStore = dbManager.getAccountStore();
 
       Assert.isTrue(accountStore.has(ownerAddr), "Owner account not exist");
 
-      var contractCap = dbManager.getUrc721ContractStore().get(contractKey);
+      var contractCap = dbManager.getUrc721ContractStore().get(contractAddr);
       Assert.notNull(contractCap, "Contract not found");
       Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwner()), "Not owner of contract");
       Assert.isTrue(contractCap.hasMinter(), "Minter not set");

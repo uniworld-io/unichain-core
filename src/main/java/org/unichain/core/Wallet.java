@@ -873,13 +873,6 @@ public class Wallet {
         .setValue(dbManager.getDynamicPropertiesStore().getWitness55PayPerBlock())
         .build());
 
-    //    NFT_ISSUE_FEE, //drop ,40
-    builder.addChainParameter(
-            Protocol.ChainParameters.ChainParameter.newBuilder()
-                    .setKey("getNftIssueFee")
-                    .setValue(dbManager.getDynamicPropertiesStore().getNftIssueFee())
-                    .build());
-
     return builder.build();
   }
 

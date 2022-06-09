@@ -30,6 +30,7 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.Urc721AddMinterContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -48,8 +49,10 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc721AddMinterContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var minterAddr = ctx.getMinter().toByteArray();
-      var accStore = dbManager.getAccountStore();
       var contractAddr = ctx.getAddress().toByteArray();
+
+      var accStore = dbManager.getAccountStore();
+      var contractStore = dbManager.getUrc721ContractStore();
 
       //create new account
       if (!accStore.has(minterAddr)) {
@@ -58,11 +61,12 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       }
 
       //save relation
-      var contractStore = dbManager.getUrc721ContractStore();
       var contract = contractStore.get(contractAddr);
       var currentMinter = contract.getMinter();
       dbManager.removeMinterContract(currentMinter, contractAddr);
 
+      //load again then add minter
+      contract = contractStore.get(contractAddr);
       contract.setMinter(ctx.getMinter());
       contractStore.put(contractAddr, contract);
       dbManager.addMinterContractRelation(contract);
@@ -86,17 +90,18 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(contract.is(Urc721AddMinterContract.class), "contract type error, expected type [Urc721AddMinterContract], real type[" + contract.getClass() + "]");
 
-      val ctx = this.contract.unpack(Urc721AddMinterContract.class);
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var minterAddr = ctx.getMinter().toByteArray();
-      var contractAddr = ctx.getAddress().toByteArray();
       var accStore = dbManager.getAccountStore();
       var contractStore = dbManager.getUrc721ContractStore();
+
+      val ctx = this.contract.unpack(Urc721AddMinterContract.class);
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var contractAddr = ctx.getAddress().toByteArray();
+      var minterAddr = ctx.getMinter().toByteArray();
 
       Assert.isTrue(accStore.has(ownerAddr), "Owner account not exist");
       Assert.isTrue(Wallet.addressValid(minterAddr), "Minter address not active or not exists");
       Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
-      Assert.isTrue(contractStore.has(contractAddr), "Contract symbol not exist");
+      Assert.isTrue(contractStore.has(contractAddr), "Contract address not exist");
       var contractCap = contractStore.get(contractAddr);
       Assert.isTrue(Arrays.equals(contractCap.getOwner(), ownerAddr), "Not owner of contract");
 
@@ -105,8 +110,11 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       {
         fee = Math.addExact(dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract(), fee);
       }
+      else {
+        Assert.isTrue(accStore.get(minterAddr).getType() == Protocol.AccountType.Normal, "Minter must be normal address");
+      }
       Assert.isTrue(accStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
-      Assert.isTrue(!contractCap.hasMinter() || (!Arrays.equals(contractCap.getMinter(), ctx.getMinter().toByteArray())), "Already minter");
+      Assert.isTrue(!contractCap.hasMinter() || (!Arrays.equals(contractCap.getMinter(), minterAddr)), "Already minter");
       Assert.isTrue(!TransactionUtil.isGenesisAddress(minterAddr), "Minter is genesis address");
 
       return true;

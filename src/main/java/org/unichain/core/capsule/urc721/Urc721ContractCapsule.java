@@ -122,7 +122,7 @@ public class Urc721ContractCapsule implements ProtoCapsule<Urc721Contract> {
   }
 
   public byte[] getMinter() {
-    return this.contract.getMinter().toByteArray();
+    return hasMinter() ? contract.getMinter().toByteArray() : null;
   }
 
   public boolean hasMinter(){

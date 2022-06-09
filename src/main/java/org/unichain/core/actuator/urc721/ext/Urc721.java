@@ -9,7 +9,6 @@ public interface Urc721 {
     //contracts
     Protocol.Transaction createContract(Contract.Urc721CreateContract contract) throws ContractValidateException;
     Protocol.Transaction mint(Contract.Urc721MintContract contract) throws ContractValidateException;
-    Protocol.Urc721Token getToken(Protocol.Urc721TokenQuery query);
     Protocol.Transaction burnToken(Contract.Urc721BurnContract contract) throws ContractValidateException;
     Protocol.Transaction addMinter(Contract.Urc721AddMinterContract contract) throws ContractValidateException;
     Protocol.Transaction removeMinter(Contract.Urc721RemoveMinterContract contract) throws ContractValidateException;
@@ -27,7 +26,8 @@ public interface Urc721 {
     Protocol.AddressMessage ownerOf(Protocol.Urc721TokenQuery msg);
     Protocol.AddressMessage getApproved(Protocol.Urc721TokenQuery query);
     Protocol.BoolMessage isApprovedForAll(Protocol.Urc721IsApprovedForAllQuery query);
-    Protocol.Urc721Contract getContract(Protocol.AddressMessage query);
     Protocol.Urc721ContractPage listContract(Protocol.Urc721ContractQuery query);
+    Protocol.Urc721Contract getContract(Protocol.AddressMessage query);
     Protocol.Urc721TokenPage listToken(Protocol.Urc721TokenListQuery query);
+    Protocol.Urc721Token getToken(Protocol.Urc721TokenQuery query);
 }

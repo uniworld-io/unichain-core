@@ -83,16 +83,19 @@ public class Urc721TokenCapsule implements ProtoCapsule<Protocol.Urc721Token> {
     token = token.toBuilder().setApproval(ByteString.copyFrom(approval)).build();
   }
 
-  public void setOwner(ByteString owner){
+  public Urc721TokenCapsule setOwner(ByteString owner){
     token = token.toBuilder().setOwnerAddress(owner).build();
+    return this;
   }
 
-  public void setLastOperation(long lastOperation){
+  public Urc721TokenCapsule setLastOperation(long lastOperation){
     token = token.toBuilder().setLastOperation(lastOperation).build();
+    return this;
   }
 
-  public void clearApproval(){
+  public Urc721TokenCapsule clearApproval(){
     token = token.toBuilder().clearApproval().build();
+    return this;
   }
 
   public byte[] getOwner(){
@@ -115,12 +118,14 @@ public class Urc721TokenCapsule implements ProtoCapsule<Protocol.Urc721Token> {
     token = token.toBuilder().setPrev(ByteString.copyFrom(prev)).build();
   }
 
-  public void clearNext(){
+  public Urc721TokenCapsule clearNext(){
     this.token = token.toBuilder().clearNext().build();
+    return this;
   }
 
-  public void clearPrev(){
+  public Urc721TokenCapsule clearPrev(){
     this.token = token.toBuilder().clearPrev().build();
+    return this;
   }
 
   public boolean hasPrev(){

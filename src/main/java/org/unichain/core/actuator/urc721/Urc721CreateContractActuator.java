@@ -25,10 +25,9 @@ import org.apache.commons.codec.binary.Hex;
 import org.springframework.util.Assert;
 import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.Urc721ContractCreatedEvent;
-import org.unichain.common.utils.StringUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
-import org.unichain.core.capsule.*;
+import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.urc721.Urc721ContractCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
@@ -57,12 +56,11 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       var owner = ctx.getOwnerAddress().toByteArray();
       var tokenAddr = ctx.getAddress().toByteArray();
 
+      //save contract
       dbManager.saveUrc721Contract(new Urc721ContractCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
 
-      //register new account with type asset_issue
-      var defaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
-      var tokenAccount = new AccountCapsule(ByteString.copyFrom(tokenAddr), Protocol.AccountType.AssetIssue, dbManager.getHeadBlockTimeStamp(), defaultPermission, dbManager);
-      dbManager.getAccountStore().put(tokenAddr, tokenAccount);
+      //create asset_issue account
+      createDefaultAssetIssueAccount(tokenAddr);
 
       chargeFee(owner, fee);
       dbManager.burnFee(fee);
@@ -99,33 +97,39 @@ public class Urc721CreateContractActuator extends AbstractActuator {
 
       val ctx = this.contract.unpack(Urc721CreateContract.class);
       var accountStore = dbManager.getAccountStore();
+      var contractStore = dbManager.getUrc721ContractStore();
+      var fee = calcFee();
 
-      var addr = ctx.getAddress().toByteArray();
+      var contractAddr = ctx.getAddress().toByteArray();
       var symbol = ctx.getSymbol();
       var name = ctx.getName();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = accountStore.get(ownerAddr);
 
-      Assert.isTrue(Wallet.addressValid(addr), "Invalid contract address");
+      Assert.isTrue(Wallet.addressValid(contractAddr)
+              && !accountStore.has(contractAddr)
+              && !contractStore.has(contractAddr), "Bad contract address: invalid or exist");
+
+      Assert.isTrue(Wallet.addressValid(ownerAddr)
+                      && accountStore.has(ownerAddr)
+                      && (accountStore.get(ownerAddr).getType() == Protocol.AccountType.Normal)
+                      && !TransactionUtil.isGenesisAddress(ownerAddr),
+              "Bad owner account: invalid or not exist, must be normal and non-genesis account");
+
       Assert.isTrue(TransactionUtil.validTokenSymbol(symbol), "Invalid contract symbol");
       Assert.isTrue(TransactionUtil.validTokenName(name), "Invalid contract name");
 
-      Assert.isTrue(!dbManager.getUrc721ContractStore().has(addr), "Contract address has existed");
-
-      Assert.isTrue(accountStore.has(ownerAddr), "Owner account[" + StringUtil.createReadableString(ownerAddr) + "] not exists");
-      Assert.isTrue(!TransactionUtil.isGenesisAddress(ownerAddr), "Owner is genesis address");
-
       if (ctx.hasField(URC721_CREATE_CONTRACT_FIELD_MINTER)){
         var minterAddr = ctx.getMinter().toByteArray();
-        Assert.notNull(accountStore.get(minterAddr), "Minter account[" + StringUtil.createReadableString(minterAddr) + "] not exists or not active");
-        Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
-        Assert.isTrue(!TransactionUtil.isGenesisAddress(minterAddr), "Minter is genesis address");
+        Assert.isTrue(Wallet.addressValid(minterAddr) && accountStore.has(minterAddr), "Unrecognized minter account[" + Wallet.encode58Check(minterAddr) + "]");
+        Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr)
+                && !TransactionUtil.isGenesisAddress(minterAddr)
+                && (accountStore.get(minterAddr).getType() == Protocol.AccountType.Normal),
+                "Bad minter address: must be not owner, not genesis and must be normal account!");
       }
-      Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");
-      Assert.isTrue(ownerAccountCap.getBalance() >= calcFee(), "Not enough balance, require 500 UNW");
 
-      //validate address
-      Assert.isTrue(!dbManager.getAccountStore().has(ctx.getAddress().toByteArray()), "contract address exist");
+      Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");
+      Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Not enough balance, gas required: " + fee);
 
       return true;
     }
@@ -142,7 +146,7 @@ public class Urc721CreateContractActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getNftIssueFee();//500 UNW default
+    return dbManager.getDynamicPropertiesStore().getAssetIssueFee();//500 UNW default
   }
 }
 

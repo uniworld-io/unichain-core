@@ -118,7 +118,6 @@ public class ProposalService {
       case CREATE_ACCOUNT_FEE:
       case TRANSACTION_FEE:
       case ASSET_ISSUE_FEE:
-      case NFT_ISSUE_FEE:
       case WITNESS_PAY_PER_BLOCK:
       case WITNESS_STANDBY_ALLOWANCE:
       case CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT:
@@ -374,10 +373,6 @@ public class ProposalService {
         }
         case ASSET_ISSUE_FEE: {
           manager.getDynamicPropertiesStore().saveAssetIssueFee(entry.getValue());
-          break;
-        }
-        case NFT_ISSUE_FEE: {
-          manager.getDynamicPropertiesStore().saveNftIssueFee(entry.getValue());
           break;
         }
         case WITNESS_PAY_PER_BLOCK: {

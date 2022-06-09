@@ -53,4 +53,11 @@ public abstract class AbstractActuator implements Actuator {
     dbManager.getAccountStore().put(address, accountCap);
     return accountCap;
   }
+
+  protected AccountCapsule createDefaultAssetIssueAccount(byte[] address){
+    var defaultPermission = (dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1);
+    var accountCap = new AccountCapsule(ByteString.copyFrom(address), Protocol.AccountType.AssetIssue, dbManager.getHeadBlockTimeStamp(), defaultPermission, dbManager);
+    dbManager.getAccountStore().put(address, accountCap);
+    return accountCap;
+  }
 }

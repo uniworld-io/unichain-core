@@ -64,11 +64,11 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             dbManager.removeUrc721Token(tokenKey);
 
             //save new token
-            token.setOwner(ByteString.copyFrom(toAddr));
-            token.setLastOperation(dbManager.getHeadBlockTimeStamp());
-            token.clearApproval();
-            token.clearNext();
-            token.clearPrev();
+            token.setOwner(ByteString.copyFrom(toAddr))
+                    .setLastOperation(dbManager.getHeadBlockTimeStamp())
+                    .clearApproval()
+                    .clearNext()
+                    .clearPrev();
             dbManager.saveUrc721Token(token);
 
             chargeFee(fromAddr, fee);

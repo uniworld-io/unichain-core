@@ -32,6 +32,7 @@ import org.unichain.protos.Contract.Urc721SetApprovalForAllContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 @Slf4j(topic = "actuator")
 public class Urc721SetApprovalForAllActuator extends AbstractActuator {
@@ -48,8 +49,9 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
       var contractAddr = ctx.getAddress().toByteArray();
+
       var accountStore = dbManager.getAccountStore();
-      var relationStore = dbManager.getUrc721AccountTokenRelationStore();
+      var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
 
       //create new account
       if (!accountStore.has(toAddr)) {
@@ -59,9 +61,9 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
 
       //approve or dis-approve
       if(ctx.getApprove())
-        relationStore.approveForAll(ownerAddr, toAddr, contractAddr);
+        summaryStore.approveForAll(ownerAddr, toAddr, contractAddr);
       else
-        relationStore.disApproveForAll(ownerAddr, toAddr, contractAddr);
+        summaryStore.disApproveForAll(ownerAddr, toAddr, contractAddr);
 
       //charge fee
       chargeFee(ownerAddr, fee);
@@ -85,29 +87,32 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
       val ctx = this.contract.unpack(Urc721SetApprovalForAllContract.class);
 
       var accountStore = dbManager.getAccountStore();
-      var relationStore = dbManager.getUrc721AccountTokenRelationStore();
+      var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
       var contractStore = dbManager.getUrc721ContractStore();
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contractAddr = ctx.getAddress().toByteArray();
-      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
       var toAddr = ctx.getToAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddr)
+              && Wallet.addressValid(contractAddr)
+              && Wallet.addressValid(toAddr),
+              "Invalid owner|contract|to address");
+
+      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
       var toAddrBase58 = Wallet.encode58Check(toAddr);
 
       Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and operator cannot be the same");
-      Assert.isTrue(accountStore.has(ownerAddr) && contractStore.has(contractAddr), "Owner|Urc721 contract not exist");
-      Assert.isTrue(Wallet.addressValid(toAddr), "To address invalid");
+      Assert.isTrue(accountStore.has(ownerAddr) && contractStore.has(contractAddr), "Owner| urc721 contract not exist");
 
       //check has token to approve for all
-      Assert.isTrue(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal(contractAddrBase58) > 0, "Not found any token of urc721 contract: " + contractAddrBase58);
-
-      var relation = relationStore.get(ownerAddr);
+      var summary = summaryStore.get(ownerAddr);
+      Assert.isTrue(Objects.nonNull(summary) && summary.getTotal(contractAddrBase58) > 0, "Not found any token of urc721 contract: " + contractAddrBase58);
 
       //approve or not
       if(ctx.getApprove()){
-        Assert.isTrue(!relation.hasApprovalForAll(toAddrBase58, contractAddrBase58), "To address has already been approved for all with contract: " + contractAddrBase58);
+        Assert.isTrue(!summary.hasApprovalForAll(toAddrBase58, contractAddrBase58), "To address has already been approved for all with contract: " + contractAddrBase58);
       } else {
-        Assert.isTrue(relation.hasApprovalForAll(toAddrBase58, contractAddrBase58), "To address not approved for all with contract: " + contractAddrBase58);
+        Assert.isTrue(summary.hasApprovalForAll(toAddrBase58, contractAddrBase58), "To address not approved for all with contract: " + contractAddrBase58);
       }
 
       if(!accountStore.has(toAddr)){

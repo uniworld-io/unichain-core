@@ -57,12 +57,12 @@ public class Urc721AccountTokenRelationStore extends UnichainStoreWithRevoking<U
 
     public void approveForAll(byte[] ownerAddr, byte[] operatorAddr, byte[] contractAddr) {
         //update owner relation
-        Urc721AccountTokenRelationCapsule ownerRelation;
+        Urc721AccountTokenRelationCapsule ownerSummary;
         if(has(ownerAddr)) {
-            ownerRelation = get(ownerAddr);
-            ownerRelation.setApprovedForAll(contractAddr, operatorAddr);
+            ownerSummary = get(ownerAddr);
+            ownerSummary.setApprovedForAll(contractAddr, operatorAddr);
         } else {
-            ownerRelation = new Urc721AccountTokenRelationCapsule(ownerAddr,
+            ownerSummary = new Urc721AccountTokenRelationCapsule(ownerAddr,
                     Protocol.Urc721AccountTokenRelation.newBuilder()
                             .setOwnerAddress(ByteString.copyFrom(ownerAddr))
                             .clearHead()
@@ -72,17 +72,17 @@ public class Urc721AccountTokenRelationStore extends UnichainStoreWithRevoking<U
                             .clearApprovedForAlls()
                             .clearApproveAlls()
                             .build());
-            ownerRelation.setApprovedForAll(contractAddr, operatorAddr);
+            ownerSummary.setApprovedForAll(contractAddr, operatorAddr);
         }
-        put(ownerAddr, ownerRelation);
+        put(ownerAddr, ownerSummary);
 
         //update to relation
-        Urc721AccountTokenRelationCapsule operatorRelation;
+        Urc721AccountTokenRelationCapsule operatorSummary;
         if(has(operatorAddr)) {
-            operatorRelation = get(operatorAddr);
-            operatorRelation.addApproveAll(ownerAddr, contractAddr);
+            operatorSummary = get(operatorAddr);
+            operatorSummary.addApproveAll(ownerAddr, contractAddr);
         } else {
-            operatorRelation = new Urc721AccountTokenRelationCapsule(operatorAddr,
+            operatorSummary = new Urc721AccountTokenRelationCapsule(operatorAddr,
                     Protocol.Urc721AccountTokenRelation.newBuilder()
                             .setOwnerAddress(ByteString.copyFrom(operatorAddr))
                             .clearHead()
@@ -92,8 +92,8 @@ public class Urc721AccountTokenRelationStore extends UnichainStoreWithRevoking<U
                             .clearApprovedForAlls()
                             .clearApproveAlls()
                             .build());
-            operatorRelation.addApproveAll(ownerAddr, contractAddr);
+            operatorSummary.addApproveAll(ownerAddr, contractAddr);
         }
-        put(operatorAddr, operatorRelation);
+        put(operatorAddr, operatorSummary);
     }
 }

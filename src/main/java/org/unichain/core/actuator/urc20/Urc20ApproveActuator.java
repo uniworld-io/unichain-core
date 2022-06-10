@@ -27,6 +27,7 @@ import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.urc20.Urc20SpenderCapsule;
+import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -135,20 +136,27 @@ public class Urc20ApproveActuator extends AbstractActuator {
       val ctx = this.contract.unpack(Urc20ApproveContract.class);
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerCap = accountStore.get(ownerAddr);
       var spenderAddr = ctx.getSpender().toByteArray();
       var urc20Addr = ctx.getAddress().toByteArray();
-      var urc20AddrBase58 = Wallet.encode58Check(urc20Addr);
-      var urc20Cap = contractStore.get(urc20Addr);
 
       Assert.isTrue(Wallet.addressValid(spenderAddr) && Wallet.addressValid(urc20Addr) && Wallet.addressValid(ownerAddr), "Bad owner|contract|spender address");
+      Assert.isTrue(!TransactionUtil.isGenesisAddress(spenderAddr), "Spender can not be genesis");
       Assert.isTrue(!Arrays.equals(ownerAddr, spenderAddr), "Spender must not be owner");
       Assert.isTrue(accountStore.has(ownerAddr) && contractStore.has(urc20Addr) , "Unrecognized owner|contract address");
+
+      var urc20AddrBase58 = Wallet.encode58Check(urc20Addr);
+      var urc20Cap = contractStore.get(urc20Addr);
+      var ownerCap = accountStore.get(ownerAddr);
 
       //validate fee
       var urc20OwnerAddr = urc20Cap.getOwnerAddress().toByteArray();
       var urc20OwnerCap = accountStore.get(urc20OwnerAddr);
       var createSpenderAcc = !accountStore.has(spenderAddr);
+
+      if(!createSpenderAcc){
+        Assert.isTrue(accountStore.get(spenderAddr).getType() == Protocol.AccountType.Normal, "Spender must be normal account");
+      }
+
       var fee = calcFee();
       var tokenFee = 0L;
       var tokenAvailable = ownerCap.getUrc20TokenAvailable(urc20AddrBase58);

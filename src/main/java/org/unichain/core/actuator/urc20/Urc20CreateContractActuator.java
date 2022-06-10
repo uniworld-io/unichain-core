@@ -39,6 +39,8 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import java.util.Objects;
+
 import static org.unichain.core.config.Parameter.ChainConstant.*;
 
 @Slf4j(topic = "actuator")
@@ -57,9 +59,9 @@ public class Urc20CreateContractActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(Contract.Urc20CreateContract.class);
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var contractAddr = ctx.getAddress().toByteArray();
       var contractCap = new Urc20ContractCapsule(ctx);
-      var contractAddr = contractCap.getAddress().toByteArray();
 
       if(!ctx.hasField(URC20_CREATE_FIELD_START_TIME))
       {
@@ -84,10 +86,10 @@ public class Urc20CreateContractActuator extends AbstractActuator {
       contractCap.setOriginFeePool(ctx.getFeePool());
       dbManager.getUrc20ContractStore().put(contractAddr, contractCap);
 
-      var accountCapsule = dbManager.getAccountStore().get(ownerAddress);
+      var accountCapsule = dbManager.getAccountStore().get(ownerAddr);
       accountCapsule.addUrc20Token(contractCap.createDbKey(), contractCap.getTotalSupply());
       accountCapsule.setBalance(Math.subtractExact(accountCapsule.getBalance(), Math.addExact(ctx.getFeePool(), fee)));
-      dbManager.getAccountStore().put(ownerAddress, accountCapsule);
+      dbManager.getAccountStore().put(ownerAddr, accountCapsule);
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
 
@@ -119,22 +121,23 @@ public class Urc20CreateContractActuator extends AbstractActuator {
     try {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
+      var accountStore = dbManager.getAccountStore();
       Assert.isTrue(contract.is(Contract.Urc20CreateContract.class), "contract type error,expected type [Urc20CreateContract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(Contract.Urc20CreateContract.class);
 
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-      var accountCap = dbManager.getAccountStore().get(ownerAddress);
-      Assert.notNull(accountCap, "Account not exists");
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddr) && !TransactionUtil.isGenesisAddress(ownerAddr), "Bad owner address: invalid or genesis address");
+      var accountCap = accountStore.get(ownerAddr);
+      Assert.isTrue(Objects.nonNull(accountCap) && accountCap.getType() == Protocol.AccountType.Normal, "Account not exists or must be normal account type");
 
       var contractAddr = ctx.getAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(contractAddr), "Invalid contractAddress");
-      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
-      Assert.isTrue(!dbManager.getAccountStore().has(contractAddr) && !dbManager.getUrc20ContractStore().has(contractAddr), "Contract address exists: " + contractAddrBase58);
+      var contractBase58 = Wallet.encode58Check(contractAddr);
+      Assert.isTrue(!accountStore.has(contractAddr) && !dbManager.getUrc20ContractStore().has(contractAddr), "Contract address exists: " + contractBase58);
 
       Assert.isTrue(!ctx.getSymbol().isEmpty() && TransactionUtil.validTokenSymbol(ctx.getSymbol()), "Invalid contract symbol");
-      Assert.isTrue(!ctx.getSymbol().equalsIgnoreCase("UNX"), "Token symbol can't be UNX");
+      Assert.isTrue(!ctx.getSymbol().equalsIgnoreCase("UNW"), "Token symbol can't be UNW");
       Assert.isTrue(!StringUtils.isEmpty(ctx.getName().isEmpty()) && TransactionUtil.validTokenName(ctx.getName()), "Invalid token name");
       Assert.isTrue(TransactionUtil.validUrl(ByteString.copyFrom(ctx.getUrl().getBytes()).toByteArray()), "Invalid url");
 

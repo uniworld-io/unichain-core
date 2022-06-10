@@ -293,7 +293,7 @@ public class ActuatorUtil {
     }
   }
 
-  public static void addUrc20Future(Manager dbManager, byte[] toAddress, byte[] contractAddr, long amount, long availableTime){
+  public static void addUrc20Future(final Manager dbManager, byte[] toAddress, byte[] contractAddr, long amount, long availableTime){
     var addrBase58 = Wallet.encode58Check(contractAddr);
     var tickDay = Util.makeDayTick(availableTime);
     var tickKey = Util.makeUrc20FutureTokenIndexKey(toAddress, addrBase58, tickDay);

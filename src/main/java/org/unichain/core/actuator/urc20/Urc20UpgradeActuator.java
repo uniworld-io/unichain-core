@@ -19,6 +19,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
 import org.unichain.common.utils.ActuatorUtil;
 import org.unichain.common.utils.AddressUtil;
@@ -30,7 +31,6 @@ import org.unichain.core.capsule.urc20.Urc20ContractCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
@@ -70,22 +70,26 @@ public class Urc20UpgradeActuator extends AbstractActuator {
   @Override
   public void upgrade(){
     try {
-
+      logger.warn("UPGRADING urc30 to urc20 asset ....");
       var urc30ContractStore = dbManager.getTokenPoolStore();
       var urc20ContractStore = dbManager.getUrc20ContractStore();
       var accStore = dbManager.getAccountStore();
       var urc30FutureTokenStore = dbManager.getFutureTokenStore();
 
       //1. filter migrate account first!
+      logger.warn("filtering urc30 asset account...");
       Predicate<AccountCapsule> filter = accountCap -> {
         var urc30Noodle =  accountCap.getInstance().getTokenMap();
         var urc30Future = accountCap.getInstance().getTokenFutureMap();
         return (Objects.nonNull(urc30Noodle) && urc30Noodle.size() > 0) || ( Objects.nonNull(urc30Future) && urc30Future.size() > 0);
       };
       var migrateAccounts = accStore.filter(filter);
+      logger.warn("filtering urc30 asset account...done! got {} accounts!", migrateAccounts.size());
+
 
       //2.migrate contracts
       urc30ContractStore.getAll().forEach(urc30Cap -> {
+        logger.warn("migrate urc30 contract {} ...", urc30Cap.getName());
         //register contract acc
         var urc20Addr = AddressUtil.genAssetAddrBySeed(urc30Cap.getTokenName());
         dbManager.createDefaultAccount(urc20Addr, Protocol.AccountType.AssetIssue);
@@ -117,59 +121,46 @@ public class Urc20UpgradeActuator extends AbstractActuator {
 
         var urc20Cap = new Urc20ContractCapsule(urc20Builder.build());
         urc20ContractStore.put(urc20Addr, urc20Cap);
+        logger.warn("migrate urc30 contract {} ...done!", urc30Cap.getName());
       });
 
       //3. migrate account asset
       migrateAccounts.forEach(acc -> {
-        //migrate noodle urc30
-        acc.getInstance().getTokenMap().forEach((symbol, amount) -> acc.addUrc20Token(AddressUtil.genAssetAddrBySeed(symbol), amount));
+        try {
+          val ownerAddr = acc.getAddress().toByteArray();
+          var ownerAddrBase58 = Wallet.encode58Check(ownerAddr);
+          logger.warn("migrate urc30 acc {} ...", ownerAddrBase58);
+          //migrate noodle urc30
+          acc.getInstance().getTokenMap().forEach((symbol, amount) -> acc.addUrc20Token(AddressUtil.genAssetAddrBySeed(symbol), amount));
+          accStore.put(ownerAddr, acc);
 
-        //migrate future
-        acc.getInstance().getTokenFutureMap().forEach((symbol, urc30Summary) -> {
-          var addrBase58 = Wallet.encode58Check(AddressUtil.genAssetAddrBySeed(symbol));
+          //migrate future
+          acc.getInstance().getTokenFutureMap().forEach((symbol, urc30Summary) -> {
+            try {
+              val urc20Addr = AddressUtil.genAssetAddrBySeed(symbol);
+              var urc30HeadDeal = urc30FutureTokenStore.get(urc30Summary.getLowerTick().toByteArray());
 
-          //@todo migrate future store: Need review
-          // move future urc30 future deals to urc20 future deals
-          var tempTick = urc30FutureTokenStore.get(urc30Summary.getLowerTick().toByteArray());
-          if (tempTick == null) {
-            return;
-          }
-
-          while (tempTick.getNextTick() != null && tempTick.getNextTick().size() != 0) {
-            ActuatorUtil.addUrc20Future(dbManager, acc.getAddress().toByteArray(), AddressUtil.genAssetAddrBySeed(symbol), tempTick.getBalance(), tempTick.getExpireTime());
-            tempTick = urc30FutureTokenStore.get(tempTick.getNextTick().toByteArray());
-          }
-
-          // change summary
-          var lowerTickUrc20Pointer =
-                  createTickDayKeyUrc20(acc, addrBase58, urc30Summary.getLowerBoundTime());
-          var upperTickUrc20Pointer =
-                  createTickDayKeyUrc20(acc, addrBase58, urc30Summary.getUpperBoundTime());
-          var urc20TokenSummary = Protocol.Urc20FutureTokenSummary.newBuilder()
-                  .setAddress(ByteString.copyFrom(AddressUtil.genAssetAddrBySeed(urc30Summary.getTokenName())))
-                  .setSymbol(urc30Summary.getTokenName())
-                  .setTotalDeal(urc30Summary.getTotalDeal())
-                  .setLowerBoundTime(urc30Summary.getLowerBoundTime())
-                  .setUpperBoundTime(urc30Summary.getUpperBoundTime())
-                  .setTotalValue(urc30Summary.getTotalValue())
-                  .setLowerTick(lowerTickUrc20Pointer)
-                  .setUpperTick(upperTickUrc20Pointer)
-                  .build();
-          acc.setUrc20FutureTokenSummary(Wallet.encode58Check(ByteString.copyFromUtf8(symbol).toByteArray()), urc20TokenSummary);
-        });
-
-        accStore.put(acc.getAddress().toByteArray(), acc);
+              while (Objects.nonNull(urc30HeadDeal) && Objects.nonNull(urc30HeadDeal.getNextTick()) && urc30HeadDeal.getNextTick().size() > 0) {
+                ActuatorUtil.addUrc20Future(dbManager, ownerAddr, urc20Addr, urc30HeadDeal.getBalance(), urc30HeadDeal.getExpireTime());
+                urc30HeadDeal = urc30FutureTokenStore.get(urc30HeadDeal.getNextTick().toByteArray());
+              }
+              logger.warn("migrate future urc30 of symbol {} success!", symbol);
+            }
+            catch (Exception e){
+              logger.error("migrate future urc30 of symbol {} error -->", symbol, e);
+            }
+          });
+          logger.warn("migrate urc30 acc {} ...done!", ownerAddrBase58);
+        }
+        catch (Exception e){
+          logger.error("migrate urc30 of account  {} error -->", acc, e);
+        }
       });
+
+      logger.warn("UPGRADING urc30 to urc20 asset ....SUCCESSFUL!");
     }
     catch (Exception e){
         logger.error("failed to upgrade: ", e);
     }
   }
-
-  private ByteString createTickDayKeyUrc20(AccountCapsule ownerAccount, String tokenAddressBase58, long expireTime) {
-    var tickDay = Util.makeDayTick(expireTime);
-    var tickDayKey = Util.makeUrc20FutureTokenIndexKey(ownerAccount.getAddress().toByteArray(), tokenAddressBase58, tickDay);
-    return ByteString.copyFrom(tickDayKey);
-  }
-
 }

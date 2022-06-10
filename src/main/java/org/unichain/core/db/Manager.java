@@ -607,12 +607,12 @@ public class Manager {
     );
   }
 
-  public long createNewAccount(ByteString accAddr){
-    Assert.isTrue(!getAccountStore().has(accAddr.toByteArray()), "Account exist");
-    var withDefaultPermission = getDynamicPropertiesStore().getAllowMultiSign() == 1;
-    var toAccountCap = new AccountCapsule(accAddr, Protocol.AccountType.Normal, getHeadBlockTimeStamp(), withDefaultPermission, this);
-    getAccountStore().put(accAddr.toByteArray(), toAccountCap);
-    return getDynamicPropertiesStore().getCreateAccountFee();
+  public AccountCapsule createDefaultAccount(byte[] address, AccountType type) {
+    Assert.isTrue(!getAccountStore().has(address), "Account exist");
+    var defaultPermission = (getDynamicPropertiesStore().getAllowMultiSign() == 1);
+    var accountCap = new AccountCapsule(ByteString.copyFrom(address), type, getHeadBlockTimeStamp(), defaultPermission, this);
+    getAccountStore().put(address, accountCap);
+    return accountCap;
   }
 
   public void adjustBalance(byte[] accountAddress, long amount) throws BalanceInsufficientException {

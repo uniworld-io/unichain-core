@@ -29,7 +29,6 @@ import org.unichain.common.event.NativeContractEvent;
 import org.unichain.common.event.TokenCreateEvent;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.urc20.Urc20ContractCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
@@ -93,9 +92,7 @@ public class Urc20CreateContractActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
 
       //register new account with type asset_issue
-      var defaultPermission = dbManager.getDynamicPropertiesStore().getAllowMultiSign() == 1;
-      var tokenAccount = new AccountCapsule(ByteString.copyFrom(contractAddr), Protocol.AccountType.AssetIssue, dbManager.getHeadBlockTimeStamp(), defaultPermission, dbManager);
-      dbManager.getAccountStore().put(contractAddr, tokenAccount);
+      dbManager.createDefaultAccount(contractAddr, Protocol.AccountType.AssetIssue);
 
       //emit event
       var event = NativeContractEvent.builder()

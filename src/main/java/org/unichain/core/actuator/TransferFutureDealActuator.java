@@ -44,7 +44,7 @@ public class TransferFutureDealActuator extends AbstractActuator {
 
       //create toAddress
       if (!accountStore.has(toAddr)) {
-        createDefaultAccount(toAddr);
+        dbManager.createDefaultAccount(toAddr, Protocol.AccountType.Normal);
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 

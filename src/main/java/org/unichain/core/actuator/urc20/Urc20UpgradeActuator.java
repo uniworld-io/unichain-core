@@ -34,6 +34,7 @@ import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
@@ -69,76 +70,81 @@ public class Urc20UpgradeActuator extends AbstractActuator {
   @Override
   public void upgrade(){
     try {
-      //1. migrate token pool without spender
-      var urc30Store = dbManager.getTokenPoolStore();
-      var urc20Store = dbManager.getUrc20ContractStore();
-      var accStore = dbManager.getAccountStore();
-      var future30TokenStore = dbManager.getFutureTokenStore();
-      urc30Store.getAll().forEach(urc30Cap -> {
-        var urc20Builder = Contract.Urc20CreateContract.newBuilder();
-        urc20Builder.setOwnerAddress(urc30Cap.getOwnerAddress());
-        //@todo review
-        urc20Builder.setAddress(ByteString.copyFrom(AddressUtil.genAssetAddrBySeed(urc30Cap.getTokenName())));
 
-        urc20Builder.setSymbol(urc30Cap.getName());
-        urc20Builder.setName(urc30Cap.getAbbr());
-        urc20Builder.setDecimals(0L);
-        urc20Builder.setMaxSupply(urc30Cap.getMaxSupply());
-        urc20Builder.setTotalSupply(urc30Cap.getTotalSupply());
-        urc20Builder.setStartTime(urc30Cap.getStartTime());
-        urc20Builder.setEndTime(urc30Cap.getEndTime());
-        urc20Builder.setUrl(urc30Cap.getUrl());
-        urc20Builder.setFee(urc30Cap.getFee());
-        urc20Builder.setExtraFeeRate(urc30Cap.getExtraFeeRate());
-        urc20Builder.setFeePool(urc30Cap.getFeePool());
-        urc20Builder.setBurned(urc30Cap.getBurnedToken());
-        urc20Builder.setLatestOperationTime(urc30Cap.getLatestOperationTime());
-        urc20Builder.setLot(urc30Cap.getLot());
-        urc20Builder.setFeePoolOrigin(urc30Cap.getOriginFeePool());
-        urc20Builder.setExchUnxNum(urc30Cap.getExchUnw());
-        urc20Builder.setExchNum(urc30Cap.getExchToken());
-        urc20Builder.setExchEnable(true);
-        urc20Builder.setCriticalUpdateTime(urc30Cap.getCriticalUpdateTime());
-        urc20Builder.setCreateAccFee(urc30Cap.getCreateAccountFee());
+      var urc30ContractStore = dbManager.getTokenPoolStore();
+      var urc20ContractStore = dbManager.getUrc20ContractStore();
+      var accStore = dbManager.getAccountStore();
+      var urc30FutureTokenStore = dbManager.getFutureTokenStore();
+
+      //1. filter migrate account first!
+      Predicate<AccountCapsule> filter = accountCap -> {
+        var urc30Noodle =  accountCap.getInstance().getTokenMap();
+        var urc30Future = accountCap.getInstance().getTokenFutureMap();
+        return (Objects.nonNull(urc30Noodle) && urc30Noodle.size() > 0) || ( Objects.nonNull(urc30Future) && urc30Future.size() > 0);
+      };
+      var migrateAccounts = accStore.filter(filter);
+
+      //2.migrate contracts
+      urc30ContractStore.getAll().forEach(urc30Cap -> {
+        //register contract acc
+        var urc20Addr = AddressUtil.genAssetAddrBySeed(urc30Cap.getTokenName());
+        dbManager.createDefaultAccount(urc20Addr, Protocol.AccountType.AssetIssue);
+
+        //save urc20 contract
+        var urc20Builder = Contract.Urc20CreateContract.newBuilder()
+                .setOwnerAddress(urc30Cap.getOwnerAddress())
+                .setAddress(ByteString.copyFrom(urc20Addr))
+                .setSymbol(urc30Cap.getName())
+                .setName(urc30Cap.getAbbr())
+                .setDecimals(0L)
+                .setMaxSupply(urc30Cap.getMaxSupply())
+                .setTotalSupply(urc30Cap.getTotalSupply())
+                .setStartTime(urc30Cap.getStartTime())
+                .setEndTime(urc30Cap.getEndTime())
+                .setUrl(urc30Cap.getUrl())
+                .setFee(urc30Cap.getFee())
+                .setExtraFeeRate(urc30Cap.getExtraFeeRate())
+                .setFeePool(urc30Cap.getFeePool())
+                .setBurned(urc30Cap.getBurnedToken())
+                .setLatestOperationTime(urc30Cap.getLatestOperationTime())
+                .setLot(urc30Cap.getLot())
+                .setFeePoolOrigin(urc30Cap.getOriginFeePool())
+                .setExchUnxNum(urc30Cap.getExchUnw())
+                .setExchNum(urc30Cap.getExchToken())
+                .setExchEnable(true)
+                .setCriticalUpdateTime(urc30Cap.getCriticalUpdateTime())
+                .setCreateAccFee(urc30Cap.getCreateAccountFee());
 
         var urc20Cap = new Urc20ContractCapsule(urc20Builder.build());
-        var urc20Addr = urc20Cap.getAddress().toByteArray();
-        urc20Store.put(urc20Addr, urc20Cap);
+        urc20ContractStore.put(urc20Addr, urc20Cap);
       });
 
-      //2.migrate available token
-      Predicate<AccountCapsule> filter = accountCap -> {
-        var urc30 =  accountCap.getInstance().getTokenMap();
-        var urc30Future = accountCap.getInstance().getTokenFutureMap();
-        return (urc30 != null && urc30.size() > 0) || (urc30Future != null && urc30Future.size() > 0);
-      };
-
-      var accounts = accStore.filter(filter);
-      accounts.forEach(acc -> {
-        //@todo migrate urc30: Need review
+      //3. migrate account asset
+      migrateAccounts.forEach(acc -> {
+        //migrate noodle urc30
         acc.getInstance().getTokenMap().forEach((symbol, amount) -> acc.addUrc20Token(AddressUtil.genAssetAddrBySeed(symbol), amount));
 
-        //@todo migrate urc30 future: Need review
+        //migrate future
         acc.getInstance().getTokenFutureMap().forEach((symbol, urc30Summary) -> {
-          var addressBase58 = Wallet.encode58Check(AddressUtil.genAssetAddrBySeed(symbol));
+          var addrBase58 = Wallet.encode58Check(AddressUtil.genAssetAddrBySeed(symbol));
 
           //@todo migrate future store: Need review
           // move future urc30 future deals to urc20 future deals
-          var tempTick = future30TokenStore.get(urc30Summary.getLowerTick().toByteArray());
+          var tempTick = urc30FutureTokenStore.get(urc30Summary.getLowerTick().toByteArray());
           if (tempTick == null) {
             return;
           }
 
           while (tempTick.getNextTick() != null && tempTick.getNextTick().size() != 0) {
             ActuatorUtil.addUrc20Future(dbManager, acc.getAddress().toByteArray(), AddressUtil.genAssetAddrBySeed(symbol), tempTick.getBalance(), tempTick.getExpireTime());
-            tempTick = future30TokenStore.get(tempTick.getNextTick().toByteArray());
+            tempTick = urc30FutureTokenStore.get(tempTick.getNextTick().toByteArray());
           }
 
           // change summary
           var lowerTickUrc20Pointer =
-                  createTickDayKeyUrc20(acc, addressBase58, urc30Summary.getLowerBoundTime());
+                  createTickDayKeyUrc20(acc, addrBase58, urc30Summary.getLowerBoundTime());
           var upperTickUrc20Pointer =
-                  createTickDayKeyUrc20(acc, addressBase58, urc30Summary.getUpperBoundTime());
+                  createTickDayKeyUrc20(acc, addrBase58, urc30Summary.getUpperBoundTime());
           var urc20TokenSummary = Protocol.Urc20FutureTokenSummary.newBuilder()
                   .setAddress(ByteString.copyFrom(AddressUtil.genAssetAddrBySeed(urc30Summary.getTokenName())))
                   .setSymbol(urc30Summary.getTokenName())

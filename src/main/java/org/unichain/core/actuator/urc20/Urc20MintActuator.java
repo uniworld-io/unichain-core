@@ -33,6 +33,7 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.Urc20MintContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -69,7 +70,7 @@ public class Urc20MintActuator extends AbstractActuator {
         toAddr = ctx.getToAddress().toByteArray();
         if(!accStore.has(toAddr)){
           fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
-          toAccountCap = createDefaultAccount(toAddr);
+          toAccountCap = dbManager.createDefaultAccount(toAddr, Protocol.AccountType.Normal);
         }
         else
         {

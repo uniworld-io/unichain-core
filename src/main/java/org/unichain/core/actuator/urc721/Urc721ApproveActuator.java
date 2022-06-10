@@ -67,7 +67,7 @@ public class Urc721ApproveActuator extends AbstractActuator {
         dbManager.addApproveToken(tokenKey, toAddr);
 
         if(!accountStore.has(toAddr)){
-            createDefaultAccount(toAddr);
+            dbManager.createDefaultAccount(toAddr, Protocol.AccountType.Normal);
             fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
         }
       }

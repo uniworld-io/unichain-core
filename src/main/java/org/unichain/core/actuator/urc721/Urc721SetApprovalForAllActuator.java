@@ -29,6 +29,7 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.Urc721SetApprovalForAllContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -55,7 +56,7 @@ public class Urc721SetApprovalForAllActuator extends AbstractActuator {
 
       //create new account
       if (!accountStore.has(toAddr)) {
-        createDefaultAccount(toAddr);
+        dbManager.createDefaultAccount(toAddr, Protocol.AccountType.Normal);
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 

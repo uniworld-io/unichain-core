@@ -9,12 +9,12 @@ import org.springframework.util.Assert;
 import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
-import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.Urc20TransferOwnerContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
@@ -42,7 +42,7 @@ public class Urc20TransferOwnerActuator extends AbstractActuator {
 
       var toAccount = accountStore.get(toAddr);
       if (Objects.isNull(toAccount)) {
-        toAccount = createDefaultAccount(toAddr);
+        toAccount = dbManager.createDefaultAccount(toAddr, Protocol.AccountType.Normal);
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 

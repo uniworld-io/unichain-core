@@ -59,8 +59,8 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       //save contract
       dbManager.saveUrc721Contract(new Urc721ContractCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
 
-      //create asset_issue account
-      createDefaultAssetIssueAccount(tokenAddr);
+      //create account
+      dbManager.createDefaultAccount(tokenAddr, Protocol.AccountType.AssetIssue);
 
       chargeFee(owner, fee);
       dbManager.burnFee(fee);

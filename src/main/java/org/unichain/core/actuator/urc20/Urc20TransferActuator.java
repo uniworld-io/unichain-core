@@ -65,7 +65,7 @@ public class Urc20TransferActuator extends AbstractActuator {
 
       var isCreateNewAcc = Objects.isNull(toAccountCap);
       if (isCreateNewAcc) {
-        toAccountCap = createDefaultAccount(toAddr);
+        toAccountCap = dbManager.createDefaultAccount(toAddr, Protocol.AccountType.Normal);
       }
 
       if(Arrays.equals(ownerAddr, urc20OwnerAddr)){

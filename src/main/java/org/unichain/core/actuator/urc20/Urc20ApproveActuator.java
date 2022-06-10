@@ -31,6 +31,7 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.Urc20ApproveContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.math.RoundingMode;
@@ -65,7 +66,7 @@ public class Urc20ApproveActuator extends AbstractActuator {
       //create spender account
       var createSpenderAcc = !accountStore.has(spenderAddr);
       if (createSpenderAcc) {
-        createDefaultAccount(spenderAddr);
+        dbManager.createDefaultAccount(spenderAddr, Protocol.AccountType.Normal);
       }
 
       if(Arrays.equals(ownerAddr, urc20OwnerAddr)){

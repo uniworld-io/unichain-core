@@ -175,7 +175,7 @@ public abstract class UnichainStoreWithRevoking<T extends ProtoCapsule> implemen
    */
   public List<T> filter(Predicate filter) {
       var it = iterator();
-      var out = new ArrayList<T>();
+      var out = new LinkedList<T>();
       while (it.hasNext()){
         var v = it.next().getValue();
         if(filter.test(v))

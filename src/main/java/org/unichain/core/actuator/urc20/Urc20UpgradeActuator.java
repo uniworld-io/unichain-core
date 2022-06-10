@@ -26,9 +26,11 @@ import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.urc20.Urc20ContractCapsule;
+import org.unichain.core.capsule.urc20.Urc20FutureTokenCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
+import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
@@ -71,6 +73,8 @@ public class Urc20UpgradeActuator extends AbstractActuator {
       var urc30Store = dbManager.getTokenPoolStore();
       var urc20Store = dbManager.getUrc20ContractStore();
       var accStore = dbManager.getAccountStore();
+      var future30TokenStore = dbManager.getFutureTokenStore();
+      var future20TokenStore = dbManager.getUrc20FutureTransferStore();
       urc30Store.getAll().forEach(urc30Cap -> {
         var urc20Builder = Contract.Urc20CreateContract.newBuilder();
         urc20Builder.setOwnerAddress(urc30Cap.getOwnerAddress());
@@ -113,23 +117,44 @@ public class Urc20UpgradeActuator extends AbstractActuator {
       var accounts = accStore.filter(filter);
       accounts.forEach(acc -> {
         //@todo migrate urc30: Need review
-        acc.getInstance().getTokenMap().forEach((key, value) -> {
-          acc.addUrc20Token(AddressUtil.genAssetAddrBySeed(key), value);
+        acc.getInstance().getTokenMap().forEach((symbol, amount) -> {
+          acc.addUrc20Token(AddressUtil.genAssetAddrBySeed(symbol), amount);
         });
 
         //@todo migrate urc30 future: Need review
-        acc.getInstance().getTokenFutureMap().forEach((key, urc30TokenFuture) -> {
+        acc.getInstance().getTokenFutureMap().forEach((symbol, futureTokenSummaryV2) -> {
           var urc20TokenSummary = Protocol.Urc20FutureTokenSummary.newBuilder()
-                  .setAddress(ByteString.copyFrom(AddressUtil.genAssetAddrBySeed(urc30TokenFuture.getTokenName())))
-                  .setSymbol(urc30TokenFuture.getTokenName())
-                  .setTotalDeal(urc30TokenFuture.getTotalDeal())
-                  .setLowerBoundTime(urc30TokenFuture.getLowerBoundTime())
-                  .setUpperBoundTime(urc30TokenFuture.getUpperBoundTime())
-                  .setTotalValue(urc30TokenFuture.getTotalValue())
-                  .setLowerTick(urc30TokenFuture.getLowerTick())
-                  .setUpperTick(urc30TokenFuture.getUpperTick())
+                  .setAddress(ByteString.copyFrom(AddressUtil.genAssetAddrBySeed(futureTokenSummaryV2.getTokenName())))
+                  .setSymbol(futureTokenSummaryV2.getTokenName())
+                  .setTotalDeal(futureTokenSummaryV2.getTotalDeal())
+                  .setLowerBoundTime(futureTokenSummaryV2.getLowerBoundTime())
+                  .setUpperBoundTime(futureTokenSummaryV2.getUpperBoundTime())
+                  .setTotalValue(futureTokenSummaryV2.getTotalValue())
+                  .setLowerTick(futureTokenSummaryV2.getLowerTick())
+                  .setUpperTick(futureTokenSummaryV2.getUpperTick())
                   .build();
-          acc.setUrc20FutureTokenSummary(Wallet.encode58Check(ByteString.copyFromUtf8(key).toByteArray()), urc20TokenSummary);
+          acc.setUrc20FutureTokenSummary(Wallet.encode58Check(ByteString.copyFromUtf8(symbol).toByteArray()), urc20TokenSummary);
+
+          var tempTick = future30TokenStore.get(futureTokenSummaryV2.getLowerTick().toByteArray());
+          if (tempTick == null) {
+            return;
+          }
+
+          while (tempTick.getNextTick() != null || tempTick.getNextTick().size() != 0) {
+            var urc20Tick = Protocol.Urc20FutureToken.newBuilder()
+                    .setFutureBalance(tempTick.getBalance())
+                    .setExpireTime(tempTick.getExpireTime())
+                    .setPrevTick(tempTick.getPrevTick())
+                    .setNextTick(tempTick.getNextTick())
+                    .build();
+
+            var addressBase58 = Wallet.encode58Check(AddressUtil.genAssetAddrBySeed(symbol));
+            var tickDay = Util.makeDayTick(tempTick.getExpireTime());
+            var urc20TickKey = Util.makeUrc20FutureTokenIndexKey(acc.getAddress().toByteArray(), addressBase58, tickDay);
+            future20TokenStore.put(urc20TickKey, new Urc20FutureTokenCapsule(urc20Tick));
+
+            tempTick = future30TokenStore.get(tempTick.getNextTick().toByteArray());
+          }
         });
 
           //@todo migrate future store: Need review

@@ -624,6 +624,10 @@ public class Manager {
     adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
   }
 
+  public byte[] getBurnAddress(){
+    return getAccountStore().getBurnaccount().getAddress().toByteArray();
+  }
+
   /**
    * judge balance.
    */

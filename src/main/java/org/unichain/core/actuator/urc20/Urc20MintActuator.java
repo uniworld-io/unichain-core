@@ -52,17 +52,20 @@ public class Urc20MintActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var urc20Store = dbManager.getUrc20ContractStore();
+      var accStore = dbManager.getAccountStore();
+
       var ctx = contract.unpack(Urc20MintContract.class);
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var urc20Addr = ctx.getAddress().toByteArray();
+
+      //update contract
       var urc20Cap = urc20Store.get(urc20Addr);
       urc20Cap.setTotalSupply(Math.addExact(urc20Cap.getTotalSupply(), ctx.getAmount()));
       urc20Cap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
       urc20Cap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       urc20Store.put(urc20Addr, urc20Cap);
 
-      var accStore = dbManager.getAccountStore();
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-
+      //mine token
       AccountCapsule toAccountCap;
       byte[] toAddr;
 
@@ -101,14 +104,17 @@ public class Urc20MintActuator extends AbstractActuator {
       Assert.notNull(contract, "No contract!");
       Assert.notNull(dbManager, "No dbManager!");
       Assert.isTrue(contract.is(Urc20MintContract.class), "Contract type error,expected type [Urc20MintContract], real type[" + contract.getClass() + "]");
+
       var accStore = dbManager.getAccountStore();
+      var contractStore = dbManager.getUrc20ContractStore();
 
       val ctx = this.contract.unpack(Urc20MintContract.class);
       var fee = calcFee();
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = accStore.get(ownerAddr);
-      Assert.notNull(ownerAccountCap, "Owner address not exist");
+      var urc20Addr = ctx.getAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddr) && accStore.has(ownerAddr)
+      && Wallet.addressValid(urc20Addr) && contractStore.has(urc20Addr), "Unrecognized owner|contract address");
 
       if(ctx.hasField(TO_ADDRESS_FIELD_NUMBER)){
         var toAddr = ctx.getToAddress().toByteArray();
@@ -118,18 +124,15 @@ public class Urc20MintActuator extends AbstractActuator {
         }
       }
 
-      Assert.isTrue(ownerAccountCap.getBalance() >= fee, "Fee exceed balance");
+      var ownerCap = accStore.get(ownerAddr);
+      Assert.isTrue(ownerCap.getBalance() >= fee, "Fee exceed balance");
 
-      var urc20Addr = ctx.getAddress().toByteArray();
-      var urc20AddrBase58 = Wallet.encode58Check(urc20Addr);
-      var urc20Cap = dbManager.getUrc20ContractStore().get(urc20Addr);
-      Assert.notNull(urc20Cap, "Contract not exist :" + urc20AddrBase58);
+      var urc20Cap = contractStore.get(urc20Addr);
 
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < urc20Cap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(urc20Cap.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= urc20Cap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(urc20Cap.getStartTime()));
 
-      //limit on owner only
-      Assert.isTrue(Arrays.equals(ownerAddr, urc20Cap.getOwnerAddress().toByteArray()), "Mismatched Contract owner not allowed to mine");
+      Assert.isTrue(Arrays.equals(ownerAddr, urc20Cap.getOwnerAddress().toByteArray()), "Only contract owner allowed to mine");
 
       Assert.isTrue(ctx.getAmount() >= urc20Cap.getLot(), "Mined amount at least equal lot: " + urc20Cap.getLot());
 

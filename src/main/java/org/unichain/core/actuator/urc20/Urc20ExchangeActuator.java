@@ -53,7 +53,6 @@ public class Urc20ExchangeActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc20ExchangeContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccount = accountStore.get(ownerAddr);
-
       var contractAddr = ctx.getAddress().toByteArray();
       var contractCap = contractStore.get(contractAddr);
       var contractOwnerAddr = contractCap.getOwnerAddress().toByteArray();
@@ -61,8 +60,7 @@ public class Urc20ExchangeActuator extends AbstractActuator {
 
       var exchUnwFactor = contractCap.getExchUnw();
       var exchTokenFactor = contractCap.getExchToken();
-      Assert.isTrue(exchUnwFactor > 0, "Exchange unw factor must be positive");
-      Assert.isTrue(exchTokenFactor > 0, "Exchange token factor must be positive");
+      Assert.isTrue(exchUnwFactor > 0 && exchTokenFactor > 0, "Bad exchange factors: must be positive");
       var exchangedTokenAmt = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
 
       ownerAccount.addUrc20Token(contractAddr, exchangedTokenAmt);
@@ -93,18 +91,21 @@ public class Urc20ExchangeActuator extends AbstractActuator {
 
       var accountStore = dbManager.getAccountStore();
       var contractStore = dbManager.getUrc20ContractStore();
+
       val ctx = this.contract.unpack(Urc20ExchangeContract.class);
-      Assert.isTrue(ctx.getAmount() > 0, "Exchange UNW amount must be positive");
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-      var ownerCap = accountStore.get(ownerAddress);
-      Assert.notNull(ownerCap, "Owner account not exists");
+      Assert.isTrue(ctx.getAmount() > 0, "Bad exchange unw amount");
+
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var  contractAddr = ctx.getAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
+              && Wallet.addressValid(contractAddr) && contractStore.has(contractAddr),
+              "Unrecognized ownerAddress|contractAddress");
+
+      var ownerCap = accountStore.get(ownerAddr);
       Assert.isTrue(ownerCap.getBalance() >= Math.addExact(ctx.getAmount(), calcFee()), "Not enough balance to exchange");
 
-      var  contractAddr = ctx.getAddress().toByteArray();
       var contractAddrBase58 = Wallet.encode58Check(contractAddr);
       var contractCap = contractStore.get(contractAddr);
-      Assert.notNull(contractCap, "Contract not exists");
       Assert.isTrue(contractCap.getEnableExch(), "Contract disabled exchange feature");
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
@@ -116,7 +117,7 @@ public class Urc20ExchangeActuator extends AbstractActuator {
       var contractOwnerCap = accountStore.get(contractCap.getOwnerAddress().toByteArray());
       Assert.notNull(contractOwnerCap, "Contract owner account not exists");
 
-      Assert.isTrue(!Arrays.equals(ownerAddress, contractCap.getOwnerAddress().toByteArray()), "Contract owner not allowed to exchange token");
+      Assert.isTrue(!Arrays.equals(ownerAddr, contractCap.getOwnerAddress().toByteArray()), "Contract owner not allowed to exchange token");
 
       var exchUnwFactor = contractCap.getExchUnw();
       var exchTokenFactor = contractCap.getExchToken();

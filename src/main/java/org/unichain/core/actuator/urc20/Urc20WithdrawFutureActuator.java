@@ -45,14 +45,17 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(Urc20WithdrawFutureContract.class);
+      var contractStore = dbManager.getUrc20ContractStore();
+
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contractAddr = ctx.getAddress().toByteArray();
-      var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
+      var contractCap = contractStore.get(contractAddr);
 
       withdraw(ownerAddr, contractAddr, dbManager.getHeadBlockTimeStamp());
       contractCap.setFeePool(Math.subtractExact(contractCap.getFeePool(), fee));
       contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      dbManager.getUrc20ContractStore().put(contractAddr, contractCap);
+      contractStore.put(contractAddr, contractCap);
+
       dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
@@ -72,18 +75,20 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
       Assert.isTrue(contract.is(Urc20WithdrawFutureContract.class), "Contract type error,expected type [Urc20WithdrawFutureContract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(Urc20WithdrawFutureContract.class);
+      var accountStore = dbManager.getAccountStore();
+      var contractStore = dbManager.getUrc20ContractStore();
+
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
-      Assert.notNull (ownerAccountCap, "Owner account not found");
-
       var contractAddr = ctx.getAddress().toByteArray();
-      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
-      var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
-      Assert.notNull (contractCap, "Contract not found: " + contractAddrBase58);
+      Assert.isTrue(Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
+                      && Wallet.addressValid(contractAddr) && contractStore.has(contractAddr),
+              "Unrecognized owner|contract address");
 
+      var contractBase58 = Wallet.encode58Check(contractAddr);
+      var contractCap = contractStore.get(contractAddr);
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
       Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
-      Assert.isTrue (availableToWithdraw(ownerAddr, contractAddrBase58, dbManager.getHeadBlockTimeStamp()), "Contract unavailable to withdraw");
+      Assert.isTrue (availableToWithdraw(ownerAddr, contractBase58, dbManager.getHeadBlockTimeStamp()), "Contract unavailable to withdraw");
       Assert.isTrue (contractCap.getFeePool() >= fee, "Not enough contract pool fee balance");
       return true;
     }

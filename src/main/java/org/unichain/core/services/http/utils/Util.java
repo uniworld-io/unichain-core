@@ -559,141 +559,178 @@ public class Util {
         String contractType = contract.getString("type");
         Any any = null;
         switch (contractType) {
-          case "AccountCreateContract":
-            AccountCreateContract.Builder accountCreateContractBuilder = AccountCreateContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), accountCreateContractBuilder, selfType);
-            any = Any.pack(accountCreateContractBuilder.build());
+          case "AccountCreateContract":{
+            var builder = AccountCreateContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "TransferContract":
-            TransferContract.Builder transferContractBuilder = TransferContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferContractBuilder, selfType);
-            any = Any.pack(transferContractBuilder.build());
+          }
+          case "TransferContract": {
+            var builder = TransferContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "TransferAssetContract":
-            TransferAssetContract.Builder transferAssetContractBuilder = TransferAssetContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), transferAssetContractBuilder, selfType);
-            any = Any.pack(transferAssetContractBuilder.build());
+          }
+          case "TransferAssetContract":{
+            var builder = TransferAssetContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "VoteAssetContract":
-            VoteAssetContract.Builder voteAssetContractBuilder = VoteAssetContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), voteAssetContractBuilder, selfType);
-            any = Any.pack(voteAssetContractBuilder.build());
+          }
+          case "VoteAssetContract": {
+            var builder = VoteAssetContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "VoteWitnessContract":
-            VoteWitnessContract.Builder voteWitnessContractBuilder = VoteWitnessContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), voteWitnessContractBuilder, selfType);
-            any = Any.pack(voteWitnessContractBuilder.build());
+          {
+            var builder = VoteWitnessContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "WitnessCreateContract":
-            WitnessCreateContract.Builder witnessCreateContractBuilder = WitnessCreateContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), witnessCreateContractBuilder, selfType);
-            any = Any.pack(witnessCreateContractBuilder.build());
+          {
+            var builder = WitnessCreateContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "AssetIssueContract":
-            AssetIssueContract.Builder assetIssueContractBuilder = AssetIssueContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), assetIssueContractBuilder, selfType);
-            any = Any.pack(assetIssueContractBuilder.build());
+          {
+            var builder = AssetIssueContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "WitnessUpdateContract":
-            WitnessUpdateContract.Builder witnessUpdateContractBuilder = WitnessUpdateContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), witnessUpdateContractBuilder, selfType);
-            any = Any.pack(witnessUpdateContractBuilder.build());
+          {
+            var builder = WitnessUpdateContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "ParticipateAssetIssueContract":
-            ParticipateAssetIssueContract.Builder participateAssetIssueContractBuilder = ParticipateAssetIssueContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), participateAssetIssueContractBuilder, selfType);
-            any = Any.pack(participateAssetIssueContractBuilder.build());
+          {
+            var builder = ParticipateAssetIssueContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "AccountUpdateContract":
-            AccountUpdateContract.Builder accountUpdateContractBuilder = AccountUpdateContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), accountUpdateContractBuilder, selfType);
-            any = Any.pack(accountUpdateContractBuilder.build());
+          {
+            var builder = AccountUpdateContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "FreezeBalanceContract":
-            FreezeBalanceContract.Builder freezeBalanceContractBuilder = FreezeBalanceContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), freezeBalanceContractBuilder, selfType);
-            any = Any.pack(freezeBalanceContractBuilder.build());
+          {
+            var builder = FreezeBalanceContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "UnfreezeBalanceContract":
-            UnfreezeBalanceContract.Builder unfreezeBalanceContractBuilder = UnfreezeBalanceContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), unfreezeBalanceContractBuilder, selfType);
-            any = Any.pack(unfreezeBalanceContractBuilder.build());
+          {
+            var builder = UnfreezeBalanceContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "WithdrawBalanceContract":
-            WithdrawBalanceContract.Builder withdrawBalanceContractBuilder = WithdrawBalanceContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), withdrawBalanceContractBuilder, selfType);
-            any = Any.pack(withdrawBalanceContractBuilder.build());
+          {
+            var builder = WithdrawBalanceContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "UnfreezeAssetContract":
-            UnfreezeAssetContract.Builder unfreezeAssetContractBuilder = UnfreezeAssetContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), unfreezeAssetContractBuilder, selfType);
-            any = Any.pack(unfreezeAssetContractBuilder.build());
+          {
+            var builder = UnfreezeAssetContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "UpdateAssetContract":
-            UpdateAssetContract.Builder updateAssetContractBuilder = UpdateAssetContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateAssetContractBuilder, selfType);
-            any = Any.pack(updateAssetContractBuilder.build());
+          }
+          case "UpdateAssetContract":{
+            var builder = UpdateAssetContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "ProposalCreateContract":
-            ProposalCreateContract.Builder createContractBuilder = ProposalCreateContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), createContractBuilder, selfType);
-            any = Any.pack(createContractBuilder.build());
+          }
+          case "ProposalCreateContract":{
+            var builder = ProposalCreateContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "ProposalApproveContract":
-            ProposalApproveContract.Builder approveContractBuilder = ProposalApproveContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), approveContractBuilder, selfType);
-            any = Any.pack(approveContractBuilder.build());
+          }
+          case "ProposalApproveContract":{
+            var builder = ProposalApproveContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "ProposalDeleteContract":
-            ProposalDeleteContract.Builder deleteContractBuilder = ProposalDeleteContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), deleteContractBuilder, selfType);
-            any = Any.pack(deleteContractBuilder.build());
+          }
+          case "ProposalDeleteContract":{
+            var builder = ProposalDeleteContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "SetAccountIdContract":
-            Contract.SetAccountIdContract.Builder setAccountid = Contract.SetAccountIdContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), setAccountid, selfType);
-            any = Any.pack(setAccountid.build());
+          }
+          case "SetAccountIdContract": {
+            var builder = SetAccountIdContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "CreateSmartContract":
-            CreateSmartContract.Builder createSmartContractBuilder = CreateSmartContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), createSmartContractBuilder, selfType);
-            any = Any.pack(createSmartContractBuilder.build());
+          }
+          case "CreateSmartContract":{
+            var builder = CreateSmartContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "TriggerSmartContract":
-            TriggerSmartContract.Builder triggerSmartContractBuilder = TriggerSmartContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), triggerSmartContractBuilder, selfType);
-            any = Any.pack(triggerSmartContractBuilder.build());
+          }
+          case "TriggerSmartContract":{
+            var builder = TriggerSmartContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "UpdateSettingContract":
-            UpdateSettingContract.Builder updateSettingContractBuilder = UpdateSettingContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateSettingContractBuilder, selfType);
-            any = Any.pack(updateSettingContractBuilder.build());
+          }
+          case "UpdateSettingContract":{
+            var builder = UpdateSettingContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "ExchangeCreateContract":
-            ExchangeCreateContract.Builder exchangeCreateContractBuilder = ExchangeCreateContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), exchangeCreateContractBuilder, selfType);
-            any = Any.pack(exchangeCreateContractBuilder.build());
+          }
+          case "ExchangeCreateContract":{
+            var builder = ExchangeCreateContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "ExchangeInjectContract":
-            ExchangeInjectContract.Builder exchangeInjectContractBuilder = ExchangeInjectContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), exchangeInjectContractBuilder, selfType);
-            any = Any.pack(exchangeInjectContractBuilder.build());
+          }
+          case "ExchangeInjectContract":{
+            var builder = ExchangeInjectContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "ExchangeTransactionContract":
-            ExchangeTransactionContract.Builder exchangeTransactionContractBuilder = ExchangeTransactionContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), exchangeTransactionContractBuilder, selfType);
-            any = Any.pack(exchangeTransactionContractBuilder.build());
+          }
+          case "ExchangeTransactionContract":{
+            var builder = ExchangeTransactionContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "ExchangeWithdrawContract":
-            ExchangeWithdrawContract.Builder exchangeWithdrawContractBuilder = ExchangeWithdrawContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), exchangeWithdrawContractBuilder, selfType);
-            any = Any.pack(exchangeWithdrawContractBuilder.build());
+          }
+          case "ExchangeWithdrawContract":{
+            var builder = ExchangeWithdrawContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
-          case "UpdateEnergyLimitContract":
-            UpdateEnergyLimitContract.Builder updateEnergyLimitContractBuilder = UpdateEnergyLimitContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), updateEnergyLimitContractBuilder, selfType);
-            any = Any.pack(updateEnergyLimitContractBuilder.build());
+          }
+          case "UpdateEnergyLimitContract":{
+            var builder = UpdateEnergyLimitContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
             break;
+          }
           case "AccountPermissionUpdateContract":{
             var builder = AccountPermissionUpdateContract.newBuilder();
             JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
@@ -728,9 +765,15 @@ public class Util {
             any = Any.pack(builder.build());
             break;
           }
+          case "FutureDealTransferContract":{
+            var builder = FutureDealTransferContract.newBuilder();
+            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
+            any = Any.pack(builder.build());
+            break;
+          }
 
           /*
-             token economy
+             urc30
            */
           case "CreateTokenContract":{
             var builder = CreateTokenContract.newBuilder();
@@ -787,12 +830,7 @@ public class Util {
             any = Any.pack(builder.build());
             break;
           }
-          case "FutureDealTransferContract":{
-            var builder = FutureDealTransferContract.newBuilder();
-            JsonFormat.merge(parameter.getJSONObject(VALUE).toJSONString(), builder, selfType);
-            any = Any.pack(builder.build());
-            break;
-          }
+
           case "Urc721CreateContract":
           {
             var builder = Urc721CreateContract.newBuilder();

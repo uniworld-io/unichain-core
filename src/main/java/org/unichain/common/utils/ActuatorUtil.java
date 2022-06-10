@@ -13,7 +13,7 @@ import java.util.Objects;
 
 public class ActuatorUtil {
 
-  public static void addFutureDeal(Manager dbManager, byte[] address, long amount, long availableTime) {
+  public static void addFutureDeal(final Manager dbManager, byte[] address, long amount, long availableTime) {
     var tickDay = Util.makeDayTick(availableTime);
     var dealKey = Util.makeFutureTransferIndexKey(address, tickDay);
 
@@ -21,9 +21,8 @@ public class ActuatorUtil {
     var accountStore = dbManager.getAccountStore();
     var toAcc = accountStore.get(address);
     var summary = toAcc.getFutureSummary();
-    /*
-      tick exist: the fasted way!
-     */
+
+    //tick exist: the fasted way!
     if(futureStore.has(dealKey)){
       //save tick
       var tick = futureStore.get(dealKey);
@@ -39,9 +38,7 @@ public class ActuatorUtil {
       return;
     }
 
-    /*
-      first tick ever: add new tick, add summary
-     */
+    //first tick ever: add new tick, add summary
     if(Objects.isNull(summary)){
       //save new tick
       var tick = Protocol.Future.newBuilder()
@@ -66,16 +63,12 @@ public class ActuatorUtil {
       return;
     }
 
-    /*
-      other ticks exist
-     */
+    //other ticks exist
     var headKey = summary.getLowerTick().toByteArray();
     var head = futureStore.get(headKey);
     var headTime = head.getExpireTime();
 
-    /*
-      if new tick is head
-     */
+    //if new tick is head
     if(tickDay < headTime){
       //save old head
       head.setPrevTick(ByteString.copyFrom(dealKey));
@@ -102,9 +95,7 @@ public class ActuatorUtil {
       return;
     }
 
-    /*
-      if new tick is tail
-     */
+    //if new tick is tail
     if(tickDay > headTime){
       //save new tail
       var oldTailKeyBs = summary.getUpperTick();
@@ -133,9 +124,7 @@ public class ActuatorUtil {
       return;
     }
 
-    /*
-      otherwise: lookup slot to insert
-     */
+    //otherwise: lookup slot to insert
     var searchKeyBs = summary.getUpperTick();
     while (true){
       var searchTick = futureStore.get(searchKeyBs.toByteArray());
@@ -178,46 +167,56 @@ public class ActuatorUtil {
   }
 
   /**
-   * Detach deal:
-   * - if all --> just remove deal
-   * - if not --> just update deal, update summary
+   * Cut one deal by amount:
+   * - if [amount >= balance] --> remove deal
+   * - else update deal and summary
    */
-  public static void detachFutureDeal(Manager dbManager, byte[] ownerAddress, byte[] dealKey, long amt) {
+  public static void cutFutureDeal(final Manager dbManager, byte[] fromAddr, byte[] dealKey, long amt) {
     var futureStore = dbManager.getFutureTransferStore();
     var accountStore = dbManager.getAccountStore();
-    var ownerAcc = accountStore.get(ownerAddress);
+    var fromAcc = accountStore.get(fromAddr);
 
-    var summary = ownerAcc.getFutureSummary();
+    var summary = fromAcc.getFutureSummary();
     var deal = futureStore.get(dealKey);
-    Assert.isTrue(deal.getBalance() >= amt, "detach amount over deal balance!");
+    Assert.isTrue(deal.getBalance() >= amt, "cut amount over deal balance!");
 
-    if (deal.getBalance() > amt) {
-      //just update, not delete
+    if (deal.getBalance() > amt)
+    {
+      /**
+       * if smaller amount be cut, just update
+       */
+
+      //update deal
       deal.setBalance(Math.subtractExact(deal.getBalance(), amt));
       futureStore.put(dealKey, deal);
 
+      //update summary
       summary = summary.toBuilder()
               .setTotalBalance(Math.subtractExact(summary.getTotalBalance(), amt))
               .build();
-      ownerAcc.setFutureSummary(summary);
-      accountStore.put(ownerAddress, ownerAcc);
-      return;
-    } else {
+      fromAcc.setFutureSummary(summary);
+      accountStore.put(fromAddr, fromAcc);
+    }
+    else
+    {
       /**
-       * Delete deal
+       * move all amount, so just remove deal
        */
 
-      //if one deal: just remove
-      if (summary.getTotalDeal() == 1) {
-        ownerAcc.clearFuture();
-        accountStore.put(ownerAddress, ownerAcc);
+      //one deal, just clear all
+      if (summary.getTotalDeal() <= 1) {
+        fromAcc.clearFuture();
+        accountStore.put(fromAddr, fromAcc);
         futureStore.delete(dealKey);
         return;
       }
 
-      //if this deal is head: update next
       var headKey = summary.getLowerTick().toByteArray();
       if (Arrays.equals(headKey, dealKey)) {
+        /**
+         * this deal is head, so...
+         */
+        //update summary
         var head = futureStore.get(headKey);
         var nextTickKey = head.getNextTick().toByteArray();
         var nextTick = futureStore.get(nextTickKey);
@@ -230,15 +229,20 @@ public class ActuatorUtil {
                 .setTotalBalance(Math.subtractExact(summary.getTotalBalance(), deal.getBalance()))
                 .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), 1))
                 .build();
-        ownerAcc.setFutureSummary(summary);
-        accountStore.put(ownerAddress, ownerAcc);
+        fromAcc.setFutureSummary(summary);
+        accountStore.put(fromAddr, fromAcc);
+
+        //delete deal
         futureStore.delete(dealKey);
         return;
       }
 
-      // if this deal is tail: update prev
       var tailKey = summary.getUpperTick().toByteArray();
-      if (Arrays.equals(dealKey, tailKey)) {
+      if (Arrays.equals(tailKey, dealKey)) {
+        /**
+         * if this deal is tail, so....
+         */
+        //update summary
         var tail = futureStore.get(tailKey);
         var prevTickKey = tail.getPrevTick().toByteArray();
         var prevTick = futureStore.get(prevTickKey);
@@ -251,13 +255,18 @@ public class ActuatorUtil {
                 .setTotalBalance(Math.subtractExact(summary.getTotalDeal(), deal.getBalance()))
                 .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), 1))
                 .build();
-        ownerAcc.setFutureSummary(summary);
-        accountStore.put(ownerAddress, ownerAcc);
+        fromAcc.setFutureSummary(summary);
+        accountStore.put(fromAddr, fromAcc);
+
+        //delete deal
         futureStore.delete(dealKey);
         return;
       }
 
-      // if this deal is middle: update link & summary
+      /**
+       *  finally: this deal is the middle node, so...
+       */
+      //update summary
       var prevTickPointer = deal.getPrevTick().toByteArray();
       var prevTick = futureStore.get(prevTickPointer);
 
@@ -274,8 +283,10 @@ public class ActuatorUtil {
               .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), 1))
               .setTotalBalance(Math.subtractExact(summary.getTotalBalance(), deal.getBalance()))
               .build();
-      ownerAcc.setFutureSummary(summary);
-      accountStore.put(ownerAddress, ownerAcc);
+      fromAcc.setFutureSummary(summary);
+      accountStore.put(fromAddr, fromAcc);
+
+      //delete deal
       futureStore.delete(dealKey);
     }
   }

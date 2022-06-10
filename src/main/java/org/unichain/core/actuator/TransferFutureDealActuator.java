@@ -19,6 +19,7 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 @Slf4j(topic = "actuator")
 public class TransferFutureDealActuator extends AbstractActuator {
@@ -37,25 +38,25 @@ public class TransferFutureDealActuator extends AbstractActuator {
       var futureStore = dbManager.getFutureTransferStore();
 
       var ctx = contract.unpack(Contract.FutureDealTransferContract.class);
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      var toAddress = ctx.getToAddress().toByteArray();
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
+      var toAddr = ctx.getToAddress().toByteArray();
       var dealId = ctx.getDealId();
 
       //create toAddress
-      if (!accountStore.has(toAddress)) {
-        createDefaultAccount(toAddress);
+      if (!accountStore.has(toAddr)) {
+        createDefaultAccount(toAddr);
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
       //real amount
-      var dealKey = Util.makeFutureTransferIndexKey(ownerAddress, Util.makeDayTick(dealId));
+      var dealKey = Util.makeFutureTransferIndexKey(ownerAddr, Util.makeDayTick(dealId));
       var futureDeal = futureStore.get(dealKey);
       var amt = ctx.hasField(TRANSFER_FUTURE_DEAL_FIELD_AMT) ? ctx.getAmount() : futureDeal.getBalance();
 
-      ActuatorUtil.detachFutureDeal(dbManager, ownerAddress, dealKey, amt);
-      ActuatorUtil.addFutureDeal(dbManager, toAddress, amt, dealId);
+      ActuatorUtil.cutFutureDeal(dbManager, ownerAddr, dealKey, amt);
+      ActuatorUtil.addFutureDeal(dbManager, toAddr, amt, dealId);
 
-      chargeFee(ownerAddress, fee);
+      chargeFee(ownerAddr, fee);
       ret.setStatus(fee, Protocol.Transaction.Result.code.SUCESS);
       return true;
     } catch (Exception e) {
@@ -87,7 +88,7 @@ public class TransferFutureDealActuator extends AbstractActuator {
       var toAccount = accountStore.get(toAddr);
 
       var fee = calcFee();
-      if (toAccount == null) {
+      if (Objects.isNull(toAccount)) {
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
       else {
@@ -99,7 +100,7 @@ public class TransferFutureDealActuator extends AbstractActuator {
       */
       var dealId = Util.makeFutureTransferIndexKey(ownerAddr, Util.makeDayTick(ctx.getDealId()));
       var futureStore = dbManager.getFutureTransferStore();
-      Assert.isTrue(futureStore.has(dealId) && futureStore.get(dealId).getBalance() > 0, "No future deal or not enough balance " + ctx.getDealId());
+      Assert.isTrue(futureStore.has(dealId) && futureStore.get(dealId).getBalance() > 0, "No future deal or not enough future balance " + ctx.getDealId());
 
       if(ctx.hasField(TRANSFER_FUTURE_DEAL_FIELD_AMT)){
         Assert.isTrue(ctx.getAmount() > 0 && ctx.getAmount() <= futureStore.get(dealId).getBalance(), "Invalid amount");

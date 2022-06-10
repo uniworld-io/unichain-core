@@ -1871,10 +1871,6 @@ public class RpcApiService implements Service {
     /**
      * Urc20
      */
-
-    @Autowired
-    Urc20 urc20;
-
     @Override
     public void urc20ContractCreate(Contract.Urc20CreateContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {

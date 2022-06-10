@@ -32,9 +32,9 @@ public class TransferFutureDealServlet extends HttpServlet {
       var contract = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
       Util.checkBodySize(contract);
       var visible = Util.getVisiblePost(contract);
-      var build = Contract.FutureTransferContract.newBuilder();
-      JsonFormat.merge(contract, build, visible);
-      var transferCtx = build.build();
+      var builder = Contract.FutureTransferContract.newBuilder();
+      JsonFormat.merge(contract, builder, visible);
+      var transferCtx = builder.build();
       var tx = wallet.createTransactionCapsule(transferCtx, Protocol.Transaction.Contract.ContractType.FutureDealTransferContract).getInstance();
       var jsonObject = JSONObject.parseObject(contract);
       tx = Util.setTransactionPermissionId(jsonObject, tx);

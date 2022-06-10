@@ -74,7 +74,6 @@ public class Urc20UpgradeActuator extends AbstractActuator {
       var urc20Store = dbManager.getUrc20ContractStore();
       var accStore = dbManager.getAccountStore();
       var future30TokenStore = dbManager.getFutureTokenStore();
-      var future20TokenStore = dbManager.getUrc20FutureTransferStore();
       urc30Store.getAll().forEach(urc30Cap -> {
         var urc20Builder = Contract.Urc20CreateContract.newBuilder();
         urc20Builder.setOwnerAddress(urc30Cap.getOwnerAddress());

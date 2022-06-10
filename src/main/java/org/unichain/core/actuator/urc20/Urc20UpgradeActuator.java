@@ -20,13 +20,13 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.unichain.common.utils.ActuatorUtil;
 import org.unichain.common.utils.AddressUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.urc20.Urc20ContractCapsule;
-import org.unichain.core.capsule.urc20.Urc20FutureTokenCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -122,42 +122,39 @@ public class Urc20UpgradeActuator extends AbstractActuator {
         });
 
         //@todo migrate urc30 future: Need review
-        acc.getInstance().getTokenFutureMap().forEach((symbol, futureTokenSummaryV2) -> {
-          var urc20TokenSummary = Protocol.Urc20FutureTokenSummary.newBuilder()
-                  .setAddress(ByteString.copyFrom(AddressUtil.genAssetAddrBySeed(futureTokenSummaryV2.getTokenName())))
-                  .setSymbol(futureTokenSummaryV2.getTokenName())
-                  .setTotalDeal(futureTokenSummaryV2.getTotalDeal())
-                  .setLowerBoundTime(futureTokenSummaryV2.getLowerBoundTime())
-                  .setUpperBoundTime(futureTokenSummaryV2.getUpperBoundTime())
-                  .setTotalValue(futureTokenSummaryV2.getTotalValue())
-                  .setLowerTick(futureTokenSummaryV2.getLowerTick())
-                  .setUpperTick(futureTokenSummaryV2.getUpperTick())
-                  .build();
-          acc.setUrc20FutureTokenSummary(Wallet.encode58Check(ByteString.copyFromUtf8(symbol).toByteArray()), urc20TokenSummary);
+        acc.getInstance().getTokenFutureMap().forEach((symbol, urc30Summary) -> {
+          var addressBase58 = Wallet.encode58Check(AddressUtil.genAssetAddrBySeed(symbol));
 
-          var tempTick = future30TokenStore.get(futureTokenSummaryV2.getLowerTick().toByteArray());
+          //@todo migrate future store: Need review
+          // move future urc30 future deals to urc20 future deals
+          var tempTick = future30TokenStore.get(urc30Summary.getLowerTick().toByteArray());
           if (tempTick == null) {
             return;
           }
 
-          while (tempTick.getNextTick() != null || tempTick.getNextTick().size() != 0) {
-            var urc20Tick = Protocol.Urc20FutureToken.newBuilder()
-                    .setFutureBalance(tempTick.getBalance())
-                    .setExpireTime(tempTick.getExpireTime())
-                    .setPrevTick(tempTick.getPrevTick())
-                    .setNextTick(tempTick.getNextTick())
-                    .build();
-
-            var addressBase58 = Wallet.encode58Check(AddressUtil.genAssetAddrBySeed(symbol));
-            var tickDay = Util.makeDayTick(tempTick.getExpireTime());
-            var urc20TickKey = Util.makeUrc20FutureTokenIndexKey(acc.getAddress().toByteArray(), addressBase58, tickDay);
-            future20TokenStore.put(urc20TickKey, new Urc20FutureTokenCapsule(urc20Tick));
-
+          while (tempTick.getNextTick() != null && tempTick.getNextTick().size() != 0) {
+            ActuatorUtil.addUrc20Future(dbManager, acc.getAddress().toByteArray(), AddressUtil.genAssetAddrBySeed(symbol), tempTick.getBalance(), tempTick.getExpireTime());
             tempTick = future30TokenStore.get(tempTick.getNextTick().toByteArray());
           }
+
+          // change summary
+          var lowerTickUrc20Pointer =
+                  createTickDayKeyUrc20(acc, addressBase58, urc30Summary.getLowerBoundTime());
+          var upperTickUrc20Pointer =
+                  createTickDayKeyUrc20(acc, addressBase58, urc30Summary.getUpperBoundTime());
+          var urc20TokenSummary = Protocol.Urc20FutureTokenSummary.newBuilder()
+                  .setAddress(ByteString.copyFrom(AddressUtil.genAssetAddrBySeed(urc30Summary.getTokenName())))
+                  .setSymbol(urc30Summary.getTokenName())
+                  .setTotalDeal(urc30Summary.getTotalDeal())
+                  .setLowerBoundTime(urc30Summary.getLowerBoundTime())
+                  .setUpperBoundTime(urc30Summary.getUpperBoundTime())
+                  .setTotalValue(urc30Summary.getTotalValue())
+                  .setLowerTick(lowerTickUrc20Pointer)
+                  .setUpperTick(upperTickUrc20Pointer)
+                  .build();
+          acc.setUrc20FutureTokenSummary(Wallet.encode58Check(ByteString.copyFromUtf8(symbol).toByteArray()), urc20TokenSummary);
         });
 
-          //@todo migrate future store: Need review
         accStore.put(acc.getAddress().toByteArray(), acc);
       });
     }
@@ -165,4 +162,11 @@ public class Urc20UpgradeActuator extends AbstractActuator {
         logger.error("failed to upgrade: ", e);
     }
   }
+
+  private ByteString createTickDayKeyUrc20(AccountCapsule ownerAccount, String tokenAddressBase58, long expireTime) {
+    var tickDay = Util.makeDayTick(expireTime);
+    var tickDayKey = Util.makeUrc20FutureTokenIndexKey(ownerAccount.getAddress().toByteArray(), tokenAddressBase58, tickDay);
+    return ByteString.copyFrom(tickDayKey);
+  }
+
 }

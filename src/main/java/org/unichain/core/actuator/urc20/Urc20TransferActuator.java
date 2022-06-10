@@ -146,13 +146,13 @@ public class Urc20TransferActuator extends AbstractActuator {
       var toAddr = ctx.getTo().toByteArray();
 
       Assert.isTrue(Wallet.addressValid(ownerAddr)
-              && accountStore.has(ownerAddr)
-              && Wallet.addressValid(contractAddr)
-              && contractStore.has(contractAddr)
-              && Wallet.addressValid(toAddr)
+                      && accountStore.has(ownerAddr), "Unrecognized owner address");
+      Assert.isTrue(Wallet.addressValid(contractAddr)
+              && contractStore.has(contractAddr), "Unrecognized contract address");
+      Assert.isTrue(Wallet.addressValid(toAddr)
               && !Arrays.equals(dbManager.getBurnAddress(), toAddr)
-              && (!accountStore.has(toAddr) || accountStore.get(toAddr).getType() == Protocol.AccountType.Normal),
-              "Unrecognized owner|contract|to address");
+              && (!accountStore.has(toAddr) || accountStore.get(toAddr).getType() != Protocol.AccountType.Contract),
+              "Unrecognized to address or burn address or contract address");
 
       Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Transfer to itself not allowed");
 

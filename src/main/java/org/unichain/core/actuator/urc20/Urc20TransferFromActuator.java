@@ -161,16 +161,13 @@ public class Urc20TransferFromActuator extends AbstractActuator {
       var urc20Addr = ctx.getAddress().toByteArray();
       var toAddr = ctx.getTo().toByteArray();
 
-      Assert.isTrue(Wallet.addressValid(spenderAddr)
-                      && accStore.has(spenderAddr)
-                      && Wallet.addressValid(fromAddr)
-                      && accStore.has(fromAddr)
-                      && Wallet.addressValid(urc20Addr)
-                      && contractStore.has(urc20Addr)
-                      && Wallet.addressValid(toAddr)
+      Assert.isTrue(Wallet.addressValid(spenderAddr) && accStore.has(spenderAddr), "Unrecognized spender address!");
+      Assert.isTrue(Wallet.addressValid(fromAddr) && accStore.has(fromAddr), "Unrecognized fromAddr address!");
+      Assert.isTrue(Wallet.addressValid(urc20Addr) && contractStore.has(urc20Addr), "Unrecognized contract address!");
+      Assert.isTrue(Wallet.addressValid(toAddr)
                       && !Arrays.equals(dbManager.getBurnAddress(), toAddr)
-                      && (!accStore.has(toAddr) || (accStore.get(toAddr).getType() == Protocol.AccountType.Normal)),
-              "Unrecognized spender|from|contract|to address!");
+                      && (!accStore.has(toAddr) || (accStore.get(toAddr).getType() != Protocol.AccountType.Contract)),
+              "Unrecognized to address or burn address or contract address");
 
       var urc20AddrBase58 = Wallet.encode58Check(urc20Addr);
 

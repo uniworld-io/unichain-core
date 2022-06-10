@@ -76,36 +76,34 @@ public class Urc20TransferOwnerActuator extends AbstractActuator {
 
       var fee = calcFee();
       var ctx = contract.unpack(Urc20TransferOwnerContract.class);
+      var accountStore = dbManager.getAccountStore();
+      var contractStore = dbManager.getUrc20ContractStore();
 
-      var ownerAddress = ctx.getOwnerAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(ownerAddress), "Invalid ownerAddress");
-      var ownerAccount = dbManager.getAccountStore().get(ownerAddress);
-      Assert.notNull(ownerAccount, "Owner account not exists");
-
-      var toAddress = ctx.getToAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(toAddress), "Invalid toAddress");
-      Assert.isTrue(!Arrays.equals(ownerAddress, toAddress), "Transfer owner to itself not allowed");
-
+      var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contractAddr = ctx.getAddress().toByteArray();
-      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
-      var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
-      Assert.notNull(contractCap, "Contract not found: " + contractAddrBase58);
+      var toAddr = ctx.getToAddress().toByteArray();
+
+      Assert.isTrue(Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
+              && Wallet.addressValid(contractAddr) && contractStore.has(contractAddr)
+              && Wallet.addressValid(toAddr), "Unrecognized owner|contract|to address");
+
+      Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Transfer owner to itself not allowed");
+
+      var contractCap = contractStore.get(contractAddr);
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
-      Assert.isTrue(Arrays.equals(ownerAddress, contractCap.getOwnerAddress().toByteArray()), "Mismatched Contract owner not allowed");
+      Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwnerAddress().toByteArray()), "Mismatched Contract owner not allowed");
 
-      var toAccount = dbManager.getAccountStore().get(toAddress);
+      var toAccount = accountStore.get(toAddr);
       if (Objects.isNull(toAccount)) {
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
 
-      //after UvmSolidity059 proposal, send token/reassign token owner to smartContract by actuator is not allowed.
-      var transferToSmartContract  = (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1)
-              && (toAccount != null)
-              && (toAccount.getType() == AccountType.Contract);
-      Assert.isTrue(!transferToSmartContract, "Cannot transfer token owner permission to smartContract");
+      if(toAccount != null){
+        Assert.isTrue(accountStore.get(toAddr).getType() == AccountType.Normal, "Transfer owner to normal account only");
+      }
 
-      Assert.isTrue(ownerAccount.getBalance() >=  fee, "Balance is not sufficient");
+      Assert.isTrue(accountStore.get(ownerAddr).getBalance() >=  fee, "Balance is not sufficient");
 
       return true;
     }

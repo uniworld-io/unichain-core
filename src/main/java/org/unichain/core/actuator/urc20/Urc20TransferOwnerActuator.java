@@ -83,9 +83,14 @@ public class Urc20TransferOwnerActuator extends AbstractActuator {
       var contractAddr = ctx.getAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
 
-      Assert.isTrue(Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
-              && Wallet.addressValid(contractAddr) && contractStore.has(contractAddr)
-              && Wallet.addressValid(toAddr), "Unrecognized owner|contract|to address");
+      Assert.isTrue(Wallet.addressValid(ownerAddr)
+              && accountStore.has(ownerAddr)
+              && Wallet.addressValid(contractAddr)
+              && contractStore.has(contractAddr)
+              && Wallet.addressValid(toAddr)
+              && !Arrays.equals(dbManager.getBurnAddress(), toAddr)
+              && (!accountStore.has(toAddr) || accountStore.get(toAddr).getType() == AccountType.Normal),
+              "Unrecognized owner|contract|to address");
 
       Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Transfer owner to itself not allowed");
 
@@ -97,10 +102,6 @@ public class Urc20TransferOwnerActuator extends AbstractActuator {
       var toAccount = accountStore.get(toAddr);
       if (Objects.isNull(toAccount)) {
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
-      }
-
-      if(toAccount != null){
-        Assert.isTrue(accountStore.get(toAddr).getType() == AccountType.Normal, "Transfer owner to normal account only");
       }
 
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >=  fee, "Balance is not sufficient");

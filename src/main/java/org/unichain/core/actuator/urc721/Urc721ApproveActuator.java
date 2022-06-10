@@ -111,6 +111,11 @@ public class Urc721ApproveActuator extends AbstractActuator {
       Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Owner and operator cannot be the same");
       Assert.isTrue(!TransactionUtil.isGenesisAddress(toAddr), "Operator can not be Genesis account");
 
+      Assert.isTrue(!Arrays.equals(dbManager.getBurnAddress(), toAddr)
+              && (!accountStore.has(toAddr) || accountStore.get(toAddr).getType() == Protocol.AccountType.Normal),
+      "Bad to address: must be not burn, normal address");
+
+
       if(!accountStore.has(toAddr)){
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }

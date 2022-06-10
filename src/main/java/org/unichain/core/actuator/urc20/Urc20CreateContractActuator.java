@@ -39,6 +39,7 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import static org.unichain.core.config.Parameter.ChainConstant.*;
@@ -127,14 +128,20 @@ public class Urc20CreateContractActuator extends AbstractActuator {
       val ctx = this.contract.unpack(Contract.Urc20CreateContract.class);
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(ownerAddr) && !TransactionUtil.isGenesisAddress(ownerAddr), "Bad owner address: invalid or genesis address");
-      var accountCap = accountStore.get(ownerAddr);
-      Assert.isTrue(Objects.nonNull(accountCap) && accountCap.getType() == Protocol.AccountType.Normal, "Account not exists or must be normal account type");
-
       var contractAddr = ctx.getAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(contractAddr), "Invalid contractAddress");
-      var contractBase58 = Wallet.encode58Check(contractAddr);
-      Assert.isTrue(!accountStore.has(contractAddr) && !dbManager.getUrc20ContractStore().has(contractAddr), "Contract address exists: " + contractBase58);
+
+      Assert.isTrue(Wallet.addressValid(ownerAddr)
+                      && accountStore.has(ownerAddr)
+                      && !Arrays.equals(dbManager.getBurnAddress(), ownerAddr),
+              "Invalid owner: unrecongized or burn address");
+
+      var accountCap = accountStore.get(ownerAddr);
+      Assert.isTrue( accountCap.getType() == Protocol.AccountType.Normal, "Account not exists or must be normal account type");
+
+      Assert.isTrue(Wallet.addressValid(contractAddr)
+              && !accountStore.has(contractAddr)
+              && !dbManager.getUrc20ContractStore().has(contractAddr)
+              && !Arrays.equals(dbManager.getBurnAddress(), contractAddr), "Bad contract address: invalid|exist|is burn address");
 
       Assert.isTrue(!ctx.getSymbol().isEmpty() && TransactionUtil.validTokenSymbol(ctx.getSymbol()), "Invalid contract symbol");
       Assert.isTrue(!ctx.getSymbol().equalsIgnoreCase("UNW"), "Token symbol can't be UNW");

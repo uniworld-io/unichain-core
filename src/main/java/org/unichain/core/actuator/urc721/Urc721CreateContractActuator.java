@@ -112,20 +112,21 @@ public class Urc721CreateContractActuator extends AbstractActuator {
 
       Assert.isTrue(Wallet.addressValid(ownerAddr)
                       && accountStore.has(ownerAddr)
-                      && (accountStore.get(ownerAddr).getType() == Protocol.AccountType.Normal)
-                      && !TransactionUtil.isGenesisAddress(ownerAddr),
-              "Bad owner account: invalid or not exist, must be normal and non-genesis account");
+                      && !Arrays.equals(dbManager.getBurnAddress(), ownerAddr)
+                      && (accountStore.get(ownerAddr).getType() == Protocol.AccountType.Normal),
+              "Bad owner account: invalid or not exist, must be normal and not burn address");
 
       Assert.isTrue(TransactionUtil.validTokenSymbol(symbol), "Invalid contract symbol");
       Assert.isTrue(TransactionUtil.validTokenName(name), "Invalid contract name");
 
       if (ctx.hasField(URC721_CREATE_CONTRACT_FIELD_MINTER)){
         var minterAddr = ctx.getMinter().toByteArray();
-        Assert.isTrue(Wallet.addressValid(minterAddr) && accountStore.has(minterAddr), "Unrecognized minter account[" + Wallet.encode58Check(minterAddr) + "]");
-        Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr)
-                && !TransactionUtil.isGenesisAddress(minterAddr)
-                && (accountStore.get(minterAddr).getType() == Protocol.AccountType.Normal),
-                "Bad minter address: must be not owner, not genesis and must be normal account!");
+        Assert.isTrue(Wallet.addressValid(minterAddr)
+                        && accountStore.has(minterAddr)
+                        && !Arrays.equals(dbManager.getBurnAddress(), minterAddr)
+                        && (accountStore.get(minterAddr).getType() == Protocol.AccountType.Normal)
+                        && !Arrays.equals(minterAddr, ownerAddr)
+                , "Unrecognized minter address: must exist, not burn address, normal address and not owner address");
       }
 
       Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");

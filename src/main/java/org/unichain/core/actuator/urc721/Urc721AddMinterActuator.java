@@ -25,7 +25,6 @@ import org.springframework.util.Assert;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
-import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -101,6 +100,9 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       Assert.isTrue(accStore.has(ownerAddr), "Owner account not exist");
       Assert.isTrue(Wallet.addressValid(minterAddr), "Minter address not active or not exists");
       Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
+      Assert.isTrue(!Arrays.equals(dbManager.getBurnAddress(), minterAddr)
+                      && (!accStore.has(minterAddr) || accStore.get(minterAddr).getType() == Protocol.AccountType.Normal),
+              "Bad minter address: must be not burn, normal address");
       Assert.isTrue(contractStore.has(contractAddr), "Contract address not exist");
       var contractCap = contractStore.get(contractAddr);
       Assert.isTrue(Arrays.equals(contractCap.getOwner(), ownerAddr), "Not owner of contract");
@@ -115,7 +117,6 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       }
       Assert.isTrue(accStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
       Assert.isTrue(!contractCap.hasMinter() || (!Arrays.equals(contractCap.getMinter(), minterAddr)), "Already minter");
-      Assert.isTrue(!TransactionUtil.isGenesisAddress(minterAddr), "Minter is genesis address");
 
       return true;
     }

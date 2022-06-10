@@ -27,7 +27,6 @@ import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.urc20.Urc20SpenderCapsule;
-import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -139,10 +138,12 @@ public class Urc20ApproveActuator extends AbstractActuator {
       var spenderAddr = ctx.getSpender().toByteArray();
       var urc20Addr = ctx.getAddress().toByteArray();
 
-      Assert.isTrue(Wallet.addressValid(spenderAddr) && Wallet.addressValid(urc20Addr) && Wallet.addressValid(ownerAddr), "Bad owner|contract|spender address");
-      Assert.isTrue(!TransactionUtil.isGenesisAddress(spenderAddr), "Spender can not be genesis");
+      Assert.isTrue( Wallet.addressValid(urc20Addr) && contractStore.has(urc20Addr)
+              && Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
+              && Wallet.addressValid(spenderAddr), "Unrecognized owner|contract|spender address");
+
+      Assert.isTrue(!Arrays.equals(dbManager.getBurnAddress(), spenderAddr), "Spender can not be burn address");
       Assert.isTrue(!Arrays.equals(ownerAddr, spenderAddr), "Spender must not be owner");
-      Assert.isTrue(accountStore.has(ownerAddr) && contractStore.has(urc20Addr) , "Unrecognized owner|contract address");
 
       var urc20AddrBase58 = Wallet.encode58Check(urc20Addr);
       var urc20Cap = contractStore.get(urc20Addr);

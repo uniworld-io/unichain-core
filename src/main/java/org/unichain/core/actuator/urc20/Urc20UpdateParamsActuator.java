@@ -151,8 +151,10 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
 
           var ownerAddr = ctx.getOwnerAddress().toByteArray();
           var contractAddr = ctx.getAddress().toByteArray();
-          Assert.isTrue(Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
-                                && Wallet.addressValid(contractAddr) && contractStore.has(contractAddr),
+          Assert.isTrue(Wallet.addressValid(ownerAddr)
+                          && accountStore.has(ownerAddr)
+                          && Wallet.addressValid(contractAddr)
+                          && contractStore.has(contractAddr),
                   "Unrecognized owner|contract address");
 
           var accountCap = accountStore.get(ownerAddr);

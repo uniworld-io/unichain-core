@@ -27,7 +27,6 @@ import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.urc721.Urc721TokenCapsule;
-import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -98,26 +97,27 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             var fee = calcFee();
 
             val ctx = this.contract.unpack(Urc721TransferFromContract.class);
-            var operatorAddr = ctx.getOwnerAddress().toByteArray();
-            var toAddr = ctx.getTo().toByteArray();
-            var contractAddr = ctx.getAddress().toByteArray();
-
-            Assert.isTrue(Wallet.addressValid(operatorAddr)
-                    && Wallet.addressValid(toAddr)
-                    && Wallet.addressValid(contractAddr),
-                    "Invalid  from|to|contract address");
-            Assert.isTrue(!TransactionUtil.isGenesisAddress(toAddr), "To address can not be genesis account");
-
-            Assert.isTrue(ctx.hasField(URC721_TRANSFER_FROM_FIELD_TOKEN_ID) && ctx.getTokenId() >= 0, "Missing or bad token id");
-
             var accountStore = dbManager.getAccountStore();
             var tokenStore = dbManager.getUrc721TokenStore();
             var contractStore = dbManager.getUrc721ContractStore();
             var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
 
+            var operatorAddr = ctx.getOwnerAddress().toByteArray();
+            var toAddr = ctx.getTo().toByteArray();
+            var contractAddr = ctx.getAddress().toByteArray();
+
+            Assert.isTrue(Wallet.addressValid(operatorAddr)
+                            && accountStore.has(operatorAddr)
+                            && Wallet.addressValid(contractAddr)
+                            && contractStore.has(contractAddr)
+                            && Wallet.addressValid(toAddr)
+                            && !Arrays.equals(dbManager.getBurnAddress(), toAddr)
+                            && (!accountStore.has(toAddr) || (accountStore.get(toAddr).getType() == Protocol.AccountType.Normal)),
+                    "Unrecognized  operator|to|contract address");
+
+            Assert.isTrue(ctx.hasField(URC721_TRANSFER_FROM_FIELD_TOKEN_ID) && ctx.getTokenId() >= 0, "Missing or bad token id");
+
             Assert.isTrue(!Arrays.equals(operatorAddr, toAddr), "Can not transfer to it self");
-            Assert.isTrue(accountStore.has(operatorAddr), "Operator address not exist");
-            Assert.isTrue(contractStore.has(contractAddr), "Contract address not exist");
 
             var tokenKey = Urc721TokenCapsule.genTokenKey(contractAddr, ctx.getTokenId());
             Assert.isTrue(tokenStore.has(tokenKey), "Token not exist");
@@ -136,9 +136,7 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             if (!accountStore.has(toAddr)) {
                 fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
             }
-            {
-                Assert.isTrue(accountStore.get(toAddr).getType() == Protocol.AccountType.Normal, "Transfer token to normal address only");
-            }
+
             Assert.isTrue(accountStore.get(operatorAddr).getBalance() >= fee, "Not enough balance to cover fee, required gas: " + fee + "ginza");
             return true;
         } catch (Exception e) {

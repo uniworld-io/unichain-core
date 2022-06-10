@@ -161,11 +161,17 @@ public class Urc20TransferFromActuator extends AbstractActuator {
       var urc20Addr = ctx.getAddress().toByteArray();
       var toAddr = ctx.getTo().toByteArray();
 
-      Assert.isTrue(Wallet.addressValid(spenderAddr) && accStore.has(spenderAddr)
-              && Wallet.addressValid(fromAddr) && accStore.has(fromAddr)
-              && Wallet.addressValid(urc20Addr) && contractStore.has(urc20Addr)
-              && Wallet.addressValid(toAddr),
+      Assert.isTrue(Wallet.addressValid(spenderAddr)
+                      && accStore.has(spenderAddr)
+                      && Wallet.addressValid(fromAddr)
+                      && accStore.has(fromAddr)
+                      && Wallet.addressValid(urc20Addr)
+                      && contractStore.has(urc20Addr)
+                      && Wallet.addressValid(toAddr)
+                      && !Arrays.equals(dbManager.getBurnAddress(), toAddr)
+                      && (!accStore.has(toAddr) || (accStore.get(toAddr).getType() == Protocol.AccountType.Normal)),
               "Unrecognized spender|from|contract|to address!");
+
       var urc20AddrBase58 = Wallet.encode58Check(urc20Addr);
 
       Assert.isTrue(!Arrays.equals(spenderAddr, toAddr) && !Arrays.equals(fromAddr, toAddr), "Transfer to itself not allowed");
@@ -222,10 +228,6 @@ public class Urc20TransferFromActuator extends AbstractActuator {
           tokenFee = Math.addExact(tokenFee, contractCap.getCreateAccountFee());
         }
         Assert.isTrue(ctx.getAmount() > tokenFee, "Not enough token balance to cover transfer fee");
-      }
-
-      if(!createToAccount){
-        Assert.isTrue(toAccountCap.getType() == Protocol.AccountType.Normal, "Transfer to normal account only");
       }
 
       return true;

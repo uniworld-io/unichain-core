@@ -80,8 +80,10 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var contractAddr = ctx.getAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
-                      && Wallet.addressValid(contractAddr) && contractStore.has(contractAddr),
+      Assert.isTrue(Wallet.addressValid(ownerAddr)
+                      && accountStore.has(ownerAddr)
+                      && Wallet.addressValid(contractAddr)
+                      && contractStore.has(contractAddr),
               "Unrecognized owner|contract address");
 
       var contractBase58 = Wallet.encode58Check(contractAddr);

@@ -30,6 +30,7 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.Urc20ExchangeContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
@@ -96,10 +97,13 @@ public class Urc20ExchangeActuator extends AbstractActuator {
       Assert.isTrue(ctx.getAmount() > 0, "Bad exchange unw amount");
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var  contractAddr = ctx.getAddress().toByteArray();
-      Assert.isTrue(Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
-              && Wallet.addressValid(contractAddr) && contractStore.has(contractAddr),
-              "Unrecognized ownerAddress|contractAddress");
+      var contractAddr = ctx.getAddress().toByteArray();
+      Assert.isTrue(Wallet.addressValid(ownerAddr)
+                      && accountStore.has(ownerAddr)
+                      && (accountStore.get(ownerAddr).getType() == Protocol.AccountType.Normal)
+                      && Wallet.addressValid(contractAddr)
+                      && contractStore.has(contractAddr),
+              "Unrecognized ownerAddress|contractAddress or must be normal account");
 
       var ownerCap = accountStore.get(ownerAddr);
       Assert.isTrue(ownerCap.getBalance() >= Math.addExact(ctx.getAmount(), calcFee()), "Not enough balance to exchange");

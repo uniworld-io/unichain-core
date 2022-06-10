@@ -55,12 +55,14 @@ public class Urc20TransferActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc20TransferContract.class);
       var accountStore = dbManager.getAccountStore();
       var urc20Store = dbManager.getUrc20ContractStore();
+
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = accountStore.get(ownerAddr);
       var urc20Addr = ctx.getAddress().toByteArray();
+      var toAddr = ctx.getTo().toByteArray();
+
+      var ownerAccountCap = accountStore.get(ownerAddr);
       var urc20Cap = urc20Store.get(urc20Addr);
       var urc20OwnerAddr = urc20Cap.getOwnerAddress().toByteArray();
-      var toAddr = ctx.getTo().toByteArray();
       var toAccountCap = accountStore.get(toAddr);
 
       var isCreateNewAcc = Objects.isNull(toAccountCap);
@@ -135,16 +137,25 @@ public class Urc20TransferActuator extends AbstractActuator {
 
       var fee = calcFee();
 
+      var accountStore = dbManager.getAccountStore();
+      var contractStore = dbManager.getUrc20ContractStore();
+
       val ctx = this.contract.unpack(Urc20TransferContract.class);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
-      Assert.notNull(ownerAccountCap, "Owner account not found");
-
       var contractAddr = ctx.getAddress().toByteArray();
-      var contractAddrBase58 = Wallet.encode58Check(contractAddr);
-      var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
+      var toAddr = ctx.getTo().toByteArray();
+
+      Assert.isTrue(Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
+      && Wallet.addressValid(contractAddr) && contractStore.has(contractAddr)
+              && Wallet.addressValid(toAddr), "Unrecognized owner|contract|to address");
+
+      Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Transfer to itself not allowed");
+
+      var ownerAccountCap = accountStore.get(ownerAddr);
+      var contractBase58 = Wallet.encode58Check(contractAddr);
+      var contractCap = contractStore.get(contractAddr);
       var contractOwnerAddr = contractCap.getOwnerAddress().toByteArray();
-      Assert.notNull(contractCap, "Contract not found: " + contractAddrBase58);
+
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Token expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Token pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
 
@@ -160,11 +171,7 @@ public class Urc20TransferActuator extends AbstractActuator {
         Assert.isTrue(ctx.getAmount() >= contractCap.getLot(),"Future transfer require minimum amount of : " + contractCap.getLot());
       }
 
-      var toAddr = ctx.getTo().toByteArray();
-      Assert.isTrue(!Arrays.equals(ownerAddr, toAddr), "Transfer to itself not allowed");
-      Assert.isTrue(Wallet.addressValid(toAddr), "Invalid toAddress");
-
-      var toAccountCap = dbManager.getAccountStore().get(toAddr);
+      var toAccountCap = accountStore.get(toAddr);
       var createNewAccount = Objects.isNull(toAccountCap);
       var ownerIsContractOwner = Arrays.equals(ownerAddr, contractOwnerAddr);
       if(ownerIsContractOwner)
@@ -182,8 +189,8 @@ public class Urc20TransferActuator extends AbstractActuator {
       }
       Assert.isTrue(contractCap.getFeePool() >= fee, "Not enough token pool fee balance, require at least " + fee);
 
-      Assert.isTrue (ctx.getAmount() > 0, "Invalid transfer amount, expect positive number");
-      Assert.isTrue(ownerAccountCap.getUrc20TokenAvailable(contractAddrBase58) >= ctx.getAmount(), "Not enough token balance");
+      Assert.isTrue ((ctx.getAmount() > 0) && (ctx.getAmount() >= contractCap.getLot()) , "Bad transfer amount, require atleast: "+ contractCap.getLot());
+      Assert.isTrue(ownerAccountCap.getUrc20TokenAvailable(contractBase58) >= ctx.getAmount(), "Not enough token balance");
 
       //validate transfer amount vs fee
       if(!Arrays.equals(ownerAddr, contractOwnerAddr)){
@@ -194,11 +201,9 @@ public class Urc20TransferActuator extends AbstractActuator {
         }
         Assert.isTrue(ctx.getAmount() > tokenFee, "Not enough token balance to cover transfer fee");
       }
-      //after UvmSolidity059 proposal, send unx to smartContract by actuator is not allowed.
-      if (dbManager.getDynamicPropertiesStore().getAllowUvmSolidity059() == 1
-              && toAccountCap != null
-              && toAccountCap.getType() == Protocol.AccountType.Contract) {
-        throw new ContractValidateException("Cannot transfer token to smartContract.");
+
+      if(!createNewAccount){
+        Assert.isTrue(toAccountCap.getType() == Protocol.AccountType.Normal, "Transfer to normal account only");
       }
 
       return true;

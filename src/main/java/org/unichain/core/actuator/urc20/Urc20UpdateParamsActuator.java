@@ -40,8 +40,6 @@ import static org.unichain.core.config.Parameter.ChainConstant.*;
 
 @Slf4j(topic = "actuator")
 public class Urc20UpdateParamsActuator extends AbstractActuator {
-    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_ADDR = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.ADDRESS_FIELD_NUMBER);
-    private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_OWNER_ADDR = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.OWNER_ADDRESS_FIELD_NUMBER);
     private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_FEE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.FEE_FIELD_NUMBER);
     private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_LOT = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.LOT_FIELD_NUMBER);
     private static Descriptors.FieldDescriptor URC20_UPDATE_PARAMS_FIELD_FEE_RATE = Urc20UpdateParamsContract.getDescriptor().findFieldByNumber(Urc20UpdateParamsContract.EXTRA_FEE_RATE_FIELD_NUMBER);
@@ -61,10 +59,13 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
     var fee = calcFee();
     try {
         var ctx = contract.unpack(Urc20UpdateParamsContract.class);
+        var accountStore = dbManager.getAccountStore();
+        var contractStore = dbManager.getUrc20ContractStore();
+
         var ownerAddr = ctx.getOwnerAddress().toByteArray();
         var contractAddr = ctx.getAddress().toByteArray();
 
-        var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
+        var contractCap = contractStore.get(contractAddr);
         var updateCriticalParams = false;
 
         if(ctx.hasField(URC20_UPDATE_PARAMS_FIELD_FEE)) {
@@ -89,9 +90,9 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
             var newTotalSupply = ctx.getTotalSupply();
             var totalSupplyDiff = Math.subtractExact(newTotalSupply, contractCap.getTotalSupply());
             contractCap.setTotalSupply(newTotalSupply);
-            var ownerAccount = dbManager.getAccountStore().get(ownerAddr);
+            var ownerAccount = accountStore.get(ownerAddr);
             ownerAccount.addToken(contractAddr, totalSupplyDiff);
-            dbManager.getAccountStore().put(ownerAddr, ownerAccount);
+            accountStore.put(ownerAddr, ownerAccount);
             updateCriticalParams = true;
         }
 
@@ -125,7 +126,7 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
         }
 
         contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-        dbManager.getUrc20ContractStore().put(contractAddr, contractCap);
+        contractStore.put(contractAddr, contractCap);
 
         chargeFee(ownerAddr, fee);
         ret.setStatus(fee, code.SUCESS);
@@ -145,22 +146,21 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
           Assert.isTrue(contract.is(Urc20UpdateParamsContract.class), "Contract type error,expected type [Urc20UpdateParamsContract],real type[" + contract.getClass() + "]");
 
           val ctx = this.contract.unpack(Urc20UpdateParamsContract.class);
-
-          Assert.isTrue(ctx.hasField(URC20_UPDATE_PARAMS_FIELD_OWNER_ADDR), "Missing owner address");
-          Assert.isTrue(ctx.hasField(URC20_UPDATE_PARAMS_FIELD_ADDR), "Missing contract address");
+          var accountStore = dbManager.getAccountStore();
+          var contractStore = dbManager.getUrc20ContractStore();
 
           var ownerAddr = ctx.getOwnerAddress().toByteArray();
-          var accountCap = dbManager.getAccountStore().get(ownerAddr);
-          Assert.notNull(accountCap, "Invalid ownerAddress");
+          var contractAddr = ctx.getAddress().toByteArray();
+          Assert.isTrue(Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
+                                && Wallet.addressValid(contractAddr) && contractStore.has(contractAddr),
+                  "Unrecognized owner|contract address");
+
+          var accountCap = accountStore.get(ownerAddr);
           Assert.isTrue (accountCap.getBalance() >= calcFee(), "Not enough balance");
 
-          var contractAddr = ctx.getAddress().toByteArray();
           var contractAddrBase58 = Wallet.encode58Check(contractAddr);
-          var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
-          Assert.notNull(contractCap, "Contract not exist: " + contractAddrBase58);
-
+          var contractCap = contractStore.get(contractAddr);
           Assert.isTrue(Arrays.equals(ownerAddr, contractCap.getOwnerAddress().toByteArray()), "Mismatched Contract owner not allowed to mine");
-
           Assert.isTrue (dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: " + Utils.formatDateLong(contractCap.getEndTime()));
           Assert.isTrue (dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
 

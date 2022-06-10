@@ -34,11 +34,11 @@ public class Urc20TransferOwnerActuator extends AbstractActuator {
     try {
       var ctx = contract.unpack(Urc20TransferOwnerContract.class);
       var accountStore = dbManager.getAccountStore();
-      var urc20Store = dbManager.getUrc20ContractStore();
+      var contractStore = dbManager.getUrc20ContractStore();
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var toAddr = ctx.getToAddress().toByteArray();
       var urc20Addr = ctx.getAddress().toByteArray();
-      var urc20Cap = urc20Store.get(urc20Addr);
+      var urc20Cap = contractStore.get(urc20Addr);
 
       var toAccount = accountStore.get(toAddr);
       if (Objects.isNull(toAccount)) {
@@ -49,7 +49,7 @@ public class Urc20TransferOwnerActuator extends AbstractActuator {
       urc20Cap.setOwnerAddress(ctx.getToAddress());
       urc20Cap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
       urc20Cap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      urc20Store.put(urc20Addr, urc20Cap);
+      contractStore.put(urc20Addr, urc20Cap);
 
       var ownerAccount = accountStore.get(ownerAddr);
       var tokenAvail = ownerAccount.burnUrc20AllAvailableToken(urc20Addr);

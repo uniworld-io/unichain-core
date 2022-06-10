@@ -45,13 +45,16 @@ public class Urc20ContributePoolFeeActuator extends AbstractActuator {
     var fee = calcFee();
     try {
         var ctx = contract.unpack(Urc20ContributePoolFeeContract.class);
+        var contractStore = dbManager.getUrc20ContractStore();
         var contractAddr = ctx.getAddress().toByteArray();
+        var ownerAddr = ctx.getOwnerAddress().toByteArray();
         var contributeAmount =  ctx.getAmount();
-        var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
+
+        var contractCap = contractStore.get(contractAddr);
         contractCap.setFeePool(Math.addExact(contractCap.getFeePool(), contributeAmount));
-        dbManager.getUrc20ContractStore().put(contractAddr, contractCap);
-        var ownerAddress = ctx.getOwnerAddress().toByteArray();
-        dbManager.adjustBalance(ownerAddress, -Math.addExact(ctx.getAmount(), fee));
+        contractStore.put(contractAddr, contractCap);
+
+        dbManager.adjustBalance(ownerAddr, -Math.addExact(ctx.getAmount(), fee));
         dbManager.burnFee(fee);
         ret.setStatus(fee, code.SUCESS);
     }
@@ -70,14 +73,21 @@ public class Urc20ContributePoolFeeActuator extends AbstractActuator {
           Assert.notNull(dbManager, "No dbManager!");
           Assert.isTrue(contract.is(Urc20ContributePoolFeeContract.class), "Contract type error,expected type [Urc20ContributePoolFeeContract],real type[" + contract.getClass() + "]");
 
+          var accountStore = dbManager.getAccountStore();
+          var contractStore = dbManager.getUrc20ContractStore();
+
           val ctx  = this.contract.unpack(Urc20ContributePoolFeeContract.class);
-          var ownerAccount = dbManager.getAccountStore().get(ctx.getOwnerAddress().toByteArray());
+          var ownerAddr = ctx.getOwnerAddress().toByteArray();
+          var contractAddr = ctx.getAddress().toByteArray();
+          Assert.isTrue(Wallet.addressValid(ownerAddr) && accountStore.has(ownerAddr)
+                  && Wallet.addressValid(contractAddr) && contractStore.has(contractAddr), "Unrecognized owner|contract address");
+
+          var ownerAccount = accountStore.get(ownerAddr);
           Assert.notNull(ownerAccount, "Not found ownerAddress");
 
-          var contractAddr = ctx.getAddress().toByteArray();
           var contractAddrBase58 = Wallet.encode58Check(contractAddr);
           var contributeAmount = ctx.getAmount();
-          var urc20Contract = dbManager.getUrc20ContractStore().get(contractAddr);
+          var urc20Contract = contractStore.get(contractAddr);
           urc20Contract.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
           Assert.notNull(urc20Contract, "Contract not exist: " + contractAddrBase58);
 

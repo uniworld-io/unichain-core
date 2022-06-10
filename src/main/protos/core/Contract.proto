@@ -71,7 +71,8 @@ message FutureTransferContract {
 message FutureDealTransferContract {
   bytes owner_address = 1;
   bytes to_address = 2;
-  int64 deal_id = 4;
+  int64 deal_id = 3;
+  int64 amount = 4;
 }
 
 message TransferAssetContract {

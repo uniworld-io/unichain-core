@@ -3,19 +3,21 @@ package org.unichain.common.utils;
 import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.core.Wallet;
+import org.springframework.util.Assert;
 import org.unichain.core.capsule.FutureTransferCapsule;
 import org.unichain.core.capsule.urc20.Urc20FutureTokenCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Protocol;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class ActuatorUtil {
 
   public static void addFutureDeal(Manager dbManager, byte[] address, long amount, long availableTime) {
     var tickDay = Util.makeDayTick(availableTime);
-    var tickKey = Util.makeFutureTransferIndexKey(address, tickDay);
+    var dealKey = Util.makeFutureTransferIndexKey(address, tickDay);
 
     var futureStore = dbManager.getFutureTransferStore();
     var accountStore = dbManager.getAccountStore();
@@ -24,11 +26,11 @@ public class ActuatorUtil {
     /*
       tick exist: the fasted way!
      */
-    if(futureStore.has(tickKey)){
+    if(futureStore.has(dealKey)){
       //save tick
-      var tick = futureStore.get(tickKey);
+      var tick = futureStore.get(dealKey);
       tick.addBalance(amount);
-      futureStore.put(tickKey, tick);
+      futureStore.put(dealKey, tick);
 
       //save summary
       summary = summary.toBuilder()
@@ -50,7 +52,7 @@ public class ActuatorUtil {
               .clearNextTick()
               .clearPrevTick()
               .build();
-      futureStore.put(tickKey, new FutureTransferCapsule(tick));
+      futureStore.put(dealKey, new FutureTransferCapsule(tick));
 
       //save summary
       summary = Protocol.FutureSummary.newBuilder()
@@ -58,8 +60,8 @@ public class ActuatorUtil {
               .setTotalDeal(1L)
               .setUpperTime(tickDay)
               .setLowerTime(tickDay)
-              .setLowerTick(ByteString.copyFrom(tickKey))
-              .setUpperTick(ByteString.copyFrom(tickKey))
+              .setLowerTick(ByteString.copyFrom(dealKey))
+              .setUpperTick(ByteString.copyFrom(dealKey))
               .build();
       toAcc.setFutureSummary(summary);
       accountStore.put(address, toAcc);
@@ -78,7 +80,7 @@ public class ActuatorUtil {
      */
     if(tickDay < headTime){
       //save old head
-      head.setPrevTick(ByteString.copyFrom(tickKey));
+      head.setPrevTick(ByteString.copyFrom(dealKey));
       futureStore.put(headKey, head);
 
       //save new head
@@ -88,14 +90,14 @@ public class ActuatorUtil {
               .setNextTick(summary.getLowerTick())
               .clearPrevTick()
               .build();
-      futureStore.put(tickKey, new FutureTransferCapsule(newHead));
+      futureStore.put(dealKey, new FutureTransferCapsule(newHead));
 
       //save summary
       summary = summary.toBuilder()
               .setLowerTime(tickDay)
               .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
               .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
-              .setLowerTick(ByteString.copyFrom(tickKey))
+              .setLowerTick(ByteString.copyFrom(dealKey))
               .build();
       toAcc.setFutureSummary(summary);
       accountStore.put(address, toAcc);
@@ -114,18 +116,18 @@ public class ActuatorUtil {
               .clearNextTick()
               .setPrevTick(oldTailKeyBs)
               .build();
-      futureStore.put(tickKey, new FutureTransferCapsule(newTail));
+      futureStore.put(dealKey, new FutureTransferCapsule(newTail));
 
       //save old tail
       var oldTail = futureStore.get(oldTailKeyBs.toByteArray());
-      oldTail.setNextTick(ByteString.copyFrom(tickKey));
+      oldTail.setNextTick(ByteString.copyFrom(dealKey));
       futureStore.put(oldTailKeyBs.toByteArray(), oldTail);
 
       //save summary
       summary = summary.toBuilder()
               .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
               .setTotalBalance(Math.addExact(summary.getTotalBalance(), amount))
-              .setUpperTick(ByteString.copyFrom(tickKey))
+              .setUpperTick(ByteString.copyFrom(dealKey))
               .setUpperTime(tickDay)
               .build();
       toAcc.setFutureSummary(summary);
@@ -150,15 +152,15 @@ public class ActuatorUtil {
                 .setPrevTick(searchKeyBs)
                 .setNextTick(oldNextTickKey)
                 .build();
-        futureStore.put(tickKey, new FutureTransferCapsule(newTick));
+        futureStore.put(dealKey, new FutureTransferCapsule(newTick));
 
         //save prev
-        searchTick.setNextTick(ByteString.copyFrom(tickKey));
+        searchTick.setNextTick(ByteString.copyFrom(dealKey));
         futureStore.put(searchKeyBs.toByteArray(), searchTick);
 
         //save next
         var oldNextTick = futureStore.get(oldNextTickKey.toByteArray());
-        oldNextTick.setPrevTick(ByteString.copyFrom(tickKey));
+        oldNextTick.setPrevTick(ByteString.copyFrom(dealKey));
         futureStore.put(oldNextTickKey.toByteArray(), oldNextTick);
 
         //save summary
@@ -177,82 +179,107 @@ public class ActuatorUtil {
     }
   }
 
-  //@todo review
-  public static void removeFutureDeal(Manager dbManager, byte[] ownerAddress, FutureTransferCapsule futureTick) {
+  /**
+   * Detach deal:
+   * - if all --> just remove deal
+   * - if not --> just update deal, update summary
+   */
+  public static void detachFutureDeal(Manager dbManager, byte[] ownerAddress, byte[] dealKey, long amt) {
     var futureStore = dbManager.getFutureTransferStore();
     var accountStore = dbManager.getAccountStore();
     var ownerAcc = accountStore.get(ownerAddress);
-    var ownerSummary = ownerAcc.getFutureSummary();
 
-    // if ownerAddress has just this deal
-    if (ownerSummary.getTotalDeal() == 1) {
-      ownerAcc.clearFuture();
-      accountStore.put(ownerAddress, ownerAcc);
-      return;
-    }
+    var summary = ownerAcc.getFutureSummary();
+    var deal = futureStore.get(dealKey);
+    Assert.isTrue(deal.getBalance() >= amt, "detach amount over deal balance!");
 
-    // if this deal is head
-    var headKey = ownerSummary.getLowerTick().toByteArray();
-    var head = futureStore.get(headKey);
-    var headTime = head.getExpireTime();
-    if (futureTick.getExpireTime() == headTime) {
-      var nextTickKey = head.getNextTick().toByteArray();
-      var nextTick = futureStore.get(nextTickKey);
-      nextTick.clearPrevTick();;
-      futureStore.put(nextTickKey, nextTick);
+    if (deal.getBalance() > amt) {
+      //just update, not delete
+      deal.setBalance(Math.subtractExact(deal.getBalance(), amt));
+      futureStore.put(dealKey, deal);
 
-      ownerSummary = ownerSummary.toBuilder()
-              .setLowerTick(head.getNextTick())
-              .setLowerTime(nextTick.getExpireTime())
-              .setTotalBalance(Math.subtractExact(ownerSummary.getTotalBalance(), futureTick.getBalance()))
-              .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1))
+      summary = summary.toBuilder()
+              .setTotalBalance(Math.subtractExact(summary.getTotalBalance(), amt))
               .build();
-      ownerAcc.setFutureSummary(ownerSummary);
+      ownerAcc.setFutureSummary(summary);
       accountStore.put(ownerAddress, ownerAcc);
       return;
-    }
+    } else {
+      /**
+       * Delete deal
+       */
 
-    // if this deal is tail
-    var tailKey = ownerSummary.getUpperTick().toByteArray();
-    var tail = futureStore.get(tailKey);
-    if (futureTick.getExpireTime() == tail.getExpireTime()) {
-      var prevTickKey = tail.getPrevTick().toByteArray();
-      var prevTick = futureStore.get(prevTickKey);
-      prevTick.clearNextTick();
-      futureStore.put(prevTickKey, prevTick);
+      //if one deal: just remove
+      if (summary.getTotalDeal() == 1) {
+        ownerAcc.clearFuture();
+        accountStore.put(ownerAddress, ownerAcc);
+        futureStore.delete(dealKey);
+        return;
+      }
 
-      ownerSummary = ownerSummary.toBuilder()
-              .setUpperTick(tail.getPrevTick())
-              .setUpperTime(prevTick.getExpireTime())
-              .setTotalBalance(Math.subtractExact(ownerSummary.getTotalDeal(), futureTick.getBalance()))
-              .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1))
+      //if this deal is head: update next
+      var headKey = summary.getLowerTick().toByteArray();
+      if (Arrays.equals(headKey, dealKey)) {
+        var head = futureStore.get(headKey);
+        var nextTickKey = head.getNextTick().toByteArray();
+        var nextTick = futureStore.get(nextTickKey);
+        nextTick.clearPrevTick();
+        futureStore.put(nextTickKey, nextTick);
+
+        summary = summary.toBuilder()
+                .setLowerTick(head.getNextTick())
+                .setLowerTime(nextTick.getExpireTime())
+                .setTotalBalance(Math.subtractExact(summary.getTotalBalance(), deal.getBalance()))
+                .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), 1))
+                .build();
+        ownerAcc.setFutureSummary(summary);
+        accountStore.put(ownerAddress, ownerAcc);
+        futureStore.delete(dealKey);
+        return;
+      }
+
+      // if this deal is tail: update prev
+      var tailKey = summary.getUpperTick().toByteArray();
+      if (Arrays.equals(dealKey, tailKey)) {
+        var tail = futureStore.get(tailKey);
+        var prevTickKey = tail.getPrevTick().toByteArray();
+        var prevTick = futureStore.get(prevTickKey);
+        prevTick.clearNextTick();
+        futureStore.put(prevTickKey, prevTick);
+
+        summary = summary.toBuilder()
+                .setUpperTick(tail.getPrevTick())
+                .setUpperTime(prevTick.getExpireTime())
+                .setTotalBalance(Math.subtractExact(summary.getTotalDeal(), deal.getBalance()))
+                .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), 1))
+                .build();
+        ownerAcc.setFutureSummary(summary);
+        accountStore.put(ownerAddress, ownerAcc);
+        futureStore.delete(dealKey);
+        return;
+      }
+
+      // if this deal is middle: update link & summary
+      var prevTickPointer = deal.getPrevTick().toByteArray();
+      var prevTick = futureStore.get(prevTickPointer);
+
+      var nextTickPointer = deal.getNextTick().toByteArray();
+      var nextTick = futureStore.get(nextTickPointer);
+
+      prevTick.setNextTick(deal.getNextTick());
+      nextTick.setPrevTick(deal.getPrevTick());
+
+      futureStore.put(prevTickPointer, prevTick);
+      futureStore.put(nextTickPointer, nextTick);
+
+      summary = summary.toBuilder()
+              .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), 1))
+              .setTotalBalance(Math.subtractExact(summary.getTotalBalance(), deal.getBalance()))
               .build();
-      ownerAcc.setFutureSummary(ownerSummary);
+      ownerAcc.setFutureSummary(summary);
       accountStore.put(ownerAddress, ownerAcc);
-      return;
+      futureStore.delete(dealKey);
     }
-
-    // if this deal is middle
-    // attach currentTick.prev tick to currentTick.next
-    var prevTickPointer = futureTick.getPrevTick();
-    var prevTick = futureStore.get(prevTickPointer.toByteArray());
-
-    var nextTickPointer = futureTick.getNextTick();
-    var nextTick = futureStore.get(nextTickPointer.toByteArray());
-
-    // change nextTick of prev and prevTick of next in ownerSummary
-    prevTick.setNextTick(futureTick.getNextTick());
-    nextTick.setPrevTick(futureTick.getPrevTick());
-
-    futureStore.put(prevTickPointer.toByteArray(), prevTick);
-    futureStore.put(nextTickPointer.toByteArray(), nextTick);
-
-    ownerSummary = ownerSummary.toBuilder()
-            .setTotalDeal(Math.subtractExact(ownerSummary.getTotalDeal(), 1))
-            .setTotalBalance(Math.subtractExact(ownerSummary.getTotalBalance(), futureTick.getBalance()))
-            .build();
-    ownerAcc.setFutureSummary(ownerSummary);
-    accountStore.put(ownerAddress, ownerAcc);
   }
 
   public static void addUrc20Future(Manager dbManager, byte[] toAddress, byte[] contractAddr, long amount, long availableTime){

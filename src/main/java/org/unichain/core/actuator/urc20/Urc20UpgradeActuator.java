@@ -116,9 +116,7 @@ public class Urc20UpgradeActuator extends AbstractActuator {
       var accounts = accStore.filter(filter);
       accounts.forEach(acc -> {
         //@todo migrate urc30: Need review
-        acc.getInstance().getTokenMap().forEach((symbol, amount) -> {
-          acc.addUrc20Token(AddressUtil.genAssetAddrBySeed(symbol), amount);
-        });
+        acc.getInstance().getTokenMap().forEach((symbol, amount) -> acc.addUrc20Token(AddressUtil.genAssetAddrBySeed(symbol), amount));
 
         //@todo migrate urc30 future: Need review
         acc.getInstance().getTokenFutureMap().forEach((symbol, urc30Summary) -> {

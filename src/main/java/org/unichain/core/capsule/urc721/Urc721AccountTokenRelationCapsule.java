@@ -33,9 +33,7 @@ import java.util.Objects;
 public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721AccountTokenRelation> {
 
   private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.TAIL_FIELD_NUMBER);
-  private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_APPROVED_FOR_ALLS = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Urc721AccountTokenRelation.APPROVED_FOR_ALLS_FIELD_NUMBER);
   private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.APPROVE_TAIL_FIELD_NUMBER);
-  private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_APPROVE_ALLS = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Urc721AccountTokenRelation.APPROVE_ALLS_FIELD_NUMBER);
   private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_TOTALS = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Urc721AccountTokenRelation.TOTALS_FIELD_NUMBER);
 
 
@@ -181,12 +179,14 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
   }
 
   public boolean hasApprovalForAll(String operatorBase58, String contractBase58){
-    return !relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_APPROVED_FOR_ALLS) ? false :
+    var approvedForAll = relation.getApprovedForAllsMap();
+    return (Objects.isNull(approvedForAll) || approvedForAll.size() <= 0) ? false :
             operatorBase58.equals(relation.getApprovedForAllsMap().get(contractBase58));
   }
 
   public  boolean isApprovedForAll(byte[] contractAddr, byte[] operatorAddr){
-    if(!relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_APPROVED_FOR_ALLS))
+    var approvedForAll = relation.getApprovedForAllsMap();
+    if(Objects.isNull(approvedForAll) || approvedForAll.size() <= 0)
       return false;
     var operator =  relation.getApprovedForAllsMap().get(Wallet.encode58Check(contractAddr));
     return  Objects.isNull(operator) ? false : operator.equals(Wallet.encode58Check(operatorAddr));
@@ -225,8 +225,11 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
     var ownerBase58 = Wallet.encode58Check(ownerAddr);
     var contractBase58 = Wallet.encode58Check(contractAddr);
 
-    var approveAllMap = relation.hasField(URC721_ACC_TOKEN_RELATION_FIELD_APPROVE_ALLS)
-             ? relation.getApproveAllsMap() : new HashMap<String, Protocol.Urc721ApproveAllMap>();
+    var approveAllMap = relation.getApproveAllsMap();
+    if(Objects.isNull(approveAllMap))
+    {
+      approveAllMap = new HashMap<>();
+    }
     var contracts = approveAllMap.containsKey(ownerBase58)
             ? approveAllMap.get(ownerBase58) : Protocol.Urc721ApproveAllMap.newBuilder().build();
 

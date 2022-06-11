@@ -1605,7 +1605,11 @@ public class Wallet {
         var tmpTick = futureStore.get(tmpTickKeyBs.toByteArray());
         if(index >= start && index < end)
         {
-          deals.add(tmpTick.getInstance());
+          deals.add(tmpTick.getInstance()
+                  .toBuilder()
+                  .clearNextTick()
+                  .clearPrevTick()
+                  .build());
         }
         if(index >= end)
           break;

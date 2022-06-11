@@ -91,7 +91,9 @@ public class Urc30TokenTransferActuatorV4 extends AbstractActuator {
           dbManager.getAccountStore().put(toAddress, toAccountCap);
         }
         else
+        {
           addFutureToken(toAddress, tokenKey, ctx.getAmount(), ctx.getAvailableTime());
+        }
       }
       else {
          /*
@@ -355,6 +357,7 @@ public class Urc30TokenTransferActuatorV4 extends AbstractActuator {
     var searchKeyBs = summary.getUpperTick();
     while (true){
       var searchTick = tokenStore.get(searchKeyBs.toByteArray());
+      //@fixme null pointer exception
       if(searchTick.getExpireTime() < tickDay)
       {
         var oldNextTickKey = searchTick.getNextTick();

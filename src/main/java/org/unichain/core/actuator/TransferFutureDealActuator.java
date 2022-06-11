@@ -100,7 +100,7 @@ public class TransferFutureDealActuator extends AbstractActuator {
       */
       var dealId = Util.makeFutureTransferIndexKey(ownerAddr, Util.makeDayTick(ctx.getDealId()));
       var futureStore = dbManager.getFutureTransferStore();
-      Assert.isTrue(futureStore.has(dealId) && futureStore.get(dealId).getBalance() > 0, "No future deal or not enough future balance " + ctx.getDealId());
+      Assert.isTrue(futureStore.has(dealId) && futureStore.get(dealId).getBalance() > 0, "No future deal or not enough future balance for dealId: " + ctx.getDealId());
 
       if(ctx.hasField(TRANSFER_FUTURE_DEAL_FIELD_AMT)){
         Assert.isTrue(ctx.getAmount() > 0 && ctx.getAmount() <= futureStore.get(dealId).getBalance(), "Invalid amount");

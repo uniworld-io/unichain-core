@@ -14,37 +14,41 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j(topic = "API")
 public class Urc721BalanceOfServlet extends HttpServlet {
 
-  @Autowired
-  private Urc721 urc721;
+    @Autowired
+    private Urc721 urc721;
 
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-    try {
-      var visible = Util.getVisible(request);
-      var ownerAddress = request.getParameter("owner_address");
-      var contractAddr = request.getParameter("address");
-      var builder = Protocol.Urc721BalanceOfQuery.newBuilder();
-      var jsonObject = new JSONObject();
-      jsonObject.put("owner_address", ownerAddress);
-      jsonObject.put("address", contractAddr);
-      JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
-      var reply = urc721.balanceOf(builder.build());
-      if (reply != null) {
-        response.getWriter().println(JsonFormat.printToString(reply, visible));
-      } else {
-        response.getWriter().println("{}");
-      }
-    } catch (Exception e) {
-      logger.debug("Exception: {}", e.getMessage());
-      try {
-        response.getWriter().println(Util.printErrorMsg(e));
-      } catch (IOException ioe) {
-        logger.debug("IOException: {}", ioe.getMessage());
-      }
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            var visible = Util.getVisible(request);
+
+            var address = request.getParameter("address");
+            var owner = request.getParameter("owner_address");
+
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("address", address);
+            jsonObject.put("owner_address", owner);
+            var builder = Protocol.Urc721BalanceOfQuery.newBuilder();
+            JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
+
+            var reply = urc721.balanceOf(builder.build());
+            if (reply != null) {
+                response.getWriter().println(JsonFormat.printToString(reply, visible));
+            } else {
+                response.getWriter().println("{}");
+            }
+        } catch (Exception e) {
+            logger.debug("Exception: {}", e.getMessage());
+            try {
+                response.getWriter().println(Util.printErrorMsg(e));
+            } catch (IOException ioe) {
+                logger.debug("IOException: {}", ioe.getMessage());
+            }
+        }
     }
-  }
 }

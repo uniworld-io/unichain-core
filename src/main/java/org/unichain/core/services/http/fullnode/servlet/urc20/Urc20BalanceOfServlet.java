@@ -20,38 +20,36 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j(topic = "API")
 public class Urc20BalanceOfServlet extends HttpServlet {
-  @Autowired
-  private Urc20 urc20;
+    @Autowired
+    private Urc20 urc20;
 
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-    doPost(request, response);
-  }
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            var visible = Util.getVisible(request);
 
-  protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-    try {
-      var filter = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-      Util.checkBodySize(filter);
-      var visible = Util.getVisiblePost(filter);
-      var builder = Protocol.Urc20BalanceOfQuery.newBuilder();
-      JsonFormat.merge(filter, builder, visible);
-      var reply = urc20.balanceOf(builder.build());
-      if (reply != null) {
-        response.getWriter().println(visible ? JsonFormat.printToString(reply, true) : convertOutput(reply));
-      } else {
-        response.getWriter().println("{}");
-      }
-    } catch (Exception e) {
-      logger.error("Urc20BalanceOf error: {}", e.getMessage(), e);
-      try {
-        response.getWriter().println(Util.printErrorMsg(e));
-      } catch (IOException ioe) {
-        logger.debug("IOException: {}", ioe.getMessage());
-      }
+            var address = request.getParameter("address");
+            var owner = request.getParameter("owner_address");
+
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("address", address);
+            jsonObject.put("owner_address", owner);
+
+            var builder = Protocol.Urc20BalanceOfQuery.newBuilder();
+            JsonFormat.merge(jsonObject.toJSONString(), builder, visible);
+
+            var reply = urc20.balanceOf(builder.build());
+            if (reply != null) {
+                response.getWriter().println(JsonFormat.printToString(reply, visible));
+            } else {
+                response.getWriter().println("{}");
+            }
+        } catch (Exception e) {
+            logger.error("Urc20BalanceOf error: {}", e.getMessage(), e);
+            try {
+                response.getWriter().println(Util.printErrorMsg(e));
+            } catch (IOException ioe) {
+                logger.debug("IOException: {}", ioe.getMessage());
+            }
+        }
     }
-  }
-
-  private String convertOutput(GrpcAPI.NumberMessage msg) {
-    JSONObject tokenPoolJson = JSONObject.parseObject(JsonFormat.printToString(msg, false));
-    return tokenPoolJson.toJSONString();
-  }
 }

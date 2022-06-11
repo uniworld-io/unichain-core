@@ -25,7 +25,6 @@ import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Urc721AccountTokenRelation;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -34,7 +33,6 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
 
   private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_TAIL = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.TAIL_FIELD_NUMBER);
   private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_TAIL_APPROVE = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Protocol.Urc721AccountTokenRelation.APPROVE_TAIL_FIELD_NUMBER);
-  private static Descriptors.FieldDescriptor URC721_ACC_TOKEN_RELATION_FIELD_TOTALS = Protocol.Urc721AccountTokenRelation.getDescriptor().findFieldByNumber(Urc721AccountTokenRelation.TOTALS_FIELD_NUMBER);
 
 
   private Urc721AccountTokenRelation relation;
@@ -180,17 +178,20 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
   }
 
   public boolean hasApprovalForAll(String operatorBase58, String contractBase58){
-    var approvedForAll = relation.getApprovedForAllsMap();
-    return (Objects.isNull(approvedForAll) || approvedForAll.size() <= 0) ? false :
-            operatorBase58.equals(relation.getApprovedForAllsMap().get(contractBase58));
+    if(!relation.containsApprovedForAlls(contractBase58))
+      return false;
+    return operatorBase58.equals(relation.getApprovedForAllsMap().get(contractBase58));
   }
 
   public  boolean isApprovedForAll(byte[] contractAddr, byte[] operatorAddr){
-    var approvedForAll = relation.getApprovedForAllsMap();
-    if(Objects.isNull(approvedForAll) || approvedForAll.size() <= 0)
+    var contractBase58 = Wallet.encode58Check(contractAddr);
+    var operatorBase58 = Wallet.encode58Check(operatorAddr);
+
+    if(!relation.containsApprovedForAlls(contractBase58))
       return false;
-    var operator =  relation.getApprovedForAllsMap().get(Wallet.encode58Check(contractAddr));
-    return  Objects.isNull(operator) ? false : operator.equals(Wallet.encode58Check(operatorAddr));
+    else
+      return (operatorBase58.equals(relation.getApprovedForAllsMap().get(contractBase58)));
+
   }
 
   public void clearApprovedForAll(byte[] contract, byte[] _operator){
@@ -209,16 +210,17 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
     var ownerBase58 = Wallet.encode58Check(owner);
     var contractBase58 = Wallet.encode58Check(contract);
 
-    var approveAllMap = relation.getApproveAllsMap();
-    if(Objects.isNull(approveAllMap) || !approveAllMap.containsKey(ownerBase58))
+    if(!relation.containsApproveAlls(ownerBase58))
       return;
 
-    var contracts = approveAllMap.get(ownerBase58);
+    var contracts = relation.getApproveAllsMap()
+            .get(ownerBase58)
+            .toBuilder()
+            .removeContracts(contractBase58)
+            .build();
 
-    contracts.toBuilder().removeContracts(contractBase58).build();
-    approveAllMap.put(ownerBase58, contracts);
     relation = relation.toBuilder()
-            .putAllApproveAlls(approveAllMap)
+            .putApproveAlls(ownerBase58, contracts)
             .build();
   }
 
@@ -226,30 +228,23 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
     var ownerBase58 = Wallet.encode58Check(ownerAddr);
     var contractBase58 = Wallet.encode58Check(contractAddr);
 
-    var approveAllMap = relation.getApproveAllsMap();
-    if(Objects.isNull(approveAllMap))
-    {
-      approveAllMap = new HashMap<>();
-    }
-    var contracts = approveAllMap.containsKey(ownerBase58)
-            ? approveAllMap.get(ownerBase58) : Protocol.Urc721ApproveAllMap.newBuilder().build();
-
-    contracts = contracts.toBuilder()
+    var contracts = relation.getApproveAllsOrDefault(ownerBase58, Protocol.Urc721ApproveAllMap.newBuilder().build())
+            .toBuilder()
             .putContracts(contractBase58, true)
             .build();
-    approveAllMap.put(ownerBase58, contracts);
 
     relation = relation.toBuilder()
-            .putAllApproveAlls(approveAllMap)
+            .putApproveAlls(ownerBase58, contracts)
             .build();
   }
 
   public boolean hasApproveAll(byte[] owner, byte[] contract){
     var ownerBase58 = Wallet.encode58Check(owner);
-    var approveAllMap = relation.getApproveAllsMap();
-    return  (approveAllMap == null) ? false :
-            (!approveAllMap.containsKey(ownerBase58) ? false :
-                    (approveAllMap.get(ownerBase58).getContractsMap().get(Wallet.encode58Check(contract)) == true));
+    return !relation.containsApproveAlls(ownerBase58) ? false :
+            (relation.getApproveAllsMap()
+                    .get(ownerBase58)
+                    .getContractsMap()
+                    .get(Wallet.encode58Check(contract)) == true);
   }
 
   public Map<String, Protocol.Urc721ApproveAllMap> getApproveAllMap(){

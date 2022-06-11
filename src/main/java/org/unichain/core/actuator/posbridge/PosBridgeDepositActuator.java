@@ -63,9 +63,9 @@ public class PosBridgeDepositActuator extends AbstractActuator {
 
             //lock asset
             var config = dbManager.getPosBridgeConfigStore().get();
-            var predicateService = lookupPredicate(tokenType, dbManager, ret, config);
+            var predicate = lookupPredicate(tokenType, dbManager, ret, config);
             var rootToken = ByteString.copyFrom(Numeric.hexStringToByteArray(ctx.getRootToken()));
-            predicateService.lockTokens(ctx.getOwnerAddress(), rootToken, ctx.getData());
+            predicate.lockTokens(ctx.getOwnerAddress(), rootToken, ctx.getData());
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
@@ -76,7 +76,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                     Numeric.toHexString(ctx.getOwnerAddress().toByteArray()),
                     ctx.getReceiveAddress(), ctx.getData());
             return true;
-        } catch (Exception e) {
+        } catch (Exception e){
             logger.error("Actuator error: {} --> ", e.getMessage(), e);
             ret.setStatus(fee, code.FAILED);
             throw new ContractExeException(e.getMessage());
@@ -101,6 +101,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
             Assert.isTrue(Wallet.addressValid(ctx.getRootToken()), "ROOT_TOKEN_INVALID");
             Assert.isTrue(WalletUtils.isValidAddress(ctx.getReceiveAddress()), "RECEIVER_INVALID");
 
+            //check mapped token
             if(!PosBridgeUtil.NativeToken.UNI.equalsIgnoreCase(ctx.getRootToken())){
                 var tokenMapStore = dbManager.getRootTokenMapStore();
                 var rootKey = PosBridgeUtil.makeTokenMapKey(ctx.getChildChainid(), ctx.getRootToken());
@@ -109,8 +110,6 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                 var tokenMap = tokenMapStore.get(rootKey.getBytes());
                 Assert.isTrue(tokenMap.getChildChainId() == ctx.getChildChainid(), "CHILD_CHAIN_INVALID: " + ctx.getChildChainid());
             }
-            //check mapped token
-
             Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;
         } catch (Exception e) {

@@ -61,11 +61,11 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             var tokenMap = tokenMapStore.get(childKey.getBytes());
             var config = dbManager.getPosBridgeConfigStore().get();
 
-            Predicate predicateService = lookupPredicate(tokenMap.getTokenType(), dbManager, ret, config);
+            Predicate predicate = lookupPredicate(tokenMap.getTokenType(), dbManager, ret, config);
 
             ByteString rootToken = ByteString.copyFrom(Numeric.hexStringToByteArray(tokenMap.getRootToken()));
             ByteString receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));
-            predicateService.unlockTokens(receiver, rootToken, Hex.encodeHexString(decodedMsg.withdrawData.getValue()));
+            predicate.unlockTokens(receiver, rootToken, Hex.encodeHexString(decodedMsg.withdrawData.getValue()));
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);

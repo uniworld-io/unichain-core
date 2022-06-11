@@ -64,8 +64,8 @@ public class PosBridgeWithdrawActuator extends AbstractActuator {
             //transfer back token
             var childToken = ByteString.copyFrom(Numeric.hexStringToByteArray(ctx.getChildToken()));
 
-            var childTokenService = lookupChildToken(tokenMap.getTokenType(), dbManager, ret);
-            childTokenService.withdraw(ctx.getOwnerAddress(), childToken, ctx.getData());
+            var childTokenManager = lookupChildToken(tokenMap.getTokenType(), dbManager, ret);
+            childTokenManager.withdraw(ctx.getOwnerAddress(), childToken, ctx.getData());
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);

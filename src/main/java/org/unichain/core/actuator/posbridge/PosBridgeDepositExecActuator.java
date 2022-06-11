@@ -62,8 +62,8 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             var childToken = ByteString.copyFrom(Numeric.hexStringToByteArray(tokenMap.getChildToken()));
             var receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));
 
-            var childTokenService = lookupChildToken(tokenMap.getTokenType(), dbManager, ret);
-            childTokenService.deposit(receiver, childToken, Hex.encodeHexString(decodedMsg.depositData.getValue()));
+            var childTokenManager = lookupChildToken(tokenMap.getTokenType(), dbManager, ret);
+            childTokenManager.deposit(receiver, childToken, Hex.encodeHexString(decodedMsg.depositData.getValue()));
 
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);

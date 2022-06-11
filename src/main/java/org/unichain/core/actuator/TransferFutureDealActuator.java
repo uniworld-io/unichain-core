@@ -92,7 +92,7 @@ public class TransferFutureDealActuator extends AbstractActuator {
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
       else {
-        Assert.isTrue(toAccount.getType() == Protocol.AccountType.Normal, "Allow transfer to normal account only!");
+        Assert.isTrue(toAccount.getType() != Protocol.AccountType.Contract, "Allow transfer to normal account only!");
       }
 
       /**

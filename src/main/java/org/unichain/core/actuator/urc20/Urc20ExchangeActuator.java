@@ -100,10 +100,10 @@ public class Urc20ExchangeActuator extends AbstractActuator {
       var contractAddr = ctx.getAddress().toByteArray();
       Assert.isTrue(Wallet.addressValid(ownerAddr)
                       && accountStore.has(ownerAddr)
-                      && (accountStore.get(ownerAddr).getType() == Protocol.AccountType.Normal)
+                      && (accountStore.get(ownerAddr).getType() != Protocol.AccountType.Contract)
                       && Wallet.addressValid(contractAddr)
                       && contractStore.has(contractAddr),
-              "Unrecognized ownerAddress|contractAddress or must be normal account");
+              "Unrecognized contractAddress|ownerAddress or owner must be not contract type");
 
       var ownerCap = accountStore.get(ownerAddr);
       Assert.isTrue(ownerCap.getBalance() >= Math.addExact(ctx.getAmount(), calcFee()), "Not enough balance to exchange");

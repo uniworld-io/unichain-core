@@ -121,7 +121,8 @@ public class Urc20MintActuator extends AbstractActuator {
         Assert.isTrue(Wallet.addressValid(toAddr)
                 && !Arrays.equals(toAddr, ownerAddr)
                 && !Arrays.equals(dbManager.getBurnAddress(), toAddr)
-                && (!accStore.has(toAddr) || (accStore.get(toAddr).getType() == Protocol.AccountType.Normal)), "Bad to address: invalid, is owner|burn| not a normal address!");
+                && (!accStore.has(toAddr) || (accStore.get(toAddr).getType() != Protocol.AccountType.Contract)),
+                "Bad to address: invalid, is owner|burn| or contract address!");
 
         if(!accStore.has(toAddr)){
           fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());

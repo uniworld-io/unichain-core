@@ -40,7 +40,6 @@ import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 import static org.unichain.core.config.Parameter.ChainConstant.*;
 
@@ -95,7 +94,7 @@ public class Urc20CreateContractActuator extends AbstractActuator {
       ret.setStatus(fee, code.SUCESS);
 
       //register new account with type asset_issue
-      dbManager.createDefaultAccount(contractAddr, Protocol.AccountType.AssetIssue);
+      dbManager.createDefaultAccount(contractAddr, Protocol.AccountType.Contract);
 
       //emit event
       var event = NativeContractEvent.builder()
@@ -136,7 +135,7 @@ public class Urc20CreateContractActuator extends AbstractActuator {
               "Invalid owner: unrecongized or burn address");
 
       var accountCap = accountStore.get(ownerAddr);
-      Assert.isTrue( accountCap.getType() == Protocol.AccountType.Normal, "Account not exists or must be normal account type");
+      Assert.isTrue( accountCap.getType() != Protocol.AccountType.Contract, "Account not exists or must be not contract type type");
 
       Assert.isTrue(Wallet.addressValid(contractAddr)
               && !accountStore.has(contractAddr)

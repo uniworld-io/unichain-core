@@ -155,7 +155,7 @@ public class Urc20ApproveActuator extends AbstractActuator {
       var createSpenderAcc = !accountStore.has(spenderAddr);
 
       if(!createSpenderAcc){
-        Assert.isTrue(accountStore.get(spenderAddr).getType() == Protocol.AccountType.Normal, "Spender must be normal account");
+        Assert.isTrue(accountStore.get(spenderAddr).getType() != Protocol.AccountType.Contract, "Spender must be not contract account");
       }
 
       var fee = calcFee();

@@ -92,7 +92,7 @@ public class Urc20UpgradeActuator extends AbstractActuator {
         logger.warn("migrate urc30 contract {} ...", urc30Cap.getName());
         //register contract acc
         var urc20Addr = AddressUtil.genAssetAddrBySeed(urc30Cap.getTokenName());
-        dbManager.createDefaultAccount(urc20Addr, Protocol.AccountType.AssetIssue);
+        dbManager.createDefaultAccount(urc20Addr, Protocol.AccountType.Contract);
 
         //save urc20 contract
         var urc20Builder = Contract.Urc20CreateContract.newBuilder()

@@ -252,42 +252,48 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public Protocol.Urc721TokenPage listToken(Protocol.Urc721TokenListQuery query) {
-        Assert.isTrue(query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_OWNER), "Owner address null");
-        Assert.isTrue(query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_TYPE) && TOKEN_LIST_OWNER_TYPES.contains(query.getOwnerType().toLowerCase()), "Owner type null or invalid type");
+        try {
+            Assert.isTrue(query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_OWNER), "Owner address null");
+            Assert.isTrue(query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_TYPE) && TOKEN_LIST_OWNER_TYPES.contains(query.getOwnerType().toLowerCase()), "Owner type null or invalid type");
 
-        int pageSize = query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
-        int pageIndex = query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
-        Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
+            int pageSize = query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
+            int pageIndex = query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
+            Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
 
-        var ownerAddr = query.getOwnerAddress().toByteArray();
-        var ownerType = query.getOwnerType().toLowerCase();
+            var ownerAddr = query.getOwnerAddress().toByteArray();
+            var ownerType = query.getOwnerType().toLowerCase();
 
-        var contractAddr = query.getAddress();
-        var hasContractAddr = query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_ADDR);
+            var contractAddr = query.getAddress();
+            var hasContractAddr = query.hasField(URC721_TOKEN_LIST_QUERY_FIELD_ADDR);
 
-        List<Protocol.Urc721Token> unsorted = new ArrayList<>();
-        Predicate<Urc721TokenCapsule> filter = cap -> !hasContractAddr || Arrays.equals(cap.getAddr(), contractAddr.toByteArray());
+            List<Protocol.Urc721Token> unsorted = new ArrayList<>();
+            Predicate<Urc721TokenCapsule> filter = cap -> !hasContractAddr || Arrays.equals(cap.getAddr(), contractAddr.toByteArray());
 
-        switch (ownerType){
-            case "owner":
-                unsorted = listTokenByOwner(ownerAddr, filter);
-                break;
-            case "approved":
-                unsorted = listTokenByApproved(ownerAddr, filter);
-                break;
-            case "approved_all":
-                unsorted = listTokenByApprovedForAll(ownerAddr, filter);
-                break;
-            default:
-                break;
+            switch (ownerType) {
+                case "owner":
+                    unsorted = listTokenByOwner(ownerAddr, filter);
+                    break;
+                case "approved":
+                    unsorted = listTokenByApproved(ownerAddr, filter);
+                    break;
+                case "approved_all":
+                    unsorted = listTokenByApprovedForAll(ownerAddr, filter);
+                    break;
+                default:
+                    break;
+            }
+
+            return Protocol.Urc721TokenPage.newBuilder()
+                    .setPageSize(pageSize)
+                    .setPageIndex(pageIndex)
+                    .setTotal(unsorted.size())
+                    .addAllTokens(Utils.paging(unsorted, pageIndex, pageSize))
+                    .build();
         }
-
-        return  Protocol.Urc721TokenPage.newBuilder()
-                .setPageSize(pageSize)
-                .setPageIndex(pageIndex)
-                .setTotal(unsorted.size())
-                .addAllTokens(Utils.paging(unsorted, pageIndex, pageSize))
-                .build();
+        catch (Exception e){
+            logger.error("listtoken error -->", e);
+            throw e;
+        }
     }
 
     private List<Protocol.Urc721Token> listTokenByOwner(byte[] ownerAddr, Predicate<Urc721TokenCapsule> filter){
@@ -365,23 +371,29 @@ public class Urc721Impl implements Urc721 {
 
     @Override
     public GrpcAPI.NumberMessage balanceOf(Protocol.Urc721BalanceOfQuery query) {
-        Assert.isTrue(query.hasField(URC721_BALANCE_OF_QUERY_FIELD_OWNER)
-                && query.hasField(URC721_BALANCE_OF_QUERY_FIELD_CONTRACT),
-                "Owner address | urc721 address is null");
+        try {
+            Assert.isTrue(query.hasField(URC721_BALANCE_OF_QUERY_FIELD_OWNER)
+                            && query.hasField(URC721_BALANCE_OF_QUERY_FIELD_CONTRACT),
+                    "Owner address | urc721 address is null");
 
-        var owner = query.getOwnerAddress().toByteArray();
-        var contract = query.getAddress().toByteArray();
-        Assert.isTrue(Wallet.addressValid(owner) && Wallet.addressValid(contract), "Bad owner|contract address");
+            var owner = query.getOwnerAddress().toByteArray();
+            var contract = query.getAddress().toByteArray();
+            Assert.isTrue(Wallet.addressValid(owner) && Wallet.addressValid(contract), "Bad owner|contract address");
 
-        Assert.isTrue(dbManager.getAccountStore().has(owner), "Unrecognized owner address");
-        Assert.isTrue(dbManager.getUrc721ContractStore().has(contract), "Unrecognized contract address");
+            Assert.isTrue(dbManager.getAccountStore().has(owner), "Unrecognized owner address");
+            Assert.isTrue(dbManager.getUrc721ContractStore().has(contract), "Unrecognized contract address");
 
-        var relationStore = dbManager.getUrc721AccountTokenRelationStore();
-        var balance = relationStore.has(owner) ? relationStore.get(owner).getTotal(Wallet.encode58Check(contract)) : 0L;
+            var relationStore = dbManager.getUrc721AccountTokenRelationStore();
+            var balance = relationStore.has(owner) ? relationStore.get(owner).getTotal(Wallet.encode58Check(contract)) : 0L;
 
-        return GrpcAPI.NumberMessage.newBuilder()
-                .setNum(balance)
-                .build();
+            return GrpcAPI.NumberMessage.newBuilder()
+                    .setNum(balance)
+                    .build();
+        }
+        catch (Exception e){
+            logger.error("balanceOf error -->", e);
+            throw e;
+        }
     }
 
     @Override

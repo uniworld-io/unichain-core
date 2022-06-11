@@ -291,7 +291,7 @@ public class Urc721Impl implements Urc721 {
     }
 
     private List<Protocol.Urc721Token> listTokenByOwner(byte[] ownerAddr, Predicate<Urc721TokenCapsule> filter){
-        var unsorted = new ArrayList<Protocol.Urc721Token>();
+        var unsorted = new LinkedList<Protocol.Urc721Token>();
         var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
         var tokenStore = dbManager.getUrc721TokenStore();
 
@@ -314,7 +314,7 @@ public class Urc721Impl implements Urc721 {
         var tokenStore = dbManager.getUrc721TokenStore();
         var approvedStore = dbManager.getUrc721TokenApproveRelationStore();
         var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
-        var result = new ArrayList<Protocol.Urc721Token>();
+        var result = new LinkedList<Protocol.Urc721Token>();
 
         if(summaryStore.has(operatorAddr) && summaryStore.get(operatorAddr).getTotalApprove() > 0){
             var summary = summaryStore.get(operatorAddr);
@@ -340,18 +340,20 @@ public class Urc721Impl implements Urc721 {
     private List<Protocol.Urc721Token> listTokenByApprovedForAll(byte[] operatorAddr, Predicate<Urc721TokenCapsule> filter){
         var result = new ArrayList<Protocol.Urc721Token>();
         var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
-        summaryStore.get(operatorAddr).getApproveAllMap().forEach((ownerBase58, contracts) -> {
-            contracts.getContractsMap().forEach((contractBase58, approved) -> {
-                if(approved){
-                    var owner = Wallet.decodeFromBase58Check(ownerBase58);
-                    if (summaryStore.has(owner)) {
-                        var ownerRelationCap = summaryStore.get(owner);
-                        Predicate<Urc721TokenCapsule> filter0 = cap -> (Arrays.equals(cap.getAddr(), Wallet.decodeFromBase58Check(contractBase58))) && filter.test(cap);
-                        result.addAll(listTokenByOwner(ownerRelationCap.getInstance().getOwnerAddress().toByteArray(), filter0));
+        if (summaryStore.has(operatorAddr) && summaryStore.get(operatorAddr).getTotalApprove() > 0) {
+            summaryStore.get(operatorAddr).getApproveAllMap().forEach((ownerBase58, contracts) -> {
+                contracts.getContractsMap().forEach((contractBase58, approved) -> {
+                    if(approved){
+                        var owner = Wallet.decodeFromBase58Check(ownerBase58);
+                        if (summaryStore.has(owner)) {
+                            var ownerRelationCap = summaryStore.get(owner);
+                            Predicate<Urc721TokenCapsule> filter0 = cap -> (Arrays.equals(cap.getAddr(), Wallet.decodeFromBase58Check(contractBase58))) && filter.test(cap);
+                            result.addAll(listTokenByOwner(ownerRelationCap.getInstance().getOwnerAddress().toByteArray(), filter0));
+                        }
                     }
-                }
+                });
             });
-        });
+        }
 
         return result;
     }

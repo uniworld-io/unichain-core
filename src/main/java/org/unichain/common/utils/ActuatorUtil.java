@@ -254,7 +254,7 @@ public class ActuatorUtil {
         summary = summary.toBuilder()
                 .setUpperTick(tail.getPrevTick())
                 .setUpperTime(prevTick.getExpireTime())
-                .setTotalBalance(Math.subtractExact(summary.getTotalDeal(), deal.getBalance()))
+                .setTotalBalance(Math.subtractExact(summary.getTotalBalance(), deal.getBalance()))
                 .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), 1))
                 .build();
         fromAcc.setFutureSummary(summary);

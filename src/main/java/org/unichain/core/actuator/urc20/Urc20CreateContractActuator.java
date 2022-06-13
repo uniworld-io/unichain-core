@@ -46,13 +46,13 @@ import static org.unichain.core.config.Parameter.ChainConstant.*;
 @Slf4j(topic = "actuator")
 public class Urc20CreateContractActuator extends AbstractActuator {
 
-  private static final long MAX_DECIMALS = 9L;
-  private static final long DEFAULT_ROOT_DECIMALS = 18L;
+  public static final long MAX_DECIMALS = 9L;
+  public static final long DEFAULT_ROOT_DECIMALS = 18L;
 
-  private static Descriptors.FieldDescriptor URC20_CREATE_FIELD_START_TIME= Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.START_TIME_FIELD_NUMBER);
-  private static Descriptors.FieldDescriptor URC20_CREATE_FIELD_END_TIME= Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.END_TIME_FIELD_NUMBER);
-  private static Descriptors.FieldDescriptor URC20_CREATE_FIELD_ENABLE_EXCH = Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.EXCH_ENABLE_FIELD_NUMBER);
-  private static Descriptors.FieldDescriptor URC20_CREATE_FIELD_ROOT_DECIMALS= Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.ROOTDECIMALS_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_START_TIME= Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.START_TIME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_END_TIME= Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.END_TIME_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_ENABLE_EXCH = Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.EXCH_ENABLE_FIELD_NUMBER);
+  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_ROOT_DECIMALS= Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.ROOTDECIMALS_FIELD_NUMBER);
 
   public Urc20CreateContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);

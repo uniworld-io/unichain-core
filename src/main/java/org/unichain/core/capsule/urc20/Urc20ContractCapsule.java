@@ -107,6 +107,10 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
     return this.ctx.getDecimals();
   }
 
+  public long getRootDecimals(){
+    return this.ctx.getRootDecimals();
+  }
+
   public long getMaxSupply() {
     return this.ctx.getMaxSupply();
   }
@@ -193,6 +197,10 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
 
   public void setEnableExch(boolean enableExch) {
     this.ctx = this.ctx.toBuilder().setExchEnable(enableExch).build();
+  }
+
+  public void setRootDecimals(long rootDecimals) {
+    this.ctx = this.ctx.toBuilder().setRootDecimals(rootDecimals).build();
   }
 
   public void burnToken(long amount) throws ContractExeException {

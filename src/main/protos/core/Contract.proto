@@ -238,8 +238,6 @@ message Urc20CreateContract {
   bool  exch_enable = 20;
   int64 critical_update_time = 21;//internal
   int64 create_acc_fee = 22;
-  //@fixme review
-  int64 root_decimals = 23;
 }
 
 message Urc20TransferFromContract {

@@ -31,16 +31,13 @@ public class ChildTokenUrc20 implements ChildToken {
         //load token and transfer from token owner to ...
         var contract = dbManager.getUrc20ContractStore().get(childToken.toByteArray());
 
-        var amount = PosBridgeUtil.abiDecodeToUint256(depositData)
-                .getValue()
-                .multiply(BigInteger.valueOf(Double.valueOf(Math.pow(10, contract.getDecimals())).longValue()))
-                .divide(BigInteger.valueOf(Double.valueOf(Math.pow(10, contract.getRootDecimals())).longValue()));
+        var amount = PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue();
 
         var wrapCtx = Contract.Urc20MintContract.newBuilder()
                 .setOwnerAddress(contract.getOwnerAddress())
                 .setAddress(childToken)
                 .setToAddress(user)
-                .setAmount(amount.longValue())
+                .setAmount(amount)
                 .build();
         var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc20MintContract)
                 .getInstance()
@@ -54,14 +51,9 @@ public class ChildTokenUrc20 implements ChildToken {
 
     @Override
     public void withdraw(ByteString user, ByteString childToken, String withdrawData) throws ContractExeException, ContractValidateException {
-        var contract = dbManager.getUrc20ContractStore().get(childToken.toByteArray());
-        var amount = PosBridgeUtil.abiDecodeToUint256(withdrawData)
-                .getValue()
-                .multiply(BigInteger.valueOf(Double.valueOf(Math.pow(10, contract.getDecimals())).longValue()))
-                .divide(BigInteger.valueOf(Double.valueOf(Math.pow(10, contract.getRootDecimals())).longValue()));
-
+        var amount = PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue();
         var wrapCtx = Contract.Urc20BurnContract.newBuilder()
-                .setAmount(amount.longValue())
+                .setAmount(amount)
                 .setOwnerAddress(user)
                 .setAddress(childToken)
                 .build();

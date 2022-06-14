@@ -80,7 +80,7 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
 
   public long getTotal(String contractBase58){
     var totals = relation.getTotalsMap();
-    return (Objects.isNull(totals) || totals.size() <= 0) ? 0L :  relation.getTotalsMap().get(contractBase58);
+    return totals.getOrDefault(contractBase58, 0L);
   }
 
   public void decreaseTotal(String contractBase58, long amt){

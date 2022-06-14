@@ -19,7 +19,9 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.util.Assert;
+import org.unichain.core.actuator.urc20.Urc20CreateContractActuator;
 import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.exception.ContractExeException;
@@ -105,6 +107,10 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
 
   public long getDecimals(){
     return this.ctx.getDecimals();
+  }
+
+  public long getRootDecimals(){
+    return ctx.hasField(Urc20CreateContractActuator.URC20_CREATE_FIELD_ROOT_DECIMALS) ? this.ctx.getRootDecimals() : Urc20CreateContractActuator.DEFAULT_ROOT_DECIMALS;
   }
 
   public long getMaxSupply() {
@@ -195,6 +201,10 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
     this.ctx = this.ctx.toBuilder().setExchEnable(enableExch).build();
   }
 
+  public void setRootDecimals(long rootDecimals) {
+    this.ctx = this.ctx.toBuilder().setRootDecimals(rootDecimals).build();
+  }
+
   public void burnToken(long amount) throws ContractExeException {
     Assert.isTrue(amount > 0, "burn token amount must be positive");
     setBurnedToken(Math.addExact(ctx.getBurned(), amount));
@@ -245,4 +255,5 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
   public ByteString getAddress() {
       return ctx.getAddress();
   }
+
 }

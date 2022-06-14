@@ -168,7 +168,7 @@ public class Urc20CreateContractActuator extends AbstractActuator {
       Assert.isTrue(ctx.getLot() >= 0, "Invalid lot: must not negative");
       Assert.isTrue(ctx.getExchUnxNum() > 0, "Invalid exchange unw number: must be positive");
       Assert.isTrue(ctx.getExchNum() > 0, "Invalid exchange token number: must be positive");
-      Assert.isTrue(ctx.getDecimals() >= 0 && ctx.getDecimals() <= 100, "Invalid decimals number: must be from 0 to 100");
+      Assert.isTrue(ctx.getDecimals() >= 0 && ctx.getDecimals() <= 18, "Invalid decimals number: must be from 0 to 18");
 
       Assert.isTrue(ctx.getCreateAccFee() > 0 && ctx.getCreateAccFee() <= TOKEN_MAX_CREATE_ACC_FEE, "Invalid create account fee");
       return true;

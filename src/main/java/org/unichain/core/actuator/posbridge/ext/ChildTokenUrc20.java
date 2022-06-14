@@ -30,13 +30,13 @@ public class ChildTokenUrc20 implements ChildToken {
         //load token and transfer from token owner to ...
         var contract = dbManager.getUrc20ContractStore().get(childToken.toByteArray());
 
-        var amount = PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue();
+        var amount = PosBridgeUtil.abiDecodeToUint256(depositData).getValue();
 
         var wrapCtx = Contract.Urc20MintContract.newBuilder()
                 .setOwnerAddress(contract.getOwnerAddress())
                 .setAddress(childToken)
                 .setToAddress(user)
-                .setAmount(Long.valueOf(amount).toString())
+                .setAmount(amount.toString())
                 .build();
         var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc20MintContract)
                 .getInstance()
@@ -50,9 +50,9 @@ public class ChildTokenUrc20 implements ChildToken {
 
     @Override
     public void withdraw(ByteString user, ByteString childToken, String withdrawData) throws ContractExeException, ContractValidateException {
-        var amount = PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue();
+        var amount = PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue();
         var wrapCtx = Contract.Urc20BurnContract.newBuilder()
-                .setAmount(Long.valueOf(amount).toString())
+                .setAmount(amount.toString())
                 .setOwnerAddress(user)
                 .setAddress(childToken)
                 .build();

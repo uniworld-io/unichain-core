@@ -10,12 +10,14 @@ public class Parameter {
   /**
    *  all supported version add here
    */
+  //todo review version 6 before release Urc20 and NFT
   public static final Set<Integer> BLOCK_VERSION_SUPPORTED = new HashSet<>(Arrays.asList(
           ChainConstant.BLOCK_VERSION_1,
           ChainConstant.BLOCK_VERSION_2,
           ChainConstant.BLOCK_VERSION_3,
           ChainConstant.BLOCK_VERSION_4,
-          ChainConstant.BLOCK_VERSION_5));
+          ChainConstant.BLOCK_VERSION_5,
+          ChainConstant.BLOCK_VERSION_6));
 
   public class ChainConstant {
     /**

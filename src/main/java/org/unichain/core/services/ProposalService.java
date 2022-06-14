@@ -59,12 +59,12 @@ public class ProposalService {
     WITNESS_55_PAY_PER_BLOCK(31), //drop, 31
     ALLOW_TVM_SOLIDITY_059(32), // 1, 32
     ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO(33), // 10, 33
-    HARD_FORK(34), // block version 34
-    MAX_FUTURE_TRANSFER_TIME_RANGE_UNW(35), // max future transfer unw 35
-    MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN(36), // max future transfer token 36
-    TOKEN_UPDATE_FEE(37), // token update(burn, mine, update params..) fee 37
-    MAX_FROZEN_TIME_BY_DAY(38), //max time to freeze balance 38
-    MIN_FROZEN_TIME_BY_DAY(39); //min time to freeze balance 39
+    HARD_FORK(34), //example: 5 34
+    MAX_FUTURE_TRANSFER_TIME_RANGE_UNW(35), // 50*31536000000L ~50 years, 35
+    MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN(36), // 50*31536000000L ~50 years, 36
+    TOKEN_UPDATE_FEE(37), // 2000000L~2unw, 37
+    MAX_FROZEN_TIME_BY_DAY(38), //3, 38
+    MIN_FROZEN_TIME_BY_DAY(39); //3, 39
 
     ProposalType(long code) {
       this.code = code;

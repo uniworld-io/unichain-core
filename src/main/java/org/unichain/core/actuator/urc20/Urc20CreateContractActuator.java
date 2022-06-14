@@ -48,13 +48,10 @@ import static org.unichain.core.config.Parameter.ChainConstant.*;
 public class Urc20CreateContractActuator extends AbstractActuator {
 
   public static final long MAX_DECIMALS = 18L;
-  public static final long DEFAULT_ROOT_DECIMALS = 18L;
 
   public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_START_TIME= Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.START_TIME_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_END_TIME= Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.END_TIME_FIELD_NUMBER);
   public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_ENABLE_EXCH = Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.EXCH_ENABLE_FIELD_NUMBER);
-  //@fixme reivew: should move to posbirdge db
-  public static Descriptors.FieldDescriptor URC20_CREATE_FIELD_ROOT_DECIMALS= Contract.Urc20CreateContract.getDescriptor().findFieldByNumber(Contract.Urc20CreateContract.ROOT_DECIMALS_FIELD_NUMBER);
 
   public Urc20CreateContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
@@ -85,11 +82,6 @@ public class Urc20CreateContractActuator extends AbstractActuator {
         contractCap.setEnableExch(true);
       }
 
-      //@fixme move to postbridge ...
-      if(!ctx.hasField(URC20_CREATE_FIELD_ROOT_DECIMALS))
-      {
-        contractCap.setRootDecimals(DEFAULT_ROOT_DECIMALS);
-      }
 
       contractCap.setBurnedToken(BigInteger.ZERO);
       contractCap.setSymbol(contractCap.getSymbol().toUpperCase());
@@ -182,7 +174,6 @@ public class Urc20CreateContractActuator extends AbstractActuator {
       Assert.isTrue(ctx.getExchUnxNum() > 0, "Invalid exchange unw number: must be positive");
       Assert.isTrue(ctx.getExchNum() > 0, "Invalid exchange token number: must be positive");
       Assert.isTrue(ctx.getDecimals() >= 0 && ctx.getDecimals() <= MAX_DECIMALS, "Invalid decimals number: must be from 0 to " + MAX_DECIMALS);
-      Assert.isTrue(!ctx.hasField(URC20_CREATE_FIELD_ROOT_DECIMALS) || (ctx.getRootDecimals() >= 0 && ctx.getRootDecimals() <= MAX_DECIMALS), "Invalid root decimals number: must be from 0 to 100");
       Assert.isTrue(ctx.getCreateAccFee() > 0 && ctx.getCreateAccFee() <= TOKEN_MAX_CREATE_ACC_FEE, "Invalid create account fee");
       return true;
     }

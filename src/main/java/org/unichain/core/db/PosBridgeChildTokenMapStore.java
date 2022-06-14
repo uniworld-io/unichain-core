@@ -34,6 +34,7 @@ public class PosBridgeChildTokenMapStore extends UnichainStoreWithRevoking<PosBr
                         .setTokenType(tokenType)
                         .build()
         );
+        this.unmap(childToken, rootChainId, rootToken);
 
         var keyRoot = PosBridgeUtil.makeTokenMapKey(rootChainId, rootToken);
         put(keyRoot.getBytes(), capsule);

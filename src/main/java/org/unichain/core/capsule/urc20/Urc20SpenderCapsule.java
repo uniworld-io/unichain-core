@@ -25,6 +25,7 @@ import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Urc20Spender;
 
+import java.math.BigInteger;
 import java.util.Objects;
 
 @Slf4j(topic = "capsule")
@@ -39,15 +40,15 @@ public class Urc20SpenderCapsule implements ProtoCapsule<Urc20Spender> {
     }
   }
 
-  public Urc20SpenderCapsule(byte[] spender, byte[]  contract, byte[] owner, long limit) {
+  public Urc20SpenderCapsule(byte[] spender, byte[]  contract, byte[] owner, BigInteger limit) {
     this.ctx = Urc20Spender.newBuilder()
                 .setSpender(ByteString.copyFrom(spender))
                 .setContract(ByteString.copyFrom(contract))
                 .putQuotas(Wallet.encode58Check(owner),
                         Protocol.Urc20SpenderQuota.newBuilder()
-                                .setLimit(limit)
-                                .setSpent(0L)
-                                .setAvail(limit)
+                                .setLimit(limit.toString())
+                                .setSpent(BigInteger.ZERO.toString())
+                                .setAvail(limit.toString())
                                 .build())
                 .build();
   }
@@ -86,69 +87,69 @@ public class Urc20SpenderCapsule implements ProtoCapsule<Urc20Spender> {
     ctx = ctx.toBuilder().setContract(ByteString.copyFrom(contractAddr)).build();
   }
 
-  public void setQuotaTo(byte[] owner, long limit){
-      Assert.isTrue(limit >= 0, "Bad limit value: must be gte zero");
+  public void setQuotaTo(byte[] owner, BigInteger limit){
+      Assert.isTrue(limit.compareTo(BigInteger.ZERO) >= 0, "Bad limit value: must be gte zero");
       var base58 = Wallet.encode58Check(owner);
       var quota = ctx.getQuotasMap().get(base58);
       if(Objects.isNull(quota)){
           quota = Protocol.Urc20SpenderQuota.newBuilder()
-                  .setLimit(limit)
-                  .setAvail(limit)
-                  .setSpent(0)
+                  .setLimit(limit.toString())
+                  .setAvail(limit.toString())
+                  .setSpent(BigInteger.ZERO.toString())
                   .build();
           ctx = ctx.toBuilder().putQuotas(base58, quota).build();
       }
       else {
-        Assert.isTrue(quota.getSpent() < limit, "Spent amount already reached limit");
-        var diff = Math.subtractExact(limit, quota.getLimit());
+        Assert.isTrue(new BigInteger(quota.getSpent()).compareTo(limit) < 0, "Spent amount already reached limit");
+        var diff = limit.subtract(new BigInteger(quota.getLimit()));
         quota = quota.toBuilder()
-                .setLimit(limit)
-                .setAvail(Math.addExact(quota.getAvail(), diff))
+                .setLimit(limit.toString())
+                .setAvail(new BigInteger(quota.getAvail()).add(diff).toString())
                 .build();
         ctx = ctx.toBuilder().putQuotas(base58, quota).build();
       }
   }
 
-  public void checkSetQuota(byte[] owner, long limit, long tokenAvailable){
-    Assert.isTrue(limit >= 0, "Bad quota limit value: must be gte zero");
+  public void checkSetQuota(byte[] owner, BigInteger limit, BigInteger tokenAvailable){
+    Assert.isTrue(limit.compareTo(BigInteger.ZERO) >= 0, "Bad quota limit value: must be gte zero");
     var base58 = Wallet.encode58Check(owner);
     var quota = ctx.getQuotasMap().get(base58);
     if(Objects.isNull(quota)){
-      Assert.isTrue(limit <= tokenAvailable, "Spender amount reached out available token!");
+      Assert.isTrue(limit.compareTo(tokenAvailable) <= 0, "Spender amount reached out available token!");
     }
     else {
-      Assert.isTrue(quota.getSpent() < limit, "Already spent amount larger than provided limit");
-      Assert.isTrue(Math.subtractExact(limit, quota.getSpent()) <= tokenAvailable, "Spender amount reached out available token!");
+      Assert.isTrue(new BigInteger(quota.getSpent()).compareTo(limit) <= 0, "Already spent amount larger than provided limit");
+      Assert.isTrue(limit.subtract( new BigInteger(quota.getSpent())).compareTo(tokenAvailable) <= 0, "Spender amount reached out available token!");
     }
   }
 
-  public void spend(byte[] owner, long amt){
-    Assert.isTrue(amt > 0, "amount must be positive");
+  public void spend(byte[] owner, BigInteger amt){
+    Assert.isTrue(amt.compareTo(BigInteger.ZERO) > 0, "amount must be positive");
     var base58 = Wallet.encode58Check(owner);
     var quota = ctx.getQuotasMap().get(base58);
     Assert.notNull(quota, "no spend quota for: " + base58);
-    Assert.isTrue(quota.getAvail() >= amt, "out of spending quota: " + base58);
-    var avail = quota.getAvail();
-    var spent = quota.getSpent();
+    Assert.isTrue(new BigInteger(quota.getAvail()).compareTo(amt) >= 0, "out of spending quota: " + base58);
+    var avail = new BigInteger(quota.getAvail());
+    var spent = new BigInteger(quota.getSpent());
     quota = quota.toBuilder()
-            .setAvail(Math.subtractExact(avail, amt))
-            .setSpent(Math.addExact(spent, amt))
+            .setAvail(avail.subtract(amt).toString())
+            .setSpent(spent.subtract(amt).toString())
             .build();
     ctx = ctx.toBuilder().putQuotas(base58, quota).build();
   }
 
-  public void checkSpend(byte[] owner, long amt){
-    Assert.isTrue(amt > 0, "amount must be positive");
+  public void checkSpend(byte[] owner, BigInteger amt){
+    Assert.isTrue(amt.compareTo(BigInteger.ZERO) > 0, "amount must be positive");
     var base58 = Wallet.encode58Check(owner);
     var quota = ctx.getQuotasMap().get(base58);
     Assert.notNull(quota, "No spend permission to: " + base58);
-    Assert.isTrue(quota.getAvail() >= amt, "out of spending quota: " + base58);
+    Assert.isTrue(new BigInteger(quota.getAvail()).compareTo(amt) >= 0, "out of spending quota: " + base58);
   }
 
-  public long getQuota(byte[] owner){
+  public BigInteger getQuota(byte[] owner){
     var base58 = Wallet.encode58Check(owner);
     var quota = ctx.getQuotasMap().get(base58);
-    return Objects.isNull(quota)  ? 0L : quota.getAvail();
+    return Objects.isNull(quota)  ? BigInteger.ZERO : new BigInteger(quota.getAvail());
   }
 
   public byte[] getKey(){

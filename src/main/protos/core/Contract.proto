@@ -221,15 +221,15 @@ message Urc20CreateContract {
   string symbol = 3;
   string name = 4;
   int64 decimals = 5;
-  int64 max_supply = 6;
-  int64 total_supply = 7;
+  string max_supply = 6;//decimal string
+  string total_supply = 7;//decimal string
   int64 start_time = 8;
   int64 end_time = 9;
   string url = 10;
   int64 fee = 11;
   int64 extra_fee_rate = 12;
   int64 fee_pool = 13;
-  int64 burned = 14;//internal
+  string burned = 14;//decimal string
   int64 latest_operation_time = 15;//internal
   int64 lot = 16;
   int64 fee_pool_origin = 17;//internal
@@ -247,7 +247,7 @@ message Urc20TransferFromContract {
   bytes from = 2; //owner
   bytes to = 3; //target
   bytes address = 4; //contract
-  int64 amount = 5;
+  string amount = 5; //decimal string
   int64 available_time = 6;
 }
 
@@ -255,7 +255,7 @@ message Urc20TransferContract {
   bytes owner_address = 1;
   bytes address = 2;
   bytes to = 3;
-  int64 amount = 4;
+  string amount = 4;//decimal string
   int64 available_time = 5;
 }
 
@@ -263,20 +263,20 @@ message Urc20ApproveContract{
   bytes owner_address = 1;
   bytes address = 2;
   bytes spender = 3;
-  int64 amount = 4;
+  string amount = 4;//decimal string
 }
 
 message Urc20MintContract {
   bytes owner_address = 1;
   bytes address = 2;
-  int64 amount = 3;
+  string amount = 3;//decimal string
   bytes to_address = 4;
 }
 
 message Urc20BurnContract {
   bytes owner_address = 1;
   bytes address = 2;
-  int64 amount = 3;
+  string amount = 3;//decimal string
 }
 
 message Urc20TransferOwnerContract {
@@ -288,7 +288,7 @@ message Urc20TransferOwnerContract {
 message Urc20ExchangeContract {
   bytes owner_address = 1;
   bytes address = 2;
-  int64 amount = 3;
+  int64 amount = 3; //ginza amount
 }
 
 message Urc20ContributePoolFeeContract {
@@ -304,7 +304,7 @@ message Urc20UpdateParamsContract {
   int64 extra_fee_rate = 4;
   int64 lot = 5;
   string url = 6;
-  int64 total_supply = 7;
+  string total_supply = 7;
   int64 fee_pool = 8;
   int64 exch_unx_num = 9;
   int64 exch_num = 10;

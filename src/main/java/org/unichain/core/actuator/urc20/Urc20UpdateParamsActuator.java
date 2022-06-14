@@ -27,6 +27,7 @@ import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.urc20.Urc20UpdateParamsContractCapsule;
 import org.unichain.core.capsule.utils.TransactionUtil;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -34,6 +35,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.Urc20UpdateParamsContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 import static org.unichain.core.config.Parameter.ChainConstant.*;
@@ -59,6 +61,7 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
     var fee = calcFee();
     try {
         var ctx = contract.unpack(Urc20UpdateParamsContract.class);
+        var ctxCap = new Urc20UpdateParamsContractCapsule(ctx);
         var accountStore = dbManager.getAccountStore();
         var contractStore = dbManager.getUrc20ContractStore();
 
@@ -87,11 +90,11 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
         }
 
         if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
-            var newTotalSupply = ctx.getTotalSupply();
-            var totalSupplyDiff = Math.subtractExact(newTotalSupply, contractCap.getTotalSupply());
+            var newTotalSupply = ctxCap.getTotalSupply();
+            var totalSupplyDiff = newTotalSupply.subtract(contractCap.getTotalSupply());
             contractCap.setTotalSupply(newTotalSupply);
             var ownerAccount = accountStore.get(ownerAddr);
-            ownerAccount.addToken(contractAddr, totalSupplyDiff);
+            ownerAccount.addUrc20Token(contractAddr, totalSupplyDiff);
             accountStore.put(ownerAddr, ownerAccount);
             updateCriticalParams = true;
         }
@@ -146,6 +149,7 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
           Assert.isTrue(contract.is(Urc20UpdateParamsContract.class), "Contract type error,expected type [Urc20UpdateParamsContract],real type[" + contract.getClass() + "]");
 
           val ctx = this.contract.unpack(Urc20UpdateParamsContract.class);
+          var ctxCap = new Urc20UpdateParamsContractCapsule(ctx);
           var accountStore = dbManager.getAccountStore();
           var contractStore = dbManager.getUrc20ContractStore();
 
@@ -186,18 +190,18 @@ public class Urc20UpdateParamsActuator extends AbstractActuator {
 
           if (ctx.hasField(URC20_UPDATE_PARAMS_FIELD_TOTAL_SUPPLY)) {
               var maxSupply = contractCap.getMaxSupply();
-              var newTotalSupply = ctx.getTotalSupply();
+              var newTotalSupply = ctxCap.getTotalSupply();
               var oldTotalSupply = contractCap.getTotalSupply();
-              var diff = Math.subtractExact(newTotalSupply, oldTotalSupply);
+              var diff = newTotalSupply.subtract(oldTotalSupply);
 
-              Assert.isTrue(diff != 0, "Total supply not changed!");
+              Assert.isTrue(diff.compareTo(BigInteger.ZERO) != 0, "Total supply not changed!");
 
-              if(diff > 0){
-                  Assert.isTrue(maxSupply >= newTotalSupply, "New total supply break max supply: " + maxSupply);
+              if(diff.compareTo(BigInteger.ZERO) > 0){
+                  Assert.isTrue(maxSupply.compareTo(newTotalSupply) >= 0, "New total supply break max supply: " + maxSupply);
               }
-              else if(diff < 0){
+              else if(diff.compareTo(BigInteger.ZERO) < 0){
                   var availableSupply = accountCap.getUrc20TokenAvailable(contractAddrBase58);
-                  Assert.isTrue(Math.addExact(availableSupply, diff) >= 0, "Max available token supply not enough to lower down total supply, minimum total supply is: " + (oldTotalSupply - availableSupply));
+                  Assert.isTrue(availableSupply.add(diff).compareTo(BigInteger.ZERO) >= 0, "Max available token supply not enough to lower down total supply, minimum total supply is: " + oldTotalSupply.subtract(availableSupply));
               }
           }
 

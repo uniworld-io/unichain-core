@@ -51,7 +51,7 @@ public class Urc20AllowanceServlet extends HttpServlet {
     }
   }
 
-  private String convertOutput(GrpcAPI.NumberMessage msg) {
+  private String convertOutput(GrpcAPI.StringMessage msg) {
     return JSONObject.parseObject(JsonFormat.printToString(msg, false)).toJSONString();
   }
 }

@@ -39,6 +39,7 @@ import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 import static org.unichain.core.config.Parameter.ChainConstant.*;
@@ -90,7 +91,7 @@ public class Urc20CreateContractActuator extends AbstractActuator {
         contractCap.setRootDecimals(DEFAULT_ROOT_DECIMALS);
       }
 
-      contractCap.setBurnedToken(0L);
+      contractCap.setBurnedToken(BigInteger.ZERO);
       contractCap.setSymbol(contractCap.getSymbol().toUpperCase());
       contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
@@ -169,9 +170,10 @@ public class Urc20CreateContractActuator extends AbstractActuator {
               && (endTime > dbManager.getHeadBlockTimeStamp())
               && (endTime <= maxAge) , "Invalid end time: must greater start time and lower than token age's limit timestamp:" + maxAge);
 
-      Assert.isTrue(ctx.getTotalSupply() > 0 , "TotalSupply must greater than 0");
-      Assert.isTrue(ctx.getMaxSupply() > 0 , "MaxSupply must greater than 0!");
-      Assert.isTrue(ctx.getMaxSupply() >= ctx.getTotalSupply() , "MaxSupply must greater or equal than TotalSupply");
+      val ctxCap = new Urc20ContractCapsule(ctx);
+      Assert.isTrue(ctxCap.getTotalSupply().compareTo(BigInteger.ZERO) > 0 , "TotalSupply must greater than 0");
+      Assert.isTrue(ctxCap.getMaxSupply().compareTo(BigInteger.ZERO) > 0 , "MaxSupply must greater than 0!");
+      Assert.isTrue(ctxCap.getMaxSupply().compareTo(ctxCap.getTotalSupply()) >= 0 , "MaxSupply must greater or equal than TotalSupply");
       Assert.isTrue(ctx.getFee() >= 0 && ctx.getFee() <= TOKEN_MAX_TRANSFER_FEE, "Invalid token transfer fee: must be positive and not exceed max fee : " + TOKEN_MAX_TRANSFER_FEE + " tokens");
       Assert.isTrue(ctx.getExtraFeeRate() >= 0 && ctx.getExtraFeeRate() <= 100 && ctx.getExtraFeeRate() <= TOKEN_MAX_TRANSFER_FEE_RATE, "Invalid extra fee rate , should between [0, " + TOKEN_MAX_TRANSFER_FEE_RATE + "]");
 

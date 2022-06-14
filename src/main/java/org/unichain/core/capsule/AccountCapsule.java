@@ -30,6 +30,7 @@ import org.unichain.protos.Protocol.Account.Builder;
 import org.unichain.protos.Protocol.Account.Frozen;
 import org.unichain.protos.Protocol.Permission.PermissionType;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -603,11 +604,11 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return true;
   }
 
-  public boolean addUrc20Token(byte[] addr, long value) {
-    Map<String, Long> tokenMap = this.account.getUrc20Map();
+  public boolean addUrc20Token(byte[] addr, BigInteger value) {
+    Map<String, String> tokenMap = this.account.getUrc20Map();
     String addrBase58 = Wallet.encode58Check(addr);
-    long totalValue = tokenMap.containsKey(addrBase58) ? Math.addExact(tokenMap.get(addrBase58), value) : value;
-    this.account = this.account.toBuilder().putUrc20(addrBase58, totalValue).build();
+    BigInteger totalValue = tokenMap.containsKey(addrBase58) ? (new BigInteger(tokenMap.get(addrBase58))).add(value) : value;
+    this.account = this.account.toBuilder().putUrc20(addrBase58, totalValue.toString()).build();
     return true;
   }
 
@@ -664,17 +665,17 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return true;
   }
 
-  public boolean burnUrc20Token(byte[] addr, long amount) {
-    Map<String, Long> tokenMap = this.account.getUrc20Map();
+  public boolean burnUrc20Token(byte[] addr, BigInteger amount) {
+    Map<String, String> tokenMap = this.account.getUrc20Map();
     String addrBase58 = Wallet.encode58Check(addr);
-    if (!tokenMap.containsKey(addrBase58) || tokenMap.get(addrBase58) < amount) {
+    if (!tokenMap.containsKey(addrBase58) || (new BigInteger(tokenMap.get(addrBase58))).compareTo(amount) <= 0) {
       return false;
     }
 
-    long remain = Math.subtractExact(tokenMap.get(addrBase58), amount);
-    if(remain > 0)
+    BigInteger remain = new BigInteger(tokenMap.get(addrBase58)).subtract(amount);
+    if(remain.compareTo(BigInteger.ZERO) > 0)
     {
-      this.account = this.account.toBuilder().putUrc20(addrBase58, remain).build();
+      this.account = this.account.toBuilder().putUrc20(addrBase58, remain.toString()).build();
     }
     else
     {
@@ -697,15 +698,15 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     }
   }
 
-  public long burnUrc20AllAvailableToken(byte[] addr) {
-    Map<String, Long> tokenMap = this.account.getUrc20Map();
+  public BigInteger burnUrc20AllAvailableToken(byte[] addr) {
+    Map<String, String> tokenMap = this.account.getUrc20Map();
     String addrBase58 = Wallet.encode58Check(addr);
     if (!tokenMap.containsKey(addrBase58)) {
       logger.warn("missing token {}", addrBase58);
-      return 0L;
+      return BigInteger.ZERO;
     }
     else {
-      long available = tokenMap.get(addrBase58);
+      BigInteger available = new BigInteger(tokenMap.get(addrBase58));
       this.account = this.account.toBuilder().removeUrc20(addrBase58).build();
       return available;
     }
@@ -717,9 +718,9 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     return tokenMap.containsKey(nameKey) ? tokenMap.get(nameKey) : 0L;
   }
 
-  public Long getUrc20TokenAvailable(String addrBase58) {
-    Map<String, Long> tokenMap = this.account.getUrc20Map();
-    return tokenMap.containsKey(addrBase58) ? tokenMap.get(addrBase58) : 0L;
+  public BigInteger getUrc20TokenAvailable(String addrBase58) {
+    Map<String, String> tokenMap = this.account.getUrc20Map();
+    return tokenMap.containsKey(addrBase58) ? new BigInteger(tokenMap.get(addrBase58)) : BigInteger.ZERO;
   }
 
   public boolean addAssetV2(byte[] key, long value) {

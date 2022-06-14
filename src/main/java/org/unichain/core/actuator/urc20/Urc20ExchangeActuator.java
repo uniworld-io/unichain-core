@@ -33,6 +33,7 @@ import org.unichain.protos.Contract.Urc20ExchangeContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 import static org.unichain.core.config.Parameter.ChainConstant.URC30_CRITICAL_UPDATE_TIME_GUARD;
@@ -62,8 +63,9 @@ public class Urc20ExchangeActuator extends AbstractActuator {
       var exchUnwFactor = contractCap.getExchUnw();
       var exchTokenFactor = contractCap.getExchToken();
       Assert.isTrue(exchUnwFactor > 0 && exchTokenFactor > 0, "Bad exchange factors: must be positive");
-      var exchangedTokenAmt = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
-
+      var exchangedTokenAmt = BigInteger.valueOf(ctx.getAmount())
+              .multiply(BigInteger.valueOf(exchTokenFactor))
+              .divide(BigInteger.valueOf(exchUnwFactor));
       ownerAccount.addUrc20Token(contractAddr, exchangedTokenAmt);
       ownerAccount.setBalance(Math.subtractExact(ownerAccount.getBalance(), Math.addExact(ctx.getAmount(), fee)));
       contractOwnerCap.burnUrc20Token(contractAddr, exchangedTokenAmt);
@@ -127,8 +129,10 @@ public class Urc20ExchangeActuator extends AbstractActuator {
       var exchTokenFactor = contractCap.getExchToken();
       Assert.isTrue(exchUnwFactor > 0, "Exchange unw factor must be positive");
       Assert.isTrue(exchTokenFactor > 0, "Exchange token factor must be positive");
-      var estimatedExchangeToken = Math.floorDiv(Math.multiplyExact(ctx.getAmount(), exchTokenFactor), exchUnwFactor);
-      Assert.isTrue(contractOwnerCap.getUrc20TokenAvailable(contractAddrBase58) >= estimatedExchangeToken, "Not enough token liquidity to exchange");
+      var estimatedExchangeToken = BigInteger.valueOf(ctx.getAmount())
+              .multiply(BigInteger.valueOf(exchTokenFactor))
+              .divide(BigInteger.valueOf(exchUnwFactor));
+      Assert.isTrue(contractOwnerCap.getUrc20TokenAvailable(contractAddrBase58).compareTo(estimatedExchangeToken) >= 0, "Not enough token liquidity to exchange");
       return true;
     }
     catch (Exception e){

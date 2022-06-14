@@ -26,6 +26,7 @@ import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.urc20.Urc20FutureTokenSummaryCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -33,6 +34,8 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.Urc20WithdrawFutureContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+
+import java.math.BigInteger;
 
 @Slf4j(topic = "actuator")
 public class Urc20WithdrawFutureActuator extends AbstractActuator {
@@ -114,7 +117,9 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
       var headBlockTickDay = Util.makeDayTick(headBlockTime);
       var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
       var summary = ownerAcc.getUrc20FutureTokenSummary(contractAddrBase58);
-      if(summary == null || headBlockTickDay < summary.getLowerBoundTime() || summary.getTotalDeal() <= 0 || summary.getTotalValue() <= 0)
+      val summaryCap = new Urc20FutureTokenSummaryCapsule(summary);
+
+      if(summary == null || headBlockTickDay < summary.getLowerBoundTime() || summary.getTotalDeal() <= 0 || summaryCap.getTotalValue().compareTo(BigInteger.ZERO) <= 0)
         return false;
       else
         return true;
@@ -127,12 +132,13 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
       var accountStore = dbManager.getAccountStore();
       var ownerAcc = accountStore.get(ownerAddress);
       var summary = ownerAcc.getUrc20FutureTokenSummary(contractAddrBase58);
+      val summaryCap = new Urc20FutureTokenSummaryCapsule(summary);
 
       /**
        * loop to withdraw, the most fastest way!!!
        */
       var tmpTickKeyBs = summary.getLowerTick();
-      var withdrawAmount = 0L;
+      var withdrawAmount = BigInteger.ZERO;
       var withdrawDeal = 0L;
       var withdrawAll = false;
       while (true){
@@ -152,7 +158,7 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
         if(tmpTick.getExpireTime() <= headBlockTickDay)
         {
           //withdraw
-          withdrawAmount = Math.addExact(withdrawAmount, tmpTick.getBalance());
+          withdrawAmount = withdrawAmount.add(tmpTick.getBalance());
           withdrawDeal = Math.incrementExact(withdrawDeal);
           futureStore.delete(tmpTickKeyBs.toByteArray());
           tmpTickKeyBs = tmpTick.getNextTick();
@@ -182,7 +188,7 @@ public class Urc20WithdrawFutureActuator extends AbstractActuator {
       futureStore.put(tmpTickKeyBs.toByteArray(), newHead);
       summary = summary.toBuilder()
               .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), withdrawDeal))
-              .setTotalValue(Math.subtractExact(summary.getTotalValue(), withdrawAmount))
+              .setTotalValue(summaryCap.getTotalValue().subtract(withdrawAmount).toString())
               .setLowerTick(tmpTickKeyBs)
               .setLowerBoundTime(newHead.getExpireTime())
               .build();

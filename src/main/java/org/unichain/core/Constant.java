@@ -45,7 +45,6 @@ public class Constant {
     public static final String ADD_PRE_FIX_STRING_TESTNET = "82";
     public static final int ADDRESS_SIZE = 42;
 
-    //@ToDo
     public static final Set<Long> POSBRIDGE_MAINNET_SUPPORT = new HashSet<>(Arrays.asList(
             68L, //uni mainnet
             1L,  //eth mainnet

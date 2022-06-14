@@ -15,7 +15,6 @@
 
 package org.unichain.core.actuator.urc20;
 
-import com.google.common.math.LongMath;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -28,6 +27,7 @@ import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.urc20.Urc20TransferFromContractCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -37,7 +37,7 @@ import org.unichain.protos.Contract.Urc20TransferFromContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.math.RoundingMode;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -54,6 +54,7 @@ public class Urc20TransferFromActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(Urc20TransferFromContract.class);
+      var ctxCap = new Urc20TransferFromContractCapsule(ctx);
       var accStore = dbManager.getAccountStore();
       var contractStore = dbManager.getUrc20ContractStore();
 
@@ -83,17 +84,17 @@ public class Urc20TransferFromActuator extends AbstractActuator {
           dbManager.adjustBalanceNoPut(fromCap, -dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
         }
 
-        fromCap.burnUrc20Token(contractAddr, ctx.getAmount());
+        fromCap.burnUrc20Token(contractAddr, ctxCap.getAmount());
         accStore.put(from, fromCap);
 
         if(ctx.getAvailableTime() <= 0)
         {
-          toAccountCap.addUrc20Token(contractAddr, ctx.getAmount());
+          toAccountCap.addUrc20Token(contractAddr, ctxCap.getAmount());
           accStore.put(to, toAccountCap);
         }
         else
         {
-          ActuatorUtil.addUrc20Future(dbManager, to, contractAddr, ctx.getAmount(), ctx.getAvailableTime());
+          ActuatorUtil.addUrc20Future(dbManager, to, contractAddr, ctxCap.getAmount(), ctx.getAvailableTime());
         }
       }
       else {
@@ -102,20 +103,22 @@ public class Urc20TransferFromActuator extends AbstractActuator {
           - if create new account, charge more fee on pool and more token fee on this account
           - charge more token fee on this account
         **/
-        var tokenFee = Math.addExact(contractCap.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), contractCap.getExtraFeeRate()), 100, RoundingMode.CEILING));
+        var tokenFee = BigInteger.valueOf(contractCap.getFee())
+                .add(Utils.divideCeiling(ctxCap.getAmount()
+                        .multiply(BigInteger.valueOf(contractCap.getExtraFeeRate())), BigInteger.valueOf(100L)));
         if(createToAcc)
         {
-          tokenFee = Math.addExact(tokenFee, contractCap.getCreateAccountFee());
+          tokenFee = tokenFee.add(BigInteger.valueOf(contractCap.getCreateAccountFee()));
           fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
         }
         var contractOwnerCap = accStore.get(contractOwnerAddr);
         contractOwnerCap.addUrc20Token(contractAddr, tokenFee);
         accStore.put(contractOwnerAddr, contractOwnerCap);
 
-        fromCap.burnUrc20Token(contractAddr, ctx.getAmount());
+        fromCap.burnUrc20Token(contractAddr, ctxCap.getAmount());
         accStore.put(from, fromCap);
-        var receivedAmt = Math.subtractExact(ctx.getAmount(), tokenFee);
-        Assert.isTrue(receivedAmt > 0, "Transfer amount must be greater than fee: " + tokenFee);
+        var receivedAmt = ctxCap.getAmount().subtract(tokenFee);
+        Assert.isTrue(receivedAmt.compareTo(BigInteger.ZERO) > 0, "Transfer amount must be greater than fee: " + tokenFee);
         if(ctx.getAvailableTime() <= 0)
         {
           toAccountCap.addUrc20Token(contractAddr, receivedAmt);
@@ -126,7 +129,7 @@ public class Urc20TransferFromActuator extends AbstractActuator {
       }
 
       //update spender
-      dbManager.getUrc20SpenderStore().spend(spender, contractAddr, from, ctx.getAmount());
+      dbManager.getUrc20SpenderStore().spend(spender, contractAddr, from, ctxCap.getAmount());
 
       //charge pool fee
       contractCap.setFeePool(Math.subtractExact(contractCap.getFeePool(), fee));
@@ -152,6 +155,7 @@ public class Urc20TransferFromActuator extends AbstractActuator {
 
       var fee = calcFee();
       val ctx = this.contract.unpack(Urc20TransferFromContract.class);
+      var ctxCap = new Urc20TransferFromContractCapsule(ctx);
       var accStore = dbManager.getAccountStore();
       var spenderStore = dbManager.getUrc20SpenderStore();
       var contractStore = dbManager.getUrc20ContractStore();
@@ -174,7 +178,7 @@ public class Urc20TransferFromActuator extends AbstractActuator {
       Assert.isTrue(!Arrays.equals(spenderAddr, toAddr) && !Arrays.equals(fromAddr, toAddr), "Transfer to itself not allowed");
 
       //check spender
-      spenderStore.checkSpend(spenderAddr, urc20Addr, fromAddr, ctx.getAmount());
+      spenderStore.checkSpend(spenderAddr, urc20Addr, fromAddr, ctxCap.getAmount());
 
       //check contract active
       var contractCap = contractStore.get(urc20Addr);
@@ -191,7 +195,7 @@ public class Urc20TransferFromActuator extends AbstractActuator {
         long maxAvailTime = Math.addExact(dbManager.getHeadBlockTimeStamp(), dbManager.getMaxFutureTransferTimeDurationTokenV3());
         Assert.isTrue (ctx.getAvailableTime() <= maxAvailTime, "Available time limited. Max available timestamp: " + maxAvailTime);
         Assert.isTrue(ctx.getAvailableTime() < contractCap.getEndTime(), "Available time exceeded token expired time");
-        Assert.isTrue(ctx.getAmount() >= contractCap.getLot(),"Future transfer require minimum amount of : " + contractCap.getLot());
+        Assert.isTrue(ctxCap.getAmount().compareTo(BigInteger.valueOf(contractCap.getLot())) >= 0,"Future transfer require minimum amount of : " + contractCap.getLot());
       }
 
       //check fee
@@ -214,17 +218,19 @@ public class Urc20TransferFromActuator extends AbstractActuator {
       }
 
       Assert.isTrue(contractCap.getFeePool() >= fee, "Not enough token pool fee balance, require at least " + fee);
-      Assert.isTrue (ctx.getAmount() > 0, "Invalid transfer amount, expect positive number");
-      Assert.isTrue(fromAccCap.getUrc20TokenAvailable(urc20AddrBase58) >= ctx.getAmount(), "Not enough token balance");
+      Assert.isTrue (ctxCap.getAmount().compareTo(BigInteger.ZERO) > 0, "Invalid transfer amount, expect positive number");
+      Assert.isTrue(fromAccCap.getUrc20TokenAvailable(urc20AddrBase58).compareTo(ctxCap.getAmount()) >= 0, "Not enough token balance");
 
       //validate transfer amount vs fee
       if(!Arrays.equals(fromAddr, contractOwnerAddr)){
-        var tokenFee = Math.addExact(contractCap.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), contractCap.getExtraFeeRate()), 100, RoundingMode.CEILING));
+        var tokenFee = BigInteger.valueOf(contractCap.getFee())
+                .add(Utils.divideCeiling(ctxCap.getAmount()
+                        .multiply(BigInteger.valueOf(contractCap.getExtraFeeRate())), BigInteger.valueOf(100L)));
         if(createToAccount)
         {
-          tokenFee = Math.addExact(tokenFee, contractCap.getCreateAccountFee());
+          tokenFee = tokenFee.add(BigInteger.valueOf(contractCap.getCreateAccountFee()));
         }
-        Assert.isTrue(ctx.getAmount() > tokenFee, "Not enough token balance to cover transfer fee");
+        Assert.isTrue(ctxCap.getAmount().compareTo(tokenFee) > 0, "Not enough token balance to cover transfer fee");
       }
 
       return true;

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.unichain.core.capsule.urc20.Urc20SpenderCapsule;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,7 +34,7 @@ public class Urc20SpenderStore extends UnichainStoreWithRevoking<Urc20SpenderCap
             .collect(Collectors.toList());
   }
 
-  public void spend(byte[] spender, byte[] contract, byte[] owner, long amt){
+  public void spend(byte[] spender, byte[] contract, byte[] owner, BigInteger amt){
     var spenderKey = Urc20SpenderCapsule.genKey(spender, contract);
     var quota = get(spenderKey);
     Assert.notNull(quota, "No spender permission");
@@ -41,7 +42,7 @@ public class Urc20SpenderStore extends UnichainStoreWithRevoking<Urc20SpenderCap
     put(spenderKey, quota);
   }
 
-  public void checkSpend(byte[] spender, byte[] contract, byte[] owner, long spendAmt){
+  public void checkSpend(byte[] spender, byte[] contract, byte[] owner, BigInteger spendAmt){
     var spenderKey = Urc20SpenderCapsule.genKey(spender, contract);
     var quota = get(spenderKey);
     Assert.notNull(quota, "No spender permission");

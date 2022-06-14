@@ -21,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.unichain.core.capsule.ProtoCapsule;
 import org.unichain.protos.Protocol.Urc20FutureToken;
 
+import java.math.BigInteger;
+
 @Slf4j(topic = "capsule")
 public class Urc20FutureTokenCapsule implements ProtoCapsule<Urc20FutureToken> {
   private Urc20FutureToken index;
@@ -81,12 +83,14 @@ public class Urc20FutureTokenCapsule implements ProtoCapsule<Urc20FutureToken> {
       this.index = index.toBuilder().clearNextTick().build();
   }
 
-  public void addBalance(long balance){
-    index = index.toBuilder().setFutureBalance(index.getFutureBalance() + balance).build();
+  public void addBalance(BigInteger balance){
+    index = index.toBuilder()
+            .setFutureBalance(new BigInteger(index.getFutureBalance()).add(balance).toString())
+            .build();
   }
 
-  public long getBalance(){
-    return index.getFutureBalance();
+  public BigInteger getBalance(){
+    return new BigInteger(index.getFutureBalance());
   }
 
   public long getExpireTime(){

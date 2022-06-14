@@ -15,7 +15,6 @@
 
 package org.unichain.core.actuator.urc20;
 
-import com.google.common.math.LongMath;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -23,9 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
 import org.springframework.util.Assert;
+import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.urc20.Urc20ApproveContractCapsule;
 import org.unichain.core.capsule.urc20.Urc20SpenderCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
@@ -34,7 +35,7 @@ import org.unichain.protos.Contract.Urc20ApproveContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
-import java.math.RoundingMode;
+import java.math.BigInteger;
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
@@ -52,6 +53,7 @@ public class Urc20ApproveActuator extends AbstractActuator {
       var accountStore = dbManager.getAccountStore();
       var urc20ContractStore = dbManager.getUrc20ContractStore();
       var ctx = contract.unpack(Urc20ApproveContract.class);
+      var ctxCap = new Urc20ApproveContractCapsule(ctx);
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var spenderAddr = ctx.getSpender().toByteArray();
@@ -61,7 +63,7 @@ public class Urc20ApproveActuator extends AbstractActuator {
       var urc20OwnerAddr = urc20Contract.getOwnerAddress().toByteArray();
       var urc20OwnerCap = accountStore.get(urc20OwnerAddr);
 
-      var limit = ctx.getAmount();
+      var limit = ctxCap.getAmount();
 
       //create spender account
       var createSpenderAcc = !accountStore.has(spenderAddr);
@@ -82,10 +84,12 @@ public class Urc20ApproveActuator extends AbstractActuator {
         }
       }
       else {
-        var tokenFee = Math.addExact(urc20Contract.getFee(), LongMath.divide(Math.multiplyExact(ctx.getAmount(), urc20Contract.getExtraFeeRate()), 100, RoundingMode.CEILING));
+        var tokenFee =  BigInteger.valueOf(urc20Contract.getFee()).add(
+                Utils.divideCeiling(ctxCap.getAmount().multiply(BigInteger.valueOf(urc20Contract.getExtraFeeRate())), BigInteger.valueOf(100L)));
+
         if (createSpenderAcc) {
           fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
-          tokenFee = Math.addExact(tokenFee, urc20Contract.getCreateAccountFee());
+          tokenFee = tokenFee.add(BigInteger.valueOf(urc20Contract.getCreateAccountFee()));
         }
 
         //charge token fee
@@ -158,10 +162,11 @@ public class Urc20ApproveActuator extends AbstractActuator {
         Assert.isTrue(accountStore.get(spenderAddr).getType() != Protocol.AccountType.Contract, "Spender must be not contract account");
       }
 
+      var ctxCap = new Urc20ApproveContractCapsule(ctx);
       var fee = calcFee();
-      var tokenFee = 0L;
+      var tokenFee = BigInteger.ZERO;
       var tokenAvailable = ownerCap.getUrc20TokenAvailable(urc20AddrBase58);
-      Assert.isTrue(tokenAvailable > 0, "No available token amount found!");
+      Assert.isTrue(tokenAvailable.compareTo(BigInteger.ZERO) > 0, "No available token amount found!");
 
       if(Arrays.equals(ownerAddr, urc20OwnerAddr)){
         if(createSpenderAcc){
@@ -172,29 +177,33 @@ public class Urc20ApproveActuator extends AbstractActuator {
       }
       else {
         //check token fee
-        tokenFee = Math.addExact(tokenFee, urc20Cap.getFee());
-        tokenFee = Math.addExact(tokenFee, LongMath.divide(Math.multiplyExact(ctx.getAmount(), urc20Cap.getExtraFeeRate()), 100, RoundingMode.CEILING));
+        tokenFee = tokenFee.add(BigInteger.valueOf(urc20Cap.getFee()));
+
+        tokenFee = tokenFee.add(
+                Utils.divideCeiling(
+                        ctxCap.getAmount().multiply(BigInteger.valueOf(urc20Cap.getExtraFeeRate())),
+                        BigInteger.valueOf(100L)));
         if (createSpenderAcc) {
           fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
-          tokenFee = Math.addExact(tokenFee, urc20Cap.getCreateAccountFee());
+          tokenFee = tokenFee.add(BigInteger.valueOf(urc20Cap.getCreateAccountFee()));
         }
-        Assert.isTrue(tokenAvailable >= tokenFee, "Not enough token to cover fee, expected: " + tokenFee);
+        Assert.isTrue(tokenAvailable.compareTo(tokenFee) >= 0, "Not enough token to cover fee, expected: " + tokenFee);
       }
 
       //check pool fee
       Assert.isTrue(urc20Cap.getFeePool() >= fee, "Not enough urc20 pool fee, expected gas: " + fee);
 
       //left token avail
-      tokenAvailable = Math.subtractExact(tokenAvailable, tokenFee);
+      tokenAvailable =tokenAvailable.subtract(tokenFee);
 
       //validate quota
-      var limit = ctx.getAmount();
-      Assert.isTrue(urc20Cap.getTotalSupply() >= limit, "Spender limit reached out contract total supply!");
+      var limit = ctxCap.getAmount();
+      Assert.isTrue(urc20Cap.getTotalSupply().compareTo(limit) >= 0, "Spender limit reached out contract total supply!");
 
       var spenderKey = Urc20SpenderCapsule.genKey(spenderAddr, urc20Addr);
       if(!spenderStore.has(spenderKey))
       {
-        Assert.isTrue(tokenAvailable >= limit, "Spender amount reached out available token!");
+        Assert.isTrue(tokenAvailable.compareTo(limit) >= 0, "Spender amount reached out available token!");
       }
       else {
         spenderStore.get(spenderKey).checkSetQuota(ownerAddr, limit, tokenAvailable);

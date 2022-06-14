@@ -26,6 +26,7 @@ import org.unichain.common.utils.Utils;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.urc20.Urc20BurnContractCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -44,16 +45,17 @@ public class Urc20BurnActuator extends AbstractActuator {
     var fee = calcFee();
     try {
       var ctx = contract.unpack(Urc20BurnContract.class);
+      var ctxCap = new Urc20BurnContractCapsule(ctx);
       var contractAddr = ctx.getAddress().toByteArray();
       var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
-      contractCap.burnToken(ctx.getAmount());
+      contractCap.burnToken(ctxCap.getAmount());
       contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
       dbManager.getUrc20ContractStore().put(contractAddr, contractCap);
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerCap = dbManager.getAccountStore().get(ownerAddr);
-      ownerCap.burnUrc20Token(contractAddr, ctx.getAmount());
+      ownerCap.burnUrc20Token(contractAddr, ctxCap.getAmount());
       dbManager.getAccountStore().put(ownerAddr, ownerCap);
 
       chargeFee(ownerAddr, fee);
@@ -74,6 +76,8 @@ public class Urc20BurnActuator extends AbstractActuator {
       Assert.isTrue(contract.is(Urc20BurnContract.class), "Contract type error,expected type [Urc20BurnContract],real type[" + contract.getClass() + "]");
 
       val ctx = this.contract.unpack(Urc20BurnContract.class);
+      val ctxCap = new Urc20BurnContractCapsule(ctx);
+
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
 
@@ -87,7 +91,7 @@ public class Urc20BurnActuator extends AbstractActuator {
 
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: "+ Utils.formatDateLong(contractCap.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
-      Assert.isTrue(ownerAccountCap.getUrc20TokenAvailable(contractAddrBase58) >= ctx.getAmount(), "Not enough contract balance of" + contractAddrBase58 + "at least " + ctx.getAmount());
+      Assert.isTrue(ownerAccountCap.getUrc20TokenAvailable(contractAddrBase58).compareTo(ctxCap.getAmount()) >= 0, "Not enough contract balance of" + contractAddrBase58 + "at least " + ctx.getAmount());
       return true;
     }
     catch (Exception e){

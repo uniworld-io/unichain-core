@@ -4,7 +4,6 @@ import com.google.protobuf.ByteString;
 import lombok.var;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.actuator.urc20.Urc20TransferActuator;
-import org.unichain.core.actuator.urc20.Urc20TransferFromActuator;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
@@ -34,7 +33,7 @@ public class Urc20Predicate implements Predicate {
                 .setOwnerAddress(depositor)
                 .setTo(config.getPredicateErc20())
                 .setAddress(rootToken)
-                .setAmount(PosBridgeUtil.abiDecodeToUint256(depositData).getValue().longValue())
+                .setAmount(PosBridgeUtil.abiDecodeToUint256(depositData).getValue().toString())
                 .setAvailableTime(0L)
                 .build();
 
@@ -57,7 +56,7 @@ public class Urc20Predicate implements Predicate {
                 .setOwnerAddress(config.getPredicateErc20())
                 .setTo(withdrawer)
                 .setAddress(rootToken)
-                .setAmount(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().longValue())
+                .setAmount(PosBridgeUtil.abiDecodeToUint256(withdrawData).getValue().toString())
                 .setAvailableTime(0L)
                 .build();
 

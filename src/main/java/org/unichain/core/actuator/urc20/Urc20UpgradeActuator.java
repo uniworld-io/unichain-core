@@ -34,6 +34,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
+import java.math.BigInteger;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -101,15 +102,15 @@ public class Urc20UpgradeActuator extends AbstractActuator {
                 .setSymbol(urc30Cap.getName())
                 .setName(urc30Cap.getAbbr())
                 .setDecimals(0L)
-                .setMaxSupply(urc30Cap.getMaxSupply())
-                .setTotalSupply(urc30Cap.getTotalSupply())
+                .setMaxSupply(BigInteger.valueOf(urc30Cap.getMaxSupply()).toString())
+                .setTotalSupply(BigInteger.valueOf(urc30Cap.getTotalSupply()).toString())
                 .setStartTime(urc30Cap.getStartTime())
                 .setEndTime(urc30Cap.getEndTime())
                 .setUrl(urc30Cap.getUrl())
                 .setFee(urc30Cap.getFee())
                 .setExtraFeeRate(urc30Cap.getExtraFeeRate())
                 .setFeePool(urc30Cap.getFeePool())
-                .setBurned(urc30Cap.getBurnedToken())
+                .setBurned(BigInteger.valueOf(urc30Cap.getBurnedToken()).toString())
                 .setLatestOperationTime(urc30Cap.getLatestOperationTime())
                 .setLot(urc30Cap.getLot())
                 .setFeePoolOrigin(urc30Cap.getOriginFeePool())
@@ -131,7 +132,7 @@ public class Urc20UpgradeActuator extends AbstractActuator {
           var ownerAddrBase58 = Wallet.encode58Check(ownerAddr);
           logger.warn("migrate urc30 acc {} ...", ownerAddrBase58);
           //migrate noodle urc30
-          acc.getInstance().getTokenMap().forEach((symbol, amount) -> acc.addUrc20Token(AddressUtil.genAssetAddrBySeed(symbol), amount));
+          acc.getInstance().getTokenMap().forEach((symbol, amount) -> acc.addUrc20Token(AddressUtil.genAssetAddrBySeed(symbol), BigInteger.valueOf(amount)));
           accStore.put(ownerAddr, acc);
 
           //migrate future
@@ -141,7 +142,7 @@ public class Urc20UpgradeActuator extends AbstractActuator {
               var urc30HeadDeal = urc30FutureTokenStore.get(urc30Summary.getLowerTick().toByteArray());
 
               while (Objects.nonNull(urc30HeadDeal) && Objects.nonNull(urc30HeadDeal.getNextTick()) && urc30HeadDeal.getNextTick().size() > 0) {
-                ActuatorUtil.addUrc20Future(dbManager, ownerAddr, urc20Addr, urc30HeadDeal.getBalance(), urc30HeadDeal.getExpireTime());
+                ActuatorUtil.addUrc20Future(dbManager, ownerAddr, urc20Addr, BigInteger.valueOf(urc30HeadDeal.getBalance()), urc30HeadDeal.getExpireTime());
                 urc30HeadDeal = urc30FutureTokenStore.get(urc30HeadDeal.getNextTick().toByteArray());
               }
               logger.warn("migrate future urc30 of symbol {} success!", symbol);

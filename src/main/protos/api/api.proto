@@ -97,7 +97,7 @@ service Wallet {
     };
   };
 
-  rpc Urc20TotalSupply (AddressMessage) returns (NumberMessage) {
+  rpc Urc20TotalSupply (AddressMessage) returns (StringMessage) {
     option (google.api.http) = {
       post: "/wallet/urc20totalsupply"
       body: "*"
@@ -107,7 +107,7 @@ service Wallet {
     };
   };
 
-  rpc Urc20BalanceOf (Urc20BalanceOfQuery) returns (NumberMessage) {
+  rpc Urc20BalanceOf (Urc20BalanceOfQuery) returns (StringMessage) {
     option (google.api.http) = {
       post: "/wallet/urc20balanceof"
       body: "*"
@@ -127,7 +127,7 @@ service Wallet {
     };
   };
 
-  rpc Urc20Allowance (Urc20AllowanceQuery) returns (NumberMessage) {
+  rpc Urc20Allowance (Urc20AllowanceQuery) returns (StringMessage) {
     option (google.api.http) = {
       post: "/wallet/urc20allowance"
       body: "*"
@@ -1408,7 +1408,7 @@ service WalletSolidity {
     };
   };
 
-  rpc Urc20TotalSupply (AddressMessage) returns (NumberMessage) {
+  rpc Urc20TotalSupply (AddressMessage) returns (StringMessage) {
     option (google.api.http) = {
       post: "/walletsolidity/urc20totalsupply"
       body: "*"
@@ -1418,7 +1418,7 @@ service WalletSolidity {
     };
   };
 
-  rpc Urc20BalanceOf (Urc20BalanceOfQuery) returns (NumberMessage) {
+  rpc Urc20BalanceOf (Urc20BalanceOfQuery) returns (StringMessage) {
     option (google.api.http) = {
       post: "/walletsolidity/urc20balanceof"
       body: "*"
@@ -1438,7 +1438,7 @@ service WalletSolidity {
     };
   };
 
-  rpc Urc20Allowance (Urc20AllowanceQuery) returns (NumberMessage) {
+  rpc Urc20Allowance (Urc20AllowanceQuery) returns (StringMessage) {
     option (google.api.http) = {
       post: "/walletsolidity/urc20allowance"
       body: "*"

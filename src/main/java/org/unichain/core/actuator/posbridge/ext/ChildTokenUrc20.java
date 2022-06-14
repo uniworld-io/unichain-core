@@ -10,7 +10,6 @@ import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
@@ -40,7 +39,7 @@ public class ChildTokenUrc20 implements ChildToken {
                 .setOwnerAddress(contract.getOwnerAddress())
                 .setAddress(childToken)
                 .setToAddress(user)
-                .setAmount(amount.longValue())
+                .setAmount(amount.toString())
                 .build();
         var wrapCap = new TransactionCapsule(wrapCtx, Protocol.Transaction.Contract.ContractType.Urc20MintContract)
                 .getInstance()
@@ -61,7 +60,7 @@ public class ChildTokenUrc20 implements ChildToken {
                 .divide(BigInteger.valueOf(Double.valueOf(Math.pow(10, contract.getRootDecimals())).longValue()));
 
         var wrapCtx = Contract.Urc20BurnContract.newBuilder()
-                .setAmount(amount.longValue())
+                .setAmount(amount.toString())
                 .setOwnerAddress(user)
                 .setAddress(childToken)
                 .build();

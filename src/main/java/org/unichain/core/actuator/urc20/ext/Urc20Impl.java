@@ -16,6 +16,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Protocol;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -37,7 +38,7 @@ public class Urc20Impl implements Urc20 {
   private Manager dbManager;
 
   @Override
-  public GrpcAPI.NumberMessage allowance(Protocol.Urc20AllowanceQuery query) {
+  public GrpcAPI.StringMessage allowance(Protocol.Urc20AllowanceQuery query) {
     var owner = query.getOwner().toByteArray();
     var contract = query.getAddress().toByteArray();
     var spender = query.getSpender().toByteArray();
@@ -47,13 +48,13 @@ public class Urc20Impl implements Urc20 {
 
     var spenderKey = Urc20SpenderCapsule.genKey(spender, contract);
     var spenderStore = dbManager.getUrc20SpenderStore();
-    var avail = 0L;
+    var avail = BigInteger.ZERO;
     if(spenderStore.has(spenderKey)){
       var quota = spenderStore.get(spenderKey);
-      avail = Objects.isNull(quota) ? 0L : quota.getQuota(owner);
+      avail = Objects.isNull(quota) ? BigInteger.ZERO : quota.getQuota(owner);
     }
 
-    return GrpcAPI.NumberMessage.newBuilder().setNum(avail).build();
+    return GrpcAPI.StringMessage.newBuilder().setValue(avail.toString()).build();
   }
 
   @Override
@@ -62,7 +63,7 @@ public class Urc20Impl implements Urc20 {
   }
 
   @Override
-  public GrpcAPI.NumberMessage balanceOf(Protocol.Urc20BalanceOfQuery query) {
+  public GrpcAPI.StringMessage balanceOf(Protocol.Urc20BalanceOfQuery query) {
     var owner = query.getOwnerAddress().toByteArray();
     var contract = query.getAddress().toByteArray();
     var contractBase58 = Wallet.encode58Check(contract);
@@ -73,8 +74,8 @@ public class Urc20Impl implements Urc20 {
     var ownerCap = accStore.get(owner);
     var futureSummary = ownerCap.getUrc20FutureTokenSummary(contractBase58);
     var avail = ownerCap.getUrc20TokenAvailable(contractBase58);
-    var future = (futureSummary == null ? 0L : futureSummary.getTotalValue());
-    return GrpcAPI.NumberMessage.newBuilder().setNum(avail + future).build();
+    var future = (futureSummary == null ? BigInteger.ZERO : new BigInteger(futureSummary.getTotalValue()));
+    return GrpcAPI.StringMessage.newBuilder().setValue(avail.add(future).toString()).build();
   }
 
   @Override
@@ -159,7 +160,7 @@ public class Urc20Impl implements Urc20 {
               .setAddress(query.getAddress())
               .setSymbol(contract.getSymbol())
               .setTotalDeal(0)
-              .setTotalValue(0)
+              .setTotalValue(BigInteger.ZERO.toString())
               .clearLowerBoundTime()
               .clearUpperBoundTime()
               .clearDeals()
@@ -245,12 +246,12 @@ public class Urc20Impl implements Urc20 {
   }
 
   @Override
-  public GrpcAPI.NumberMessage totalSupply(Protocol.AddressMessage query) {
+  public GrpcAPI.StringMessage totalSupply(Protocol.AddressMessage query) {
     var addr = query.getAddress().toByteArray();
     var contractStore = dbManager.getUrc20ContractStore();
     Assert.isTrue(contractStore.has(addr), "Not found urc20 contract: " + Wallet.encode58Check(addr));
-    return GrpcAPI.NumberMessage.newBuilder()
-            .setNum(contractStore.get(addr).getTotalSupply())
+    return GrpcAPI.StringMessage.newBuilder()
+            .setValue(contractStore.get(addr).getTotalSupply().toString())
             .build();
   }
 

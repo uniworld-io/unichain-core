@@ -19,7 +19,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.util.Assert;
 import org.unichain.core.actuator.urc20.Urc20CreateContractActuator;
 import org.unichain.core.capsule.ProtoCapsule;
@@ -27,6 +26,8 @@ import org.unichain.core.config.Parameter;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.Urc20CreateContract;
+
+import java.math.BigInteger;
 
 @Slf4j(topic = "capsule")
 public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
@@ -93,8 +94,8 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
     return this.ctx.getUrl();
   }
 
-  public long getTotalSupply() {
-    return this.ctx.getTotalSupply();
+  public BigInteger getTotalSupply() {
+    return new BigInteger(this.ctx.getTotalSupply());
   }
 
   public String getName(){
@@ -109,12 +110,13 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
     return this.ctx.getDecimals();
   }
 
+  //@fixme move to posbridge
   public long getRootDecimals(){
     return ctx.hasField(Urc20CreateContractActuator.URC20_CREATE_FIELD_ROOT_DECIMALS) ? this.ctx.getRootDecimals() : Urc20CreateContractActuator.DEFAULT_ROOT_DECIMALS;
   }
 
-  public long getMaxSupply() {
-    return this.ctx.getMaxSupply();
+  public BigInteger getMaxSupply() {
+    return new BigInteger(this.ctx.getMaxSupply());
   }
 
   public long getFee() {
@@ -145,8 +147,8 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
     return this.ctx.getExchEnable();
   }
 
-  public long getBurnedToken() {
-    return ctx.getBurned();
+  public BigInteger getBurnedToken() {
+    return new BigInteger(ctx.getBurned());
   }
 
   public void setOwnerAddress(ByteString ownerAddress) {
@@ -181,8 +183,8 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
     this.ctx = this.ctx.toBuilder().setExchNum(exchTokenNum).build();
   }
 
-  public void setTotalSupply(long amount) {
-    this.ctx = this.ctx.toBuilder().setTotalSupply(amount).build();
+  public void setTotalSupply(BigInteger amount) {
+    this.ctx = this.ctx.toBuilder().setTotalSupply(amount.toString()).build();
   }
 
   public void setName(String name) {
@@ -205,10 +207,10 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
     this.ctx = this.ctx.toBuilder().setRootDecimals(rootDecimals).build();
   }
 
-  public void burnToken(long amount) throws ContractExeException {
-    Assert.isTrue(amount > 0, "burn token amount must be positive");
-    setBurnedToken(Math.addExact(ctx.getBurned(), amount));
-    setTotalSupply(Math.subtractExact(ctx.getTotalSupply(), amount));
+  public void burnToken(BigInteger amount) throws ContractExeException {
+    Assert.isTrue(amount.compareTo(BigInteger.ZERO) > 0, "burn token amount must be positive");
+    setBurnedToken(new BigInteger(ctx.getBurned()).add(amount));
+    setTotalSupply(new BigInteger(ctx.getTotalSupply()).subtract(amount));
   }
 
   public void setOriginFeePool(long originFeePool) {
@@ -235,13 +237,8 @@ public class Urc20ContractCapsule implements ProtoCapsule<Urc20CreateContract> {
     this.ctx = this.ctx.toBuilder().setUrl(newUrl).build();
   }
 
-  public void setBurnedToken(long amount){
-    this.ctx = this.ctx.toBuilder().setBurned(amount).build();
-  }
-
-  public void mintToken(long amount) throws ContractExeException{
-    Assert.isTrue(amount > 0 && (getMaxSupply() - getBurnedToken() - getTotalSupply() >= amount), "mint token amount must be positive and do not exceed mint capacity");
-    setTotalSupply(getTotalSupply() + amount);
+  public void setBurnedToken(BigInteger amount){
+    this.ctx = this.ctx.toBuilder().setBurned(amount.toString()).build();
   }
 
   public long getLot() {

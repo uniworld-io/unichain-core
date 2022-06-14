@@ -28,6 +28,7 @@ import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
+import org.unichain.core.capsule.urc20.Urc20MintContractCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
@@ -36,6 +37,7 @@ import org.unichain.protos.Contract.Urc20MintContract;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
@@ -55,12 +57,13 @@ public class Urc20MintActuator extends AbstractActuator {
       var accStore = dbManager.getAccountStore();
 
       var ctx = contract.unpack(Urc20MintContract.class);
+      var ctxCap = new Urc20MintContractCapsule(ctx);
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
       var urc20Addr = ctx.getAddress().toByteArray();
 
       //update contract
       var urc20Cap = urc20Store.get(urc20Addr);
-      urc20Cap.setTotalSupply(Math.addExact(urc20Cap.getTotalSupply(), ctx.getAmount()));
+      urc20Cap.setTotalSupply(urc20Cap.getTotalSupply().add(ctxCap.getAmount()));
       urc20Cap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
       urc20Cap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
       urc20Store.put(urc20Addr, urc20Cap);
@@ -85,7 +88,7 @@ public class Urc20MintActuator extends AbstractActuator {
         toAccountCap = accStore.get(toAddr);
       }
 
-      toAccountCap.addUrc20Token(urc20Addr, ctx.getAmount());
+      toAccountCap.addUrc20Token(urc20Addr, ctxCap.getAmount());
       accStore.put(toAddr, toAccountCap);
 
       chargeFee(ownerAddr, fee);
@@ -109,6 +112,7 @@ public class Urc20MintActuator extends AbstractActuator {
       var contractStore = dbManager.getUrc20ContractStore();
 
       val ctx = this.contract.unpack(Urc20MintContract.class);
+      val ctxCap = new Urc20MintContractCapsule(ctx);
       var fee = calcFee();
 
       var ownerAddr = ctx.getOwnerAddress().toByteArray();
@@ -139,11 +143,11 @@ public class Urc20MintActuator extends AbstractActuator {
 
       Assert.isTrue(Arrays.equals(ownerAddr, urc20Cap.getOwnerAddress().toByteArray()), "Only contract owner allowed to mine");
 
-      Assert.isTrue(ctx.getAmount() >= urc20Cap.getLot(), "Mined amount at least equal lot: " + urc20Cap.getLot());
+      Assert.isTrue(ctxCap.getAmount().compareTo(BigInteger.valueOf(urc20Cap.getLot())) >= 0, "Mined amount at least equal lot: " + urc20Cap.getLot());
 
       //avail to mine = max - total - burned
-      var availableToMine = Math.subtractExact(urc20Cap.getMaxSupply(), Math.addExact(urc20Cap.getTotalSupply(), urc20Cap.getBurnedToken()));
-      Assert.isTrue(ctx.getAmount() <= availableToMine, "Not enough frozen token to mine, maximum allowed: " + availableToMine);
+      var availableToMine = urc20Cap.getMaxSupply().subtract(urc20Cap.getTotalSupply().add(urc20Cap.getBurnedToken()));
+      Assert.isTrue(ctxCap.getAmount().compareTo(availableToMine) <= 0, "Not enough frozen token to mine, maximum allowed: " + availableToMine);
 
       return true;
     }

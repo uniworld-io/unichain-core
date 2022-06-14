@@ -418,14 +418,14 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc20TotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+    public void urc20TotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
       var reply = urc20.totalSupply(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc20BalanceOf(Urc20BalanceOfQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+    public void urc20BalanceOf(Urc20BalanceOfQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
       var reply = urc20.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
@@ -439,7 +439,7 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc20Allowance(Urc20AllowanceQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+    public void urc20Allowance(Urc20AllowanceQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
       var reply = urc20.allowance(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
@@ -980,14 +980,14 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc20TotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+    public void urc20TotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
       var reply = urc20.totalSupply(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void urc20BalanceOf(Urc20BalanceOfQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+    public void urc20BalanceOf(Urc20BalanceOfQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
       var reply = urc20.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
@@ -1001,7 +1001,7 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void urc20Allowance(Urc20AllowanceQuery request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+    public void urc20Allowance(Urc20AllowanceQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
       var reply = urc20.allowance(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();

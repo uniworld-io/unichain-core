@@ -157,7 +157,7 @@ message Urc20FutureTokenPack {
   int64  total_deal = 4;
   int64 lower_bound_time = 5;
   int64 upper_bound_time = 6;
-  int64 total_value = 7;
+  string total_value = 7; //decimal str
   repeated Urc20FutureToken deals = 8;
 }
 
@@ -169,9 +169,9 @@ message Urc20ContractQuery {
 }
 
 message Urc20FutureTokenQuery {
-  bytes  owner_address = 3;
+  bytes owner_address = 3;
   bytes address = 1;
-  int32  page_size = 4;
+  int32 page_size = 4;
   int32 page_index = 5;
 }
 
@@ -192,13 +192,13 @@ message Urc20FutureTokenSummary {
   int64  total_deal = 3;
   int64 lower_bound_time = 4;
   int64 upper_bound_time = 5;
-  int64 total_value = 6;
+  string total_value = 6;
   bytes lower_tick = 7;
   bytes upper_tick = 8;
 }
 
 message Urc20FutureToken {
-  int64 future_balance = 1;
+  string future_balance = 1; //decimal str
   int64 expire_time = 2;
   bytes prev_tick = 3;
   bytes next_tick = 4;
@@ -206,9 +206,9 @@ message Urc20FutureToken {
 
 message Urc20SpenderQuota{
     bytes owner = 1;
-    int64 limit = 2;
-    int64 spent = 3;
-    int64 avail = 4;
+    string limit = 2; //decimal str
+    string spent = 3; //decimal str
+    string avail = 4; //decimal str
 }
 message Urc20Spender {
   bytes spender = 1;
@@ -256,8 +256,8 @@ message Account {
   //token future
   map<string, FutureTokenSummaryV2> token_future = 61;
 
-  //token map, including all type
-  map<string, int64> urc20 = 62;
+  //token map" [addr --> decimal number]
+  map<string, string> urc20 = 62;
 
   //token future
   map<string, Urc20FutureTokenSummary> urc20_future = 63;

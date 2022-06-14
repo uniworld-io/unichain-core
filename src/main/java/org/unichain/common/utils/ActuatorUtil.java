@@ -10,6 +10,7 @@ import org.unichain.core.db.Manager;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Protocol;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -293,7 +294,7 @@ public class ActuatorUtil {
     }
   }
 
-  public static void addUrc20Future(final Manager dbManager, byte[] toAddress, byte[] contractAddr, long amount, long availableTime){
+  public static void addUrc20Future(final Manager dbManager, byte[] toAddress, byte[] contractAddr, BigInteger amount, long availableTime){
     var addrBase58 = Wallet.encode58Check(contractAddr);
     var tickDay = Util.makeDayTick(availableTime);
     var tickKey = Util.makeUrc20FutureTokenIndexKey(toAddress, addrBase58, tickDay);
@@ -314,7 +315,9 @@ public class ActuatorUtil {
       futureStore.put(tickKey, tick);
 
       //update account summary
-      summary = summary.toBuilder().setTotalValue(Math.addExact(summary.getTotalValue(), amount)).build();
+      summary = summary.toBuilder()
+              .setTotalValue(new BigInteger(summary.getTotalValue()).add(amount).toString())
+              .build();
       toAcc.setUrc20FutureTokenSummary(addrBase58, summary);
       accountStore.put(toAddress, toAcc);
       return;
@@ -326,7 +329,7 @@ public class ActuatorUtil {
     if(Objects.isNull(summary)){
       //save tick
       var tick = Protocol.Urc20FutureToken.newBuilder()
-              .setFutureBalance(amount)
+              .setFutureBalance(amount.toString())
               .setExpireTime(tickDay)
               .clearNextTick()
               .clearPrevTick()
@@ -337,7 +340,7 @@ public class ActuatorUtil {
       summary = Protocol.Urc20FutureTokenSummary.newBuilder()
               .setAddress(ByteString.copyFrom(contractAddr))
               .setSymbol(contractCap.getSymbol())
-              .setTotalValue(amount)
+              .setTotalValue(amount.toString())
               .setTotalDeal(1)
               .setUpperBoundTime(tickDay)
               .setLowerBoundTime(tickDay)
@@ -366,7 +369,7 @@ public class ActuatorUtil {
       //save new head
       var newHead = Protocol.Urc20FutureToken.newBuilder()
               .setExpireTime(tickDay)
-              .setFutureBalance(amount)
+              .setFutureBalance(amount.toString())
               .setNextTick(summary.getLowerTick())
               .clearPrevTick()
               .build();
@@ -376,7 +379,7 @@ public class ActuatorUtil {
       summary = summary.toBuilder()
               .setLowerBoundTime(tickDay)
               .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
-              .setTotalValue(Math.addExact(summary.getTotalValue(), amount))
+              .setTotalValue(new BigInteger(summary.getTotalValue()).add(amount).toString())
               .setLowerTick(ByteString.copyFrom(tickKey))
               .build();
       toAcc.setUrc20FutureTokenSummary(addrBase58, summary);
@@ -392,7 +395,7 @@ public class ActuatorUtil {
 
       //save new tail
       var newTail = Protocol.Urc20FutureToken.newBuilder()
-              .setFutureBalance(amount)
+              .setFutureBalance(amount.toString())
               .setExpireTime(tickDay)
               .clearNextTick()
               .setPrevTick(oldTailKeyBs)
@@ -407,7 +410,7 @@ public class ActuatorUtil {
       //save summary
       summary = summary.toBuilder()
               .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
-              .setTotalValue(Math.addExact(summary.getTotalValue(), amount))
+              .setTotalValue(new BigInteger(summary.getTotalValue()).add(amount).toString())
               .setUpperTick(ByteString.copyFrom(tickKey))
               .setUpperBoundTime(tickDay)
               .build();
@@ -429,7 +432,7 @@ public class ActuatorUtil {
         //save new tick
         var newTick = Protocol.Urc20FutureToken.newBuilder()
                 .setExpireTime(tickDay)
-                .setFutureBalance(amount)
+                .setFutureBalance(amount.toString())
                 .setPrevTick(searchKeyBs)
                 .setNextTick(oldNextTickKey)
                 .build();
@@ -446,7 +449,7 @@ public class ActuatorUtil {
 
         //save tick summary
         summary = summary.toBuilder()
-                .setTotalValue(Math.addExact(summary.getTotalValue() , amount))
+                .setTotalValue(new BigInteger(summary.getTotalValue()).add(amount).toString())
                 .setTotalDeal(Math.incrementExact(summary.getTotalDeal()))
                 .build();
 

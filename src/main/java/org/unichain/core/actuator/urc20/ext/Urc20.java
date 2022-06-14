@@ -18,13 +18,13 @@ public interface Urc20 {
   Protocol.Transaction transferFrom(Contract.Urc20TransferFromContract contract) throws ContractValidateException;
   Protocol.Transaction transfer(Contract.Urc20TransferContract contract) throws ContractValidateException;
 
-  GrpcAPI.NumberMessage allowance(Protocol.Urc20AllowanceQuery query);
-  GrpcAPI.NumberMessage balanceOf(Protocol.Urc20BalanceOfQuery query);
+  GrpcAPI.StringMessage allowance(Protocol.Urc20AllowanceQuery query);
+  GrpcAPI.StringMessage balanceOf(Protocol.Urc20BalanceOfQuery query);
   GrpcAPI.NumberMessage decimals(Protocol.AddressMessage query);
   Protocol.AddressMessage getOwner(Protocol.AddressMessage query);
   GrpcAPI.StringMessage name(Protocol.AddressMessage query);
   GrpcAPI.StringMessage symbol(Protocol.AddressMessage query);
-  GrpcAPI.NumberMessage totalSupply(Protocol.AddressMessage query);
+  GrpcAPI.StringMessage totalSupply(Protocol.AddressMessage query);
   Contract.Urc20ContractPage contractList(Protocol.Urc20ContractQuery query);
   Protocol.Urc20FutureTokenPack futureGet(Protocol.Urc20FutureTokenQuery query);
 }

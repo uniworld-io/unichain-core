@@ -89,8 +89,8 @@ public class Urc30TokenCreateActuatorV4 extends AbstractActuator {
                       TokenCreateEvent.builder()
                               .owner_address(Hex.encodeHexString(ctx.getOwnerAddress().toByteArray()))
                               .name(ctx.getName())
-                              .max_supply(ctx.getMaxSupply())
-                              .total_supply(ctx.getTotalSupply())
+                              .max_supply(Long.valueOf(ctx.getMaxSupply()).toString())
+                              .total_supply(Long.valueOf(ctx.getTotalSupply()).toString())
                               .build())
               .build();
       emitEvent(event, ret);

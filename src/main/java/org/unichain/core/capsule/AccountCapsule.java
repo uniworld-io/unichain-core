@@ -19,6 +19,7 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 import org.unichain.common.utils.ByteArray;
 import org.unichain.core.Wallet;
 import org.unichain.core.db.Manager;
@@ -668,9 +669,8 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
   public boolean burnUrc20Token(byte[] addr, BigInteger amount) {
     Map<String, String> tokenMap = this.account.getUrc20Map();
     String addrBase58 = Wallet.encode58Check(addr);
-    if (!tokenMap.containsKey(addrBase58) || (new BigInteger(tokenMap.get(addrBase58))).compareTo(amount) <= 0) {
-      return false;
-    }
+    Assert.isTrue(tokenMap.containsKey(addrBase58)
+            && (new BigInteger(tokenMap.get(addrBase58))).compareTo(amount) >= 0, "burn amount violate available token amount!");
 
     BigInteger remain = new BigInteger(tokenMap.get(addrBase58)).subtract(amount);
     if(remain.compareTo(BigInteger.ZERO) > 0)
@@ -702,7 +702,6 @@ public class AccountCapsule implements ProtoCapsule<Account>, Comparable<Account
     Map<String, String> tokenMap = this.account.getUrc20Map();
     String addrBase58 = Wallet.encode58Check(addr);
     if (!tokenMap.containsKey(addrBase58)) {
-      logger.warn("missing token {}", addrBase58);
       return BigInteger.ZERO;
     }
     else {

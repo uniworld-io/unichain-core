@@ -161,6 +161,13 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
                 continue;
               break;
             }
+            case Urc20BurnContract:
+            {
+              var tokenKey = contract.getParameter().unpack(Urc20BurnContract.class).getAddress().toByteArray();
+              if (useTransactionFee4Urc20Pool(tokenKey, bytesSize, trace))
+                continue;
+              break;
+            }
             default:
             {
               if (useTransactionFee(ownerAccountCap, bytesSize, trace))

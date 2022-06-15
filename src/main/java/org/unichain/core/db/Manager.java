@@ -799,6 +799,11 @@ public class Manager {
                 chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
                 break;
             }
+            case Urc20BurnContract: {
+              var ctx = contract.getParameter().unpack(Urc20BurnContract.class);
+              chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
+              break;
+            }
             case Urc20TransferContract: {
               var ctx = contract.getParameter().unpack(Urc20TransferContract.class);
               chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);

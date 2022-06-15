@@ -27,12 +27,17 @@ import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.capsule.urc20.Urc20BurnContractCapsule;
+import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.Urc20BurnContract;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+
+//@todo dont charge unw fee, just charge token fee
 @Slf4j(topic = "actuator")
 public class Urc20BurnActuator extends AbstractActuator {
 
@@ -47,18 +52,51 @@ public class Urc20BurnActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc20BurnContract.class);
       var ctxCap = new Urc20BurnContractCapsule(ctx);
       var contractAddr = ctx.getAddress().toByteArray();
-      var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
-      contractCap.burnToken(ctxCap.getAmount());
-      contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
-      contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
-      dbManager.getUrc20ContractStore().put(contractAddr, contractCap);
+      var contractStore = dbManager.getUrc20ContractStore();
+      var accountStore = dbManager.getAccountStore();
+      var contractCap = contractStore.get(contractAddr);
+      var contractOwner = contractCap.getOwnerAddress().toByteArray();
+      var burnerAddr = ctx.getOwnerAddress().toByteArray();
 
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerCap = dbManager.getAccountStore().get(ownerAddr);
-      ownerCap.burnUrc20Token(contractAddr, ctxCap.getAmount());
-      dbManager.getAccountStore().put(ownerAddr, ownerCap);
+      if(Arrays.equals(contractOwner, burnerAddr)){
+        //if owner: just burn token
+        var ownerCap = accountStore.get(burnerAddr);
+        ownerCap.burnUrc20Token(contractAddr, ctxCap.getAmount());
+        accountStore.put(burnerAddr, ownerCap);
 
-      chargeFee(ownerAddr, fee);
+        //update contract info
+        contractCap.burnToken(ctxCap.getAmount());
+        contractCap.setFeePool(Math.subtractExact(contractCap.getFeePool(), fee));
+        contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+        contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+        contractStore.put(contractAddr, contractCap);
+      }
+      else {
+        var tokenFee = BigInteger.valueOf(contractCap.getFee())
+                .add(Utils.divideCeiling(ctxCap.getAmount()
+                                .multiply(BigInteger.valueOf(contractCap.getExtraFeeRate())),
+                        BigInteger.valueOf(100L)));
+        var realBurn = ctxCap.getAmount().subtract(tokenFee);
+
+        //update burner
+        var burnerCap = accountStore.get(burnerAddr);
+        burnerCap.burnUrc20Token(contractAddr, ctxCap.getAmount());
+        accountStore.put(burnerAddr, burnerCap);
+
+        //update contract owner
+        var contractOwnerCap = accountStore.get(contractOwner);
+        contractOwnerCap.addUrc20Token(contractAddr, tokenFee);
+        accountStore.put(contractOwner, contractOwnerCap);
+
+        //update contract info
+        contractCap.burnToken(realBurn);
+        contractCap.setFeePool(Math.subtractExact(contractCap.getFeePool(), fee));
+        contractCap.setLatestOperationTime(dbManager.getHeadBlockTimeStamp());
+        contractCap.setCriticalUpdateTime(dbManager.getHeadBlockTimeStamp());
+        contractStore.put(contractAddr, contractCap);
+      }
+
+      dbManager.burnFee(fee);
       ret.setStatus(fee, code.SUCESS);
       return true;
     } catch (Exception e) {
@@ -78,20 +116,38 @@ public class Urc20BurnActuator extends AbstractActuator {
       val ctx = this.contract.unpack(Urc20BurnContract.class);
       val ctxCap = new Urc20BurnContractCapsule(ctx);
 
-      var ownerAddr = ctx.getOwnerAddress().toByteArray();
-      var ownerAccountCap = dbManager.getAccountStore().get(ownerAddr);
+      var contractStore = dbManager.getUrc20ContractStore();
+      var accountStore = dbManager.getAccountStore();
 
-      Assert.notNull(ownerAccountCap, "Owner address not exist");
-      Assert.isTrue(ownerAccountCap.getBalance() >= calcFee());
+      var burnerAddr = ctx.getOwnerAddress().toByteArray();
+      var burnerCap = accountStore.get(burnerAddr);
+
+      Assert.notNull(burnerCap, "Owner address not exist");
 
       var contractAddr = ctx.getAddress().toByteArray();
-      var contractAddrBase58 =  Wallet.encode58Check(contractAddr);
-      var contractCap = dbManager.getUrc20ContractStore().get(contractAddr);
-      Assert.notNull(contractCap, "Contract not exist :" + contractAddrBase58);
+      var contractBase58 =  Wallet.encode58Check(contractAddr);
+      var contractCap = contractStore.get(contractAddr);
+      Assert.notNull(contractCap, "Contract not exist :" + contractBase58);
+
+      var fee = calcFee();
+      Assert.isTrue(contractCap.getFeePool() >= fee, "Not enough token pool fee balance, require at least " + fee);
+      Assert.notNull(contractCap.getTotalSupply().subtract(ctxCap.getAmount()).compareTo(BigInteger.ZERO) >= 0, "Bad burn amount: violate total supply!");
+
+      var contractOwner = contractCap.getOwnerAddress().toByteArray();
+
+      if(Arrays.equals(contractOwner, burnerAddr)){
+          Assert.isTrue(burnerCap.getUrc20TokenAvailable(contractBase58).compareTo(ctxCap.getAmount()) >= 0, "Not enough contract balance of" + contractBase58 + "at least " + ctx.getAmount());
+      }
+      else {
+        var tokenFee = BigInteger.valueOf(contractCap.getFee())
+                .add(Utils.divideCeiling(ctxCap.getAmount()
+                                .multiply(BigInteger.valueOf(contractCap.getExtraFeeRate())),
+                        BigInteger.valueOf(100L)));
+        Assert.isTrue(burnerCap.getUrc20TokenAvailable(contractBase58).compareTo(tokenFee) >= 0, "Not enough token balance to cover fee");
+      }
 
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() < contractCap.getEndTime(), "Contract expired at: "+ Utils.formatDateLong(contractCap.getEndTime()));
       Assert.isTrue(dbManager.getHeadBlockTimeStamp() >= contractCap.getStartTime(), "Contract pending to start at: " + Utils.formatDateLong(contractCap.getStartTime()));
-      Assert.isTrue(ownerAccountCap.getUrc20TokenAvailable(contractAddrBase58).compareTo(ctxCap.getAmount()) >= 0, "Not enough contract balance of" + contractAddrBase58 + "at least " + ctx.getAmount());
       return true;
     }
     catch (Exception e){
@@ -107,6 +163,6 @@ public class Urc20BurnActuator extends AbstractActuator {
 
   @Override
   public long calcFee() {
-    return dbManager.getDynamicPropertiesStore().getAssetUpdateFee();//2UNW default
+    return Parameter.ChainConstant.TOKEN_TRANSFER_FEE;
   }
 }

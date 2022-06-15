@@ -1155,7 +1155,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case PosBridgeDepositExecContract:
         case PosBridgeWithdrawContract:
         case PosBridgeWithdrawExecContract:
-          Assert.isTrue(blockNum >= BLOCK_VERSION_6, "not supported by block version: " + blockNum + " anymore!");
+          Assert.isTrue(blockNum >= BLOCK_VERSION_5, "not supported by block version: " + blockNum + " anymore!");
           break;
         /**
          * Urc20

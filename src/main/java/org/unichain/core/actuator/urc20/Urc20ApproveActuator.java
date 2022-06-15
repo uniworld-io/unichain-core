@@ -194,7 +194,7 @@ public class Urc20ApproveActuator extends AbstractActuator {
       Assert.isTrue(urc20Cap.getFeePool() >= fee, "Not enough urc20 pool fee, expected gas: " + fee);
 
       //left token avail
-      tokenAvailable =tokenAvailable.subtract(tokenFee);
+      tokenAvailable = tokenAvailable.subtract(tokenFee);
 
       //validate quota
       var limit = ctxCap.getAmount();

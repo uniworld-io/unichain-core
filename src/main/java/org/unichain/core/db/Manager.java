@@ -22,18 +22,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.unichain.common.logsfilter.EventPluginLoader;
 import org.unichain.common.logsfilter.FilterQuery;
-import org.unichain.common.logsfilter.capsule.BlockLogTriggerCapsule;
-import org.unichain.common.logsfilter.capsule.ContractTriggerCapsule;
-import org.unichain.common.logsfilter.capsule.TransactionLogTriggerCapsule;
-import org.unichain.common.logsfilter.capsule.TriggerCapsule;
-import org.unichain.common.logsfilter.trigger.ContractTrigger;
+import org.unichain.common.logsfilter.capsule.*;
+import org.unichain.common.logsfilter.trigger.ContractEventTrigger;
+import org.unichain.common.logsfilter.trigger.Trigger;
 import org.unichain.common.overlay.discover.node.Node;
 import org.unichain.common.overlay.message.Message;
 import org.unichain.common.runtime.config.VMConfig;
 import org.unichain.common.utils.*;
 import org.unichain.core.Constant;
+import org.unichain.core.Wallet;
 import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
+import org.unichain.core.capsule.urc30.Urc30TokenPoolCapsule;
+import org.unichain.core.capsule.urc721.*;
 import org.unichain.core.capsule.utils.BlockUtil;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.config.args.Args;
@@ -53,8 +54,7 @@ import org.unichain.core.services.WitnessService;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.witness.ProposalController;
 import org.unichain.core.witness.WitnessController;
-import org.unichain.protos.Contract.TransferTokenContract;
-import org.unichain.protos.Contract.WithdrawFutureTokenContract;
+import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.AccountType;
 import org.unichain.protos.Protocol.Transaction;
@@ -78,33 +78,48 @@ import static org.unichain.core.config.Parameter.NodeConstant.MAX_TRANSACTION_PE
 public class Manager {
   @Autowired
   @Getter
-  private NftTokenApproveRelationStore nftTokenApproveRelationStore;
+  private Urc721TokenApproveRelationStore urc721TokenApproveRelationStore;
 
   @Autowired
   @Getter
-  private NftTemplateStore nftTemplateStore;
+  private Urc721ContractStore urc721ContractStore;
 
   @Autowired
   @Getter
-  private NftTokenStore nftTokenStore;
+  private Urc721TokenStore urc721TokenStore;
 
   @Autowired
   @Getter
-  private NftAccountTemplateStore nftAccountTemplateStore;
+  private Urc721AccountContractRelationStore urc721AccountContractRelationStore;
 
   @Autowired
   @Getter
-  private NftMinterContractStore nftMinterContractStore;
+  private Urc721MinterContractRelationStore urc721MinterContractRelationStore;
 
   @Autowired
   @Getter
-  private NftAccountTokenStore nftAccountTokenStore;
+  private Urc721AccountTokenRelationStore urc721AccountTokenRelationStore;
 
   @Getter
   @Autowired
   private DelegationStore delegationStore;
+
   @Autowired
+  @Getter
   private AccountStore accountStore;
+
+  @Autowired
+  @Getter
+  private PosBridgeConfigStore posBridgeConfigStore;
+
+  @Autowired
+  @Getter
+  private PosBridgeRootTokenMapStore rootTokenMapStore;
+
+  @Autowired
+  @Getter
+  private PosBridgeChildTokenMapStore childTokenMapStore;
+
   @Autowired
   private TransactionStore transactionStore;
   @Autowired(required = false)
@@ -115,13 +130,22 @@ public class Manager {
   private WitnessStore witnessStore;
   @Autowired
   private AssetIssueStore assetIssueStore;
+
+  //urc20
   @Autowired
-  private TokenPoolStore tokenPoolStore;
+  private Urc20FutureTransferStore urc20FutureTransferStore;
   @Autowired
-  private FutureTokenStore futureTokenStore;
+  private Urc20ContractStore urc20ContractStore;
+  @Autowired
+  private Urc20SpenderStore urc20SpenderStore;
 
   @Autowired
+  private FutureTokenStore futureTokenStore;
+  @Autowired
   private FutureTransferStore futureTransferStore;
+
+  @Autowired
+  private TokenPoolStore tokenPoolStore;
 
   @Autowired
   private AssetIssueV2Store assetIssueV2Store;
@@ -365,12 +389,10 @@ public class Manager {
       () -> {
         while (isRunTriggerCapsuleProcessThread) {
           try {
-            TriggerCapsule triggerCapsule = triggerCapsuleQueue.poll(1, TimeUnit.SECONDS);
-            if (triggerCapsule != null) {
-              triggerCapsule.processTrigger();
-            }
+            Optional.ofNullable(triggerCapsuleQueue.poll(1, TimeUnit.SECONDS))
+                    .ifPresent(triggerCapsule -> triggerCapsule.processTrigger());
           } catch (InterruptedException ex) {
-            logger.info(ex.getMessage());
+            logger.warn(ex.getMessage());
             Thread.currentThread().interrupt();
           } catch (Exception ex) {
             logger.error("Unknown exception happened in process capsule loop", ex);
@@ -585,12 +607,12 @@ public class Manager {
     );
   }
 
-  public long createNewAccount(ByteString accAddr){
-    Assert.isTrue(!getAccountStore().has(accAddr.toByteArray()),"Account exist");
-    var withDefaultPermission = getDynamicPropertiesStore().getAllowMultiSign() == 1;
-    var toAccountCap = new AccountCapsule(accAddr, Protocol.AccountType.Normal, getHeadBlockTimeStamp(), withDefaultPermission, this);
-    getAccountStore().put(accAddr.toByteArray(), toAccountCap);
-    return getDynamicPropertiesStore().getCreateAccountFee();
+  public AccountCapsule createDefaultAccount(byte[] address, AccountType type) {
+    Assert.isTrue(!getAccountStore().has(address), "Account exist");
+    var defaultPermission = (getDynamicPropertiesStore().getAllowMultiSign() == 1);
+    var accountCap = new AccountCapsule(ByteString.copyFrom(address), type, getHeadBlockTimeStamp(), defaultPermission, this);
+    getAccountStore().put(address, accountCap);
+    return accountCap;
   }
 
   public void adjustBalance(byte[] accountAddress, long amount) throws BalanceInsufficientException {
@@ -600,6 +622,10 @@ public class Manager {
 
   public void burnFee(long fee) throws BalanceInsufficientException{
     adjustBalance(getAccountStore().getBurnaccount().getAddress().toByteArray(), fee);
+  }
+
+  public byte[] getBurnAddress(){
+    return getAccountStore().getBurnaccount().getAddress().toByteArray();
   }
 
   /**
@@ -644,8 +670,8 @@ public class Manager {
     val blockVersion = findBlockVersion(block);
     var txs = unx.getInstance().getRawData().getContractList();
     for(var tx : txs){
-        if(blockVersion < TransactionCapsule.getMinSupportedBlockVersion(tx.getType()))
-          throw new ContractValidateException(String.format("transaction type %s not supported by this block version %s", tx.getType(), blockVersion));
+        TransactionCapsule.checkMinSupportedBlockVersion(tx.getType(), blockVersion);
+        TransactionCapsule.checkMaxSupportedBlockVersion(tx.getType(), blockVersion);
     }
   }
 
@@ -699,6 +725,13 @@ public class Manager {
     return transactionStore.has(transactionCapsule.getTransactionId().getBytes());
   }
 
+  private boolean containsTransaction(byte[] txId) {
+    if (transactionCache != null)
+      return transactionCache.has(txId);
+    else
+      return transactionStore.has(txId);
+  }
+
   /**
    * push transaction into pending.
    */
@@ -738,62 +771,73 @@ public class Manager {
     return true;
   }
 
-  public void consumeMultiSignFee(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws AccountResourceInsufficientException, ContractExeException {
+  public void consumeMultiSignFee(TransactionCapsule tx, TransactionTrace trace, BlockCapsule block) throws AccountResourceInsufficientException, ContractExeException {
     val blockVersion = findBlockVersion(block);
     switch (blockVersion){
       case BLOCK_VERSION_1:
-        consumeMultiSignFeeV1(unx, trace);
+        consumeMultiSignFeeV1(tx, trace);
         break;
       default:
-        consumeMultiSignFeeV2(unx, trace);
+        consumeMultiSignFeeV2(tx, trace);
         break;
     }
   }
 
-  private void consumeMultiSignFeeV2(TransactionCapsule unx, TransactionTrace trace) throws AccountResourceInsufficientException, ContractExeException {
-    if (unx.getInstance().getSignatureCount() > 1) {
-      long fee = getDynamicPropertiesStore().getMultiSignFee();
-
-      List<Contract> contracts = unx.getInstance().getRawData().getContractList();
-      for (Contract contract : contracts) {
-        switch (contract.getType()){
-          case TransferTokenContract:
-            TransferTokenContract tContract;
-            try {
-              tContract = contract.getParameter().unpack(TransferTokenContract.class);
-              chargeFee4TokenPool(Util.stringAsBytesUppercase(tContract.getTokenName()), fee);
+  private void consumeMultiSignFeeV2(TransactionCapsule tx, TransactionTrace trace) throws AccountResourceInsufficientException, ContractExeException {
+    if (tx.getInstance().getSignatureCount() > 1) {
+      var fee = getDynamicPropertiesStore().getMultiSignFee();
+      for (var contract : tx.getInstance().getRawData().getContractList()) {
+        try{
+          switch (contract.getType()){
+            case TransferTokenContract: {
+                var ctx = contract.getParameter().unpack(TransferTokenContract.class);
+                chargeFee4Urc30Pool(Util.stringAsBytesUppercase(ctx.getTokenName()), fee);
+                break;
             }
-            catch (BalanceInsufficientException e1) {
-              throw new AccountResourceInsufficientException("Not enough account's balance or pool fee to transfer token");
+            case Urc20TransferFromContract: {
+                var ctx = contract.getParameter().unpack(Urc20TransferFromContract.class);
+                chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
+                break;
             }
-            catch (InvalidProtocolBufferException e2){
-              throw new ContractExeException("bad TransferTokenContract format");
+            case Urc20BurnContract: {
+              var ctx = contract.getParameter().unpack(Urc20BurnContract.class);
+              chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
+              break;
             }
-            break;
-          case WithdrawFutureTokenContract:
-            WithdrawFutureTokenContract wContract;
-            try {
-              wContract = contract.getParameter().unpack(WithdrawFutureTokenContract.class);
-              chargeFee4TokenPool(Util.stringAsBytesUppercase(wContract.getTokenName()), fee);
+            case Urc20TransferContract: {
+              var ctx = contract.getParameter().unpack(Urc20TransferContract.class);
+              chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
+              break;
             }
-            catch (BalanceInsufficientException e1) {
-              throw new AccountResourceInsufficientException("Not enough account's balance or pool fee to withdraw future token");
+            case Urc20ApproveContract: {
+              var ctx = contract.getParameter().unpack(Urc20ApproveContract.class);
+              chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
+              break;
             }
-            catch (InvalidProtocolBufferException e2){
-              throw new ContractExeException("bad WithdrawFutureTokenContract format");
+            case WithdrawFutureTokenContract: {
+                var ctx = contract.getParameter().unpack(WithdrawFutureTokenContract.class);
+                chargeFee4Urc30Pool(Util.stringAsBytesUppercase(ctx.getTokenName()), fee);
+                break;
             }
-            break;
-          default:
-            AccountCapsule accountCapsule = getAccountStore().get(TransactionCapsule.getOwner(contract));
-            try {
-              chargeFee(accountCapsule, fee);
-            } catch (BalanceInsufficientException e) {
-                throw new AccountResourceInsufficientException("Account Insufficient  balance[" + fee + "] to MultiSign");
+            case Urc20WithdrawFutureContract: {
+                var ctx = contract.getParameter().unpack(Urc20WithdrawFutureContract.class);
+                chargeFee4Urc20Pool(ctx.getAddress().toByteArray(), fee);
+                break;
             }
-            break;
+            default: {
+                var txOwner = getAccountStore().get(TransactionCapsule.getOwner(contract));
+                chargeFee(txOwner, fee);
+              break;
+            }
+          }
+        }
+        catch (BalanceInsufficientException e1) {
+          throw new AccountResourceInsufficientException("Not enough account's balance or token pool fee");
+        }
+        catch (InvalidProtocolBufferException e2) {
+          throw new ContractExeException("bad contract format");
         }
       }
-
       trace.getReceipt().setMultiSignFee(fee);
     }
   }
@@ -814,7 +858,8 @@ public class Manager {
   }
 
   public void consumeBandwidth(TransactionCapsule unx, TransactionTrace trace, BlockCapsule block) throws ContractValidateException, AccountResourceInsufficientException, TooBigTransactionResultException {
-    getBandwidthProcessor(findBlockVersion(block)).consume(unx, trace);
+    loadBandwidthProcessor(findBlockVersion(block))
+            .consume(unx, trace);
   }
 
   /**
@@ -1079,10 +1124,11 @@ public class Manager {
           - commit to next stage
          */
         try (ISession tmpSession = revokingStore.buildSession()) {
+          long oldSolidNum = getDynamicPropertiesStore().getLatestSolidifiedBlockNum();
           applyBlock(newBlock);
           tmpSession.commit();
-          //notify new block
           postBlockTrigger(newBlock);
+          postSolidityTrigger(oldSolidNum, getDynamicPropertiesStore().getLatestSolidifiedBlockNum());
         } catch (Throwable throwable) {
           logger.error(throwable.getMessage(), throwable);
           khaosDb.removeBlk(block.getBlockId());
@@ -1216,11 +1262,11 @@ public class Manager {
   /**
    * Process transaction.
    */
-    public TransactionInfo processTransaction(final TransactionCapsule txCap, final BlockCapsule block)
-          throws ValidateSignatureException, ContractValidateException, ContractExeException,
-                  AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException,
-                  TooBigTransactionResultException, DupTransactionException, TaposException, ReceiptCheckErrException,
-                  VMIllegalException {
+  public TransactionInfo processTransaction(final TransactionCapsule txCap, final BlockCapsule block)
+        throws ValidateSignatureException, ContractValidateException, ContractExeException,
+                AccountResourceInsufficientException, TransactionExpirationException, TooBigTransactionException,
+                TooBigTransactionResultException, DupTransactionException, TaposException, ReceiptCheckErrException,
+                VMIllegalException {
     if (txCap == null) {
       return null;
     }
@@ -1240,7 +1286,7 @@ public class Manager {
     }
 
     TransactionTrace trace = new TransactionTrace(txCap, this);
-    txCap.setUnxTrace(trace);
+    txCap.setTxTrace(trace);
 
     consumeBandwidth(txCap, trace, block);
     consumeMultiSignFee(txCap, trace, block);
@@ -1274,31 +1320,31 @@ public class Manager {
         }
         trace.check();
       }
-    }
+  }
 
-    /*
-      - charge energy fee with smart contract call or deploy
-      - with token transfer, dont use energy so don't charge fee
-     */
-    trace.finalization(findBlockVersion(block));
+  /*
+    - charge energy fee with smart contract call or deploy
+    - with token transfer, dont use energy so don't charge fee
+   */
+  trace.finalization(findBlockVersion(block));
 
-    if (Objects.nonNull(block) && getDynamicPropertiesStore().supportVM()) {
-      txCap.setResult(trace.getRuntime());
-    }
-    transactionStore.put(txCap.getTransactionId().getBytes(), txCap);
+  if (Objects.nonNull(block) && getDynamicPropertiesStore().supportVM()) {
+    txCap.setResult(trace.getRuntime());
+  }
+  transactionStore.put(txCap.getTransactionId().getBytes(), txCap);
 
-    Optional.ofNullable(transactionCache)
-          .ifPresent(t -> t.put(txCap.getTransactionId().getBytes(), new BytesCapsule(ByteArray.fromLong(txCap.getBlockNum()))));
+  Optional.ofNullable(transactionCache)
+        .ifPresent(t -> t.put(txCap.getTransactionId().getBytes(), new BytesCapsule(ByteArray.fromLong(txCap.getBlockNum()))));
 
-    TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, block, trace);
+  TransactionInfoCapsule transactionInfo = TransactionInfoCapsule.buildInstance(txCap, block, trace);
 
-    postContractTrigger(trace, false);
-    Contract contract = txCap.getInstance().getRawData().getContract(0);
-    if (isMultiSignTransaction(txCap.getInstance())) {
-      ownerAddressSet.add(ByteArray.toHexString(TransactionCapsule.getOwner(contract)));
-    }
+  postContractTrigger(trace, false);
+  Contract contract = txCap.getInstance().getRawData().getContract(0);
+  if (isMultiSignTransaction(txCap.getInstance())) {
+    ownerAddressSet.add(ByteArray.toHexString(TransactionCapsule.getOwner(contract)));
+  }
 
-    return transactionInfo.getInstance();
+  return transactionInfo.getInstance();
   }
 
 
@@ -1316,11 +1362,8 @@ public class Manager {
   /**
    * Generate a block.
    */
-  public synchronized BlockCapsule generateBlock(
-          final WitnessCapsule witnessCapsule, final long when, final byte[] privateKey,
-          Boolean lastHeadBlockIsMaintenanceBefore, Boolean needCheckWitnessPermission)
-      throws ValidateSignatureException, ContractValidateException, ContractExeException,
-      UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException {
+  public synchronized BlockCapsule generateBlock(final WitnessCapsule witnessCapsule, final long when, final byte[] privateKey, Boolean lastHeadBlockIsMaintenanceBefore, Boolean needCheckWitnessPermission)
+      throws ValidateSignatureException, ContractValidateException, ContractExeException, UnLinkedBlockException, ValidateScheduleException, AccountResourceInsufficientException {
 
     //check that the first block after the maintenance period has just been processed
     // if (lastHeadBlockIsMaintenanceBefore != lastHeadBlockIsMaintenance()) {
@@ -1404,7 +1447,6 @@ public class Manager {
         var result = processTransaction(tx, blockCapsule);
         accountStateCallBack.exeTransFinish();
         tmpSession.merge();
-        // push into block
         blockCapsule.addTransaction(tx);
 
         if (Objects.nonNull(result)) {
@@ -1546,17 +1588,17 @@ public class Manager {
       }
     }
 
-    TransactionRetCapsule transactionRetCapsule = new TransactionRetCapsule(block);
+    var transactionRetCapsule = new TransactionRetCapsule(block);
 
     try {
       accountStateCallBack.preExecute(block);
-      for (TransactionCapsule transactionCapsule : block.getTransactions()) {
-        transactionCapsule.setBlockNum(block.getNum());
+      for (var txCap : block.getTransactions()) {
+        txCap.setBlockNum(block.getNum());
         if (block.generatedByMyself) {
-          transactionCapsule.setVerified(true);
+          txCap.setVerified(true);
         }
         accountStateCallBack.preExeTrans();
-        TransactionInfo result = processTransaction(transactionCapsule, block);
+        TransactionInfo result = processTransaction(txCap, block);
         accountStateCallBack.exeTransFinish();
         if (Objects.nonNull(result)) {
           transactionRetCapsule.addTransactionInfo(result);
@@ -1578,7 +1620,7 @@ public class Manager {
       }
     }
     if (getDynamicPropertiesStore().getAllowAdaptiveEnergy() == 1) {
-      EnergyProcessor energyProcessor = new EnergyProcessor(this);
+      var energyProcessor = new EnergyProcessor(this);
       energyProcessor.updateTotalEnergyAverageUsage();
       energyProcessor.updateAdaptiveTotalEnergyLimit();
     }
@@ -1610,7 +1652,7 @@ public class Manager {
     List<Long> numbers = witnessController
             .getActiveWitnesses()
             .stream()
-            .map(address -> witnessController.getWitnesseByAddress(address).getLatestBlockNum())
+            .map(address -> witnessController.getWitnessByAddress(address).getLatestBlockNum())
             .sorted()
             .collect(Collectors.toList());
 
@@ -1681,22 +1723,14 @@ public class Manager {
     forkController.reset();
   }
 
-  /**
-   * @param block the block update signed witness. set witness who signed block the 1. the latest
-   * block num 2. pay the unx to witness. 3. the latest slot num.
-   */
   public void updateSignedWitness(BlockCapsule block) {
-    // TODO: add verification
-    WitnessCapsule witnessCapsule =
-        witnessStore.getUnchecked(
-            block.getInstance().getBlockHeader().getRawData().getWitnessAddress()
-                .toByteArray());
+    var witnessAddr = block.getWitnessAddress();
+    var witnessCapsule = witnessStore.getUnchecked(witnessAddr.toByteArray());
     witnessCapsule.setTotalProduced(witnessCapsule.getTotalProduced() + 1);
     witnessCapsule.setLatestBlockNum(block.getNum());
     witnessCapsule.setLatestSlotNum(witnessController.getAbSlotAtTime(block.getTimeStamp()));
 
-    // Update memory witness status
-    WitnessCapsule wit = witnessController.getWitnesseByAddress(block.getWitnessAddress());
+    WitnessCapsule wit = witnessController.getWitnessByAddress(witnessAddr);
     if (wit != null) {
       wit.setTotalProduced(witnessCapsule.getTotalProduced() + 1);
       wit.setLatestBlockNum(block.getNum());
@@ -1721,8 +1755,8 @@ public class Manager {
     }
   }
 
-  public void updateMaintenanceState(boolean needMaint) {
-    if (needMaint) {
+  public void updateMaintenanceState(boolean needMaintain) {
+    if (needMaintain) {
       getDynamicPropertiesStore().saveStateFlag(1);
     } else {
       getDynamicPropertiesStore().saveStateFlag(0);
@@ -1748,13 +1782,16 @@ public class Manager {
 
   public void closeAllStore() {
     logger.warn("******** begin to close db ********");
-    closeOneStore(nftMinterContractStore);
-    closeOneStore(nftTokenApproveRelationStore);
-    closeOneStore(nftTokenStore);
-    closeOneStore(nftTemplateStore);
-    closeOneStore(nftAccountTemplateStore);
-    closeOneStore(nftAccountTokenStore);
+    closeOneStore(urc721MinterContractRelationStore);
+    closeOneStore(urc721TokenApproveRelationStore);
+    closeOneStore(urc721TokenStore);
+    closeOneStore(urc721ContractStore);
+    closeOneStore(urc721AccountContractRelationStore);
+    closeOneStore(urc721AccountTokenRelationStore);
     closeOneStore(accountStore);
+    closeOneStore(posBridgeConfigStore);
+    closeOneStore(rootTokenMapStore);
+    closeOneStore(childTokenMapStore);
     closeOneStore(blockStore);
     closeOneStore(blockIndexStore);
     closeOneStore(accountIdIndexStore);
@@ -1780,7 +1817,11 @@ public class Manager {
     closeOneStore(transactionRetStore);
     closeOneStore(tokenPoolStore);
     closeOneStore(futureTokenStore);
+    closeOneStore(urc20ContractStore);
+    closeOneStore(urc20SpenderStore);
+    closeOneStore(urc20FutureTransferStore);
     closeOneStore(futureTransferStore);
+
     logger.info("******** end to close db ********");
   }
 
@@ -1899,40 +1940,108 @@ public class Manager {
     }
   }
 
-  private void postBlockTrigger(final BlockCapsule newBlock) {
-    if (eventPluginLoaded && EventPluginLoader.getInstance().isBlockLogTriggerEnable()) {
-      BlockLogTriggerCapsule blockLogTriggerCapsule = new BlockLogTriggerCapsule(newBlock);
-      blockLogTriggerCapsule.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
-      boolean result = triggerCapsuleQueue.offer(blockLogTriggerCapsule);
-      if (!result) {
-        logger.info("too many trigger, lost block trigger: {}", newBlock.getBlockId());
+  private void postSolidityLogContractTrigger(Long blockNum, Long lastSolidityNum) {
+    if (blockNum > lastSolidityNum) {
+      return;
+    }
+    var contractLogTriggersQueue = Args.getSolidityContractLogTriggerMap().get(blockNum);
+    while (!contractLogTriggersQueue.isEmpty()) {
+      var triggerCapsule = contractLogTriggersQueue.poll();
+      if (triggerCapsule == null) {
+        break;
+      }
+      if (containsTransaction(ByteArray.fromHexString(triggerCapsule.getTransactionId()))) {
+        triggerCapsule.setTriggerName(Trigger.SOLIDITY_LOG_TRIGGER_NAME);
+        EventPluginLoader.getInstance().postSolidityLogTrigger(triggerCapsule);
+      } else {
+        logger.error("postSolidityLogContractTrigger txId={} not contains transaction", triggerCapsule.getTransactionId());
+      }
+    }
+    Args.getSolidityContractLogTriggerMap().remove(blockNum);
+  }
+
+  private void postSolidityEventContractTrigger(Long blockNum, Long lastSolidityNum) {
+    if (blockNum > lastSolidityNum) {
+      return;
+    }
+    var contractEventTriggersQueue = Args.getSolidityContractEventTriggerMap().get(blockNum);
+    while (!contractEventTriggersQueue.isEmpty()) {
+      var triggerCapsule = (ContractEventTrigger) contractEventTriggersQueue.poll();
+      if (triggerCapsule == null) {
+        break;
+      }
+      if (containsTransaction(ByteArray.fromHexString(triggerCapsule.getTransactionId()))) {
+        triggerCapsule.setTriggerName(Trigger.SOLIDITY_EVENT_TRIGGER_NAME);
+        EventPluginLoader.getInstance().postSolidityEventTrigger(triggerCapsule);
+      }
+    }
+    Args.getSolidityContractEventTriggerMap().remove(blockNum);
+  }
+
+  private void postSolidityTrigger(final long _oldSolidNum, final long latestSolidifiedBlockNumber) {
+    if (eventPluginLoaded && EventPluginLoader.getInstance().isSolidityLogTriggerEnable()) {
+      for (Long i : Args.getSolidityContractLogTriggerMap().keySet()) {
+        postSolidityLogContractTrigger(i, latestSolidifiedBlockNumber);
       }
     }
 
-    for (TransactionCapsule e : newBlock.getTransactions()) {
-      postTransactionTrigger(e, newBlock);
+    if (eventPluginLoaded && EventPluginLoader.getInstance().isSolidityEventTriggerEnable()) {
+      for (Long i : Args.getSolidityContractEventTriggerMap().keySet()) {
+        postSolidityEventContractTrigger(i, latestSolidifiedBlockNumber);
+      }
+    }
+
+    if (eventPluginLoaded && EventPluginLoader.getInstance().isSolidityTriggerEnable()) {
+      var solidityTriggerCapsule = new SolidityTriggerCapsule(latestSolidifiedBlockNumber);
+
+      try {
+        var blockCapsule = getBlockByNum(latestSolidifiedBlockNumber);
+        solidityTriggerCapsule.setTimeStamp(blockCapsule.getTimeStamp());
+      } catch (Exception e) {
+        logger.error("postSolidityTrigger getBlockByNum={} except, {}", latestSolidifiedBlockNumber, e.getMessage());
+      }
+
+      if(!triggerCapsuleQueue.offer(solidityTriggerCapsule)){
+        logger.info("too many trigger, lost solidified trigger, block number: {}", latestSolidifiedBlockNumber);
+      }
     }
   }
 
-  private void postTransactionTrigger(final TransactionCapsule unxCap, final BlockCapsule blockCap) {
-    if (eventPluginLoaded && EventPluginLoader.getInstance().isTransactionLogTriggerEnable()) {
-      TransactionLogTriggerCapsule unx = new TransactionLogTriggerCapsule(unxCap, blockCap);
-      unx.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
-      boolean result = triggerCapsuleQueue.offer(unx);
+  private void postBlockTrigger(final BlockCapsule newBlock) {
+    if (eventPluginLoaded && EventPluginLoader.getInstance().isBlockLogTriggerEnable()) {
+      var blockLogTriggerCapsule = new BlockLogTriggerCapsule(newBlock);
+      blockLogTriggerCapsule.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
+      boolean result = triggerCapsuleQueue.offer(blockLogTriggerCapsule);
       if (!result) {
-        logger.info("too many trigger, lost transaction trigger: {}", unxCap.getTransactionId());
+        logger.warn("too many trigger, lost block trigger: {}", newBlock.getBlockId());
+      }
+    }
+
+    newBlock.getTransactions().forEach(txCap -> postTransactionTrigger(txCap, newBlock));
+  }
+
+  private void postTransactionTrigger(final TransactionCapsule txCap, final BlockCapsule blockCap) {
+    if(eventPluginLoaded){
+      if(EventPluginLoader.getInstance().isTransactionLogTriggerEnable()){
+        if(!triggerCapsuleQueue.offer(new TransactionLogTriggerCapsule(txCap, blockCap, latestSolidifiedBlockNumber)))
+          logger.warn("too many trigger, lost transaction trigger: {}", txCap.getTransactionId());
+      }
+      if(EventPluginLoader.getInstance().isNativeEventTriggerEnable()){
+        for(var event : txCap.getTxTrace().getRuntime().getResult().getRet().getEvents()){
+          if(!triggerCapsuleQueue.offer(new NativeEventTriggerCapsule(txCap, blockCap, latestSolidifiedBlockNumber, event)))
+            logger.warn("too many trigger, lost transaction trigger: {}", txCap.getTransactionId());
+        }
       }
     }
   }
 
   private void reorgContractTrigger() {
-    if (eventPluginLoaded &&
-        (EventPluginLoader.getInstance().isContractEventTriggerEnable() || EventPluginLoader.getInstance().isContractLogTriggerEnable())) {
+    if (eventPluginLoaded && (EventPluginLoader.getInstance().isContractEventTriggerEnable() || EventPluginLoader.getInstance().isContractLogTriggerEnable())) {
       logger.info("switchfork occurred, post reorgContractTrigger");
       try {
         BlockCapsule oldHeadBlock = getBlockById(getDynamicPropertiesStore().getLatestBlockHeaderHash());
         for (TransactionCapsule unx : oldHeadBlock.getTransactions()) {
-          postContractTrigger(unx.getUnxTrace(), true);
+          postContractTrigger(unx.getTxTrace(), true);
         }
       } catch (BadItemException | ItemNotFoundException e) {
         logger.error("block header hash not exists or bad: {}", getDynamicPropertiesStore().getLatestBlockHeaderHash());
@@ -1940,22 +2049,17 @@ public class Manager {
     }
   }
 
-  //@todo review
   private void postContractTrigger(final TransactionTrace trace, boolean remove) {
-    if (eventPluginLoaded &&
-        (EventPluginLoader.getInstance().isContractEventTriggerEnable()
-            || EventPluginLoader.getInstance().isContractLogTriggerEnable())) {
-      // be careful, trace.getRuntimeResult().getTriggerList() should never return null
-      for (ContractTrigger trigger : trace.getRuntimeResult().getTriggerList()) {
-        ContractTriggerCapsule contractEventTriggerCapsule = new ContractTriggerCapsule(trigger);
-        contractEventTriggerCapsule.getContractTrigger().setRemoved(remove);
-        contractEventTriggerCapsule.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
-        if (!triggerCapsuleQueue.offer(contractEventTriggerCapsule)) {
+    if (eventPluginLoaded && (EventPluginLoader.getInstance().isContractEventTriggerEnable() || EventPluginLoader.getInstance().isContractLogTriggerEnable())) {
+      for (var trigger : trace.getRuntimeResult().getTriggerList()) {
+        var triggerCap = new ContractTriggerCapsule(trigger);
+        triggerCap.getContractTrigger().setRemoved(remove);
+        triggerCap.setLatestSolidifiedBlockNumber(latestSolidifiedBlockNumber);
+        if (!triggerCapsuleQueue.offer(triggerCap)) {
           logger.warn("too many trigger, lost contract log trigger: {}", trigger.getTransactionId());
         }
-
         if (!remove) {
-          contractEventTriggerCapsule.processTrigger();
+          triggerCap.processTrigger();
         }
       }
     }
@@ -1971,8 +2075,8 @@ public class Manager {
     burnFee(fee);
   }
 
-  protected void chargeFee4TokenPool(byte[] tokenKey, long fee) throws BalanceInsufficientException {
-    TokenPoolCapsule tokenPool = getTokenPoolStore().get(tokenKey);
+  protected void chargeFee4Urc30Pool(byte[] tokenKey, long fee) throws BalanceInsufficientException {
+    Urc30TokenPoolCapsule tokenPool = getTokenPoolStore().get(tokenKey);
     if(tokenPool.getFeePool() < fee)
       throw new BalanceInsufficientException("not enough token pool fee");
 
@@ -1980,6 +2084,19 @@ public class Manager {
     tokenPool.setLatestOperationTime(latestOperationTime);
     tokenPool.setFeePool(Math.subtractExact(tokenPool.getFeePool(), fee));
     getTokenPoolStore().put(tokenKey, tokenPool);
+    burnFee(fee);
+  }
+
+  protected void chargeFee4Urc20Pool(byte[] contractAddr, long fee) throws BalanceInsufficientException {
+    var contractStore = getUrc20ContractStore();
+    var contractCap = contractStore.get(contractAddr);
+    if(contractCap.getFeePool() < fee)
+      throw new BalanceInsufficientException("not enough contract pool fee: " + Wallet.encode58Check(contractAddr));
+
+    long latestOperationTime = getHeadBlockTimeStamp();
+    contractCap.setLatestOperationTime(latestOperationTime);
+    contractCap.setFeePool(Math.subtractExact(contractCap.getFeePool(), fee));
+    contractStore.put(contractAddr, contractCap);
     burnFee(fee);
   }
 
@@ -1992,8 +2109,8 @@ public class Manager {
     return  (block == null) ? this.dynamicPropertiesStore.getBlockVersion() : block.getInstance().getBlockHeader().getRawData().getVersion();
   }
 
-  private ResourceProcessor getBandwidthProcessor(int blockVer){
-    switch (blockVer){
+  private ResourceProcessor loadBandwidthProcessor(int blockNum){
+    switch (blockNum){
       case BLOCK_VERSION_0:
       case BLOCK_VERSION_1:
         return new BandwidthProcessor(this);
@@ -2006,91 +2123,108 @@ public class Manager {
     }
   }
 
-  public void saveNftTemplate(NftTemplateCapsule templateCap){
-    var templateStore = getNftTemplateStore();
-    var relationStore = getNftAccountTemplateStore();
+  /**
+   *  - just store one summary of owner-contracts relations: [ owner, head, tail, total]
+   *  - the summary point to head and tail of contract list that stored on contract store
+   *  - contract store save contracts as list by owner:  [...next, prev...]
+   *  - indexing minter if exist
+   */
+  public void saveUrc721Contract(final Urc721ContractCapsule contractCap){
+    var contractStore = getUrc721ContractStore();
+    var accContractSummaryStore = getUrc721AccountContractRelationStore();
 
-    var relationKey = templateCap.getOwner();
+    var summaryKey = contractCap.getOwner();
 
-    if(!relationStore.has(relationKey)){
-      var templateKey = templateCap.getKey();
-      templateCap.clearNext();
-      templateCap.clearPrev();
-      templateStore.put(templateKey, templateCap);
+    if(!accContractSummaryStore.has(summaryKey)){
+      //save contract
+      var contractAddr = contractCap.getKey();
+      contractCap.clearNext();
+      contractCap.clearPrev();
+      contractStore.put(contractAddr, contractCap);
 
-      var relation = new NftAccountTemplateRelationCapsule(relationKey,
-              Protocol.NftAccountTemplateRelation.newBuilder()
-                      .setOwnerAddress(ByteString.copyFrom(relationKey))
-                      .setHead(ByteString.copyFrom(templateKey))
-                      .setTail(ByteString.copyFrom(templateKey))
+      //save relation
+      var summary = new Urc721AccountContractRelationCapsule(summaryKey,
+              Protocol.Urc721AccountContractRelation.newBuilder()
+                      .setOwnerAddress(ByteString.copyFrom(summaryKey))
+                      .setHead(ByteString.copyFrom(contractAddr))
+                      .setTail(ByteString.copyFrom(contractAddr))
                       .setTotal(1L)
                       .build());
-      relationStore.put(relation.getKey(), relation);
+      accContractSummaryStore.put(summaryKey, summary);
     }
     else {
-      var relation = relationStore.get(relationKey);
-      var tailKey = relation.getTail().toByteArray();
-      var tailCap = templateStore.get(tailKey);
+      var summary = accContractSummaryStore.get(summaryKey);
+      var currentTailKey = summary.getTail().toByteArray();
+      var currentTailCap = contractStore.get(currentTailKey);
 
-      var templateKey = templateCap.getKey();
-      relation.setTotal(Math.incrementExact(relation.getTotal()));
-      relation.setTail(ByteString.copyFrom(templateKey));
-      relationStore.put(relationKey, relation);
+      var newContractAddr = contractCap.getKey();
 
-      templateCap.clearNext();
-      templateCap.setPrev(tailKey);
-      templateStore.put(templateKey, templateCap);
+      summary.setTotal(Math.incrementExact(summary.getTotal()));
+      summary.setTail(ByteString.copyFrom(newContractAddr));
+      accContractSummaryStore.put(summaryKey, summary);
 
-      tailCap.setNext(templateKey);
-      templateStore.put(tailKey, tailCap);
+      contractCap.clearNext();
+      contractCap.setPrev(currentTailKey);
+      contractStore.put(newContractAddr, contractCap);
+
+      currentTailCap.setNext(newContractAddr);
+      contractStore.put(currentTailKey, currentTailCap);
     }
-    if(templateCap.hasMinter()){
-      addMinterContractRelation(templateCap);
+
+    //indexing minter
+    if(contractCap.hasMinter()){
+      addMinterContractRelation(contractCap);
     }
   }
 
-  public void saveNftToken(NftTokenCapsule tokenCap) {
-    var tokenStore = getNftTokenStore();
-    var relationStore = getNftAccountTokenStore();
-    var relationKey = tokenCap.getOwner();
+  public void saveUrc721Token(Urc721TokenCapsule tokenCap) {
+    var tokenStore = getUrc721TokenStore();
+    var summaryStore = getUrc721AccountTokenRelationStore();
+    var summaryKey = tokenCap.getOwner();
+    var contractAddr = Wallet.encode58Check(tokenCap.getAddr());
 
-    if (!relationStore.has(relationKey)) {
+    if (!summaryStore.has(summaryKey)) {
+      //save token
       var tokenKey = tokenCap.getKey();
       tokenCap.clearNext();
       tokenCap.clearPrev();
       tokenStore.put(tokenKey, tokenCap);
 
-      var relation = new NftAccountTokenRelationCapsule(relationKey,
-              Protocol.NftAccountTokenRelation.newBuilder()
+      //save relation
+      var relation = new Urc721AccountTokenRelationCapsule(summaryKey,
+              Protocol.Urc721AccountTokenRelation.newBuilder()
                       .setOwnerAddress(ByteString.copyFrom(tokenCap.getOwner()))
                       .setHead(ByteString.copyFrom(tokenKey))
                       .setTail(ByteString.copyFrom(tokenKey))
                       .setTotal(1L)
-                      .clearApproveAll()
-                      .clearApprovedForAll()
+                      .clearApproveAlls()
+                      .clearApprovedForAlls()
                       .build());
-      relationStore.put(relation.getKey(), relation);
+      relation.increaseTotal(contractAddr, 1L);
+      summaryStore.put(relation.getKey(), relation);
     } else {
-      var relation = relationStore.get(relationKey);
-      if (!relation.hasTail()) {
+      var summary = summaryStore.get(summaryKey);
+      if (!summary.hasTail()) {
         //in the case that the relation created to store approve list only
         var tokenKey = tokenCap.getKey();
         tokenCap.clearNext();
         tokenCap.clearPrev();
         tokenStore.put(tokenKey, tokenCap);
 
-        relation.setTotal(Math.incrementExact(relation.getTotal()));
-        relation.setHead(ByteString.copyFrom(tokenKey));
-        relation.setTail(ByteString.copyFrom(tokenKey));
-        relationStore.put(relationKey, relation);
+        summary.setTotal(Math.incrementExact(summary.getTotal()));
+        summary.increaseTotal(contractAddr, 1L);
+        summary.setHead(ByteString.copyFrom(tokenKey));
+        summary.setTail(ByteString.copyFrom(tokenKey));
+        summaryStore.put(summaryKey, summary);
       } else {
-        var tailKey = relation.getTail().toByteArray();
+        var tailKey = summary.getTail().toByteArray();
         var tailTokenCap = tokenStore.get(tailKey);
 
         var tokenKey = tokenCap.getKey();
-        relation.setTotal(Math.incrementExact(relation.getTotal()));
-        relation.setTail(ByteString.copyFrom(tokenKey));
-        relationStore.put(relationKey, relation);
+        summary.setTotal(Math.incrementExact(summary.getTotal()));
+        summary.increaseTotal(contractAddr, 1L);
+        summary.setTail(ByteString.copyFrom(tokenKey));
+        summaryStore.put(summaryKey, summary);
 
         tokenCap.clearNext();
         tokenCap.setPrev(tailKey);
@@ -2104,20 +2238,23 @@ public class Manager {
 
   /**
    * remove then disapprove
-   * @param tokenId
+   * @param tokenKey
    */
-  public void removeNftToken(byte[] tokenId){
-    var tokenStore = getNftTokenStore();
-    var relationStore = getNftAccountTokenStore();
+  public void removeUrc721Token(byte[] tokenKey){
+    var tokenStore = getUrc721TokenStore();
+    var summaryStore = getUrc721AccountTokenRelationStore();
 
-    Assert.isTrue(tokenStore.has(tokenId), "not found nft token with id " + tokenId);
-    val tokenCap = tokenStore.get(tokenId);
+    Assert.isTrue(tokenStore.has(tokenKey), "missing token with id: " + tokenKey);
+    val tokenCap = tokenStore.get(tokenKey);
+    var contractAddr  = tokenCap.getAddr();
+    var contractBase58 = Wallet.encode58Check(contractAddr);
 
     var hasPrev = tokenCap.hasPrev();
     var hasNext = tokenCap.hasNext();
     var owner = tokenCap.getOwner();
-    Assert.isTrue(relationStore.has(owner), "missing account-nft relation of owner: "+ owner);
-    var relation = relationStore.get(owner);
+    var ownerBase58 = Wallet.encode58Check(owner);
+    Assert.isTrue(summaryStore.has(owner), "missing account-token summary of: "+ ownerBase58);
+    var summary = summaryStore.get(owner);
 
     if(hasNext){
       var nextKey = tokenCap.getNext();
@@ -2137,7 +2274,8 @@ public class Manager {
         tokenStore.put(nextKey, next);
         tokenStore.put(prevKey, prev);
         //update relation
-        relation.setTotal(Math.decrementExact(relation.getTotal()));
+        summary.setTotal(Math.decrementExact(summary.getTotal()));
+        summary.decreaseTotal(contractBase58, 1L);
       }
       else {
         var next = tokenStore.get(nextKey);
@@ -2145,9 +2283,10 @@ public class Manager {
         next.setLastOperation(getHeadBlockTimeStamp());
         tokenStore.put(nextKey, next);
 
-        //update relation
-        relation.setTotal(Math.decrementExact(relation.getTotal()));
-        relation.setHead(ByteString.copyFrom(nextKey));
+        //update summary
+        summary.setTotal(Math.decrementExact(summary.getTotal()));
+        summary.decreaseTotal(contractBase58, 1L);
+        summary.setHead(ByteString.copyFrom(nextKey));
       }
     }
     else {
@@ -2159,106 +2298,118 @@ public class Manager {
         prev.setLastOperation(getHeadBlockTimeStamp());
         tokenStore.put(prevKey, prev);
 
-        //relation
-        relation.setTotal(Math.decrementExact(relation.getTotal()));
-        relation.setTail(ByteString.copyFrom(prevKey));
+        //update summary
+        summary.setTotal(Math.decrementExact(summary.getTotal()));
+        summary.decreaseTotal(contractBase58, 1L);
+        summary.setTail(ByteString.copyFrom(prevKey));
       }
       else {
         //only one node
-        relation.setTotal(0L);
-        relation.clearTail();
-        relation.clearHead();
+        summary.setTotal(0L);
+        summary.clearTotal(contractBase58);
+        summary.clearTail();
+        summary.clearHead();
       }
     }
-    relationStore.put(owner, relation);
-    tokenStore.delete(tokenId);
+    summaryStore.put(owner, summary);
+    tokenStore.delete(tokenKey);
 
     //update approve relation store
     if(tokenCap.hasApproval())
     {
       var approvedAddr = tokenCap.getApproval();
-      disapproveToken(tokenId, approvedAddr);
+      disapproveToken(tokenKey, approvedAddr);
     }
   }
 
-  public void addApproveToken(byte[] tokenId, byte[] toAddress){
-    var approveStore = getNftTokenApproveRelationStore();
-    var relationStore = getNftAccountTokenStore();
+  public void addApproveToken(byte[] tokenKey, byte[] toAddress){
+    var approveStore = getUrc721TokenApproveRelationStore();
+    var summaryStore = getUrc721AccountTokenRelationStore();
 
-    if (!relationStore.has(toAddress)) {
-      var approve = new NftTokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
+    if (!summaryStore.has(toAddress)) {
+      //save approve
+      var approve = new Urc721TokenApproveRelationCapsule(Protocol.Urc721TokenApproveRelation.newBuilder()
               .clearNext()
               .clearPrev()
               .setOwnerAddress(ByteString.copyFrom(toAddress))
-              .setTokenId(ByteString.copyFrom(tokenId))
+              .setTokenId(ByteString.copyFrom(tokenKey))
               .build());
       approveStore.put(approve.getKey(), approve);
 
-      var relation = new NftAccountTokenRelationCapsule(toAddress,
-              Protocol.NftAccountTokenRelation.newBuilder()
+      //save summary
+      var summary = new Urc721AccountTokenRelationCapsule(toAddress,
+              Protocol.Urc721AccountTokenRelation.newBuilder()
                       .setOwnerAddress(ByteString.copyFrom(toAddress))
                       .clearHead()
                       .clearTail()
                       .setTotal(0L)
-                      .clearApproveAll()
-                      .clearApprovedForAll()
+                      .clearApproveAlls()
+                      .clearApprovedForAlls()
+                      .clearTotals()
                       .setApproveHead(ByteString.copyFrom(approve.getKey()))
                       .setApproveTail(ByteString.copyFrom(approve.getKey()))
                       .setApproveTotal(1L)
                       .build());
-      relationStore.put(relation.getKey(), relation);
+      summaryStore.put(summary.getKey(), summary);
     } else {
-      var relation = relationStore.get(toAddress);
-      if (!relation.hasTailApprove()) {
-        //in the case that the relation created to store approve list only
-        var approve = new NftTokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
+      var summary = summaryStore.get(toAddress);
+      if (!summary.hasTailApprove()) {
+        //has summary but no approval
+        //save approve
+        var approve = new Urc721TokenApproveRelationCapsule(Protocol.Urc721TokenApproveRelation.newBuilder()
                 .clearNext()
                 .clearPrev()
                 .setOwnerAddress(ByteString.copyFrom(toAddress))
-                .setTokenId(ByteString.copyFrom(tokenId))
+                .setTokenId(ByteString.copyFrom(tokenKey))
                 .build());
         approveStore.put(approve.getKey(), approve);
 
-        relation.setTotalApprove(Math.incrementExact(relation.getTotalApprove()));
-        relation.setHeadApprove(ByteString.copyFrom(approve.getKey()));
-        relation.setTailApprove(ByteString.copyFrom(approve.getKey()));
-        relationStore.put(toAddress, relation);
+        //save summary
+        summary.increaseTotalApprove(1L);
+        summary.setHeadApprove(ByteString.copyFrom(approve.getKey()));
+        summary.setTailApprove(ByteString.copyFrom(approve.getKey()));
+        summaryStore.put(toAddress, summary);
       } else {
-        var tailKey = relation.getTailApprove().toByteArray();
+        //load links
+        var tailKey = summary.getTailApprove().toByteArray();
         var tailApproveCap = approveStore.get(tailKey);
 
-        relation.setTotalApprove(Math.incrementExact(relation.getTotalApprove()));
-        relation.setTailApprove(ByteString.copyFrom(tokenId));
-        relationStore.put(toAddress, relation);
+        //save summary
+        summary.increaseTotalApprove(1L);
+        summary.setTailApprove(ByteString.copyFrom(tokenKey));
+        summaryStore.put(toAddress, summary);
 
-        var approve = new NftTokenApproveRelationCapsule(Protocol.NftTokenApproveRelation.newBuilder()
+        //save approval
+        var approve = new Urc721TokenApproveRelationCapsule(Protocol.Urc721TokenApproveRelation.newBuilder()
                 .clearNext()
                 .setPrev(ByteString.copyFrom(tailKey))
                 .setOwnerAddress(ByteString.copyFrom(toAddress))
-                .setTokenId(ByteString.copyFrom(tokenId))
+                .setTokenId(ByteString.copyFrom(tokenKey))
                 .build());
         approveStore.put(approve.getKey(), approve);
 
-        tailApproveCap.setNext(tokenId);
+        tailApproveCap.setNext(tokenKey);
         approveStore.put(tailKey, tailApproveCap);
       }
     }
   }
 
-  public void disapproveToken(byte[] tokenId, byte[] toAddress){
-    var approveStore = getNftTokenApproveRelationStore();
-    var relationStore = getNftAccountTokenStore();
+  public void disapproveToken(byte[] tokenId, byte[] operatorAddr){
+    var approveStore = getUrc721TokenApproveRelationStore();
+    var summaryStore = getUrc721AccountTokenRelationStore();
+    Assert.isTrue(approveStore.has(tokenId), "missing token id: " + tokenId);
 
-    Assert.isTrue(approveStore.has(tokenId), "not found nft token with id" + tokenId);
     val approveCap = approveStore.get(tokenId);
-
     var hasPrev = approveCap.hasPrev();
     var hasNext = approveCap.hasNext();
     var owner = approveCap.getOwner();
-    Assert.isTrue(Arrays.equals(toAddress, owner), "mismatched approval address");
-    Assert.isTrue(relationStore.has(owner), "missing account-nft relation of address: " + owner);
-    var relation = relationStore.get(owner);
 
+    Assert.isTrue(Arrays.equals(operatorAddr, owner), "mismatched approval address");
+    Assert.isTrue(summaryStore.has(owner), "missing account-token relation of address: " + owner);
+
+    var summary = summaryStore.get(owner);
+
+    //update links
     if(hasNext){
       var nextKey = approveCap.getNext();
       if(hasPrev) {
@@ -2274,17 +2425,17 @@ public class Manager {
         prev.setNext(nextKey);
         approveStore.put(nextKey, next);
         approveStore.put(prevKey, prev);
-        //update relation
-        relation.setTotalApprove(Math.decrementExact(relation.getTotalApprove()));
+        //update summary
+        summary.setTotalApprove(Math.decrementExact(summary.getTotalApprove()));
       }
       else {
         var next = approveStore.get(nextKey);
         next.clearPrev();
         approveStore.put(nextKey, next);
 
-        //update relation
-        relation.setTotalApprove(Math.decrementExact(relation.getTotalApprove()));
-        relation.setHeadApprove(ByteString.copyFrom(nextKey));
+        //update summary
+        summary.setTotalApprove(Math.decrementExact(summary.getTotalApprove()));
+        summary.setHeadApprove(ByteString.copyFrom(nextKey));
       }
     }
     else {
@@ -2295,105 +2446,112 @@ public class Manager {
         prev.clearNext();
         approveStore.put(prevKey, prev);
 
-        //relation
-        relation.setTotalApprove(Math.decrementExact(relation.getTotalApprove()));
-        relation.setTailApprove(ByteString.copyFrom(prevKey));
+        //update summary
+        summary.setTotalApprove(Math.decrementExact(summary.getTotalApprove()));
+        summary.setTailApprove(ByteString.copyFrom(prevKey));
       }
       else {
         //only one node
-        relation.setTotalApprove(0L);
-        relation.clearTailApprove();
-        relation.clearHeadApprove();
+        summary.setTotalApprove(0L);
+        summary.clearTailApprove();
+        summary.clearHeadApprove();
       }
     }
-    relationStore.put(owner, relation);
+    summaryStore.put(owner, summary);
     approveStore.delete(tokenId);
   }
 
-  public void addMinterContractRelation(NftTemplateCapsule contractCap){
+  /**
+   * Indexing minter
+   * @param contractCap
+   */
+  public void addMinterContractRelation(final Urc721ContractCapsule contractCap){
+    Assert.isTrue(contractCap.hasMinter(), "Minter not set");
     var minterAddress = contractCap.getMinter();
-    if(!nftMinterContractStore.has(minterAddress)){
+    if(!urc721MinterContractRelationStore.has(minterAddress)){
+      //update minter index
       contractCap.clearNextOfMinter();
       contractCap.clearPrevOfMinter();
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
 
-      var relation = Protocol.NftAccountTemplateRelation.newBuilder()
-              .setOwnerAddress(ByteString.copyFrom(minterAddress))
-              .setHead(ByteString.copyFrom(contractCap.getKey()))
-              .setTail(ByteString.copyFrom(contractCap.getKey()))
-              .setTotal(1L)
-              .build();
-      nftMinterContractStore.put(minterAddress, new NftAccountTemplateRelationCapsule(minterAddress, relation));
+      //save relation
+      var summary = new Urc721AccountContractRelationCapsule(minterAddress,
+              Protocol.Urc721AccountContractRelation.newBuilder()
+                      .setOwnerAddress(ByteString.copyFrom(minterAddress))
+                      .setHead(ByteString.copyFrom(contractCap.getKey()))
+                      .setTail(ByteString.copyFrom(contractCap.getKey()))
+                      .setTotal(1L)
+                      .build());
+      urc721MinterContractRelationStore.put(minterAddress, summary);
     }else {
-      var relationCap = nftMinterContractStore.get(minterAddress);
-      var tail  = nftTemplateStore.get(relationCap.getTail().toByteArray());
+      var relationCap = urc721MinterContractRelationStore.get(minterAddress);
+      var currentTailContract  = urc721ContractStore.get(relationCap.getTail().toByteArray());
 
-      tail.setNextOfMinter(contractCap.getKey());
-      nftTemplateStore.put(tail.getKey(), tail);
+      currentTailContract.setNextOfMinter(contractCap.getKey());
+      urc721ContractStore.put(currentTailContract.getKey(), currentTailContract);
 
       contractCap.clearNextOfMinter();
-      contractCap.setPrevOfMinter(tail.getKey());
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      contractCap.setPrevOfMinter(currentTailContract.getKey());
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
 
       relationCap.setTail(ByteString.copyFrom(contractCap.getKey()));
-      relationCap.setTotal(Math.incrementExact(relationCap.getTotal()));
-      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+      relationCap.increaseTotal(1L);
+      urc721MinterContractRelationStore.put(relationCap.getKey(), relationCap);
     }
   }
 
-  public void removeMinterContract(byte[] minterAddress, byte[] contract){
-    nftTemplateStore.deleteMinter(contract);
-    var contractCap = nftTemplateStore.get(contract);
-
-    if(!nftMinterContractStore.has(minterAddress))
+  public void removeMinterContract(byte[] minterAddress, byte[] contractAddr){
+    urc721ContractStore.clearMinterOf(contractAddr);
+    if(Objects.isNull(minterAddress) || !urc721MinterContractRelationStore.has(minterAddress))
       return;
 
-    var relationCap = nftMinterContractStore.get(minterAddress);
+    var contractCap = urc721ContractStore.get(contractAddr);
+    var minterSummary = urc721MinterContractRelationStore.get(minterAddress);
     if(!contractCap.hasPrevOfMinter() && contractCap.hasNextOfMinter()){
-      var next = nftTemplateStore.get(contractCap.getNextOfMinter());
+      var next = urc721ContractStore.get(contractCap.getNextOfMinter());
       next.clearPrevOfMinter();
-      nftTemplateStore.put(next.getKey(), next);
+      urc721ContractStore.put(next.getKey(), next);
 
-      relationCap.setHead(ByteString.copyFrom(contractCap.getNextOfMinter()));
-      relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
-      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+      minterSummary.setHead(ByteString.copyFrom(contractCap.getNextOfMinter()));
+      minterSummary.setTotal(Math.subtractExact(minterSummary.getTotal(), 1L));
+      urc721MinterContractRelationStore.put(minterSummary.getKey(), minterSummary);
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
     }else if(!contractCap.hasPrevOfMinter() && !contractCap.hasNextOfMinter()){
-      nftMinterContractStore.delete(relationCap.getKey());
+      urc721MinterContractRelationStore.delete(minterSummary.getKey());
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
     }else if(contractCap.hasPrevOfMinter() && !contractCap.hasNextOfMinter()){
-      var prev = nftTemplateStore.get(contractCap.getPrevOfMinter());
+      var prev = urc721ContractStore.get(contractCap.getPrevOfMinter());
       prev.clearNextOfMinter();
-      nftTemplateStore.put(prev.getKey(), prev);
+      urc721ContractStore.put(prev.getKey(), prev);
 
-      relationCap.setTail(ByteString.copyFrom(contractCap.getPrevOfMinter()));
-      relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
-      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+      minterSummary.setTail(ByteString.copyFrom(contractCap.getPrevOfMinter()));
+      minterSummary.setTotal(Math.subtractExact(minterSummary.getTotal(), 1L));
+      urc721MinterContractRelationStore.put(minterSummary.getKey(), minterSummary);
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
     }else {
-      var prev = nftTemplateStore.get(contractCap.getPrevOfMinter());
-      var next = nftTemplateStore.get(contractCap.getNextOfMinter());
+      var prev = urc721ContractStore.get(contractCap.getPrevOfMinter());
+      var next = urc721ContractStore.get(contractCap.getNextOfMinter());
 
       prev.setNextOfMinter(next.getKey());
       next.setPrevOfMinter(prev.getKey());
-      nftTemplateStore.put(prev.getKey(), prev);
-      nftTemplateStore.put(next.getKey(), next);
+      urc721ContractStore.put(prev.getKey(), prev);
+      urc721ContractStore.put(next.getKey(), next);
 
-      relationCap.setTotal(Math.subtractExact(relationCap.getTotal(), 1L));
-      nftMinterContractStore.put(relationCap.getKey(), relationCap);
+      minterSummary.setTotal(Math.subtractExact(minterSummary.getTotal(), 1L));
+      urc721MinterContractRelationStore.put(minterSummary.getKey(), minterSummary);
 
       contractCap.clearPrevOfMinter();
       contractCap.clearNextOfMinter();
-      nftTemplateStore.put(contractCap.getKey(), contractCap);
+      urc721ContractStore.put(contractCap.getKey(), contractCap);
     }
   }
 }

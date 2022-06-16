@@ -4,13 +4,19 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import lombok.var;
 import org.springframework.util.Assert;
+import org.unichain.core.actuator.posbridge.*;
+import org.unichain.core.actuator.urc30.*;
+import org.unichain.core.actuator.urc20.*;
+import org.unichain.core.actuator.urc721.*;
 import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Contract;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.unichain.core.config.Parameter.ChainConstant.*;
@@ -58,6 +64,8 @@ public class ActuatorFactory {
           default:
             return new TransferFutureActuatorV4(contract.getParameter(), manager);
         }
+      case FutureDealTransferContract:
+        return new TransferFutureDealActuator(contract.getParameter(), manager);
       case FutureWithdrawContract:
         switch (blockVersion){
           case BLOCK_VERSION_0:
@@ -87,57 +95,59 @@ public class ActuatorFactory {
           case BLOCK_VERSION_0:
           case BLOCK_VERSION_1:
           case BLOCK_VERSION_2:
-            return new TokenCreateActuator(contract.getParameter(), manager);
+            return new Urc30TokenCreateActuator(contract.getParameter(), manager);
           case BLOCK_VERSION_3:
-            return new TokenCreateActuatorV3(contract.getParameter(), manager);
+            return new Urc30TokenCreateActuatorV3(contract.getParameter(), manager);
+          case BLOCK_VERSION_4:
+            return new Urc30TokenCreateActuatorV4(contract.getParameter(), manager);
           default:
-            return new TokenCreateActuatorV4(contract.getParameter(), manager);
+            throw new RuntimeException("current block version do not support this contract anymore!");
         }
       case ExchangeTokenContract:
-        return new TokenExchangeActuator(contract.getParameter(), manager);
+        return new Urc30TokenExchangeActuator(contract.getParameter(), manager);
       case TransferTokenOwnerContract:
-        return new TokenTransferOwnerActuator(contract.getParameter(), manager);
+        return new Urc30TokenTransferOwnerActuator(contract.getParameter(), manager);
       case ContributeTokenPoolFeeContract:
         return (blockVersion <= BLOCK_VERSION_2) ?
-                new TokenContributePoolFeeActuator(contract.getParameter(), manager) : new TokenContributePoolFeeActuatorV3(contract.getParameter(), manager);
+                new Urc30TokenContributePoolFeeActuator(contract.getParameter(), manager) : new Urc30TokenContributePoolFeeActuatorV3(contract.getParameter(), manager);
       case UpdateTokenParamsContract:
         switch (blockVersion) {
           case BLOCK_VERSION_0:
           case BLOCK_VERSION_1:
           case BLOCK_VERSION_2:
-            return new TokenUpdateParamsActuator(contract.getParameter(), manager);
+            return new Urc30TokenUpdateParamsActuator(contract.getParameter(), manager);
           case BLOCK_VERSION_3:
-            return new TokenUpdateParamsActuatorV3(contract.getParameter(), manager);
+            return new Urc30TokenUpdateParamsActuatorV3(contract.getParameter(), manager);
           default:
-            return new TokenUpdateParamsActuatorV4(contract.getParameter(), manager);
+            return new Urc30TokenUpdateParamsActuatorV4(contract.getParameter(), manager);
         }
       case MineTokenContract:
         return (blockVersion <= BLOCK_VERSION_2) ?
-                new TokenMineActuator(contract.getParameter(), manager) : new TokenMineActuatorV3(contract.getParameter(), manager);
+                new Urc30TokenMineActuator(contract.getParameter(), manager) : new Urc30TokenMineActuatorV3(contract.getParameter(), manager);
       case BurnTokenContract:
         return (blockVersion <= BLOCK_VERSION_2) ?
-                new TokenBurnActuator(contract.getParameter(), manager) : new TokenBurnActuatorV3(contract.getParameter(), manager);
+                new Urc30TokenBurnActuator(contract.getParameter(), manager) : new Urc30TokenBurnActuatorV3(contract.getParameter(), manager);
       case TransferTokenContract:
         switch (blockVersion){
           case BLOCK_VERSION_0:
           case BLOCK_VERSION_1:
           case BLOCK_VERSION_2:
-            return  new TokenTransferActuator(contract.getParameter(), manager);
+            return  new Urc30TokenTransferActuator(contract.getParameter(), manager);
           case BLOCK_VERSION_3:
-            return new TokenTransferActuatorV3(contract.getParameter(), manager);
+            return new Urc30TokenTransferActuatorV3(contract.getParameter(), manager);
           default:
-            return new TokenTransferActuatorV4(contract.getParameter(), manager);
+            return new Urc30TokenTransferActuatorV4(contract.getParameter(), manager);
         }
       case WithdrawFutureTokenContract:
         switch (blockVersion){
           case BLOCK_VERSION_0:
           case BLOCK_VERSION_1:
           case BLOCK_VERSION_2:
-            return new TokenWithdrawFutureActuator(contract.getParameter(), manager);
+            return new Urc30TokenWithdrawFutureActuator(contract.getParameter(), manager);
           case BLOCK_VERSION_3:
-            return new TokenWithdrawFutureActuatorV3(contract.getParameter(), manager);
+            return new Urc30TokenWithdrawFutureActuatorV3(contract.getParameter(), manager);
           default:
-            return new TokenWithdrawFutureActuatorV4(contract.getParameter(), manager);
+            return new Urc30TokenWithdrawFutureActuatorV4(contract.getParameter(), manager);
         }
       case UnfreezeAssetContract:
         return new UnfreezeAssetActuator(contract.getParameter(), manager);
@@ -161,12 +171,6 @@ public class ActuatorFactory {
         return new ProposalDeleteActuator(contract.getParameter(), manager);
       case SetAccountIdContract:
         return new SetAccountIdActuator(contract.getParameter(), manager);
-//      case BuyStorageContract:
-//        return new BuyStorageActuator(contract.getParameter(), manager);
-//      case BuyStorageBytesContract:
-//        return new BuyStorageBytesActuator(contract.getParameter(), manager);
-//      case SellStorageContract:
-//        return new SellStorageActuator(contract.getParameter(), manager);
       case UpdateSettingContract:
         return new UpdateSettingContractActuator(contract.getParameter(), manager);
       case UpdateEnergyLimitContract:
@@ -185,36 +189,82 @@ public class ActuatorFactory {
         return new AccountPermissionUpdateActuator(contract.getParameter(), manager);
       case UpdateBrokerageContract:
         return new UpdateBrokerageActuator(contract.getParameter(), manager);
-      case CreateNftTemplateContract:
-        switch (blockVersion) {
-          case BLOCK_VERSION_0:
-          case BLOCK_VERSION_1:
-          case BLOCK_VERSION_2:
-          case BLOCK_VERSION_3:
-          case BLOCK_VERSION_4:
-            break;
-          default:
-            return new NftCreateContractActuator(contract.getParameter(), manager);
-        }
-      case MintNftTokenContract:
-        return new NftMintTokenActuator(contract.getParameter(), manager);
-      case AddNftMinterContract:
-        return new NftAddMinterActuator(contract.getParameter(), manager);
-      case RemoveNftMinterContract:
-        return new NftRemoveMinterActuator(contract.getParameter(), manager);
-      case RenounceNftMinterContract:
-        return new NftRenounceMinterActuator(contract.getParameter(), manager);
-      case ApproveNftTokenContract:
-        return new NftApproveTokenActuator(contract.getParameter(), manager);
-      case ApproveForAllNftTokenContract:
-        return new NftApproveForAllTokenActuator(contract.getParameter(), manager);
-      case BurnNftTokenContract:
-        return new NftBurnTokenActuator(contract.getParameter(), manager);
-      case TransferNftTokenContract:
-        return new NftTransferTokenActuator(contract.getParameter(), manager);
+      /**
+       * Urc721
+       */
+      case Urc721CreateContract:
+          return new Urc721CreateContractActuator(contract.getParameter(), manager);
+      case Urc721MintContract:
+        return new Urc721MintActuator(contract.getParameter(), manager);
+      case Urc721AddMinterContract:
+        return new Urc721AddMinterActuator(contract.getParameter(), manager);
+      case Urc721RemoveMinterContract:
+        return new Urc721RemoveMinterActuator(contract.getParameter(), manager);
+      case Urc721RenounceMinterContract:
+        return new Urc721RenounceMinterActuator(contract.getParameter(), manager);
+      case Urc721ApproveContract:
+        return new Urc721ApproveActuator(contract.getParameter(), manager);
+      case Urc721SetApprovalForAllContract:
+        return new Urc721SetApprovalForAllActuator(contract.getParameter(), manager);
+      case Urc721BurnContract:
+        return new Urc721BurnActuator(contract.getParameter(), manager);
+      case Urc721TransferFromContract:
+        return new Urc721TransferFromActuator(contract.getParameter(), manager);
+
+      /**
+        POSBridge
+       */
+      case PosBridgeSetupContract:
+        return new PosBridgeSetupActuator(contract.getParameter(), manager);
+      case PosBridgeMapTokenContract:
+        return new PosBridgeMapTokenActuator(contract.getParameter(), manager);
+      case PosBridgeCleanMapTokenContract:
+        return new PosBridgeCleanMapTokenActuator(contract.getParameter(), manager);
+      case PosBridgeDepositContract:
+        return new PosBridgeDepositActuator(contract.getParameter(), manager);
+      case PosBridgeDepositExecContract:
+        return new PosBridgeDepositExecActuator(contract.getParameter(), manager);
+      case PosBridgeWithdrawContract:
+        return new PosBridgeWithdrawActuator(contract.getParameter(), manager);
+      case PosBridgeWithdrawExecContract:
+        return new PosBridgeWithdrawExecActuator(contract.getParameter(), manager);
+
+      /**
+       * Urc20
+       */
+      case Urc20CreateContract:
+          return new Urc20CreateContractActuator(contract.getParameter(), manager);
+      case Urc20ContributePoolFeeContract:
+        return new Urc20ContributePoolFeeActuator(contract.getParameter(), manager);
+      case Urc20UpdateParamsContract:
+        return new Urc20UpdateParamsActuator(contract.getParameter(), manager);
+      case Urc20MintContract:
+        return new Urc20MintActuator(contract.getParameter(), manager);
+      case Urc20BurnContract:
+        return new Urc20BurnActuator(contract.getParameter(), manager);
+      case Urc20TransferFromContract:
+        return new Urc20TransferFromActuator(contract.getParameter(), manager);
+      case Urc20TransferContract:
+        return new Urc20TransferActuator(contract.getParameter(), manager);
+      case Urc20WithdrawFutureContract:
+        return new Urc20WithdrawFutureActuator(contract.getParameter(), manager);
+      case Urc20TransferOwnerContract:
+        return new Urc20TransferOwnerActuator(contract.getParameter(), manager);
+      case Urc20ExchangeContract:
+        return new Urc20ExchangeActuator(contract.getParameter(), manager);
+      case Urc20ApproveContract:
+        return new Urc20ApproveActuator(contract.getParameter(), manager);
       default:
         logger.warn("un-supported contract type {}!", contract.getType().name());
         return null;
     }
+  }
+
+  public static List<Actuator> createUpgradeActuator(Manager manager, int newBlockVer, int oldBlockVer){
+      var actuators = new ArrayList<Actuator>();
+      if((newBlockVer >= BLOCK_VERSION_5) && (oldBlockVer < BLOCK_VERSION_5)){
+        actuators.add(new Urc20UpgradeActuator(null, manager));
+      }
+      return actuators;
   }
 }

@@ -18,7 +18,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 @Slf4j(topic = "actuator")
 public class UpdateEnergyLimitContractActuator extends AbstractActuator {
 
-  UpdateEnergyLimitContractActuator(Any contract, Manager dbManager) {
+  public UpdateEnergyLimitContractActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

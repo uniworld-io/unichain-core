@@ -25,7 +25,7 @@ import java.util.Arrays;
 
 @Slf4j(topic = "actuator")
 public class TransferFutureActuator extends AbstractActuator {
-  TransferFutureActuator(Any contract, Manager dbManager) {
+  public TransferFutureActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

@@ -30,6 +30,13 @@ message TokenPage {
   repeated CreateTokenContract tokens = 4;
 }
 
+message Urc20ContractPage {
+  int64  page_size = 1;
+  int64 page_index = 2;
+  int64 total = 3;
+  repeated Urc20CreateContract contracts = 4;
+}
+
 message AccountCreateContract {
   bytes owner_address = 1;
   bytes account_address = 2;
@@ -59,6 +66,13 @@ message FutureTransferContract {
   bytes to_address = 2;
   int64 amount = 3;
   int64 expire_time = 4;
+}
+
+message FutureDealTransferContract {
+  bytes owner_address = 1;
+  bytes to_address = 2;
+  int64 deal_id = 3;
+  int64 amount = 4;
 }
 
 message TransferAssetContract {
@@ -113,6 +127,9 @@ message WitnessUpdateContract {
   bytes update_url = 12;
 }
 
+/**
+  urc30 contracts
+ */
 message CreateTokenContract {
   bytes owner_address = 1;
   string name = 2;
@@ -134,6 +151,7 @@ message CreateTokenContract {
   int64 exch_num = 18; //exchange to #token
   int64 critical_update_time = 19;//critical update time, ex: fee, ownership...
   int64 create_acc_fee = 20; //create new account fee
+  bytes address = 21; //address for compatible
 }
 
 message TransferTokenOwnerContract {
@@ -175,7 +193,6 @@ message MineTokenContract {
   int64 amount = 3;
 }
 
-
 message BurnTokenContract {
   bytes owner_address = 1;
   string token_name = 2;
@@ -193,6 +210,108 @@ message TransferTokenContract {
 message WithdrawFutureTokenContract {
   bytes owner_address = 1;
   string token_name = 2;
+}
+
+/**
+  urc20 token
+ */
+message Urc20CreateContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  string symbol = 3;
+  string name = 4;
+  int64 decimals = 5;
+  string max_supply = 6;//decimal string
+  string total_supply = 7;//decimal string
+  int64 start_time = 8;
+  int64 end_time = 9;
+  string url = 10;
+  int64 fee = 11;
+  int64 extra_fee_rate = 12;
+  int64 fee_pool = 13;
+  string burned = 14;//decimal string
+  int64 latest_operation_time = 15;//internal
+  int64 lot = 16;
+  int64 fee_pool_origin = 17;//internal
+  int64 exch_unx_num = 18;
+  int64 exch_num = 19;
+  bool  exch_enable = 20;
+  int64 critical_update_time = 21;//internal
+  int64 create_acc_fee = 22;
+}
+
+message Urc20TransferFromContract {
+  bytes owner_address = 1; //spender
+  bytes from = 2; //owner
+  bytes to = 3; //target
+  bytes address = 4; //contract
+  string amount = 5; //decimal string
+  int64 available_time = 6;
+}
+
+message Urc20TransferContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  bytes to = 3;
+  string amount = 4;//decimal string
+  int64 available_time = 5;
+}
+
+message Urc20ApproveContract{
+  bytes owner_address = 1;
+  bytes address = 2;
+  bytes spender = 3;
+  string amount = 4;//decimal string
+}
+
+message Urc20MintContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  string amount = 3;//decimal string
+  bytes to_address = 4;
+}
+
+message Urc20BurnContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  string amount = 3;//decimal string
+}
+
+message Urc20TransferOwnerContract {
+  bytes owner_address = 1;
+  bytes to_address = 2;
+  bytes address = 3;
+}
+
+message Urc20ExchangeContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  int64 amount = 3; //ginza amount
+}
+
+message Urc20ContributePoolFeeContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  int64 amount = 3;
+}
+
+message Urc20UpdateParamsContract {
+  bytes owner_address = 1;
+  bytes address = 2;
+  int64 fee = 3; //what is this ?
+  int64 extra_fee_rate = 4;
+  int64 lot = 5;
+  string url = 6;
+  string total_supply = 7;
+  int64 fee_pool = 8;
+  int64 exch_unx_num = 9;
+  int64 exch_num = 10;
+  int64 create_acc_fee = 11;
+}
+
+message Urc20WithdrawFutureContract {
+  bytes owner_address = 1;
+  bytes address = 2;
 }
 
 message AssetIssueContract {
@@ -228,7 +347,6 @@ message ParticipateAssetIssueContract {
   bytes asset_name = 3; // this field is token name before the proposal ALLOW_SAME_TOKEN_NAME is active, otherwise it is token id and token is should be in string format.
   int64 amount = 4; // the amount of ginzas
 }
-
 
 enum ResourceCode {
   BANDWIDTH = 0x00;
@@ -279,7 +397,7 @@ message ProposalCreateContract {
 message ProposalApproveContract {
   bytes owner_address = 1;
   int64 proposal_id = 2;
-  bool is_add_approval = 3; // add or remove approval
+  bool is_add_approval = 3; //add or remove approval
 }
 
 message ProposalDeleteContract {
@@ -360,61 +478,148 @@ message UpdateBrokerageContract {
   int32 brokerage = 2; // 1 mean 1%
 }
 
-message CreateNftTemplateContract{
-  string contract = 1;
-  string name = 2;
-  int64 total_supply = 3;
-  bytes minter = 4;
-  bytes owner_address = 5;
+message Urc721CreateContract{
+  bytes owner_address = 1;
+  bytes address = 2;
+  string symbol = 3;
+  string name = 4;
+  int64 total_supply = 5;
+  bytes minter = 6;
 }
 
-message MintNftTokenContract{
+message Urc721MintContract{
   bytes owner_address = 1;
-  string contract = 2;
+  bytes address = 2;
   bytes to_address = 3;
   string uri = 4;
-  string metadata = 5;
-}
-
-message RemoveNftMinterContract{
-  bytes owner_address = 1;
-  string contract = 2;
-}
-
-message AddNftMinterContract{
-  bytes minter = 1;
-  bytes owner_address = 2;
-  string contract = 3;
-}
-
-message RenounceNftMinterContract{
-  bytes owner_address = 1;
-  string contract = 2;
-}
-
-message BurnNftTokenContract{
-  bytes owner_address = 1;
-  string contract = 2;
-  int64 token_id = 3;
-}
-
-message ApproveNftTokenContract{
-  bytes owner_address = 1;
-  bytes to_address = 2;
-  bool approve = 3;
-  string contract = 4;
   int64 token_id = 5;
 }
 
-message ApproveForAllNftTokenContract{
+message Urc721RemoveMinterContract{
   bytes owner_address = 1;
-  bytes to_address = 2;
-  bool approve = 3;
+  bytes address = 2;
 }
 
-message TransferNftTokenContract{
+message Urc721AddMinterContract{
   bytes owner_address = 1;
+  bytes address = 2;
+  bytes minter = 3;
+}
+
+message Urc721RenounceMinterContract{
+  bytes owner_address = 1;
+  bytes address = 2;
+}
+
+message Urc721BurnContract{
+  bytes owner_address = 1;
+  bytes address = 2;
+  int64 token_id = 3;
+}
+
+message Urc721ApproveContract{
+  bytes owner_address = 1;
+  bytes address = 2;
+  int64 token_id = 3;
+  bytes to = 4;
+  bool approve = 5;
+}
+
+message Urc721SetApprovalForAllContract{
+  bytes owner_address = 1;
+  bytes address = 4;  //contract address
   bytes to_address = 2;
-  string contract = 3;
+  bool approve = 3; //approve or dis-approve
+}
+
+message Urc721TransferFromContract{
+  bytes owner_address = 1; //owner or operator
+  bytes address = 3;
+  bytes to = 2;
   int64 token_id = 4;
+}
+
+/**
+  PoS Bridge contracts
+ */
+message PosBridgeSetupContract{
+  bytes owner_address = 1;
+  bytes new_owner= 2;
+  int64 min_validator = 3;
+  repeated string validators = 4;
+  uint32 consensus_rate = 5; //percent 0 to 100
+  string predicate_native = 6; //hex
+  string predicate_token = 7; //hex
+  string predicate_nft = 8; //hex
+}
+
+//call from admin
+message PosBridgeMapTokenContract{
+  bytes owner_address = 1;
+  int64 root_chainid = 2;
+  string root_token= 3; //hex address if token, symbol if native
+  int64 child_chainid = 4;
+  string child_token= 5; //hex address
+  uint32 type = 6; //1:native, 2:erc20, 3:erc721
+}
+
+//call from admin
+message PosBridgeCleanMapTokenContract{
+    bytes owner_address = 1;
+    int64 root_chainid = 2;
+    string root_token= 3; //hex address if token, symbol if native
+    int64 child_chainid = 4;
+    string child_token= 5;
+}
+
+//call from user
+message PosBridgeDepositContract{
+  bytes owner_address = 1;
+  string root_token = 2; //hex address if token, unw if native
+  int64 child_chainid = 3;
+  string receive_address = 4;
+  string data = 5; //amount or token id, hex
+}
+
+//call from user
+message PosBridgeWithdrawContract{
+  bytes owner_address = 1;
+  string child_token = 2; //hex address
+  string receive_address = 3; //hex address
+  string data = 4; //amount or tokenid, hex
+}
+
+/**
+  calldata format:
+  {
+     signatures: string[]
+     message: bytes[] // abi encoded {
+       rootChainId: hex
+       rootTokenAddr: hex
+       childChainId: hex
+       receiveAddr: hex
+       value: hex, token amount or Id
+     }
+  }
+ */
+message PosBridgeDepositExecContract{
+  bytes owner_address = 1;
+  repeated string signatures = 2;
+  string message = 3;
+}
+
+/**
+      signatures: string[]
+      message: bytes[] // abi encoded {
+       childChainId: hex
+       childTokenAddr: hex
+       rootChainId: hex
+       receiveAddr: hex
+       value: hex, token amount or Id
+     }
+ */
+message PosBridgeWithdrawExecContract{
+  bytes owner_address = 1;
+  repeated string signatures = 2;
+  string message = 3;
 }

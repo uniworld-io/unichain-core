@@ -84,8 +84,7 @@ public class FilterQuery {
     boolean matched = false;
     if (fromBlockNumber == FilterQuery.LATEST_BLOCK_NUM
         || toBlockNumber == FilterQuery.EARLIEST_BLOCK_NUM) {
-      logger.error("invalid filter: fromBlockNumber: {}, toBlockNumber: {}",
-          fromBlockNumber, toBlockNumber);
+      logger.error("invalid filter: fromBlockNumber: {}, toBlockNumber: {}", fromBlockNumber, toBlockNumber);
       return false;
     }
 

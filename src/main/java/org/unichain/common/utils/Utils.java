@@ -18,8 +18,10 @@
 
 package org.unichain.common.utils;
 
+import lombok.val;
 import org.springframework.util.Assert;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -126,5 +128,13 @@ public interface Utils {
     if(end >= all.size())
       end = all.size();
     return all.subList(start, end);
+  }
+
+  static BigInteger divideCeiling(BigInteger a, BigInteger b){
+    val rets = a.divideAndRemainder(b);
+    if(rets[1].compareTo(BigInteger.ZERO) > 0)
+      return rets[0].add(BigInteger.ONE);
+    else
+      return rets[0];
   }
 }

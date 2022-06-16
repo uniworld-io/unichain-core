@@ -21,6 +21,9 @@ service Wallet {
     };
   };
 
+  /**
+    URC30
+   */
   rpc GetFutureToken (FutureTokenQuery) returns (FutureTokenPack) {
     option (google.api.http) = {
       post: "/wallet/getfuturetoken"
@@ -41,84 +44,218 @@ service Wallet {
     };
   };
 
-  rpc ListNftTokenApprove (NftTokenApproveQuery) returns (NftTokenApproveResult) {
+  /**
+  Urc20
+ */
+  rpc Urc20FutureGet (Urc20FutureTokenQuery) returns (Urc20FutureTokenPack) {
     option (google.api.http) = {
-      post: "/wallet/listnfttokenapprove"
+      post: "/wallet/urc20futureget"
       body: "*"
       additional_bindings {
-        get: "/wallet/listnfttokenapprove"
+        get: "/wallet/urc20futureget"
       }
     };
   };
 
-  rpc ListNftTokenApproveAll (NftTokenApproveAllQuery) returns (NftTokenApproveAllResult) {
+  rpc Urc20ContractList (Urc20ContractQuery) returns (Urc20ContractPage) {
     option (google.api.http) = {
-      post: "/wallet/listnfttokenapproveall"
+      post: "/wallet/urc20contractlist"
       body: "*"
       additional_bindings {
-        get: "/wallet/listnfttokenapproveall"
+        get: "/wallet/urc20contractlist"
       }
     };
   };
 
-  rpc ListNftTemplate (NftTemplateQuery) returns (NftTemplateQueryResult) {
+  rpc Urc20Name (AddressMessage) returns (StringMessage) {
     option (google.api.http) = {
-      post: "/wallet/listnftcontract"
+      post: "/wallet/urc20name"
       body: "*"
       additional_bindings {
-        get: "/wallet/listnftcontract"
+        get: "/wallet/urc20name"
       }
     };
   };
 
-
-  rpc ListNftToken (NftTokenQuery) returns (NftTokenQueryResult) {
+  rpc Urc20Symbol (AddressMessage) returns (StringMessage) {
     option (google.api.http) = {
-      post: "/wallet/listnfttoken"
+      post: "/wallet/urc20symbol"
       body: "*"
       additional_bindings {
-        get: "/wallet/listnfttoken"
+        get: "/wallet/urc20symbol"
       }
     };
   };
 
-  rpc GetNftTemplate (NftTemplate) returns (NftTemplate) {
+  rpc Urc20Decimals (AddressMessage) returns (NumberMessage) {
     option (google.api.http) = {
-      post: "/wallet/getnftcontract"
+      post: "/wallet/urc20decimals"
       body: "*"
       additional_bindings {
-        get: "/wallet/getnftcontract"
+        get: "/wallet/urc20decimals"
       }
     };
   };
 
-
-  rpc GetNftToken (NftTokenGet) returns (NftTokenGetResult) {
+  rpc Urc20TotalSupply (AddressMessage) returns (StringMessage) {
     option (google.api.http) = {
-      post: "/wallet/getnfttoken"
+      post: "/wallet/urc20totalsupply"
       body: "*"
       additional_bindings {
-        get: "/wallet/getnfttoken"
+        get: "/wallet/urc20totalsupply"
       }
     };
   };
 
-  rpc GetNftBalanceOf (NftBalanceOf) returns (NftBalanceOf) {
+  rpc Urc20BalanceOf (Urc20BalanceOfQuery) returns (StringMessage) {
     option (google.api.http) = {
-      post: "/wallet/getnftbalanceof"
+      post: "/wallet/urc20balanceof"
       body: "*"
       additional_bindings {
-        get: "/wallet/getnftbalanceof"
+        get: "/wallet/urc20balanceof"
       }
     };
   };
 
-  rpc GetNftApprovedForAll (IsApprovedForAll) returns (IsApprovedForAll) {
+  rpc Urc20GetOwner (AddressMessage) returns (AddressMessage) {
     option (google.api.http) = {
-      post: "/wallet/getnftapprovedforall"
+      post: "/wallet/urc20getowner"
       body: "*"
       additional_bindings {
-        get: "/wallet/getnftapprovedforall"
+        get: "/wallet/urc20getowner"
+      }
+    };
+  };
+
+  rpc Urc20Allowance (Urc20AllowanceQuery) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc20allowance"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20allowance"
+      }
+    };
+  };
+
+  /**
+    urc721
+   */
+  rpc Urc721ListContract (Urc721ContractQuery) returns (Urc721ContractPage) {
+    option (google.api.http) = {
+      post: "/wallet/urc721contractlist"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721contractlist"
+      }
+    };
+  };
+
+  rpc Urc721ListToken (Urc721TokenListQuery) returns (Urc721TokenPage) {
+    option (google.api.http) = {
+      post: "/wallet/urc721tokenlist"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721tokenlist"
+      }
+    };
+  };
+
+  rpc Urc721GetContract (AddressMessage) returns (Urc721Contract) {
+    option (google.api.http) = {
+      post: "/wallet/urc721contractget"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721contractget"
+      }
+    };
+  };
+
+  rpc Urc721GetToken (Urc721TokenQuery) returns (Urc721Token) {
+    option (google.api.http) = {
+      post: "/wallet/urc721tokenget"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721tokenget"
+      }
+    };
+  };
+
+  rpc Urc721GetBalanceOf (Urc721BalanceOfQuery) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc721balanceof"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721balanceof"
+      }
+    };
+  };
+
+  rpc Urc721GetName (AddressMessage) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc721name"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721name"
+      }
+    };
+  };
+
+  rpc Urc721GetSymbol (AddressMessage) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc721symbol"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721symbol"
+      }
+    };
+  };
+
+  rpc Urc721GetTotalSupply (AddressMessage) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc721totalsupply"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721totalsupply"
+      }
+    };
+  };
+
+  rpc Urc721GetTokenUri (Urc721TokenQuery) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc721tokenuri"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721tokenuri"
+      }
+    };
+  };
+
+  rpc Urc721GetOwnerOf (Urc721TokenQuery) returns (AddressMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc721ownerof"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721ownerof"
+      }
+    };
+  };
+
+  rpc Urc721GetApproved (Urc721TokenQuery) returns (AddressMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc721getapproved"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721getapproved"
+      }
+    };
+  };
+
+  rpc Urc721IsApprovedForAll (Urc721IsApprovedForAllQuery) returns (BoolMessage) {
+    option (google.api.http) = {
+      post: "/wallet/urc721isapprovedforall"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc721isapprovedforall"
       }
     };
   };
@@ -173,6 +310,16 @@ service Wallet {
       body: "*"
         additional_bindings {
           get: "/wallet/createfuturetransaction"
+      }
+    };
+  };
+
+  rpc CreateFutureDealTransferTransaction (FutureDealTransferContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/createfuturedealtransaction"
+      body: "*"
+        additional_bindings {
+          get: "/wallet/createfuturedealtransaction"
       }
     };
   };
@@ -248,96 +395,99 @@ service Wallet {
   rpc CreateAssetIssue2 (AssetIssueContract) returns (TransactionExtention) {
   };
 
-  rpc CreateNftTemplate (CreateNftTemplateContract) returns (Transaction) {
+  rpc CreateUrc721Contract (Urc721CreateContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/createnftcontract"
+      post: "/wallet/urc721createcontract"
       body: "*"
       additional_bindings {
-        get: "/wallet/createnftcontract"
+        get: "/wallet/urc721createcontract"
       }
     };
   };
 
-  rpc MintNftToken (MintNftTokenContract) returns (Transaction) {
+  rpc Urc721Mint (Urc721MintContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/mintnfttoken"
+      post: "/wallet/urc721mint"
       body: "*"
       additional_bindings {
-        get: "/wallet/mintnfttoken"
+        get: "/wallet/urc721mint"
       }
     };
   };
 
-  rpc RemoveNftMinter (RemoveNftMinterContract) returns (Transaction) {
+  rpc Urc721RemoveMinter (Urc721RemoveMinterContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/removenftminter"
+      post: "/wallet/urc721removeminter"
       body: "*"
       additional_bindings {
-        get: "/wallet/removenftminter"
+        get: "/wallet/urc721removeminter"
       }
     };
   };
 
-  rpc AddNftMinter (AddNftMinterContract) returns (Transaction) {
+  rpc Urc721AddMinter (Urc721AddMinterContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/addnftminter"
+      post: "/wallet/urc721addminter"
       body: "*"
       additional_bindings {
-        get: "/wallet/addnftminter"
+        get: "/wallet/urc721addminter"
       }
     };
   };
 
-  rpc RenounceNftMinter (RenounceNftMinterContract) returns (Transaction) {
+  rpc Urc721RenounceMinter (Urc721RenounceMinterContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/renouncenftminter"
+      post: "/wallet/urc721renounceminter"
       body: "*"
       additional_bindings {
-        get: "/wallet/renouncenftminter"
+        get: "/wallet/urc721renounceminter"
       }
     };
   };
 
-  rpc BurnNftToken (BurnNftTokenContract) returns (Transaction) {
+  rpc Urc721Burn (Urc721BurnContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/burnnfttoken"
+      post: "/wallet/urc721burn"
       body: "*"
       additional_bindings {
-        get: "/wallet/burnnfttoken"
+        get: "/wallet/urc721burn"
       }
     };
   };
 
-  rpc ApproveNftToken (ApproveNftTokenContract) returns (Transaction) {
+  rpc Urc721Approve (Urc721ApproveContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/approvenfttoken"
+      post: "/wallet/urc721approve"
       body: "*"
       additional_bindings {
-        get: "/wallet/approvenfttoken"
+        get: "/wallet/urc721approve"
       }
     };
   };
 
-  rpc ApproveForAllNftToken (ApproveForAllNftTokenContract) returns (Transaction) {
+  rpc Urc721SetApprovalForAll (Urc721SetApprovalForAllContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/approveforallnfttoken"
+      post: "/wallet/urc721setapprovalforall"
       body: "*"
       additional_bindings {
-        get: "/wallet/approveforallnfttoken"
+        get: "/wallet/urc721setapprovalforall"
       }
     };
   };
 
-  rpc TransferNftToken (TransferNftTokenContract) returns (Transaction) {
+  rpc Urc721TransferFrom (Urc721TransferFromContract) returns (Transaction) {
     option (google.api.http) = {
-      post: "/wallet/transfernfttoken"
+      post: "/wallet/urc721transferfrom"
       body: "*"
       additional_bindings {
-        get: "/wallet/transfernfttoken"
+        get: "/wallet/urc721transferfrom"
       }
     };
   };
 
+  /**
+    URC30
+   */
   rpc CreateToken (CreateTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/createtoken"
@@ -398,7 +548,6 @@ service Wallet {
     };
   }
 
-
   rpc BurnToken (BurnTokenContract) returns (Transaction) {
     option (google.api.http) = {
       post: "/wallet/burntoken"
@@ -425,6 +574,193 @@ service Wallet {
       body: "*"
       additional_bindings {
         get: "/wallet/withdrawfuturetoken"
+      }
+    };
+  }
+
+  /**
+    Urc20
+ */
+  rpc Urc20ContractCreate (Urc20CreateContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc20createcontract"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20createcontract"
+      }
+    };
+  };
+
+  rpc Urc20ContributePoolFee (Urc20ContributePoolFeeContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc20contributepoolfee"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20contributepoolfee"
+      }
+    };
+  };
+
+  rpc Urc20UpdateParams (Urc20UpdateParamsContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc20updateparams"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20updateparams"
+      }
+    };
+  }
+
+  rpc Urc20Mint (Urc20MintContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc20mint"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20mint"
+      }
+    };
+  }
+
+  rpc Urc20Burn (Urc20BurnContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc20burn"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20burn"
+      }
+    };
+  }
+
+  rpc Urc20WithdrawFuture (Urc20WithdrawFutureContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc20withdrawfuture"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20withdrawfuture"
+      }
+    };
+  }
+
+  rpc Urc20TransferOwner (Urc20TransferOwnerContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc20transferowner"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20transferowner"
+      }
+    };
+  };
+
+  rpc Urc20Exchange (Urc20ExchangeContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc20exchange"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20exchange"
+      }
+    };
+  };
+
+
+  rpc Urc20Approve (Urc20ApproveContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc20approve"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20approve"
+      }
+    };
+  }
+
+  rpc Urc20TransferFrom (Urc20TransferFromContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc20transferfrom"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20transferfrom"
+      }
+    };
+  }
+
+  rpc Urc20Transfer (Urc20TransferContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/urc20transfer"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/urc20transfer"
+      }
+    };
+  }
+
+  /**
+    PoS Bridge interface
+   */
+  rpc PosBridgeSetup (PosBridgeSetupContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgesetup"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgesetup"
+      }
+    };
+  }
+
+  rpc PosBridgeMapToken (PosBridgeMapTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgemaptoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgemaptoken"
+      }
+    };
+  }
+
+  rpc PosBridgeCleanMapToken (PosBridgeCleanMapTokenContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgecleanmaptoken"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgecleanmaptoken"
+      }
+    };
+  }
+
+  rpc PosBridgeDeposit(PosBridgeDepositContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgedeposit"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgedeposit"
+      }
+    };
+  }
+
+  rpc PosBridgeDepositExec(PosBridgeDepositExecContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgedepositexec"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgedepositexec"
+      }
+    };
+  }
+
+  rpc PosBridgeWithdraw(PosBridgeWithdrawContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgewithdraw"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgewithdraw"
+      }
+    };
+  }
+
+  rpc PosBridgeWithdrawExec(PosBridgeWithdrawExecContract) returns (Transaction) {
+    option (google.api.http) = {
+      post: "/wallet/posbridgewithdrawexec"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/posbridgewithdrawexec"
       }
     };
   }
@@ -637,6 +973,26 @@ service Wallet {
       body: "*"
       additional_bindings {
         get: "/wallet/gettokenbyname"
+      }
+    };
+  }
+
+  rpc GetPosBridgeConfig (EmptyMessage) returns (PosBridgeConfig) {
+    option (google.api.http) = {
+      post: "/wallet/getposbridgeconfig"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/getposbridgeconfig"
+      }
+    };
+  }
+
+  rpc GetPosBridgeTokenMap (EmptyMessage) returns (PosBridgeTokenMappingPage) {
+    option (google.api.http) = {
+      post: "/wallet/getposbridgetokenmap"
+      body: "*"
+      additional_bindings {
+        get: "/wallet/getposbridgetokenmap"
       }
     };
   }
@@ -976,6 +1332,9 @@ service WalletSolidity {
     };
   };
 
+  /**
+    Urc30
+   */
   rpc GetFutureToken (FutureTokenQuery) returns (FutureTokenPack) {
     option (google.api.http) = {
       post: "/walletsolidity/getfuturetoken"
@@ -996,85 +1355,243 @@ service WalletSolidity {
     };
   };
 
-  rpc ListNftTokenApprove (NftTokenApproveQuery) returns (NftTokenApproveResult) {
+  /**
+  Urc20
+ */
+  rpc Urc20FutureGet (Urc20FutureTokenQuery) returns (Urc20FutureTokenPack) {
     option (google.api.http) = {
-      post: "/walletsolidity/listnfttokenapprove"
+      post: "/walletsolidity/urc20futureget"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/listnfttokenapprove"
+        get: "/walletsolidity/urc20futureget"
       }
     };
   };
 
-  rpc ListNftTokenApproveAll (NftTokenApproveAllQuery) returns (NftTokenApproveAllResult) {
+  rpc Urc20ContractList (Urc20ContractQuery) returns (Urc20ContractPage) {
     option (google.api.http) = {
-      post: "/walletsolidity/listnfttokenapproveall"
+      post: "/walletsolidity/urc20contractlist"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/listnfttokenapproveall"
+        get: "/walletsolidity/urc20contractlist"
       }
     };
   };
 
-  rpc ListNftTemplate (NftTemplateQuery) returns (NftTemplateQueryResult) {
+  rpc Urc20Name (AddressMessage) returns (StringMessage) {
     option (google.api.http) = {
-      post: "/walletsolidity/listnftcontract"
+      post: "/walletsolidity/urc20name"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/listnftcontract"
+        get: "/walletsolidity/urc20name"
       }
     };
   };
 
-  rpc ListNftToken (NftTokenQuery) returns (NftTokenQueryResult) {
+  rpc Urc20Symbol (AddressMessage) returns (StringMessage) {
     option (google.api.http) = {
-      post: "/walletsolidity/listnfttoken"
+      post: "/walletsolidity/urc20symbol"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/listnfttoken"
+        get: "/walletsolidity/urc20symbol"
       }
     };
   };
 
-  rpc GetNftTemplate (NftTemplate) returns (NftTemplate) {
+  rpc Urc20Decimals (AddressMessage) returns (NumberMessage) {
     option (google.api.http) = {
-      post: "/walletsolidity/getnftcontract"
+      post: "/walletsolidity/urc20decimals"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/getnftcontract"
+        get: "/walletsolidity/urc20decimals"
       }
     };
   };
 
-  rpc GetNftToken (NftTokenGet) returns (NftTokenGetResult) {
+  rpc Urc20TotalSupply (AddressMessage) returns (StringMessage) {
     option (google.api.http) = {
-      post: "/walletsolidity/getnfttoken"
+      post: "/walletsolidity/urc20totalsupply"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/getnfttoken"
+        get: "/walletsolidity/urc20totalsupply"
       }
     };
   };
 
-  rpc GetNftBalanceOf (NftBalanceOf) returns (NftBalanceOf) {
+  rpc Urc20BalanceOf (Urc20BalanceOfQuery) returns (StringMessage) {
     option (google.api.http) = {
-      post: "/walletsolidity/getnftbalanceof"
+      post: "/walletsolidity/urc20balanceof"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/getnftbalanceof"
+        get: "/walletsolidity/urc20balanceof"
       }
     };
   };
 
-  rpc GetNftApprovedForAll (IsApprovedForAll) returns (IsApprovedForAll) {
+  rpc Urc20GetOwner (AddressMessage) returns (AddressMessage) {
     option (google.api.http) = {
-      post: "/walletsolidity/getnftapprovedforall"
+      post: "/walletsolidity/urc20getowner"
       body: "*"
       additional_bindings {
-        get: "/walletsolidity/getnftapprovedforall"
+        get: "/walletsolidity/urc20getowner"
       }
     };
   };
+
+  rpc Urc20Allowance (Urc20AllowanceQuery) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc20allowance"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc20allowance"
+      }
+    };
+  };
+
+
+  /**
+     urc721
+    */
+  rpc Urc721ListContract (Urc721ContractQuery) returns (Urc721ContractPage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721contractlist"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721contractlist"
+      }
+    };
+  };
+
+  rpc Urc721ListToken (Urc721TokenListQuery) returns (Urc721TokenPage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721tokenlist"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721tokenlist"
+      }
+    };
+  };
+
+  rpc Urc721GetContract (AddressMessage) returns (Urc721Contract) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721contractget"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721contractget"
+      }
+    };
+  };
+
+  rpc Urc721GetToken (Urc721TokenQuery) returns (Urc721Token) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721tokenget"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721tokenget"
+      }
+    };
+  };
+
+  rpc Urc721GetBalanceOf (Urc721BalanceOfQuery) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721balanceof"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721balanceof"
+      }
+    };
+  };
+
+  rpc Urc721GetName (AddressMessage) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721name"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721name"
+      }
+    };
+  };
+
+  rpc Urc721GetSymbol (AddressMessage) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721symbol"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721symbol"
+      }
+    };
+  };
+
+  rpc Urc721GetTotalSupply (AddressMessage) returns (NumberMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721totalsupply"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721totalsupply"
+      }
+    };
+  };
+
+  rpc Urc721GetTokenUri (Urc721TokenQuery) returns (StringMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721tokenuri"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721tokenuri"
+      }
+    };
+  };
+
+  rpc Urc721GetOwnerOf (Urc721TokenQuery) returns (AddressMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721ownerof"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721ownerof"
+      }
+    };
+  };
+
+  rpc Urc721GetApproved (Urc721TokenQuery) returns (AddressMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721getapproved"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721getapproved"
+      }
+    };
+  };
+
+  rpc Urc721IsApprovedForAll (Urc721IsApprovedForAllQuery) returns (BoolMessage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/urc721isapprovedforall"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/urc721isapprovedforall"
+      }
+    };
+  };
+
+  //POSBridge
+  rpc GetPosBridgeConfig (EmptyMessage) returns (PosBridgeConfig) {
+    option (google.api.http) = {
+      post: "/walletsolidity/getposbridgeconfig"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/getposbridgeconfig"
+      }
+    };
+  }
+
+  rpc GetPosBridgeTokenMap (EmptyMessage) returns (PosBridgeTokenMappingPage) {
+    option (google.api.http) = {
+      post: "/walletsolidity/getposbridgetokenmap"
+      body: "*"
+      additional_bindings {
+        get: "/walletsolidity/getposbridgetokenmap"
+      }
+    };
+  }
 
   rpc GetAccount (Account) returns (Account) {
     option (google.api.http) = {
@@ -1351,6 +1868,11 @@ message NumberMessage {
 message BytesMessage {
   bytes value = 1;
 }
+
+message StringMessage {
+  string value = 1;
+}
+
 message TimeMessage {
   int64 beginInMilliseconds = 1;
   int64 endInMilliseconds = 2;

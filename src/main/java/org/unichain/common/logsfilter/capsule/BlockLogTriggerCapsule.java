@@ -18,9 +18,7 @@ public class BlockLogTriggerCapsule extends TriggerCapsule {
     blockLogTrigger.setTimeStamp(block.getTimeStamp());
     blockLogTrigger.setBlockNumber(block.getNum());
     blockLogTrigger.setTransactionSize(block.getTransactions().size());
-    block.getTransactions().forEach(unw ->
-        blockLogTrigger.getTransactionList().add(unw.getTransactionId().toString())
-    );
+    block.getTransactions().forEach(unw -> blockLogTrigger.getTransactionList().add(unw.getTransactionId().toString()));
   }
 
   public void setLatestSolidifiedBlockNumber(long latestSolidifiedBlockNumber) {

@@ -23,12 +23,10 @@ import org.unichain.common.application.Service;
 import org.unichain.common.crypto.ECKey;
 import org.unichain.common.overlay.discover.node.NodeHandler;
 import org.unichain.common.overlay.discover.node.NodeManager;
-import org.unichain.common.utils.ByteArray;
-import org.unichain.common.utils.Sha256Hash;
-import org.unichain.common.utils.StringUtil;
-import org.unichain.common.utils.Utils;
+import org.unichain.common.utils.*;
 import org.unichain.core.Wallet;
 import org.unichain.core.WalletSolidity;
+import org.unichain.core.actuator.urc20.ext.Urc20;
 import org.unichain.core.capsule.AccountCapsule;
 import org.unichain.core.capsule.BlockCapsule;
 import org.unichain.core.capsule.TransactionCapsule;
@@ -39,7 +37,7 @@ import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.exception.NonUniqueObjectException;
 import org.unichain.core.exception.StoreException;
 import org.unichain.core.exception.VMIllegalException;
-import org.unichain.core.services.internal.NftService;
+import org.unichain.core.actuator.urc721.ext.Urc721;
 import org.unichain.protos.Contract;
 import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol;
@@ -73,16 +71,18 @@ public class RpcApiService implements Service {
   private WalletSolidity walletSolidity;
   @Autowired
   private Wallet wallet;
-
-  @Autowired
-  private NftService nftService;
-
   @Autowired
   private NodeInfoService nodeInfoService;
-
   @Getter
   private DatabaseApi databaseApi = new DatabaseApi();
+
   private WalletApi walletApi = new WalletApi();
+
+  @Autowired
+  private Urc721 urc721;
+  @Autowired
+  private Urc20 urc20;
+
   @Getter
   private WalletSolidityApi walletSolidityApi = new WalletSolidityApi();
 
@@ -296,57 +296,151 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
-      NftTokenApproveResult reply = nftService.getListApproval(request);
+    public void urc721ListContract(Urc721ContractQuery request, io.grpc.stub.StreamObserver<Urc721ContractPage> responseObserver) {
+      Urc721ContractPage reply = urc721.listContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
-      NftTokenApproveAllResult reply = nftService.getApprovalForAll(request);
+    public void urc721ListToken(Urc721TokenListQuery request, io.grpc.stub.StreamObserver<Urc721TokenPage> responseObserver) {
+      Urc721TokenPage reply = urc721.listToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftTemplate(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
-      NftTemplateQueryResult reply = nftService.listContract(request);
+    public void urc721GetContract(AddressMessage request, io.grpc.stub.StreamObserver<Urc721Contract> responseObserver) {
+      Urc721Contract reply = urc721.getContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
-      NftTokenQueryResult reply = nftService.listToken(request);
+    public void urc721GetToken(Urc721TokenQuery request, io.grpc.stub.StreamObserver<Urc721Token> responseObserver) {
+      var reply = urc721.getToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftTemplate(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
-      NftTemplate reply = nftService.getContract(request);
+    public void urc721IsApprovedForAll(Urc721IsApprovedForAllQuery request, io.grpc.stub.StreamObserver<BoolMessage> responseObserver) {
+      var reply = urc721.isApprovedForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
-      var reply = nftService.getToken(request);
+    public void urc721GetBalanceOf(Urc721BalanceOfQuery request, io.grpc.stub.StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
+      var reply = urc721.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftBalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
-      NftBalanceOf reply = nftService.balanceOf(request);
+    public void urc721GetName(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721.name(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
-      IsApprovedForAll reply = nftService.isApprovalForAll(request);
+    public void urc721GetSymbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721.symbol(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetTotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc721.totalSupply(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetTokenUri(Urc721TokenQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721.tokenUri(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetOwnerOf(Urc721TokenQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc721.ownerOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetApproved(Urc721TokenQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc721.getApproved(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    /**
+     * urc20
+     */
+    @Override
+    public void urc20FutureGet(Urc20FutureTokenQuery request, StreamObserver<Urc20FutureTokenPack> responseObserver) {
+      var reply = urc20.futureGet(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20ContractList(Urc20ContractQuery request, io.grpc.stub.StreamObserver<Urc20ContractPage> responseObserver) {
+      var reply = urc20.contractList(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Name(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.name(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Symbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.symbol(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Decimals(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.decimals(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20TotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.totalSupply(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20BalanceOf(Urc20BalanceOfQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.balanceOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20GetOwner(AddressMessage request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc20.getOwner(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Allowance(Urc20AllowanceQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.allowance(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -360,6 +454,23 @@ public class RpcApiService implements Service {
       } else {
         responseObserver.onNext(null);
       }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     * POSBridge
+     */
+    @Override
+    public void getPosBridgeConfig(EmptyMessage req, StreamObserver<PosBridgeConfig> responseObserver) {
+      var reply = wallet.getPosBridgeConfig();
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getPosBridgeTokenMap(EmptyMessage req, StreamObserver<PosBridgeTokenMappingPage> responseObserver) {
+      var reply = wallet.getPosBridgeTokenMap();
+      responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
@@ -738,57 +849,85 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void listNftTokenApprove(NftTokenApproveQuery request, io.grpc.stub.StreamObserver<NftTokenApproveResult> responseObserver) {
-      NftTokenApproveResult reply = nftService.getListApproval(request);
+    public void urc721ListContract(Urc721ContractQuery request, io.grpc.stub.StreamObserver<Urc721ContractPage> responseObserver) {
+      Urc721ContractPage reply = urc721.listContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftTokenApproveAll(NftTokenApproveAllQuery request, io.grpc.stub.StreamObserver<NftTokenApproveAllResult> responseObserver) {
-      NftTokenApproveAllResult reply = nftService.getApprovalForAll(request);
+    public void urc721ListToken(Urc721TokenListQuery request, io.grpc.stub.StreamObserver<Urc721TokenPage> responseObserver) {
+      Urc721TokenPage reply = urc721.listToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftTemplate(NftTemplateQuery request, io.grpc.stub.StreamObserver<NftTemplateQueryResult> responseObserver) {
-      NftTemplateQueryResult reply = nftService.listContract(request);
+    public void urc721GetContract(AddressMessage request, io.grpc.stub.StreamObserver<Urc721Contract> responseObserver) {
+      Urc721Contract reply = urc721.getContract(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void listNftToken(NftTokenQuery request, io.grpc.stub.StreamObserver<NftTokenQueryResult> responseObserver) {
-      NftTokenQueryResult reply = nftService.listToken(request);
+    public void urc721GetToken(Urc721TokenQuery request, io.grpc.stub.StreamObserver<Urc721Token> responseObserver) {
+      Urc721Token reply = urc721.getToken(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftTemplate(NftTemplate request, io.grpc.stub.StreamObserver<NftTemplate> responseObserver) {
-      NftTemplate reply = nftService.getContract(request);
+    public void urc721GetBalanceOf(Urc721BalanceOfQuery request, io.grpc.stub.StreamObserver<GrpcAPI.NumberMessage> responseObserver) {
+      var reply = urc721.balanceOf(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftToken(NftTokenGet request, io.grpc.stub.StreamObserver<NftTokenGetResult> responseObserver) {
-      NftTokenGetResult reply = nftService.getToken(request);
+    public void urc721GetName(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721.name(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftBalanceOf(NftBalanceOf request, io.grpc.stub.StreamObserver<NftBalanceOf> responseObserver) {
-      NftBalanceOf reply = nftService.balanceOf(request);
+    public void urc721GetSymbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721.symbol(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
     @Override
-    public void getNftApprovedForAll(IsApprovedForAll request, io.grpc.stub.StreamObserver<IsApprovedForAll> responseObserver) {
-      IsApprovedForAll reply = nftService.isApprovalForAll(request);
+    public void urc721GetTotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc721.totalSupply(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetTokenUri(Urc721TokenQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc721.tokenUri(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetOwnerOf(Urc721TokenQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc721.ownerOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetApproved(Urc721TokenQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc721.getApproved(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721IsApprovedForAll(Urc721IsApprovedForAllQuery request, io.grpc.stub.StreamObserver<BoolMessage> responseObserver) {
+      var reply = urc721.isApprovedForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -802,6 +941,84 @@ public class RpcApiService implements Service {
       } else {
         responseObserver.onNext(null);
       }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20FutureGet(Urc20FutureTokenQuery request, StreamObserver<Urc20FutureTokenPack> responseObserver) {
+      var reply = urc20.futureGet(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20ContractList(Urc20ContractQuery request, io.grpc.stub.StreamObserver<Urc20ContractPage> responseObserver) {
+      var reply = urc20.contractList(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Name(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.name(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Symbol(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.symbol(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Decimals(AddressMessage request, io.grpc.stub.StreamObserver<NumberMessage> responseObserver) {
+      var reply = urc20.decimals(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20TotalSupply(AddressMessage request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.totalSupply(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20BalanceOf(Urc20BalanceOfQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.balanceOf(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20GetOwner(AddressMessage request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc20.getOwner(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Allowance(Urc20AllowanceQuery request, io.grpc.stub.StreamObserver<StringMessage> responseObserver) {
+      var reply = urc20.allowance(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    //POSBridge
+    @Override
+    public void getPosBridgeConfig(EmptyMessage req, StreamObserver<PosBridgeConfig> responseObserver) {
+      var reply = wallet.getPosBridgeConfig();
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getPosBridgeTokenMap(EmptyMessage req, StreamObserver<PosBridgeTokenMappingPage> responseObserver) {
+      var reply = wallet.getPosBridgeTokenMap();
+      responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
 
@@ -1289,9 +1506,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void createNftTemplate(Contract.CreateNftTemplateContract request, StreamObserver<Transaction> responseObserver) {
+    public void createUrc721Contract(Contract.Urc721CreateContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.CreateNftTemplateContract).getInstance());
+        responseObserver.onNext(urc721.createContract(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1302,9 +1519,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void mintNftToken(Contract.MintNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721Mint(Contract.Urc721MintContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.MintNftTokenContract).getInstance());
+        responseObserver.onNext(urc721.mint(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1315,9 +1532,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void removeNftMinter(Contract.RemoveNftMinterContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721RemoveMinter(Contract.Urc721RemoveMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.RemoveNftMinterContract).getInstance());
+        responseObserver.onNext(urc721.removeMinter(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1328,9 +1545,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void addNftMinter(Contract.AddNftMinterContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721AddMinter(Contract.Urc721AddMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.AddNftMinterContract).getInstance());
+        responseObserver.onNext(urc721.addMinter(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1341,9 +1558,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void renounceNftMinter(Contract.RenounceNftMinterContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721RenounceMinter(Contract.Urc721RenounceMinterContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.RenounceNftMinterContract).getInstance());
+        responseObserver.onNext(urc721.renounceMinter(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1354,9 +1571,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void burnNftToken(Contract.BurnNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721Burn(Contract.Urc721BurnContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.BurnNftTokenContract).getInstance());
+        responseObserver.onNext(urc721.burn(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1367,9 +1584,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void approveNftToken(Contract.ApproveNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721Approve(Contract.Urc721ApproveContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.ApproveNftTokenContract).getInstance());
+        responseObserver.onNext(urc721.approve(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1380,9 +1597,9 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void approveForAllNftToken(Contract.ApproveForAllNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721SetApprovalForAll(Contract.Urc721SetApprovalForAllContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.ApproveForAllNftTokenContract).getInstance());
+        responseObserver.onNext(urc721.setApprovalForAll(request));
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1393,9 +1610,95 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void transferNftToken(Contract.TransferNftTokenContract request, StreamObserver<Transaction> responseObserver) {
+    public void urc721TransferFrom(Contract.Urc721TransferFromContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver.onNext(createTransactionCapsule(request, ContractType.TransferNftTokenContract).getInstance());
+        responseObserver.onNext(urc721.transferFrom(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     * POSBridge
+     */
+    @Override
+    public void posBridgeSetup(Contract.PosBridgeSetupContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeSetupContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeMapToken(Contract.PosBridgeMapTokenContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeMapTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeCleanMapToken(Contract.PosBridgeCleanMapTokenContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeCleanMapTokenContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeDeposit(Contract.PosBridgeDepositContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeDepositContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeDepositExec(Contract.PosBridgeDepositExecContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeDepositExecContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeWithdraw(Contract.PosBridgeWithdrawContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeWithdrawContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+    /**
+     */
+    @Override
+    public void posBridgeWithdrawExec(Contract.PosBridgeWithdrawExecContract request, StreamObserver<Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.PosBridgeWithdrawExecContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
         logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
@@ -1408,6 +1711,10 @@ public class RpcApiService implements Service {
     @Override
     public void createToken(Contract.CreateTokenContract request, StreamObserver<Transaction> responseObserver) {
       try {
+        //generate token address
+        request = request.toBuilder()
+                .setAddress(ByteString.copyFrom(AddressUtil.generateRandomAddress()))
+                .build();
         responseObserver.onNext(createTransactionCapsule(request, ContractType.CreateTokenContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver.onNext(null);
@@ -1499,8 +1806,7 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
-    public void transferToken(Contract.TransferTokenContract request,
-                              StreamObserver<Protocol.Transaction> responseObserver) {
+    public void transferToken(Contract.TransferTokenContract request, StreamObserver<Protocol.Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.TransferTokenContract).getInstance());
       } catch (ContractValidateException e) {
@@ -1539,6 +1845,19 @@ public class RpcApiService implements Service {
     /**
      */
     @Override
+    public void createFutureDealTransferTransaction(Contract.FutureDealTransferContract request, io.grpc.stub.StreamObserver<org.unichain.protos.Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(createTransactionCapsule(request, ContractType.FutureDealTransferContract).getInstance());
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    /**
+     */
+    @Override
     public void withdrawFutureTransaction(org.unichain.protos.Contract.FutureWithdrawContract request, io.grpc.stub.StreamObserver<org.unichain.protos.Protocol.Transaction> responseObserver) {
       try {
         responseObserver.onNext(createTransactionCapsule(request, ContractType.FutureWithdrawContract).getInstance());
@@ -1549,73 +1868,169 @@ public class RpcApiService implements Service {
       responseObserver.onCompleted();
     }
 
+    /**
+     * Urc20
+     */
     @Override
-    public void withdrawBalance2(Contract.WithdrawBalanceContract request,
-        StreamObserver<TransactionExtention> responseObserver) {
+    public void urc20ContractCreate(Contract.Urc20CreateContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(urc20.createContract(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20ContributePoolFee(Contract.Urc20ContributePoolFeeContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(urc20.contributePoolFee(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20UpdateParams(Contract.Urc20UpdateParamsContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(urc20.updateParams(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Mint(Contract.Urc20MintContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(urc20.mint(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Burn(Contract.Urc20BurnContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(urc20.burn(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20WithdrawFuture(Contract.Urc20WithdrawFutureContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(urc20.withdrawFuture(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20TransferOwner(Contract.Urc20TransferOwnerContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(urc20.transferOwner(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Exchange(Contract.Urc20ExchangeContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(urc20.exchange(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Approve(Contract.Urc20ApproveContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(urc20.approve(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20TransferFrom(Contract.Urc20TransferFromContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(urc20.transferFrom(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc20Transfer(Contract.Urc20TransferContract request, StreamObserver<Protocol.Transaction> responseObserver) {
+      try {
+        responseObserver.onNext(urc20.transfer(request));
+      } catch (ContractValidateException e) {
+        responseObserver.onNext(null);
+        logger.debug(CONTRACT_VALIDATE_EXCEPTION, e.getMessage());
+      }
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void withdrawBalance2(Contract.WithdrawBalanceContract request, StreamObserver<TransactionExtention> responseObserver) {
       createTransactionExtention(request, ContractType.WithdrawBalanceContract, responseObserver);
     }
 
     @Override
-    public void proposalCreate(Contract.ProposalCreateContract request,
-        StreamObserver<TransactionExtention> responseObserver) {
+    public void proposalCreate(Contract.ProposalCreateContract request, StreamObserver<TransactionExtention> responseObserver) {
       createTransactionExtention(request, ContractType.ProposalCreateContract, responseObserver);
     }
 
 
     @Override
-    public void proposalApprove(Contract.ProposalApproveContract request,
-        StreamObserver<TransactionExtention> responseObserver) {
+    public void proposalApprove(Contract.ProposalApproveContract request, StreamObserver<TransactionExtention> responseObserver) {
       createTransactionExtention(request, ContractType.ProposalApproveContract, responseObserver);
     }
 
     @Override
-    public void proposalDelete(Contract.ProposalDeleteContract request,
-        StreamObserver<TransactionExtention> responseObserver) {
+    public void proposalDelete(Contract.ProposalDeleteContract request, StreamObserver<TransactionExtention> responseObserver) {
       createTransactionExtention(request, ContractType.ProposalDeleteContract, responseObserver);
     }
 
-//    @Override
-//    public void buyStorage(Contract.BuyStorageContract request,
-//        StreamObserver<TransactionExtention> responseObserver) {
-//      createTransactionExtention(request, ContractType.BuyStorageContract, responseObserver);
-//    }
-//
-//    @Override
-//    public void buyStorageBytes(Contract.BuyStorageBytesContract request,
-//        StreamObserver<TransactionExtention> responseObserver) {
-//      createTransactionExtention(request, ContractType.BuyStorageBytesContract, responseObserver);
-//    }
-//
-//    @Override
-//    public void sellStorage(Contract.SellStorageContract request,
-//        StreamObserver<TransactionExtention> responseObserver) {
-//      createTransactionExtention(request, ContractType.SellStorageContract, responseObserver);
-//    }
-
     @Override
-    public void exchangeCreate(Contract.ExchangeCreateContract request,
-        StreamObserver<TransactionExtention> responseObserver) {
+    public void exchangeCreate(Contract.ExchangeCreateContract request, StreamObserver<TransactionExtention> responseObserver) {
       createTransactionExtention(request, ContractType.ExchangeCreateContract, responseObserver);
     }
 
-
     @Override
-    public void exchangeInject(Contract.ExchangeInjectContract request,
-        StreamObserver<TransactionExtention> responseObserver) {
+    public void exchangeInject(Contract.ExchangeInjectContract request, StreamObserver<TransactionExtention> responseObserver) {
       createTransactionExtention(request, ContractType.ExchangeInjectContract, responseObserver);
     }
 
     @Override
-    public void exchangeWithdraw(Contract.ExchangeWithdrawContract request,
-        StreamObserver<TransactionExtention> responseObserver) {
+    public void exchangeWithdraw(Contract.ExchangeWithdrawContract request, StreamObserver<TransactionExtention> responseObserver) {
       createTransactionExtention(request, ContractType.ExchangeWithdrawContract, responseObserver);
     }
 
     @Override
-    public void exchangeTransaction(Contract.ExchangeTransactionContract request,
-        StreamObserver<TransactionExtention> responseObserver) {
-      createTransactionExtention(request, ContractType.ExchangeTransactionContract,
-          responseObserver);
+    public void exchangeTransaction(Contract.ExchangeTransactionContract request, StreamObserver<TransactionExtention> responseObserver) {
+      createTransactionExtention(request, ContractType.ExchangeTransactionContract, responseObserver);
     }
 
     @Override
@@ -1625,8 +2040,7 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void getNowBlock2(EmptyMessage request,
-        StreamObserver<BlockExtention> responseObserver) {
+    public void getNowBlock2(EmptyMessage request, StreamObserver<BlockExtention> responseObserver) {
       Block block = wallet.getNowBlock();
       responseObserver.onNext(block2Extention(block));
       responseObserver.onCompleted();
@@ -1639,8 +2053,7 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void getBlockByNum2(NumberMessage request,
-        StreamObserver<BlockExtention> responseObserver) {
+    public void getBlockByNum2(NumberMessage request, StreamObserver<BlockExtention> responseObserver) {
       Block block = wallet.getBlockByNum(request.getNum());
       responseObserver.onNext(block2Extention(block));
       responseObserver.onCompleted();
@@ -1686,12 +2099,9 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void transferAsset(TransferAssetContract request,
-        StreamObserver<Transaction> responseObserver) {
+    public void transferAsset(TransferAssetContract request, StreamObserver<Transaction> responseObserver) {
       try {
-        responseObserver
-            .onNext(createTransactionCapsule(request, ContractType.TransferAssetContract)
-                .getInstance());
+          responseObserver.onNext(createTransactionCapsule(request, ContractType.TransferAssetContract).getInstance());
       } catch (ContractValidateException e) {
         responseObserver
             .onNext(null);
@@ -1701,14 +2111,12 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void transferAsset2(TransferAssetContract request,
-        StreamObserver<TransactionExtention> responseObserver) {
+    public void transferAsset2(TransferAssetContract request, StreamObserver<TransactionExtention> responseObserver) {
       createTransactionExtention(request, ContractType.TransferAssetContract, responseObserver);
     }
 
     @Override
-    public void participateAssetIssue(ParticipateAssetIssueContract request,
-        StreamObserver<Transaction> responseObserver) {
+    public void participateAssetIssue(ParticipateAssetIssueContract request, StreamObserver<Transaction> responseObserver) {
       try {
         responseObserver
             .onNext(createTransactionCapsule(request, ContractType.ParticipateAssetIssueContract)
@@ -1722,15 +2130,13 @@ public class RpcApiService implements Service {
     }
 
     @Override
-    public void participateAssetIssue2(ParticipateAssetIssueContract request,
-        StreamObserver<TransactionExtention> responseObserver) {
+    public void participateAssetIssue2(ParticipateAssetIssueContract request, StreamObserver<TransactionExtention> responseObserver) {
       createTransactionExtention(request, ContractType.ParticipateAssetIssueContract,
           responseObserver);
     }
 
     @Override
-    public void getAssetIssueByAccount(Account request,
-        StreamObserver<AssetIssueList> responseObserver) {
+    public void getAssetIssueByAccount(Account request, StreamObserver<AssetIssueList> responseObserver) {
       ByteString fromBs = request.getAddress();
 
       if (fromBs != null) {

@@ -1,15 +1,13 @@
 package org.unichain.core.witness;
 
-import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.unichain.core.capsule.ProposalCapsule;
 import org.unichain.core.db.Manager;
 import org.unichain.core.services.ProposalService;
 import org.unichain.protos.Protocol.Proposal.State;
-
-import java.util.List;
 
 @Slf4j(topic = "witness")
 public class ProposalController {
@@ -46,7 +44,6 @@ public class ProposalController {
 
       if (proposalCapsule.hasProcessed()) {
         logger.info("Proposal has processed，id:[{}],skip it and before it", proposalCapsule.getID());
-        //proposals with number less than this one, have been processed before
         break;
       }
 
@@ -69,21 +66,17 @@ public class ProposalController {
     logger.info("Processing proposals done, oldest proposal[{}]", proposalNum);
   }
 
-  public void processProposal(ProposalCapsule proposalCapsule) {
-    List<ByteString> activeWitnesses = this.manager.getWitnessScheduleStore().getActiveWitnesses();
-    if (proposalCapsule.hasMostApprovals(activeWitnesses)) {
-      logger.info("Processing proposal,id:{}, it has received most approvals, begin to set dynamic parameter:{}, and set proposal state as APPROVED", proposalCapsule.getID(), proposalCapsule.getParameters());
-      setDynamicParameters(proposalCapsule);
-      proposalCapsule.setState(State.APPROVED);
-      manager.getProposalStore().put(proposalCapsule.createDbKey(), proposalCapsule);
+  public void processProposal(ProposalCapsule proposal) {
+    var activeWitnesses = this.manager.getWitnessScheduleStore().getActiveWitnesses();
+    if(proposal.hasMostApprovals(activeWitnesses)) {
+      logger.info("Processing proposal,id:{}, it has received most approvals, begin to set dynamic parameter:{}, and set proposal state as APPROVED", proposal.getID(), proposal.getParameters());
+      ProposalService.process(manager, proposal);
+      proposal.setState(State.APPROVED);
+      manager.getProposalStore().put(proposal.createDbKey(), proposal);
     } else {
-      logger.info("Processing proposal,id:{}, it has not received enough approvals, set proposal state as DISAPPROVED", proposalCapsule.getID());
-      proposalCapsule.setState(State.DISAPPROVED);
-      manager.getProposalStore().put(proposalCapsule.createDbKey(), proposalCapsule);
+      logger.info("Processing proposal,id:{}, it has not received enough approvals, set proposal state as DISAPPROVED", proposal.getID());
+      proposal.setState(State.DISAPPROVED);
+      manager.getProposalStore().put(proposal.createDbKey(), proposal);
     }
-  }
-
-  public void setDynamicParameters(ProposalCapsule proposalCapsule) {
-    ProposalService.process(manager, proposalCapsule);
   }
 }

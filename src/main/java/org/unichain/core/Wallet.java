@@ -55,6 +55,7 @@ import org.unichain.core.actuator.Actuator;
 import org.unichain.core.actuator.ActuatorFactory;
 import org.unichain.core.capsule.*;
 import org.unichain.core.capsule.BlockCapsule.BlockId;
+import org.unichain.core.capsule.urc30.Urc30FutureTokenCapsule;
 import org.unichain.core.config.Parameter.ChainConstant;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.db.*;
@@ -62,7 +63,6 @@ import org.unichain.core.exception.*;
 import org.unichain.core.net.UnichainNetDelegate;
 import org.unichain.core.net.UnichainNetService;
 import org.unichain.core.net.message.TransactionMessage;
-import org.unichain.core.services.http.utils.Util;
 import org.unichain.protos.Contract.*;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.*;
@@ -72,9 +72,11 @@ import org.unichain.protos.Protocol.SmartContract.ABI.Entry.StateMutabilityType;
 import org.unichain.protos.Protocol.Transaction.Contract;
 import org.unichain.protos.Protocol.Transaction.Contract.ContractType;
 import org.unichain.protos.Protocol.Transaction.Result.code;
+import org.web3j.utils.Numeric;
 
 import java.security.SignatureException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.unichain.core.config.Parameter.DatabaseConstants.EXCHANGE_COUNT_LIMIT_MAX;
 import static org.unichain.core.config.Parameter.DatabaseConstants.PROPOSAL_COUNT_LIMIT_MAX;
@@ -85,6 +87,8 @@ import static org.unichain.core.services.http.utils.Util.*;
 public class Wallet {
   private static String addressPreFixString = Constant.ADD_PRE_FIX_STRING_MAINNET;
   private static byte addressPreFixByte = Constant.ADD_PRE_FIX_BYTE_MAINNET;
+
+  private static Set<Long> posBridgeSupportedChainIds;
   private final int minEffectiveConnection = Args.getInstance().getMinEffectiveConnection();
 
   @Getter
@@ -98,16 +102,10 @@ public class Wallet {
   @Autowired
   private NodeManager nodeManager;
 
-  /**
-   * Creates a new Wallet with a random ECKey.
-   */
   public Wallet() {
     this.ecKey = new ECKey(Utils.getRandom());
   }
 
-  /**
-   * Creates a Wallet with an existing ECKey.
-   */
   public Wallet(final ECKey ecKey) {
     this.ecKey = ecKey;
     logger.info("wallet address: {}", ByteArray.toHexString(this.ecKey.getAddress()));
@@ -137,6 +135,14 @@ public class Wallet {
     return addressPreFixString;
   }
 
+  public static long getChainId() {
+    return addressPreFixByte;
+  }
+
+  public static Set<Long> getSupportedPosChainIds() {
+    return posBridgeSupportedChainIds;
+  }
+
   public static void setAddressPreFixString(String addressPreFixString) {
     Wallet.addressPreFixString = addressPreFixString;
   }
@@ -147,6 +153,14 @@ public class Wallet {
 
   public static void setAddressPreFixByte(byte addressPreFixByte) {
     Wallet.addressPreFixByte = addressPreFixByte;
+  }
+
+  public static void setPosBridgeSupportedChainIds(Set<Long> chainIds) {
+    Wallet.posBridgeSupportedChainIds = chainIds;
+  }
+
+  public static boolean addressValid(String address){
+    return addressValid(Numeric.hexStringToByteArray(address));
   }
 
   public static boolean addressValid(byte[] address) {
@@ -162,7 +176,6 @@ public class Wallet {
       logger.warn("Warning: Address need prefix with " + addressPreFixByte + " but " + address[0] + " !!");
       return false;
     }
-    //Other rule;
     return true;
   }
   
@@ -176,7 +189,6 @@ public class Wallet {
     System.arraycopy(input, 0, inputCheck, 0, input.length);
     System.arraycopy(hash1, 0, inputCheck, input.length, extendInput);
     inputCheck[0] = 68;
-    //System.out.println(Arrays.toString(inputCheck));
     return Base58.encode(inputCheck);
   }
 
@@ -199,7 +211,6 @@ public class Wallet {
   }
 
   public static byte[] generateContractAddress(Transaction unx) {
-
     CreateSmartContract contract = ContractCapsule.getSmartContractFromTransaction(unx);
     byte[] ownerAddress = contract.getOwnerAddress().toByteArray();
     TransactionCapsule unxCap = new TransactionCapsule(unx);
@@ -208,28 +219,21 @@ public class Wallet {
     byte[] combined = new byte[txRawDataHash.length + ownerAddress.length];
     System.arraycopy(txRawDataHash, 0, combined, 0, txRawDataHash.length);
     System.arraycopy(ownerAddress, 0, combined, txRawDataHash.length, ownerAddress.length);
-
     return Hash.sha3omit12(combined);
-
   }
 
   public static byte[] generateContractAddress(byte[] ownerAddress, byte[] txRawDataHash) {
-
     byte[] combined = new byte[txRawDataHash.length + ownerAddress.length];
     System.arraycopy(txRawDataHash, 0, combined, 0, txRawDataHash.length);
     System.arraycopy(ownerAddress, 0, combined, txRawDataHash.length, ownerAddress.length);
-
     return Hash.sha3omit12(combined);
-
   }
 
-  // for `CREATE2`
   public static byte[] generateContractAddress2(byte[] address, byte[] salt, byte[] code) {
     byte[] mergedData = ByteUtil.merge(address, salt, Hash.sha3(code));
     return Hash.sha3omit12(mergedData);
   }
 
-  // for `CREATE`
   public static byte[] generateContractAddress(byte[] transactionRootId, long nonce) {
     byte[] nonceBytes = Longs.toByteArray(nonce);
     byte[] combined = new byte[transactionRootId.length + nonceBytes.length];
@@ -280,209 +284,6 @@ public class Wallet {
     return dbManager.getTokenPoolStore().query(query);
   }
 
-//  public NftTokenApproveResult listNftTokenApprove(NftTokenApproveQuery query) {
-//    Assert.notNull(query.getOwnerAddress(), "Owner address null");
-//
-//    int pageSize = query.hasField(NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
-//    int pageIndex = query.hasField(NFT_TOKEN_APPROVE_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
-//    Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
-//
-//    var ownerAddr = query.getOwnerAddress().toByteArray();
-//    var nftTokenStore = dbManager.getNftTokenStore();
-//    var approveStore = dbManager.getNftTokenApproveRelationStore();
-//    var relationStore = dbManager.getNftAccountTokenStore();
-//
-//    List<NftToken> unsorted = new ArrayList<>();
-//
-//    if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0){
-//      var relationCapsule = approveStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
-//      while (true){
-//        unsorted.add(nftTokenStore.get(relationCapsule.getKey()).getInstance());
-//        if(relationCapsule.hasNext()) {
-//          relationCapsule = approveStore.get(relationCapsule.getNext());
-//          continue;
-//        } else {
-//          break;
-//        }
-//      }
-//    } else {
-//      unsorted.add(NftToken.newBuilder().build());
-//    }
-//
-//    return NftTokenApproveResult.newBuilder()
-//            .setPageIndex(pageIndex)
-//            .setPageSize(pageSize)
-//            .setTotal(unsorted.size())
-//            .addAllTokens(Utils.paging(unsorted, pageIndex, pageSize))
-//            .build();
-//  }
-//
-//  public NftTokenApproveAllResult listNftTokenApproveAll(NftTokenApproveAllQuery query) {
-//    Assert.notNull(query.getOwnerAddress(), "Owner address null");
-//
-//    var relationStore = dbManager.getNftAccountTokenStore();
-//    var relation = relationStore.get(query.getOwnerAddress().toByteArray());
-//
-//    if (relation.getApproveAllMap() == null)
-//      return NftTokenApproveAllResult.newBuilder().setOwnerAddress(query.getOwnerAddress()).build();
-//
-//    List<NftAccountTokenRelation> approveList = new ArrayList<>();
-//
-//    relation.getApproveAllMap().forEach((owner, isApproveAll) -> {
-//      logger.info("---------------> Found owner approve all: {} - {}", owner, isApproveAll);
-//      if (isApproveAll) {
-//        var ownerRelationCap = relationStore.get(ByteString.copyFrom(ByteArray.fromHexString(owner)).toByteArray());
-//        if (ownerRelationCap != null) {
-//          var nftOwnerRelation = NftAccountTokenRelation.newBuilder()
-//                  .setOwnerAddress(ownerRelationCap.getInstance().getOwnerAddress())
-//                  .setTotal(ownerRelationCap.getInstance().getTotal())
-//                  .build();
-//          approveList.add(nftOwnerRelation);
-//        }
-//      }
-//    });
-//
-//    return NftTokenApproveAllResult.newBuilder()
-//            .setOwnerAddress(query.getOwnerAddress())
-//            .addAllApproveList(approveList)
-//            .build();
-//  }
-//
-//  public NftTemplateQueryResult listNftTemplate(NftTemplateQuery query) {
-//    Assert.notNull(query.getOwnerAddress(), "Owner address null");
-//
-//    int pageSize = query.hasField(NFT_TEMPLATE_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
-//    int pageIndex = query.hasField(NFT_TEMPLATE_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
-//    Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
-//
-//    var ownerAddr = query.getOwnerAddress().toByteArray();
-//    List<NftTemplate> unsorted = new ArrayList<>();
-//    var relationStore = dbManager.getNftAccountTemplateStore();
-//    var templateStore = dbManager.getNftTemplateStore();
-//
-//    if ("OWNER".equals(query.getOwnerType()) && relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0) {
-//      var start = templateStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
-//      while (true) {
-//        unsorted.add(start.getInstance());
-//        if (start.hasNext()) {
-//          start = templateStore.get(start.getNext());
-//        } else {
-//          break;
-//        }
-//      }
-//    }
-//    var minterRelationStore = dbManager.getNftMinterContractStore();
-//    if("MINTER".equals(query.getOwnerType()) && minterRelationStore.has(ownerAddr) && minterRelationStore.get(ownerAddr).getTotal() > 0){
-//      var relation = minterRelationStore.get(ownerAddr);
-//      var start = templateStore.get(relation.getHead().toByteArray());
-//      while (true){
-//        unsorted.add(start.getInstance());
-//        if(start.hasNextOfMinter()){
-//          start = templateStore.get(start.getNextOfMinter());
-//        }else {
-//          break;
-//        }
-//      }
-//    }
-//
-//    return  NftTemplateQueryResult.newBuilder()
-//            .setPageIndex(pageIndex)
-//            .setPageSize(pageSize)
-//            .setTotal(unsorted.size())
-//            .addAllTemplates(Utils.paging(unsorted, pageIndex, pageSize))
-//            .build();
-//  }
-//
-//  public NftTokenQueryResult listNftToken(NftTokenQuery query) {
-//    Assert.notNull(query.getOwnerAddress(), "Owner address null");
-//
-//    int pageSize = query.hasField(NFT_TOKEN_QUERY_FIELD_PAGE_SIZE) ? query.getPageSize() : DEFAULT_PAGE_SIZE;
-//    int pageIndex = query.hasField(NFT_TOKEN_QUERY_FIELD_PAGE_INDEX) ? query.getPageIndex() : DEFAULT_PAGE_INDEX;
-//    Assert.isTrue(pageSize > 0 && pageIndex >= 0 && pageSize <= MAX_PAGE_SIZE, "Invalid paging info");
-//
-//    var ownerAddr = query.getOwnerAddress().toByteArray();
-//    var contract = query.getContract();
-//    var filtercontract = query.hasField(NFT_TOKEN_QUERY_FIELD_CONTRACT);
-//    List<NftToken> unsorted = new ArrayList<>();
-//    var relationStore = dbManager.getNftAccountTokenStore();
-//    var tokenStore = dbManager.getNftTokenStore();
-//
-//    if(relationStore.has(ownerAddr) && relationStore.get(ownerAddr).getTotal() > 0){
-//      var start = tokenStore.get(relationStore.get(ownerAddr).getHead().toByteArray());
-//      while (true){
-//        if(!filtercontract || (filtercontract && start.getContract().equalsIgnoreCase(contract)))
-//           unsorted.add(start.getInstance());
-//
-//         if(start.hasNext())
-//         {
-//           start = tokenStore.get(start.getNext());
-//           continue;
-//         }
-//         else {
-//           break;
-//         }
-//      }
-//    }
-//
-//    return  NftTokenQueryResult.newBuilder()
-//            .setPageIndex(pageIndex)
-//            .setPageSize(pageSize)
-//            .setTotal(unsorted.size())
-//            .addAllTokens(Utils.paging(unsorted, pageIndex, pageSize))
-//            .build();
-//  }
-//
-//  public NftTemplate getNftTemplate(NftTemplate query) {
-//    Assert.notNull(query.getContract(), "Template contract empty");
-//    return dbManager.getNftTemplateStore().get(Util.stringAsBytesUppercase(query.getContract())).getInstance();
-//  }
-//
-//  public NftTokenGetResult getNftToken(NftTokenGet query) {
-//    Assert.notNull(query.getContract(), "Token contract empty");
-//    Assert.notNull(query.getId(), "Token id empty");
-//    var id = ArrayUtils.addAll(Util.stringAsBytesUppercase(query.getContract()), ByteArray.fromLong(query.getId()));
-//    var token = dbManager.getNftTokenStore().get(id).getInstance();
-//    return   NftTokenGetResult.newBuilder()
-//            .setId(token.getId())
-//            .setContract(query.getContract())
-//            .setUri(token.getUri())
-//            .setApproval(token.getApproval())
-//            .setLastOperation(token.getLastOperation())
-//            .setOwnerAddress(token.getOwnerAddress())
-//            .build();
-//  }
-//
-//  public NftBalanceOf getNftBalanceOf(NftBalanceOf query) {
-//    Assert.notNull(query.getOwnerAddress(), "Owner address null");
-//
-//    var nftAccountTokenStore = dbManager.getNftAccountTokenStore();
-//    var firstAccTokenRelation = nftAccountTokenStore.get(query.getOwnerAddress().toByteArray());
-//
-//    return NftBalanceOf.newBuilder()
-//            .setCount(firstAccTokenRelation.getTotal())
-//            .setOwnerAddress(query.getOwnerAddress())
-//            .build();
-//  }
-//
-//  public IsApprovedForAll getNftApprovedForAll(IsApprovedForAll query) {
-//    Assert.notNull(query.getOwnerAddress(), "Owner address null");
-//    Assert.notNull(query.getOperator(), "Operator null");
-//
-//    var relationStore = dbManager.getNftAccountTokenStore();
-//    var isApproved = false;
-//    if(relationStore.has(query.getOwnerAddress().toByteArray())){
-//      var relation = relationStore.get(query.getOwnerAddress().toByteArray());
-//      if(relation.hasApprovalForAll() && Arrays.equals(relation.getApprovedForAll(), query.getOperator().toByteArray()))
-//        isApproved = true;
-//    }
-//
-//    return IsApprovedForAll.newBuilder()
-//            .setOwnerAddress(query.getOwnerAddress())
-//            .setOperator(query.getOperator())
-//            .setIsApproved(isApproved)
-//            .build();
-//  }
-
   public Account getAccountById(Account account) {
     AccountStore accountStore = dbManager.getAccountStore();
     AccountIdIndexStore accountIdIndexStore = dbManager.getAccountIdIndexStore();
@@ -520,7 +321,7 @@ public class Wallet {
       return dbManager.getFutureTransferStore().getAll();
   }
 
-  public List<FutureTokenCapsule> listAllFutureTokenStore() {
+  public List<Urc30FutureTokenCapsule> listAllFutureTokenStore() {
     return dbManager.getFutureTokenStore().getAll();
   }
 
@@ -719,7 +520,7 @@ public class Wallet {
       }
       tswBuilder.setPermission(permission);
       if (unx.getSignatureCount() > 0) {
-        List<ByteString> approveList = new ArrayList<ByteString>();
+        List<ByteString> approveList = new ArrayList<>();
         long currentWeight = TransactionCapsule.checkWeight(permission, unx.getSignatureList(), Sha256Hash.hash(unx.getRawData().toByteArray()), approveList);
         tswBuilder.addAllApprovedList(approveList);
         tswBuilder.setCurrentWeight(currentWeight);
@@ -765,7 +566,7 @@ public class Wallet {
       }
 
       if (unx.getSignatureCount() > 0) {
-        List<ByteString> approveList = new ArrayList<ByteString>();
+        List<ByteString> approveList = new ArrayList<>();
         byte[] hash = Sha256Hash.hash(unx.getRawData().toByteArray());
         for (ByteString sig : unx.getSignatureList()) {
           if (sig.size() < 65) {
@@ -1071,13 +872,6 @@ public class Wallet {
         .setValue(dbManager.getDynamicPropertiesStore().getWitness55PayPerBlock())
         .build());
 
-    //    NFT_ISSUE_FEE, //drop ,40
-    builder.addChainParameter(
-            Protocol.ChainParameters.ChainParameter.newBuilder()
-                    .setKey("getNftIssueFee")
-                    .setValue(dbManager.getDynamicPropertiesStore().getNftIssueFee())
-                    .build());
-
     return builder.build();
   }
 
@@ -1347,6 +1141,40 @@ public class Wallet {
     }
     return null;
   }
+
+  public PosBridgeConfig getPosBridgeConfig() {
+    try {
+      return dbManager.getPosBridgeConfigStore().get().getInstance();
+    } catch (Exception e) {
+      logger.error("error while loading POSConfig -->", e);
+      return null;
+    }
+  }
+
+  public PosBridgeTokenMappingPage getPosBridgeTokenMap() {
+    try {
+      var allRoot= dbManager.getRootTokenMapStore().getAll()
+              .stream()
+              .map(PosBridgeRootTokenMapCapsule::getInstance)
+              .collect(Collectors.toSet());
+
+      var allChild= dbManager.getChildTokenMapStore().getAll()
+              .stream()
+              .map(PosBridgeChildTokenMapCapsule::getInstance)
+              .collect(Collectors.toSet());
+      return  PosBridgeTokenMappingPage.newBuilder()
+              .setTotal(allRoot.size() + allChild.size())
+              .setPageIndex(0)
+              .setPageSize(allRoot.size())
+              .addAllRootTokenMaps(allRoot)
+              .addAllChildTokenMaps(allChild)
+              .build();
+    } catch (Exception e) {
+      logger.error("error while loading POSTokenMaps -->", e);
+      return null;
+    }
+  }
+
 
   public TransactionInfo getTransactionInfoById(ByteString transactionId) {
     if (Objects.isNull(transactionId)) {
@@ -1720,7 +1548,6 @@ public class Wallet {
             .build();
   }
 
-
   public FuturePack getFuture(FutureQuery query) {
     //validate
     Assert.isTrue(query.hasField(FUTURE_QR_FIELD_OWNER_ADDR), "Missing owner address");
@@ -1777,7 +1604,11 @@ public class Wallet {
         var tmpTick = futureStore.get(tmpTickKeyBs.toByteArray());
         if(index >= start && index < end)
         {
-          deals.add(tmpTick.getInstance());
+          deals.add(tmpTick.getInstance()
+                  .toBuilder()
+                  .clearNextTick()
+                  .clearPrevTick()
+                  .build());
         }
         if(index >= end)
           break;
@@ -1796,7 +1627,6 @@ public class Wallet {
             .build();
   }
 
-  //@todo use right bandwidth processor with block version
   private BandwidthProcessor bandwidthProcessor(){
     return new BandwidthProcessor(dbManager);
   }

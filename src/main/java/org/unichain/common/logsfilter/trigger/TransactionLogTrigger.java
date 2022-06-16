@@ -48,7 +48,6 @@ public class TransactionLogTrigger extends Trigger {
   @Setter
   private long netFee;
 
-  //contract
   @Getter
   @Setter
   private String result;
@@ -73,7 +72,6 @@ public class TransactionLogTrigger extends Trigger {
   @Setter
   private String contractResult;
 
-  // transfer contract
   @Getter
   @Setter
   private String fromAddress;
@@ -94,10 +92,9 @@ public class TransactionLogTrigger extends Trigger {
   @Setter
   private long latestSolidifiedBlockNumber;
 
-  //internal transaction
   @Getter
   @Setter
-  private List<InternalTransactionPojo> internalTrananctionList;
+  private List<InternalTransactionPojo> internalTransactionList;
 
   public TransactionLogTrigger() {
     setTriggerName(Trigger.TRANSACTION_TRIGGER_NAME);

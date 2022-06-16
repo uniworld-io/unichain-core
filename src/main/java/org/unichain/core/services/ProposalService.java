@@ -1,7 +1,9 @@
 package org.unichain.core.services;
 
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.springframework.util.Assert;
+import org.unichain.core.actuator.ActuatorFactory;
 import org.unichain.core.capsule.ProposalCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -33,7 +35,6 @@ public class ProposalService {
     WITNESS_PAY_PER_BLOCK(5), //drop ,5
     WITNESS_STANDBY_ALLOWANCE(6), //drop ,6
     CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT(7), //drop ,7
-    //@todo review & remove
     CREATE_NEW_ACCOUNT_BANDWIDTH_RATE(8), // 1 ~ ,8
     ALLOW_CREATION_OF_CONTRACTS(9), // 0 / >0 ,9
     REMOVE_THE_POWER_OF_THE_GR(10),  // 1 ,10
@@ -43,10 +44,8 @@ public class ProposalService {
     ALLOW_UPDATE_ACCOUNT_NAME(14), // 1, 14
     ALLOW_SAME_TOKEN_NAME(15), // 1, 15
     ALLOW_DELEGATE_RESOURCE(16), // 0, 16
-    //@todo review and remove
     TOTAL_ENERGY_LIMIT(17), // 50,000,000,000, 17
     ALLOW_TVM_TRANSFER_UNC(18), // 1, 18
-    //@todo review and remove
     TOTAL_CURRENT_ENERGY_LIMIT(19), // 50,000,000,000, 19
     ALLOW_MULTI_SIGN(20), // 1, 20
     ALLOW_ADAPTIVE_ENERGY(21), // 1, 21
@@ -60,13 +59,12 @@ public class ProposalService {
     WITNESS_55_PAY_PER_BLOCK(31), //drop, 31
     ALLOW_TVM_SOLIDITY_059(32), // 1, 32
     ADAPTIVE_RESOURCE_LIMIT_TARGET_RATIO(33), // 10, 33
-    HARD_FORK(34), // block version 34
-    MAX_FUTURE_TRANSFER_TIME_RANGE_UNW(35), // max future transfer unw 35
-    MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN(36), // max future transfer token 36
-    TOKEN_UPDATE_FEE(37), // token update(burn, mine, update params..) fee 37
-    MAX_FROZEN_TIME_BY_DAY(38), //max time to freeze balance 38
-    MIN_FROZEN_TIME_BY_DAY(39), //min time to freeze balance 39
-    NFT_ISSUE_FEE(40);//fee create NftContract(NftTemplate)
+    HARD_FORK(34), //example: 5 34
+    MAX_FUTURE_TRANSFER_TIME_RANGE_UNW(35), // 50*31536000000L ~50 years, 35
+    MAX_FUTURE_TRANSFER_TIME_RANGE_TOKEN(36), // 50*31536000000L ~50 years, 36
+    TOKEN_UPDATE_FEE(37), // 2000000L~2unw, 37
+    MAX_FROZEN_TIME_BY_DAY(38), //3, 38
+    MIN_FROZEN_TIME_BY_DAY(39); //3, 39
 
     ProposalType(long code) {
       this.code = code;
@@ -106,7 +104,6 @@ public class ProposalService {
     }
   }
 
-  /* @todo refactor validation */
   public static void validator(Manager manager, long code, long value) throws ContractValidateException {
     ProposalType proposalType = ProposalType.getEnum(code);
     switch (proposalType) {
@@ -120,7 +117,6 @@ public class ProposalService {
       case CREATE_ACCOUNT_FEE:
       case TRANSACTION_FEE:
       case ASSET_ISSUE_FEE:
-      case NFT_ISSUE_FEE:
       case WITNESS_PAY_PER_BLOCK:
       case WITNESS_STANDBY_ALLOWANCE:
       case CREATE_NEW_ACCOUNT_FEE_IN_SYSTEM_CONTRACT:
@@ -378,10 +374,6 @@ public class ProposalService {
           manager.getDynamicPropertiesStore().saveAssetIssueFee(entry.getValue());
           break;
         }
-        case NFT_ISSUE_FEE: {
-          manager.getDynamicPropertiesStore().saveNftIssueFee(entry.getValue());
-          break;
-        }
         case WITNESS_PAY_PER_BLOCK: {
           manager.getDynamicPropertiesStore().saveWitnessPayPerBlock(entry.getValue());
           break;
@@ -513,8 +505,12 @@ public class ProposalService {
          * - the last proposal will win.
          */
         case HARD_FORK: {
-          logger.info("Saving hardfork proposal --> {}", entry.getValue());
-          manager.getDynamicPropertiesStore().saveHardForkVersion(entry.getValue());
+          Long blockVer = entry.getValue();
+          logger.info("Saving upgrade block proposal --> {}", blockVer);
+          var oldBlockVer = manager.getDynamicPropertiesStore().getBlockVersion();
+          manager.getDynamicPropertiesStore().saveHardForkVersion(blockVer);
+          ActuatorFactory.createUpgradeActuator(manager, blockVer.intValue(), oldBlockVer)
+                  .forEach(actuator -> actuator.upgrade());
           break;
         }
         case MAX_FUTURE_TRANSFER_TIME_RANGE_UNW: {
@@ -551,5 +547,4 @@ public class ProposalService {
     }
     return find;
   }
-
 }

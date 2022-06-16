@@ -28,8 +28,8 @@ public class PendingManager implements AutoCloseable {
 
     for (TransactionCapsule tx : tmpTransactions) {
       try {
-        if (tx.getUnxTrace() != null &&
-            tx.getUnxTrace().getTimeResultType().equals(TimeResultType.NORMAL)) {
+        if (tx.getTxTrace() != null &&
+            tx.getTxTrace().getTimeResultType().equals(TimeResultType.NORMAL)) {
           dbManager.getRepushTransactions().put(tx);
         }
       } catch (InterruptedException e) {
@@ -41,8 +41,8 @@ public class PendingManager implements AutoCloseable {
 
     for (TransactionCapsule tx : dbManager.getPoppedTransactions()) {
       try {
-        if (tx.getUnxTrace() != null &&
-            tx.getUnxTrace().getTimeResultType().equals(TimeResultType.NORMAL)) {
+        if (tx.getTxTrace() != null &&
+            tx.getTxTrace().getTimeResultType().equals(TimeResultType.NORMAL)) {
           dbManager.getRepushTransactions().put(tx);
         }
       } catch (InterruptedException e) {

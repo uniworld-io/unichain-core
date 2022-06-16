@@ -23,7 +23,7 @@ public class BuyStorageActuator extends AbstractActuator {
 
   private StorageMarket storageMarket;
 
-  BuyStorageActuator(Any contract, Manager dbManager) {
+  public BuyStorageActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
     storageMarket = new StorageMarket(dbManager);
   }

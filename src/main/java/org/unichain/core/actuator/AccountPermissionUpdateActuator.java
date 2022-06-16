@@ -28,7 +28,7 @@ import static java.util.stream.Collectors.toList;
 @Slf4j(topic = "actuator")
 public class AccountPermissionUpdateActuator extends AbstractActuator {
 
-  AccountPermissionUpdateActuator(Any contract, Manager dbManager) {
+  public AccountPermissionUpdateActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

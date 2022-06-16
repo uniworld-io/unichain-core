@@ -386,7 +386,7 @@ public class RuntimeImpl implements Runtime {
       logger.info("==============================Before cal energyLimit===================");
       long energyLimit = (findBlockVersion() <= BLOCK_VERSION_1) ?
               getAccountEnergyLimitV1(creator, feeLimit, callValue) : getAccountEnergyLimitV2(creator, feeLimit, callValue);
-      logger.info("==============================After cal energyLimit===================");
+      logger.info("==============================After cal energyLimit {} ===================", energyLimit);
 
 
       checkTokenValueAndId(tokenValue, tokenId);

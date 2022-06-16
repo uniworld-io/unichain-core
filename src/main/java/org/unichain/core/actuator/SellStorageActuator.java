@@ -23,7 +23,7 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 public class SellStorageActuator extends AbstractActuator {
   private StorageMarket storageMarket;
 
-  SellStorageActuator(Any contract, Manager dbManager) {
+  public SellStorageActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
     storageMarket = new StorageMarket(dbManager);
   }

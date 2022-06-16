@@ -8,14 +8,16 @@ import java.util.Set;
 
 public class Parameter {
   /**
-   * @note: all supported version add here
+   *  all supported version add here
    */
+  //todo review version 6 before release Urc20 and NFT
   public static final Set<Integer> BLOCK_VERSION_SUPPORTED = new HashSet<>(Arrays.asList(
           ChainConstant.BLOCK_VERSION_1,
           ChainConstant.BLOCK_VERSION_2,
           ChainConstant.BLOCK_VERSION_3,
           ChainConstant.BLOCK_VERSION_4,
-          ChainConstant.BLOCK_VERSION_5));
+          ChainConstant.BLOCK_VERSION_5,
+          ChainConstant.BLOCK_VERSION_6));
 
   public class ChainConstant {
     /**
@@ -46,7 +48,7 @@ public class Parameter {
     public static final int MAX_FROZEN_TIME_BY_DAY = 365 * 10; // 10 years
 
     /**
-     * Critical: all available block version must declare here
+     * critical: all available block version must declare here
      */
     public static final int BLOCK_VERSION_0 = 0;
     public static final int BLOCK_VERSION_1 = 1;
@@ -54,6 +56,9 @@ public class Parameter {
     public static final int BLOCK_VERSION_3 = 3;
     public static final int BLOCK_VERSION_4 = 4;
     public static final int BLOCK_VERSION_5 = 5;
+    public static final int BLOCK_VERSION_6 = 6;
+    public static final int BLOCK_VERSION_7 = 7;
+    public static final int BLOCK_VERSION_8 = 8;
 
     /**
      * max unw/token transfer time range

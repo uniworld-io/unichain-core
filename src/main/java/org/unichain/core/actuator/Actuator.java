@@ -16,4 +16,5 @@ public interface Actuator {
 
   long calcFee();
 
+  void upgrade();
 }

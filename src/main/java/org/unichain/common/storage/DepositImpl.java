@@ -127,10 +127,7 @@ public class DepositImpl implements Deposit {
   @Override
   public AccountCapsule createAccount(byte[] address, String accountName, AccountType type) {
     Key key = new Key(address);
-    AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address),
-        ByteString.copyFromUtf8(accountName),
-        type);
-
+    AccountCapsule account = new AccountCapsule(ByteString.copyFrom(address), ByteString.copyFromUtf8(accountName), type);
     accountCache.put(key, new Value(account.getData(), Type.VALUE_TYPE_CREATE));
     return account;
   }

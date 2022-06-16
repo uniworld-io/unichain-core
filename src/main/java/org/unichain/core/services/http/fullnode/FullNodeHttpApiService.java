@@ -12,6 +12,10 @@ import org.springframework.stereotype.Component;
 import org.unichain.common.application.Service;
 import org.unichain.core.config.args.Args;
 import org.unichain.core.services.http.fullnode.servlet.*;
+import org.unichain.core.services.http.fullnode.servlet.posbridge.*;
+import org.unichain.core.services.http.fullnode.servlet.urc30.*;
+import org.unichain.core.services.http.fullnode.servlet.urc20.*;
+import org.unichain.core.services.http.fullnode.servlet.urc721.*;
 
 import javax.servlet.DispatcherType;
 import java.util.EnumSet;
@@ -25,14 +29,13 @@ public class FullNodeHttpApiService implements Service {
   private Server server;
 
   @Autowired
-  private ShowFutureDealServlet showFutureDealServlet;
-
-  @Autowired
   private GetAccountServlet getAccountServlet;
   @Autowired
   private TransferServlet transferServlet;
   @Autowired
   private TransferFutureServlet transferFutureServlet;
+  @Autowired
+  private TransferFutureDealServlet transferFutureDealServlet;
   @Autowired
   private WithdrawFutureServlet withdrawFutureServlet;
   @Autowired
@@ -46,69 +49,151 @@ public class FullNodeHttpApiService implements Service {
   @Autowired
   private CreateAssetIssueServlet createAssetIssueServlet;
 
+  /**
+   * urc721
+   */
   @Autowired
-  private NftCreateContractServlet nftCreateContractServlet;
+  private Urc721CreateContractServlet urc721CreateContractServlet;
   @Autowired
-  private NftRemoveMinterServlet nftRemoveMinterServlet;
+  private Urc721RemoveMinterServlet urc721RemoveMinterServlet;
   @Autowired
-  private NftMintTokenServlet nftMintTokenServlet;
+  private Urc721MintServlet urc721MintServlet;
   @Autowired
-  private NftAddMinterServlet addNftMinterServlet;
+  private Urc721AddMinterServlet urc721AddMinterServlet;
   @Autowired
-  private NftRenounceMinterServlet nftRenounceMinterServlet;
+  private Urc721RenounceMinterServlet urc721RenounceMinterServlet;
   @Autowired
-  private NftBurnTokenServlet burnNftTokenServlet;
+  private Urc721BurnServlet urc721BurnTokenServlet;
   @Autowired
-  private NftApproveTokenServlet nftApproveTokenServlet;
+  private Urc721ApproveServlet urc721ApproveServlet;
   @Autowired
-  private NftSetApprovalForAllServlet nftApprovalForAllServlet;
+  private Urc721SetApprovalForAllServlet urc721ApprovalForAllServlet;
   @Autowired
-  private NftTransferTokenServlet nftTransferTokenServlet;
-
-
+  private Urc721TransferFromServlet urc721TransferFromServlet;
   @Autowired
-  private CreateTokenServlet createTokenServlet;
+  private Urc721ContractListServlet urc721ContractListServlet;
   @Autowired
-  private TransferTokenOwnerServlet transferTokenOwnerServlet;
+  private Urc721TokenListServlet urc721TokenListServlet;
   @Autowired
-  private ExchangeTokenServlet exchangeTokenServlet;
+  private Urc721ContractGetServlet urc721ContractGetServlet;
   @Autowired
-  private ContributeTokenPoolFeeServlet contributeTokenPoolFeeServlet;
+  private Urc721TokenGetServlet urc721TokenGetServlet;
   @Autowired
-  private UpdateTokenParamsServlet updateTokenParamsServlet;
+  private Urc721BalanceOfServlet urc721BalanceOfServlet;
   @Autowired
-  private MineTokenServlet mineTokenServlet;
-  @Autowired
-  private BurnTokenServlet burnTokenServlet;
-  @Autowired
-  private TransferTokenServlet transferTokenServlet;
-  @Autowired
-  private WithdrawFutureTokenServlet withdrawFutureTokenServlet;
-  @Autowired
-  private GetTokenPoolServlet getTokenPoolServlet;
+  private Urc721GetApprovedServlet urc721GetApprovedServlet;
 
   @Autowired
-  private NftListContractServlet nftListContractServlet;
+  private Urc721NameServlet urc721NameServlet;
   @Autowired
-  private NftGetListTokenApprovalServlet listNftTokenApproveServlet;
+  private Urc721SymbolServlet urc721SymbolServlet;
   @Autowired
-  private NftGetApprovalForAllServlet listNftTokenApproveAllServlet;
+  private Urc721TokenUriServlet urc721TokenUriServlet;
   @Autowired
-  private NftListTokenServlet nftListTokenServlet;
+  private Urc721TotalSupplyServlet urc721TotalSupplyServlet;
   @Autowired
-  private NftGetContractServlet nftGetContractServlet;
+  private Urc721IsApprovedForAllServlet urc721IsApprovedForAllServlet;
   @Autowired
-  private NftGetTokenServlet nftGetTokenServlet;
+  private Urc721OwnerOfServlet urc721OwnerOfServlet;
+
+  /**
+   * urc20
+   */
   @Autowired
-  private NftGetBalanceOfServlet nftGetBalanceOfServlet;
+  private Urc20ContractListServlet urc20ContractListServlet;
   @Autowired
-  private NftGetApprovalServlet nftGetApprovalServlet;
+  private Urc20FutureGetServlet urc20FutureGetServlet;
+  @Autowired
+  private Urc20NameServlet urc20NameServlet;
+  @Autowired
+  private Urc20SymbolServlet urc20SymbolServlet;
+  @Autowired
+  private Urc20DecimalsServlet urc20DecimalsServlet;
+  @Autowired
+  private Urc20TotalSupplyServlet urc20TotalSupplyServlet;
+  @Autowired
+  private Urc20BalanceOfServlet urc20BalanceOfServlet;
+  @Autowired
+  private Urc20GetOwnerServlet urc20GetOwnerServlet;
+  @Autowired
+  private Urc20AllowanceServlet urc20AllowanceServlet;
 
   @Autowired
-  private GetTokenFutureServlet getTokenFutureServlet;
+  private Urc20CreateContractServlet urc20CreateContractServlet;
+  @Autowired
+  private Urc20TransferFromServlet urc20TransferFromServlet;
+  @Autowired
+  private Urc20TransferServlet urc20TransferServlet;
+
+  @Autowired
+  private Urc20ApproveServlet urc20ApproveServlet;
+  @Autowired
+  private Urc20ContributePoolFeeServlet urc20ContributePoolFeeServlet;
+  @Autowired
+  private Urc20UpdateParamsServlet urc20UpdateParamsServlet;
+  @Autowired
+  private Urc20MintServlet urc20MintServlet;
+  @Autowired
+  private Urc20BurnServlet urc20BurnServlet;
+  @Autowired
+  private Urc20WithdrawFutureServlet urc20WithdrawFutureServlet;
+  @Autowired
+  private Urc20TransferOwnerServlet urc20TransferOwnerServlet;
+  @Autowired
+  private Urc20ExchangeServlet urc20ExchangeServlet;
+
+  /**
+   * PoSBridge
+   */
+  @Autowired
+  private PosBridgeCleanMapTokenServlet posBridgeCleanMapTokenServlet;
+  @Autowired
+  private PosBridgeDepositExecServlet posBridgeDepositExecServlet;
+  @Autowired
+  private PosBridgeDepositServlet posBridgeDepositServlet;
+  @Autowired
+  private PosBridgeMapTokenServlet posBridgeMapTokenServlet;
+  @Autowired
+  private PosBridgeSetupServlet posBridgeSetupServlet;
+  @Autowired
+  private PosBridgeWithdrawExecServlet posBridgeWithdrawExecServlet;
+  @Autowired
+  private PosBridgeWithdrawServlet posBridgeWithdrawServlet;
+
+  @Autowired
+  private PosBridgeGetConfigServlet posBridgeGetConfigServlet;
+  @Autowired
+  private PosBridgeGetTokenMapServlet posBridgeGetTokenMapServlet;
+
+  /**
+   * URC30
+   */
+  @Autowired
+  private Urc30CreateTokenServlet urc30CreateTokenServlet;
+  @Autowired
+  private Urc30TransferTokenOwnerServlet urc30TransferTokenOwnerServlet;
+  @Autowired
+  private Urc30ExchangeTokenServlet urc30ExchangeTokenServlet;
+  @Autowired
+  private Urc30ContributeTokenPoolFeeServlet urc30ContributeTokenPoolFeeServlet;
+  @Autowired
+  private Urc30UpdateTokenParamsServlet urc30UpdateTokenParamsServlet;
+  @Autowired
+  private Urc30MineTokenServlet urc30MineTokenServlet;
+  @Autowired
+  private Urc30BurnTokenServlet urc30BurnTokenServlet;
+  @Autowired
+  private Urc30TransferTokenServlet urc30TransferTokenServlet;
+  @Autowired
+  private Urc30WithdrawFutureTokenServlet urc30WithdrawFutureTokenServlet;
+
+  @Autowired
+  private Urc30GetTokenPoolServlet urc30GetTokenPoolServlet;
+  @Autowired
+  private Urc30GetFutureTokenServlet urc30GetFutureTokenServlet;
+
   @Autowired
   private GetFutureTransferServlet getFutureTransferServlet;
-
   @Autowired
   private UpdateWitnessServlet updateWitnessServlet;
   @Autowired
@@ -279,26 +364,15 @@ public class FullNodeHttpApiService implements Service {
 
       server.setHandler(context);
 
-      //@todo show all future deals
-//      context.addServlet(new ServletHolder(showFutureDealServlet), "/showfuturedeal");
       context.addServlet(new ServletHolder(getAccountServlet), "/getaccount");
-      context.addServlet(new ServletHolder(getTokenPoolServlet), "/gettokenpool");
+      context.addServlet(new ServletHolder(urc30GetTokenPoolServlet), "/gettokenpool");
 
-      context.addServlet(new ServletHolder(nftListContractServlet), "/listnftcontract");
-      context.addServlet(new ServletHolder(nftListTokenServlet), "/listnfttoken");
 
-      context.addServlet(new ServletHolder(listNftTokenApproveServlet), "/listnfttokenapprove");
-      context.addServlet(new ServletHolder(listNftTokenApproveAllServlet), "/listnfttokenapproveall");
-
-      context.addServlet(new ServletHolder(nftGetContractServlet), "/getnftcontract");
-      context.addServlet(new ServletHolder(nftGetTokenServlet), "/getnfttoken");
-      context.addServlet(new ServletHolder(nftGetBalanceOfServlet), "/getnftbalanceOf");
-      context.addServlet(new ServletHolder(nftGetApprovalServlet), "/getnftapprovedforall");
-
-      context.addServlet(new ServletHolder(getTokenFutureServlet), "/getfuturetoken");
+      context.addServlet(new ServletHolder(urc30GetFutureTokenServlet), "/getfuturetoken");
       context.addServlet(new ServletHolder(getFutureTransferServlet), "/getfuturetransfer");
       context.addServlet(new ServletHolder(transferServlet), "/createtransaction");
       context.addServlet(new ServletHolder(transferFutureServlet), "/createfuturetransaction");
+      context.addServlet(new ServletHolder(transferFutureDealServlet), "/createfuturedealtransaction");
       context.addServlet(new ServletHolder(withdrawFutureServlet), "/withdrawfuturetransaction");
       context.addServlet(new ServletHolder(broadcastServlet), "/broadcasttransaction");
       context.addServlet(new ServletHolder(transactionSignServlet), "/gettransactionsign");
@@ -306,25 +380,81 @@ public class FullNodeHttpApiService implements Service {
       context.addServlet(new ServletHolder(voteWitnessAccountServlet), "/votewitnessaccount");
       context.addServlet(new ServletHolder(createAssetIssueServlet), "/createassetissue");
 
-      context.addServlet(new ServletHolder(nftCreateContractServlet), "/createnftcontract");
-      context.addServlet(new ServletHolder(nftRemoveMinterServlet), "/removenftminter");
-      context.addServlet(new ServletHolder(nftMintTokenServlet), "/mintnfttoken");
-      context.addServlet(new ServletHolder(addNftMinterServlet), "/addnftminter");
-      context.addServlet(new ServletHolder(nftRenounceMinterServlet), "/renouncenftminter");
-      context.addServlet(new ServletHolder(burnNftTokenServlet), "/burnnfttoken");
-      context.addServlet(new ServletHolder(nftApproveTokenServlet), "/approvenfttoken");
-      context.addServlet(new ServletHolder(nftApprovalForAllServlet), "/approveforallnfttoken");
-      context.addServlet(new ServletHolder(nftTransferTokenServlet), "/transfernfttoken");
+      /**
+       * urc721
+       */
+      context.addServlet(new ServletHolder(urc721CreateContractServlet), "/urc721createcontract");
+      context.addServlet(new ServletHolder(urc721RemoveMinterServlet), "/urc721removeminter");
+      context.addServlet(new ServletHolder(urc721MintServlet), "/urc721mint");
+      context.addServlet(new ServletHolder(urc721AddMinterServlet), "/urc721addminter");
+      context.addServlet(new ServletHolder(urc721RenounceMinterServlet), "/urc721renounceminter");
+      context.addServlet(new ServletHolder(urc721BurnTokenServlet), "/urc721burn");
+      context.addServlet(new ServletHolder(urc721ApproveServlet), "/urc721approve");
+      context.addServlet(new ServletHolder(urc721ApprovalForAllServlet), "/urc721setapprovalforall");
+      context.addServlet(new ServletHolder(urc721TransferFromServlet), "/urc721transferfrom");
+      //standard erc721
+      context.addServlet(new ServletHolder(urc721BalanceOfServlet), "/urc721balanceof");
+      context.addServlet(new ServletHolder(urc721NameServlet), "/urc721name");
+      context.addServlet(new ServletHolder(urc721SymbolServlet), "/urc721symbol");
+      context.addServlet(new ServletHolder(urc721TokenUriServlet), "/urc721tokenuri");
+      context.addServlet(new ServletHolder(urc721TotalSupplyServlet), "/urc721totalsupply");
+      context.addServlet(new ServletHolder(urc721IsApprovedForAllServlet), "/urc721isapprovedforall");
+      context.addServlet(new ServletHolder(urc721OwnerOfServlet), "/urc721ownerof");
 
-      context.addServlet(new ServletHolder(createTokenServlet), "/createtoken");
-      context.addServlet(new ServletHolder(transferTokenOwnerServlet), "/transfertokenowner");
-      context.addServlet(new ServletHolder(exchangeTokenServlet), "/exchangetoken");
-      context.addServlet(new ServletHolder(contributeTokenPoolFeeServlet), "/contributetokenfee");
-      context.addServlet(new ServletHolder(updateTokenParamsServlet), "/updatetokenparams");
-      context.addServlet(new ServletHolder(mineTokenServlet), "/minetoken");
-      context.addServlet(new ServletHolder(burnTokenServlet), "/burntoken");
-      context.addServlet(new ServletHolder(transferTokenServlet), "/transfertoken");
-      context.addServlet(new ServletHolder(withdrawFutureTokenServlet), "/withdrawfuturetoken");
+      //extended erc721
+      context.addServlet(new ServletHolder(urc721GetApprovedServlet), "/urc721getapproved");
+      context.addServlet(new ServletHolder(urc721ContractListServlet), "/urc721contractlist");
+      context.addServlet(new ServletHolder(urc721TokenListServlet), "/urc721tokenlist");
+      context.addServlet(new ServletHolder(urc721ContractGetServlet), "/urc721contractget");
+      context.addServlet(new ServletHolder(urc721TokenGetServlet), "/urc721tokenget");
+
+      /**
+       * POSBridge
+       */
+      context.addServlet(new ServletHolder(posBridgeSetupServlet), "/posbridgesetup");
+      context.addServlet(new ServletHolder(posBridgeMapTokenServlet), "/posbridgemaptoken");
+      context.addServlet(new ServletHolder(posBridgeCleanMapTokenServlet), "/posbridgecleanmaptoken");
+      context.addServlet(new ServletHolder(posBridgeDepositServlet), "/posbridgedeposit");
+      context.addServlet(new ServletHolder(posBridgeDepositExecServlet), "/posbridgedepositexec");
+      context.addServlet(new ServletHolder(posBridgeWithdrawServlet), "/posbridgewithdraw");
+      context.addServlet(new ServletHolder(posBridgeWithdrawExecServlet), "/posbridgewithdrawexec");
+      context.addServlet(new ServletHolder(posBridgeGetConfigServlet), "/getposbridgeconfig");
+      context.addServlet(new ServletHolder(posBridgeGetTokenMapServlet), "/getposbridgetokenmap");
+
+      /**
+       * Urc20
+       */
+      context.addServlet(new ServletHolder(urc20CreateContractServlet), "/urc20createcontract");
+      context.addServlet(new ServletHolder(urc20TransferFromServlet), "/urc20transferfrom");
+      context.addServlet(new ServletHolder(urc20TransferServlet), "/urc20transfer");
+      context.addServlet(new ServletHolder(urc20ApproveServlet), "/urc20approve");
+      context.addServlet(new ServletHolder(urc20ContributePoolFeeServlet), "/urc20contributepoolfee");
+      context.addServlet(new ServletHolder(urc20UpdateParamsServlet), "/urc20updateparams");
+      context.addServlet(new ServletHolder(urc20MintServlet), "/urc20mint");
+      context.addServlet(new ServletHolder(urc20BurnServlet), "/urc20burn");
+      context.addServlet(new ServletHolder(urc20WithdrawFutureServlet), "/urc20withdrawfuture");
+      context.addServlet(new ServletHolder(urc20TransferOwnerServlet), "/urc20transferowner");
+      context.addServlet(new ServletHolder(urc20ExchangeServlet), "/urc20exchange");
+
+      context.addServlet(new ServletHolder(urc20ContractListServlet), "/urc20contractlist");
+      context.addServlet(new ServletHolder(urc20FutureGetServlet), "/urc20futureget");
+      context.addServlet(new ServletHolder(urc20NameServlet), "/urc20name");
+      context.addServlet(new ServletHolder(urc20SymbolServlet), "/urc20symbol");
+      context.addServlet(new ServletHolder(urc20DecimalsServlet), "/urc20decimals");
+      context.addServlet(new ServletHolder(urc20TotalSupplyServlet), "/urc20totalsupply");
+      context.addServlet(new ServletHolder(urc20BalanceOfServlet), "/urc20balanceof");
+      context.addServlet(new ServletHolder(urc20GetOwnerServlet), "/urc20getowner");
+      context.addServlet(new ServletHolder(urc20AllowanceServlet), "/urc20allowance");
+
+      context.addServlet(new ServletHolder(urc30CreateTokenServlet), "/createtoken");
+      context.addServlet(new ServletHolder(urc30TransferTokenOwnerServlet), "/transfertokenowner");
+      context.addServlet(new ServletHolder(urc30ExchangeTokenServlet), "/exchangetoken");
+      context.addServlet(new ServletHolder(urc30ContributeTokenPoolFeeServlet), "/contributetokenfee");
+      context.addServlet(new ServletHolder(urc30UpdateTokenParamsServlet), "/updatetokenparams");
+      context.addServlet(new ServletHolder(urc30MineTokenServlet), "/minetoken");
+      context.addServlet(new ServletHolder(urc30BurnTokenServlet), "/burntoken");
+      context.addServlet(new ServletHolder(urc30TransferTokenServlet), "/transfertoken");
+      context.addServlet(new ServletHolder(urc30WithdrawFutureTokenServlet), "/withdrawfuturetoken");
 
       context.addServlet(new ServletHolder(updateWitnessServlet), "/updatewitness");
       context.addServlet(new ServletHolder(createAccountServlet), "/createaccount");

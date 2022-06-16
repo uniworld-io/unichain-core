@@ -2,8 +2,10 @@ package org.unichain.common.logsfilter.capsule;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.apache.commons.lang3.ArrayUtils;
-import org.pf4j.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.spongycastle.util.encoders.Hex;
 import org.unichain.common.crypto.Hash;
 import org.unichain.common.logsfilter.ContractEventParserAbi;
@@ -18,7 +20,9 @@ import org.unichain.core.config.args.Args;
 import org.unichain.protos.Protocol.SmartContract.ABI;
 
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
+@Slf4j
 public class ContractTriggerCapsule extends TriggerCapsule {
 
   @Getter
@@ -69,7 +73,7 @@ public class ContractTriggerCapsule extends TriggerCapsule {
           String name = param.getName();
           signBuilder.append(type);
           signFullBuilder.append(type);
-          if (StringUtils.isNotNullOrEmpty(name)) {
+          if (!StringUtils.isEmpty(name)) {
             signFullBuilder.append(" ").append(name);
           }
         }
@@ -130,8 +134,32 @@ public class ContractTriggerCapsule extends TriggerCapsule {
     if (FilterQuery.matchFilter(contractTrigger)) {
       if (isEvent) {
         EventPluginLoader.getInstance().postContractEventTrigger((ContractEventTrigger) event);
+        if(!Args.getSolidityContractEventTriggerMap()
+                .computeIfAbsent(event.getBlockNumber(), listBlk -> new LinkedBlockingQueue())
+                .offer((ContractEventTrigger) event));
+        {
+          logger.info("too many triggers, solidity event trigger lost: {}", event.getUniqueId());
+        }
+
+        //enable process contractEvent as contractLog
+        var logTrigger = new ContractLogTrigger((ContractEventTrigger) event);
+        logTrigger.setTopicList(logInfo.getHexTopics());
+        logTrigger.setData(logInfo.getHexData());
+        EventPluginLoader.getInstance().postContractLogTrigger(logTrigger);
+        if(!Args.getSolidityContractLogTriggerMap()
+                .computeIfAbsent(event.getBlockNumber(), listBlk -> new LinkedBlockingQueue())
+                .offer(logTrigger))
+        {
+          logger.info("too many triggers, solidity log trigger lost: {}", logTrigger.getUniqueId());
+        }
       } else {
         EventPluginLoader.getInstance().postContractLogTrigger((ContractLogTrigger) event);
+        if(!Args.getSolidityContractLogTriggerMap()
+                .computeIfAbsent(event.getBlockNumber(), listBlk -> new LinkedBlockingQueue())
+                .offer((ContractLogTrigger) event))
+        {
+          logger.info("too many triggers, solidity log trigger lost: {}", event.getUniqueId());
+        }
       }
     }
   }

@@ -118,9 +118,7 @@ public class JsonFormat {
       print(message, text, selfType);
       return text.toString();
     } catch (IOException e) {
-      throw new RuntimeException(
-          "Writing to a StringBuilder threw an IOException (should never happen).",
-          e);
+      throw new RuntimeException("Writing to a StringBuilder threw an IOException (should never happen).", e);
     }
   }
 
@@ -133,9 +131,7 @@ public class JsonFormat {
       print(fields, text, selfType);
       return text.toString();
     } catch (IOException e) {
-      throw new RuntimeException(
-          "Writing to a StringBuilder threw an IOException (should never happen).",
-          e);
+      throw new RuntimeException("Writing to a StringBuilder threw an IOException (should never happen).", e);
     }
   }
 

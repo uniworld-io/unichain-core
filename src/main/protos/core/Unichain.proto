@@ -10,10 +10,19 @@ option java_package = "org.unichain.protos"; //Specify the name of the package t
 option java_outer_classname = "Protocol"; //Specify the class name of the generated Java file
 option go_package = "github.com/unichainprotocol/grpc-gateway/core";
 
+message AddressMessage {
+  bytes address = 1;
+}
+
+message BoolMessage {
+  bool value = 1;
+}
+
 enum AccountType {
   Normal = 0;
   AssetIssue = 1;
   Contract = 2;
+  System = 3;
 }
 
 // AccountId, (name, address) use name, (null, address) use address, (name, null) use name,
@@ -80,6 +89,7 @@ message TokenPoolQuery {
   string token_name = 1;
   int32  page_size = 2;
   int32 page_index = 3;
+  string token_addr = 4;
 }
 
 message FutureTokenQuery {
@@ -137,6 +147,86 @@ message FuturePack {
   repeated Future deals = 6;
 }
 
+/**
+  urc20
+ */
+message Urc20FutureTokenPack {
+  bytes  owner_address = 1;
+  bytes address = 2;
+  string symbol = 3;
+  int64  total_deal = 4;
+  int64 lower_bound_time = 5;
+  int64 upper_bound_time = 6;
+  string total_value = 7; //decimal str
+  repeated Urc20FutureToken deals = 8;
+}
+
+message Urc20ContractQuery {
+  bytes address = 1;
+  string symbol = 2;
+  int32  page_size = 3;
+  int32 page_index = 4;
+}
+
+message Urc20FutureTokenQuery {
+  bytes owner_address = 3;
+  bytes address = 1;
+  int32 page_size = 4;
+  int32 page_index = 5;
+}
+
+message Urc20BalanceOfQuery {
+  bytes owner_address = 1;
+  bytes address = 2;
+}
+
+message Urc20AllowanceQuery {
+  bytes owner = 1;
+  bytes address = 2;
+  bytes spender = 3;
+}
+
+message Urc20FutureTokenSummary {
+  bytes address = 1;
+  string symbol = 2;
+  int64  total_deal = 3;
+  int64 lower_bound_time = 4;
+  int64 upper_bound_time = 5;
+  string total_value = 6;
+  bytes lower_tick = 7;
+  bytes upper_tick = 8;
+}
+
+message Urc20FutureToken {
+  string future_balance = 1; //decimal str
+  int64 expire_time = 2;
+  bytes prev_tick = 3;
+  bytes next_tick = 4;
+}
+
+message Urc20SpenderQuota{
+    bytes owner = 1;
+    string limit = 2; //decimal str
+    string spent = 3; //decimal str
+    string avail = 4; //decimal str
+}
+message Urc20Spender {
+  bytes spender = 1;
+  bytes contract = 2;
+  map<string, Urc20SpenderQuota> quotas = 3; //owner --> spend quota
+}
+
+/**
+  used for both token urc20 & nft indexing
+ */
+message TokenAddressSymbolIndex{
+  string  symbol = 1;
+}
+
+message TokenSymbolAddressIndex{
+  bytes address = 1;
+}
+
 /* Account */
 message Account {
   /* frozen balance */
@@ -166,6 +256,12 @@ message Account {
   //token future
   map<string, FutureTokenSummaryV2> token_future = 61;
 
+  //token map" [addr --> decimal number]
+  map<string, string> urc20 = 62;
+
+  //token future
+  map<string, Urc20FutureTokenSummary> urc20_future = 63;
+
   // the frozen balance for bandwidth
   repeated Frozen frozen = 7;
   // bandwidth, get from frozen
@@ -177,7 +273,7 @@ message Account {
 
   // this account create time
   int64 create_time = 0x09;
-  // this last operation time, including transfer, voting and so on. //FIXME fix grammar
+  // this last operation time, including transfer, voting and so on
   int64 latest_opration_time = 10;
   // witness block producing allowance
   int64 allowance = 0x0B;
@@ -358,6 +454,8 @@ message Transaction {
 
       FutureTransferContract = 50;
       FutureWithdrawContract = 52;
+
+      //urc30 token
       CreateTokenContract = 53;
       ContributeTokenPoolFeeContract = 54;
       UpdateTokenParamsContract = 55;
@@ -368,16 +466,42 @@ message Transaction {
       TransferTokenOwnerContract = 61;
       ExchangeTokenContract = 62;
 
-      CreateNftTemplateContract = 63;
-      MintNftTokenContract = 64;
-      RemoveNftMinterContract = 65;
-      AddNftMinterContract = 66;
-      RenounceNftMinterContract = 67;
-      BurnNftTokenContract = 68;
-      ApproveNftTokenContract = 69;
-      ApproveForAllNftTokenContract = 70;
-      TransferNftTokenContract = 71;
+      //urc721
+      Urc721CreateContract = 63;
+      Urc721MintContract = 64;
+      Urc721RemoveMinterContract = 65;
+      Urc721AddMinterContract = 66;
+      Urc721RenounceMinterContract = 67;
+      Urc721BurnContract = 68;
+      Urc721ApproveContract = 69;
+      Urc721SetApprovalForAllContract = 70;
+      Urc721TransferFromContract = 71;
+
+      //PosBridge
+      PosBridgeSetupContract = 90;
+      PosBridgeMapTokenContract = 91;
+      PosBridgeCleanMapTokenContract =92;
+      PosBridgeDepositContract = 93;
+      PosBridgeDepositExecContract = 94;
+      PosBridgeWithdrawContract =95;
+      PosBridgeWithdrawExecContract = 96;
+
+      //token urc20
+      Urc20CreateContract = 110;
+      Urc20ContributePoolFeeContract = 111;
+      Urc20UpdateParamsContract = 112;
+      Urc20MintContract = 113;
+      Urc20BurnContract = 114;
+      Urc20TransferFromContract = 115;
+      Urc20WithdrawFutureContract = 116;
+      Urc20TransferOwnerContract = 117;
+      Urc20ExchangeContract = 118;
+      Urc20ApproveContract = 119;
+      Urc20TransferContract = 120;
+
+      FutureDealTransferContract = 121;
     }
+
     ContractType type = 1;
     google.protobuf.Any parameter = 2;
     bytes provider = 3;
@@ -780,8 +904,11 @@ message NodeInfo {
   }
 }
 
-message NftTemplate{
-  string contract = 1;
+/**
+  Urc721
+ */
+message Urc721Contract{
+  string symbol = 1;
   string name = 2;
   int64 total_supply = 3;
   int64 token_index = 4;
@@ -792,128 +919,137 @@ message NftTemplate{
   bytes prev = 9;
   bytes next_of_minter = 10;
   bytes prev_of_minter = 11;
-  bytes contract_address = 12;
+  bytes address = 12;
 }
 
-message NftToken{
-  string contract = 1;
+message Urc721Token{
+  string symbol = 1;
   int64 id = 2;
   bytes owner_address = 3;
   bytes approval = 4;
   string uri = 5;
-  string metadata = 6;
-  int64 last_operation = 7;
-  bytes next = 8;
-  bytes prev = 9;
+  int64 last_operation = 6;
+  bytes next = 7;
+  bytes prev = 8;
+  bytes address = 9;
+}
+message Urc721ApproveAllMap {
+   map<string, bool> contracts = 1; //[contract base58 --> bool]
 }
 
-message NftAccountTokenRelation{
+message Urc721AccountTokenRelation{
   bytes owner_address = 1;
+  //for owner
   bytes head = 2;
   bytes tail = 3;
   int64 total = 4;
-  map<string, bool> approve_all = 5;
-  bytes approved_for_all = 6;
+  map<string, int64> totals = 5; //owner --> [contract addr --> total], base58
+
+  //for approval
   bytes approve_head = 7;
   bytes approve_tail = 8;
   int64 approve_total = 9;
+
+  //for approval for all
+  map<string, string> approved_for_alls = 10; //owner --> [contract addr --> operator], base58
+  map<string, Urc721ApproveAllMap> approve_alls = 6; //operator --> [owner --> contract addr map], base58
 }
 
-message NftAccountTemplateRelation{
+message Urc721AccountContractRelation{
   bytes owner_address = 1;
   bytes head = 2;
   bytes tail = 3;
   int64 total = 4;
 }
 
-message NftTemplateQuery{
+message Urc721ContractQuery{
   bytes owner_address = 1;
   int32 page_size = 2;
   int32 page_index = 3;
-  string owner_type = 4;
+  string owner_type = 4; //owner|minter
 }
 
-message NftTemplateQueryResult{
+message Urc721ContractPage{
   bytes owner_address = 1;
   int32 page_size = 2;
   int32 page_index = 3;
   int64 total = 4;
-  repeated NftTemplate templates = 5;
+  repeated Urc721Contract contracts = 5;
 }
 
-message NftTokenQuery{
+message Urc721TokenListQuery{
   bytes owner_address = 1;
-  string contract = 2;
+  bytes address = 2;
   int32 page_size = 3;
   int32 page_index = 4;
+  string owner_type = 5; //owner|approved|approved_all
 }
 
-message NftTokenGet{
-  string contract = 1;
-  int64 id = 2;
-}
-
-message NftTokenGetResult{
-  string contract = 1;
-  int64 id = 2;
-  bytes owner_address = 3;
-  bytes approval = 4;
-  string uri = 5;
-  string metadata = 6;
-  int64 last_operation = 7;
-}
-
-message NftTokenQueryResult{
-  int32 page_size = 1;
-  int32 page_index = 2;
-  int64 total = 3;
-  repeated NftToken tokens = 4;
-}
-
-message NftBalanceOf{
-  bytes owner_address = 1;
-  int64 count = 2;
-}
-
-message IsApprovedForAll{
-  bytes owner_address = 1;
-  bytes operator = 2;
-  bool is_approved = 3;
-}
-
-message NftTokenApproveAllQuery{
-  bytes owner_address = 1;
-  int32 page_index = 2;
-  int32 page_size = 3;
-}
-
-message NftTokenApproveAllResult{
-  bytes owner_address = 1;
-  repeated NftAccountTokenRelation approve_list = 2;
-  bytes approval_for_all = 3;
-  repeated NftToken tokens = 4;
-  int32 page_size = 5;
-  int32 page_index = 6;
-  int32 total = 7;
-}
-
-message NftTokenApproveQuery{
-  bytes owner_address = 1;
-  int32 page_size = 2;
-  int32 page_index = 3;
-}
-
-message NftTokenApproveResult{
+message Urc721TokenPage{
   bytes owner_address = 1;
   int32 page_size = 2;
   int32 page_index = 3;
   int64 total = 4;
-  repeated NftToken tokens= 5;
+  repeated Urc721Token tokens = 5;
 }
 
-message NftTokenApproveRelation{
+message Urc721TokenQuery{
+  bytes address = 1;
+  int64 id = 2;
+}
+
+message Urc721BalanceOfQuery{
+  bytes owner_address = 1;
+  bytes address = 2;
+}
+
+message Urc721IsApprovedForAllQuery{
+  bytes owner_address = 1;
+  bytes address = 3;
+  bytes operator = 2;
+}
+
+message Urc721TokenApproveRelation{
   bytes owner_address = 1;
   bytes token_id = 2;
   bytes next = 3;
   bytes prev = 4;
+}
+
+message PosBridgeConfig{
+  bytes owner_address = 1;
+  int64 min_validator = 2;
+  uint32 consensus_rate =3;
+  map<string, string> validators = 4;
+  bool initialized = 5;
+  PosBridgePredicate predicates = 6;
+}
+
+message PosBridgePredicate{
+  bytes predicate_native = 1;
+  bytes predicate_erc20 = 2;
+  bytes predicate_erc721 = 3;
+}
+
+message PostBridgeRootTokenMap{
+  int64 childChainId = 1;
+  string childToken = 2;
+  string rootToken = 3;
+  int32 tokenType = 4;
+}
+
+message PostBridgeChildTokenMap{
+  int64 rootChainId = 1;
+  string rootToken = 2;
+  string childToken = 3;
+  int32 tokenType = 4;
+}
+
+
+message PosBridgeTokenMappingPage {
+  int64  page_size = 1;
+  int64 page_index = 2;
+  int64 total = 3;
+  repeated PostBridgeRootTokenMap root_token_maps = 4;
+  repeated PostBridgeChildTokenMap child_token_maps = 5;
 }

@@ -27,7 +27,7 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class ExchangeInjectActuator extends AbstractActuator {
 
-  ExchangeInjectActuator(final Any contract, final Manager dbManager) {
+  public ExchangeInjectActuator(final Any contract, final Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -135,7 +135,6 @@ public class ExchangeInjectActuator extends AbstractActuator {
       Assert.isTrue(!(firstTokenBalance == 0 || secondTokenBalance == 0), "Token balance in exchange is equal with 0," + "the exchange has been closed");
       Assert.isTrue(tokenQty > 0, "Injected token qty must greater than zero");
 
-      //@todo review math calculation
       var bigFirstTokenBalance = new BigInteger(String.valueOf(firstTokenBalance));
       var bigSecondTokenBalance = new BigInteger(String.valueOf(secondTokenBalance));
       var bigTokenQty = new BigInteger(String.valueOf(tokenQty));
@@ -148,7 +147,6 @@ public class ExchangeInjectActuator extends AbstractActuator {
         newAnotherTokenBalance = Math.addExact(secondTokenBalance, anotherTokenQty);
       } else {
         anotherTokenID = firstTokenID;
-        //@todo review math calculation
         anotherTokenQty = bigFirstTokenBalance.multiply(bigTokenQty).divide(bigSecondTokenBalance).longValueExact();
         newTokenBalance = Math.addExact(secondTokenBalance, tokenQty);
         newAnotherTokenBalance = Math.addExact(firstTokenBalance, anotherTokenQty);

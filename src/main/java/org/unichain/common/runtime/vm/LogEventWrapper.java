@@ -2,7 +2,7 @@ package org.unichain.common.runtime.vm;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.pf4j.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.unichain.common.logsfilter.trigger.ContractTrigger;
 import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.SmartContract.ABI.Entry.Param;
@@ -50,7 +50,7 @@ public class LogEventWrapper extends ContractTrigger {
         sbp.append(",");
       }
       sbp.append(param.getType());
-      if (StringUtils.isNotNullOrEmpty(param.getName())) {
+      if (!StringUtils.isEmpty(param.getName())) {
         sbp.append(" ").append(param.getName());
       }
     }

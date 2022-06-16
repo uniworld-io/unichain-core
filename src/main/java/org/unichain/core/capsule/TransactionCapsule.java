@@ -20,6 +20,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 import org.unichain.common.crypto.ECKey;
 import org.unichain.common.crypto.ECKey.ECDSASignature;
 import org.unichain.common.overlay.message.Message;
@@ -63,7 +64,6 @@ import static org.unichain.protos.Contract.*;
 @Slf4j(topic = "capsule")
 public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
-  private Transaction transaction;
   @Setter
   private boolean isVerified = false;
 
@@ -73,7 +73,9 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
   @Getter
   @Setter
-  private TransactionTrace unxTrace;
+  private TransactionTrace txTrace;
+
+  private Transaction transaction;
 
   private static final ExecutorService executorService = Executors.newFixedThreadPool(Args.getInstance().getValidContractProtoThreadNum());
 
@@ -253,12 +255,8 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     return 0;
   }
 
-  public static long checkWeight(Permission permission, List<ByteString> sigs, byte[] hash, List<ByteString> approveList)
-      throws SignatureException, PermissionException, SignatureFormatException {
+  public static long checkWeight(Permission permission, List<ByteString> sigs, byte[] hash, List<ByteString> approveList) throws SignatureException, PermissionException, SignatureFormatException {
     long currentWeight = 0;
-    //    if (signature.size() % 65 != 0) {
-    //      throw new SignatureFormatException("Signature size is " + signature.size());
-    //    }
     if (sigs.size() > permission.getKeysCount()) {
       throw new PermissionException("Signature count is " + (sigs.size()) + " more than key counts of permission : " + permission.getKeysCount());
     }
@@ -271,8 +269,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       byte[] address = ECKey.signatureToAddress(hash, base64);
       long weight = getWeight(permission, address);
       if (weight == 0) {
-        throw new PermissionException(
-            ByteArray.toHexString(sig.toByteArray()) + " is signed by " + Wallet.encode58Check(address) + " but it is not contained of permission.");
+        throw new PermissionException(ByteArray.toHexString(sig.toByteArray()) + " is signed by " + Wallet.encode58Check(address) + " but it is not contained of permission.");
       }
       if (addMap.containsKey(base64)) {
         throw new PermissionException(Wallet.encode58Check(address) + " has signed twice!");
@@ -396,15 +393,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case SetAccountIdContract:
           owner = contractParameter.unpack(SetAccountIdContract.class).getOwnerAddress();
           break;
-        //case BuyStorageContract:
-        //  owner = contractParameter.unpack(BuyStorageContract.class).getOwnerAddress();
-        //  break;
-        //case BuyStorageBytesContract:
-        //  owner = contractParameter.unpack(BuyStorageBytesContract.class).getOwnerAddress();
-        //  break;
-        //case SellStorageContract:
-        //  owner = contractParameter.unpack(SellStorageContract.class).getOwnerAddress();
-        //  break;
         case UpdateSettingContract:
           owner = contractParameter.unpack(UpdateSettingContract.class)
               .getOwnerAddress();
@@ -438,9 +426,16 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         case FutureTransferContract:
           owner = contractParameter.unpack(FutureTransferContract.class).getOwnerAddress();
           break;
+        case FutureDealTransferContract:
+          owner = contractParameter.unpack(FutureDealTransferContract.class).getOwnerAddress();
+          break;
         case FutureWithdrawContract:
           owner = contractParameter.unpack(FutureWithdrawContract.class).getOwnerAddress();
           break;
+
+        /**
+         * Urc30
+         */
         case ExchangeTokenContract:
           owner = contractParameter.unpack(ExchangeTokenContract.class).getOwnerAddress();
           break;
@@ -469,33 +464,97 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
           owner = contractParameter.unpack(WithdrawFutureTokenContract.class).getOwnerAddress();
           break;
 
-          //NFT
-        case CreateNftTemplateContract:
-          owner = contractParameter.unpack(CreateNftTemplateContract.class).getOwnerAddress();
+        /**
+         * Urc721
+         */
+        case Urc721CreateContract:
+          owner = contractParameter.unpack(Urc721CreateContract.class).getOwnerAddress();
           break;
-        case MintNftTokenContract:
-          owner = contractParameter.unpack(MintNftTokenContract.class).getOwnerAddress();
+        case Urc721MintContract:
+          owner = contractParameter.unpack(Urc721MintContract.class).getOwnerAddress();
           break;
-        case RemoveNftMinterContract:
-          owner = contractParameter.unpack(RemoveNftMinterContract.class).getOwnerAddress();
+        case Urc721RemoveMinterContract:
+          owner = contractParameter.unpack(Urc721RemoveMinterContract.class).getOwnerAddress();
           break;
-        case AddNftMinterContract:
-          owner = contractParameter.unpack(AddNftMinterContract.class).getOwnerAddress();
+        case Urc721AddMinterContract:
+          owner = contractParameter.unpack(Urc721AddMinterContract.class).getOwnerAddress();
           break;
-        case RenounceNftMinterContract:
-          owner = contractParameter.unpack(RenounceNftMinterContract.class).getOwnerAddress();
+        case Urc721RenounceMinterContract:
+          owner = contractParameter.unpack(Urc721RenounceMinterContract.class).getOwnerAddress();
           break;
-        case BurnNftTokenContract:
-          owner = contractParameter.unpack(BurnNftTokenContract.class).getOwnerAddress();
+        case Urc721BurnContract:
+          owner = contractParameter.unpack(Urc721BurnContract.class).getOwnerAddress();
           break;
-        case ApproveNftTokenContract:
-          owner = contractParameter.unpack(ApproveNftTokenContract.class).getOwnerAddress();
+        case Urc721ApproveContract:
+          owner = contractParameter.unpack(Urc721ApproveContract.class).getOwnerAddress();
           break;
-        case ApproveForAllNftTokenContract:
-          owner = contractParameter.unpack(ApproveForAllNftTokenContract.class).getOwnerAddress();
+        case Urc721SetApprovalForAllContract:
+          owner = contractParameter.unpack(Urc721SetApprovalForAllContract.class).getOwnerAddress();
           break;
-        case TransferNftTokenContract:
-          owner = contractParameter.unpack(TransferNftTokenContract.class).getOwnerAddress();
+        case Urc721TransferFromContract:
+          owner = contractParameter.unpack(Urc721TransferFromContract.class).getOwnerAddress();
+          break;
+
+        /**
+         * POSBridge
+         */
+        case PosBridgeSetupContract:
+          owner = contractParameter.unpack(PosBridgeSetupContract.class).getOwnerAddress();
+          break;
+        case PosBridgeMapTokenContract:
+          owner = contractParameter.unpack(PosBridgeMapTokenContract.class).getOwnerAddress();
+          break;
+        case PosBridgeCleanMapTokenContract:
+          owner = contractParameter.unpack(PosBridgeCleanMapTokenContract.class).getOwnerAddress();
+          break;
+        case PosBridgeDepositContract:
+          owner = contractParameter.unpack(PosBridgeDepositContract.class).getOwnerAddress();
+          break;
+        case PosBridgeDepositExecContract:
+          owner = contractParameter.unpack(PosBridgeDepositExecContract.class).getOwnerAddress();
+          break;
+        case PosBridgeWithdrawContract:
+          owner = contractParameter.unpack(PosBridgeWithdrawContract.class).getOwnerAddress();
+          break;
+        case PosBridgeWithdrawExecContract:
+          owner = contractParameter.unpack(PosBridgeWithdrawExecContract.class).getOwnerAddress();
+          break;
+
+        /**
+         * Urc20
+         */
+        case Urc20CreateContract:
+          owner = contractParameter.unpack(Urc20CreateContract.class).getOwnerAddress();
+          break;
+        case Urc20ContributePoolFeeContract:
+          owner = contractParameter.unpack(Urc20ContributePoolFeeContract.class).getOwnerAddress();
+          break;
+        case Urc20UpdateParamsContract:
+          owner = contractParameter.unpack(Urc20UpdateParamsContract.class).getOwnerAddress();
+          break;
+        case Urc20MintContract:
+          owner = contractParameter.unpack(Urc20MintContract.class).getOwnerAddress();
+          break;
+        case Urc20BurnContract:
+          owner = contractParameter.unpack(Urc20BurnContract.class).getOwnerAddress();
+          break;
+        case Urc20TransferFromContract:
+          owner = contractParameter.unpack(Urc20TransferFromContract.class).getOwnerAddress();
+          break;
+        case Urc20TransferContract:
+          owner = contractParameter.unpack(Urc20TransferContract.class).getOwnerAddress();
+          break;
+        case Urc20WithdrawFutureContract:
+          owner = contractParameter.unpack(Urc20WithdrawFutureContract.class).getOwnerAddress();
+          break;
+        case Urc20TransferOwnerContract:
+          owner = contractParameter.unpack(Urc20TransferOwnerContract.class).getOwnerAddress();
+          break;
+        case Urc20ExchangeContract:
+          owner = contractParameter.unpack(Urc20ExchangeContract.class).getOwnerAddress();
+          break;
+        case Urc20ApproveContract:
+          owner = contractParameter.unpack(Urc20ApproveContract.class).getOwnerAddress();
           break;
 
         default:
@@ -633,14 +692,15 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
       case UpdateBrokerageContract:
         clazz = UpdateBrokerageContract.class;
         break;
-
-      //Token
       case FutureTransferContract:
         clazz = FutureTransferContract.class;
         break;
       case FutureWithdrawContract:
         clazz = FutureWithdrawContract.class;
         break;
+      /**
+       * Urc30
+       */
       case CreateTokenContract:
         clazz = CreateTokenContract.class;
         break;
@@ -669,35 +729,101 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         clazz = ExchangeTokenContract.class;
         break;
 
-      //NFT
-      case CreateNftTemplateContract:
-        clazz = CreateNftTemplateContract.class;
+      /**
+       * Urc721
+       */
+      case FutureDealTransferContract:
+        clazz = FutureDealTransferContract.class;
         break;
-      case MintNftTokenContract:
-        clazz = MintNftTokenContract.class;
+      case Urc721CreateContract:
+        clazz = Urc721CreateContract.class;
         break;
-      case RemoveNftMinterContract:
-        clazz = RemoveNftMinterContract.class;
+      case Urc721MintContract:
+        clazz = Urc721MintContract.class;
         break;
-      case AddNftMinterContract:
-        clazz = AddNftMinterContract.class;
+      case Urc721RemoveMinterContract:
+        clazz = Urc721RemoveMinterContract.class;
         break;
-      case RenounceNftMinterContract:
-        clazz = RenounceNftMinterContract.class;
+      case Urc721AddMinterContract:
+        clazz = Urc721AddMinterContract.class;
         break;
-      case BurnNftTokenContract:
-        clazz = BurnNftTokenContract.class;
+      case Urc721RenounceMinterContract:
+        clazz = Urc721RenounceMinterContract.class;
         break;
-      case ApproveNftTokenContract:
-        clazz = ApproveNftTokenContract.class;
+      case Urc721BurnContract:
+        clazz = Urc721BurnContract.class;
         break;
-      case ApproveForAllNftTokenContract:
-        clazz = ApproveForAllNftTokenContract.class;
+      case Urc721ApproveContract:
+        clazz = Urc721ApproveContract.class;
         break;
-      case TransferNftTokenContract:
-        clazz = TransferNftTokenContract.class;
+      case Urc721SetApprovalForAllContract:
+        clazz = Urc721SetApprovalForAllContract.class;
         break;
-      //@todo add other contract
+      case Urc721TransferFromContract:
+        clazz = Urc721TransferFromContract.class;
+        break;
+      /**
+       * POSBridge
+       */
+      case PosBridgeSetupContract:
+        clazz = PosBridgeSetupContract.class;
+        break;
+      case PosBridgeMapTokenContract:
+        clazz = PosBridgeMapTokenContract.class;
+        break;
+      case PosBridgeCleanMapTokenContract:
+        clazz = PosBridgeCleanMapTokenContract.class;
+        break;
+      case PosBridgeDepositContract:
+        clazz = PosBridgeDepositContract.class;
+        break;
+      case PosBridgeDepositExecContract:
+        clazz = PosBridgeDepositExecContract.class;
+        break;
+      case PosBridgeWithdrawContract:
+        clazz = PosBridgeWithdrawContract.class;
+        break;
+      case PosBridgeWithdrawExecContract:
+        clazz = PosBridgeWithdrawExecContract.class;
+        break;
+
+      /**
+       * Urc20
+       */
+      case Urc20CreateContract:
+        clazz = Urc20CreateContract.class;
+        break;
+      case Urc20ContributePoolFeeContract:
+        clazz = Urc20ContributePoolFeeContract.class;
+        break;
+      case Urc20UpdateParamsContract:
+        clazz = Urc20UpdateParamsContract.class;
+        break;
+      case Urc20MintContract:
+        clazz = Urc20MintContract.class;
+        break;
+      case Urc20BurnContract:
+        clazz = Urc20BurnContract.class;
+        break;
+      case Urc20TransferFromContract:
+        clazz = Urc20TransferFromContract.class;
+        break;
+      case Urc20TransferContract:
+        clazz = Urc20TransferContract.class;
+        break;
+      case Urc20WithdrawFutureContract:
+        clazz = Urc20WithdrawFutureContract.class;
+        break;
+      case Urc20TransferOwnerContract:
+        clazz = Urc20TransferOwnerContract.class;
+        break;
+      case Urc20ExchangeContract:
+        clazz = Urc20ExchangeContract.class;
+        break;
+      case Urc20ApproveContract:
+        clazz = Urc20ApproveContract.class;
+        break;
+
       default:
         break;
     }
@@ -709,7 +835,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     Message.compareBytes(src.toByteArray(), contractMessage.toByteArray());
   }
 
-  // todo mv this static function to capsule util
   public static byte[] getToAddress(Transaction.Contract contract) {
     ByteString to;
     try {
@@ -735,7 +860,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     }
   }
 
-  // todo mv this static function to capsule util
   public static long getCallValue(Transaction.Contract contract) {
     int energyForUnx;
     try {
@@ -757,7 +881,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     }
   }
 
-  // todo mv this static function to capsule util
   public static long getCallTokenValue(Transaction.Contract contract) {
     int energyForUnx;
     try {
@@ -789,9 +912,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     return signature.toBase64();
   }
 
-  public static boolean validateSignature(Transaction transaction,
-      byte[] hash, Manager manager)
-      throws PermissionException, SignatureException, SignatureFormatException {
+  public static boolean validateSignature(Transaction transaction, byte[] hash, Manager manager) throws PermissionException, SignatureException, SignatureFormatException {
     AccountStore accountStore = manager.getAccountStore();
     Transaction.Contract contract = transaction.getRawData().getContractList().get(0);
     int permissionId = contract.getPermissionId();
@@ -803,8 +924,7 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
         permission = AccountCapsule.getDefaultPermission(ByteString.copyFrom(owner));
       }
       if (permissionId == 2) {
-        permission = AccountCapsule
-            .createDefaultActivePermission(ByteString.copyFrom(owner), manager);
+        permission = AccountCapsule.createDefaultActivePermission(ByteString.copyFrom(owner), manager);
       }
     } else {
       permission = account.getPermissionById(permissionId);
@@ -892,10 +1012,8 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
 
   @Override
   public String toString() {
-
     toStringBuff.setLength(0);
     toStringBuff.append("TransactionCapsule \n[ ");
-
     toStringBuff.append("hash=").append(getTransactionId()).append("\n");
     AtomicInteger i = new AtomicInteger();
     if (!getInstance().getRawData().getContractList().isEmpty()) {
@@ -937,7 +1055,6 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     } else {
       toStringBuff.append("contract list is empty\n");
     }
-
     toStringBuff.append("]");
     return toStringBuff.toString();
   }
@@ -1013,33 +1130,96 @@ public class TransactionCapsule implements ProtoCapsule<Transaction> {
     return this.transaction.getRet(0).getContractRet();
   }
 
-  public static int getMinSupportedBlockVersion(ContractType txType){
-    switch (txType){
-      case CreateNftTemplateContract:
-      case MintNftTokenContract:
-      case AddNftMinterContract:
-      case RemoveNftMinterContract:
-      case RenounceNftMinterContract:
-      case BurnNftTokenContract:
-      case ApproveNftTokenContract:
-      case ApproveForAllNftTokenContract:
-      case TransferNftTokenContract:
-        return BLOCK_VERSION_5;
-      case TransferTokenOwnerContract:
-      case ExchangeTokenContract:
-        return BLOCK_VERSION_3;
-      case CreateTokenContract:
-      case ContributeTokenPoolFeeContract:
-      case UpdateTokenParamsContract:
-      case MineTokenContract:
-      case BurnTokenContract:
-      case TransferTokenContract:
-      case WithdrawFutureTokenContract:
-      case FutureTransferContract:
-      case FutureWithdrawContract:
-        return BLOCK_VERSION_2;
-      default:
-        return BLOCK_VERSION_1;
+  public static void checkMinSupportedBlockVersion(ContractType txType, int blockNum) throws ContractValidateException{
+    try {
+      switch (txType) {
+        case FutureDealTransferContract:
+        case Urc721CreateContract:
+        case Urc721MintContract:
+        case Urc721AddMinterContract:
+        case Urc721RemoveMinterContract:
+        case Urc721RenounceMinterContract:
+        case Urc721BurnContract:
+        case Urc721ApproveContract:
+        case Urc721SetApprovalForAllContract:
+        case Urc721TransferFromContract:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_5, "not supported by block version: " + blockNum + " anymore!");
+          break;
+        /**
+         * POSBridge
+         */
+        case PosBridgeSetupContract:
+        case PosBridgeMapTokenContract:
+        case PosBridgeCleanMapTokenContract:
+        case PosBridgeDepositContract:
+        case PosBridgeDepositExecContract:
+        case PosBridgeWithdrawContract:
+        case PosBridgeWithdrawExecContract:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_6, "not supported by block version: " + blockNum + " anymore!");
+          break;
+        /**
+         * Urc20
+         */
+        case Urc20CreateContract:
+        case Urc20ContributePoolFeeContract:
+        case Urc20UpdateParamsContract:
+        case Urc20MintContract:
+        case Urc20BurnContract:
+        case Urc20TransferFromContract:
+        case Urc20TransferContract:
+        case Urc20WithdrawFutureContract:
+        case Urc20TransferOwnerContract:
+        case Urc20ExchangeContract:
+        case Urc20ApproveContract:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_5);
+          break;
+
+        case TransferTokenOwnerContract:
+        case ExchangeTokenContract:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_3);
+          break;
+        case CreateTokenContract:
+        case ContributeTokenPoolFeeContract:
+        case UpdateTokenParamsContract:
+        case MineTokenContract:
+        case BurnTokenContract:
+        case TransferTokenContract:
+        case WithdrawFutureTokenContract:
+        case FutureTransferContract:
+        case FutureWithdrawContract:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_2);
+          break;
+        default:
+          Assert.isTrue(blockNum >= BLOCK_VERSION_1);
+          break;
+      }
+    }
+    catch (Exception e){
+      String msg = String.format("transaction type %s not supported by this block version %s", txType, blockNum);
+      throw new ContractValidateException(msg);
+    }
+  }
+
+  public static void checkMaxSupportedBlockVersion(ContractType txType, int blockNum) throws ContractValidateException{
+    try {
+      switch (txType){
+        case BurnTokenContract:
+        case ContributeTokenPoolFeeContract:
+        case CreateTokenContract:
+        case ExchangeTokenContract:
+        case MineTokenContract:
+        case TransferTokenContract:
+        case TransferTokenOwnerContract:
+        case UpdateTokenParamsContract:
+        case WithdrawFutureTokenContract:
+          Assert.isTrue(blockNum <= BLOCK_VERSION_4);
+        default:
+          break;
+      }
+    }
+    catch (Exception e){
+      String msg = String.format("transaction type %s not supported by this block version %s", txType, blockNum);
+      throw new ContractValidateException(msg);
     }
   }
 }

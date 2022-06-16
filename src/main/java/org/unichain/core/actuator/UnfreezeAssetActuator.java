@@ -25,7 +25,7 @@ import java.util.List;
 @Slf4j(topic = "actuator")
 public class UnfreezeAssetActuator extends AbstractActuator {
 
-  UnfreezeAssetActuator(Any contract, Manager dbManager) {
+  public UnfreezeAssetActuator(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 

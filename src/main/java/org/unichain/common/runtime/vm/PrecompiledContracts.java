@@ -217,7 +217,6 @@ public class PrecompiledContracts {
 
     @Override
     public long getEnergyForData(byte[] data) {
-
       // energy charge for the execution:
       // minimum 1 and additional 1 for each 32 bytes word (round  up)
       if (data == null) {
@@ -237,7 +236,6 @@ public class PrecompiledContracts {
 
     @Override
     public long getEnergyForData(byte[] data) {
-
       // energy charge for the execution:
       // minimum 50 and additional 50 for each 32 bytes word (round  up)
       if (data == null) {

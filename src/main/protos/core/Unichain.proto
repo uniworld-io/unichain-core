@@ -939,13 +939,18 @@ message Urc721ApproveAllMap {
 
 message Urc721AccountTokenRelation{
   bytes owner_address = 1;
+  //for owner
   bytes head = 2;
   bytes tail = 3;
-  int64 total = 4;//owner only
+  int64 total = 4;
   map<string, int64> totals = 5; //owner --> [contract addr --> total], base58
+
+  //for approval
   bytes approve_head = 7;
   bytes approve_tail = 8;
   int64 approve_total = 9;
+
+  //for approval for all
   map<string, string> approved_for_alls = 10; //owner --> [contract addr --> operator], base58
   map<string, Urc721ApproveAllMap> approve_alls = 6; //operator --> [owner --> contract addr map], base58
 }

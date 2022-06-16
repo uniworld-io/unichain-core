@@ -3,6 +3,7 @@ package org.unichain.core.actuator.urc721.ext;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import lombok.var;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -346,15 +347,15 @@ public class Urc721Impl implements Urc721 {
     private List<Protocol.Urc721Token> listTokenByApprovedForAll(byte[] operatorAddr, Predicate<Urc721TokenCapsule> filter){
         var result = new ArrayList<Protocol.Urc721Token>();
         var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
-        if (summaryStore.has(operatorAddr) && summaryStore.get(operatorAddr).getTotalApprove() > 0) {
+        if (summaryStore.has(operatorAddr) && summaryStore.get(operatorAddr).getApproveAllMap().size() > 0) {
             summaryStore.get(operatorAddr).getApproveAllMap().forEach((ownerBase58, contracts) -> {
+                val ownerAddr = Wallet.decodeFromBase58Check(ownerBase58);
                 contracts.getContractsMap().forEach((contractBase58, approved) -> {
                     if(approved){
-                        var owner = Wallet.decodeFromBase58Check(ownerBase58);
-                        if (summaryStore.has(owner)) {
-                            var ownerRelationCap = summaryStore.get(owner);
+                        if (summaryStore.has(ownerAddr)) {
+                            var ownerSummary = summaryStore.get(ownerAddr);
                             Predicate<Urc721TokenCapsule> filter0 = cap -> (Arrays.equals(cap.getAddr(), Wallet.decodeFromBase58Check(contractBase58))) && filter.test(cap);
-                            result.addAll(listTokenByOwner(ownerRelationCap.getInstance().getOwnerAddress().toByteArray(), filter0));
+                            result.addAll(listTokenByOwner(ownerSummary.getInstance().getOwnerAddress().toByteArray(), filter0));
                         }
                     }
                 });

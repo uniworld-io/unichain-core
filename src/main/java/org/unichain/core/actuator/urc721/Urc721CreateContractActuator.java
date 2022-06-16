@@ -113,7 +113,7 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       Assert.isTrue(Wallet.addressValid(ownerAddr)
                       && accountStore.has(ownerAddr)
                       && !Arrays.equals(dbManager.getBurnAddress(), ownerAddr)
-                      && (accountStore.get(ownerAddr).getType() == Protocol.AccountType.Normal),
+                      && (accountStore.get(ownerAddr).getType() != Protocol.AccountType.Contract),
               "Bad owner account: invalid or not exist, must be normal and not burn address");
 
       Assert.isTrue(TransactionUtil.validTokenSymbol(symbol), "Invalid contract symbol");
@@ -124,7 +124,7 @@ public class Urc721CreateContractActuator extends AbstractActuator {
         Assert.isTrue(Wallet.addressValid(minterAddr)
                         && accountStore.has(minterAddr)
                         && !Arrays.equals(dbManager.getBurnAddress(), minterAddr)
-                        && (accountStore.get(minterAddr).getType() == Protocol.AccountType.Normal)
+                        && (accountStore.get(minterAddr).getType() != Protocol.AccountType.Contract)
                         && !Arrays.equals(minterAddr, ownerAddr)
                 , "Unrecognized minter address: must exist, not burn address, normal address and not owner address");
       }

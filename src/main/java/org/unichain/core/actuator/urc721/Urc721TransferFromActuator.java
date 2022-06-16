@@ -112,7 +112,7 @@ public class Urc721TransferFromActuator extends AbstractActuator {
                             && contractStore.has(contractAddr)
                             && Wallet.addressValid(toAddr)
                             && !Arrays.equals(dbManager.getBurnAddress(), toAddr)
-                            && (!accountStore.has(toAddr) || (accountStore.get(toAddr).getType() == Protocol.AccountType.Normal)),
+                            && (!accountStore.has(toAddr) || (accountStore.get(toAddr).getType() != Protocol.AccountType.Contract)),
                     "Unrecognized  operator|to|contract address");
 
             Assert.isTrue(ctx.hasField(URC721_TRANSFER_FROM_FIELD_TOKEN_ID) && ctx.getTokenId() >= 0, "Missing or bad token id");

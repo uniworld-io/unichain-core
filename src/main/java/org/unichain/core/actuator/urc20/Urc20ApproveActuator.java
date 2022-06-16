@@ -203,7 +203,7 @@ public class Urc20ApproveActuator extends AbstractActuator {
       var spenderKey = Urc20SpenderCapsule.genKey(spenderAddr, urc20Addr);
       if(!spenderStore.has(spenderKey))
       {
-        Assert.isTrue(tokenAvailable.compareTo(limit) >= 0, "Spender amount reached out available token!");
+        Assert.isTrue(tokenAvailable.compareTo(limit) >= 0, "Spender amount and fee reached out available token!");
       }
       else {
         spenderStore.get(spenderKey).checkSetQuota(ownerAddr, limit, tokenAvailable);

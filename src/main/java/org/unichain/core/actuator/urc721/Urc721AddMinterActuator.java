@@ -101,7 +101,7 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       Assert.isTrue(Wallet.addressValid(minterAddr), "Minter address not active or not exists");
       Assert.isTrue(!Arrays.equals(minterAddr, ownerAddr), "Owner and minter must be not the same");
       Assert.isTrue(!Arrays.equals(dbManager.getBurnAddress(), minterAddr)
-                      && (!accStore.has(minterAddr) || accStore.get(minterAddr).getType() == Protocol.AccountType.Normal),
+                      && (!accStore.has(minterAddr) || accStore.get(minterAddr).getType() != Protocol.AccountType.Contract),
               "Bad minter address: must be not burn, normal address");
       Assert.isTrue(contractStore.has(contractAddr), "Contract address not exist");
       var contractCap = contractStore.get(contractAddr);
@@ -112,9 +112,7 @@ public class Urc721AddMinterActuator extends AbstractActuator {
       {
         fee = Math.addExact(dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract(), fee);
       }
-      else {
-        Assert.isTrue(accStore.get(minterAddr).getType() == Protocol.AccountType.Normal, "Minter must be normal address");
-      }
+
       Assert.isTrue(accStore.get(ownerAddr).getBalance() >= fee, "Not enough Balance to cover transaction fee, require " + fee + "ginza");
       Assert.isTrue(!contractCap.hasMinter() || (!Arrays.equals(contractCap.getMinter(), minterAddr)), "Already minter");
 

@@ -112,16 +112,12 @@ public class Urc721ApproveActuator extends AbstractActuator {
       Assert.isTrue(!TransactionUtil.isGenesisAddress(toAddr), "Operator can not be Genesis account");
 
       Assert.isTrue(!Arrays.equals(dbManager.getBurnAddress(), toAddr)
-              && (!accountStore.has(toAddr) || accountStore.get(toAddr).getType() == Protocol.AccountType.Normal),
+              && (!accountStore.has(toAddr) || accountStore.get(toAddr).getType() != Protocol.AccountType.Contract),
       "Bad to address: must be not burn, normal address");
 
 
       if(!accountStore.has(toAddr)){
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
-      }
-      else {
-        //must be normal account
-        Assert.isTrue(accountStore.get(toAddr).getType() == Protocol.AccountType.Normal, "Must be normal account");
       }
 
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee,"Not enough Balance to cover transaction fee, require " + fee + "ginza");

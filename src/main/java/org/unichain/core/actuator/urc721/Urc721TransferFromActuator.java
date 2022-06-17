@@ -40,6 +40,8 @@ import java.util.Arrays;
 @Slf4j(topic = "actuator")
 public class Urc721TransferFromActuator extends AbstractActuator {
 
+    private static Descriptors.FieldDescriptor URC721_TRANSFER_FROM_FIELD_TOKEN_ID = Urc721TransferFromContract.getDescriptor().findFieldByNumber(Urc721TransferFromContract.TOKEN_ID_FIELD_NUMBER);
+
     public Urc721TransferFromActuator(Any contract, Manager dbManager) {
         super(contract, dbManager);
     }
@@ -84,9 +86,6 @@ public class Urc721TransferFromActuator extends AbstractActuator {
             throw new ContractExeException(e.getMessage());
         }
     }
-
-    public static Descriptors.FieldDescriptor URC721_TRANSFER_FROM_FIELD_TOKEN_ID = Urc721TransferFromContract.getDescriptor().findFieldByNumber(Urc721TransferFromContract.TOKEN_ID_FIELD_NUMBER);
-
 
     @Override
     public boolean validate() throws ContractValidateException {

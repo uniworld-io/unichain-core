@@ -214,6 +214,7 @@ public class ActuatorUtil {
         return;
       }
 
+      //other deals exist
       var headKey = summary.getLowerTick().toByteArray();
       if (Arrays.equals(headKey, dealKey)) {
         /**
@@ -245,13 +246,14 @@ public class ActuatorUtil {
         /**
          * if this deal is tail, so....
          */
-        //update summary
+        //update prev deal
         var tail = futureStore.get(tailKey);
         var prevTickKey = tail.getPrevTick().toByteArray();
         var prevTick = futureStore.get(prevTickKey);
         prevTick.clearNextTick();
         futureStore.put(prevTickKey, prevTick);
 
+        //update summary
         summary = summary.toBuilder()
                 .setUpperTick(tail.getPrevTick())
                 .setUpperTime(prevTick.getExpireTime())

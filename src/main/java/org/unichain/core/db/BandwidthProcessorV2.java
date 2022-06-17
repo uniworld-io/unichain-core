@@ -15,6 +15,9 @@ import org.unichain.protos.Protocol.Transaction.Contract;
 
 import java.util.List;
 import java.util.Map;
+
+import static org.unichain.core.capsule.urc721.Urc721ContractCapsule.URC721_CREATE_CONTRACT_FIELD_MINTER;
+
 /**
  * Charge bandwidth directly from account balance:
  * - don't use global net
@@ -85,10 +88,11 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
       }
 
       /*
-        @note:
-        - create new account fee split to 2 part: getCreateAccountFe(default 1000Ginza), getCreateNewAccountFeeInSystemContract default 0Ginza
-        this part is getCreateAccountFe only.
-        - if create new account, ignore bandwidth fee
+        - create new account fee include 2 parts:
+          - getCreateAccountFee: default 1000 Gas
+          - getCreateNewAccountFeeInSystemContract: default 0 Gas
+        - this part is getCreateAccountFe only!
+        - if charged getCreateAccountFe, ignore bandwidth fee
        */
       try {
         if (isContractCreateNewAccount(contract)) {
@@ -114,11 +118,14 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         throw new AccountResourceInsufficientException("Insufficient balance to create new account");
       }
 
-      /*
+      /**
         or else charge bw fee
        */
         try{
           switch (contract.getType()) {
+            /**
+             * urc30
+             */
             case TransferTokenContract:
             {
               var tokenKey = Util.stringAsBytesUppercase(contract.getParameter().unpack(TransferTokenContract.class).getTokenName());
@@ -126,6 +133,17 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
                 continue;
               break;
             }
+            case WithdrawFutureTokenContract:
+            {
+              var tokenKey = Util.stringAsBytesUppercase(contract.getParameter().unpack(WithdrawFutureTokenContract.class).getTokenName());
+              if (useTransactionFee4Urc30Pool(tokenKey, bytesSize, trace))
+                continue;
+              break;
+            }
+
+            /**
+             * Urc20
+             */
             case Urc20TransferFromContract:
             {
               var contractAddr = contract.getParameter().unpack(Urc20TransferFromContract.class).getAddress().toByteArray();
@@ -137,13 +155,6 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
             {
               var contractAddr = contract.getParameter().unpack(Urc20TransferContract.class).getAddress().toByteArray();
               if (useTransactionFee4Urc20Pool(contractAddr, bytesSize, trace))
-                continue;
-              break;
-            }
-            case WithdrawFutureTokenContract:
-            {
-              var tokenKey = Util.stringAsBytesUppercase(contract.getParameter().unpack(WithdrawFutureTokenContract.class).getTokenName());
-              if (useTransactionFee4Urc30Pool(tokenKey, bytesSize, trace))
                 continue;
               break;
             }
@@ -168,6 +179,8 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
                 continue;
               break;
             }
+
+            //other contract
             default:
             {
               if (useTransactionFee(ownerAccountCap, bytesSize, trace))
@@ -312,6 +325,40 @@ public class BandwidthProcessorV2 extends ResourceProcessor {
         {
           var ctx= contract.getParameter().unpack(Urc20ApproveContract.class);
           return !dbManager.getAccountStore().has(ctx.getSpender().toByteArray());
+        }
+
+        /**
+         * urc721
+         */
+        case Urc721TransferFromContract:
+        {
+          var ctx= contract.getParameter().unpack(Urc721TransferFromContract.class);
+          return !dbManager.getAccountStore().has(ctx.getTo().toByteArray());
+        }
+        case Urc721AddMinterContract:
+        {
+          var ctx= contract.getParameter().unpack(Urc721AddMinterContract.class);
+          return !dbManager.getAccountStore().has(ctx.getMinter().toByteArray());
+        }
+        case Urc721ApproveContract:
+        {
+          var ctx= contract.getParameter().unpack(Urc721ApproveContract.class);
+          return !dbManager.getAccountStore().has(ctx.getTo().toByteArray()) && ctx.getApprove();
+        }
+        case Urc721CreateContract:
+        {
+          var ctx= contract.getParameter().unpack(Urc721CreateContract.class);
+          return ctx.hasField(URC721_CREATE_CONTRACT_FIELD_MINTER) && !dbManager.getAccountStore().has(ctx.getMinter().toByteArray());
+        }
+        case Urc721MintContract:
+        {
+          var ctx= contract.getParameter().unpack(Urc721MintContract.class);
+          return !dbManager.getAccountStore().has(ctx.getToAddress().toByteArray());
+        }
+        case Urc721SetApprovalForAllContract:
+        {
+          var ctx= contract.getParameter().unpack(Urc721SetApprovalForAllContract.class);
+          return ctx.getApprove() && !dbManager.getAccountStore().has(ctx.getToAddress().toByteArray());
         }
         default:
           return false;

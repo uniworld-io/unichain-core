@@ -122,11 +122,10 @@ public class Urc20MintActuator extends AbstractActuator {
 
       if(ctx.hasField(TO_ADDRESS_FIELD_NUMBER)){
         var toAddr = ctx.getToAddress().toByteArray();
-        Assert.isTrue(Wallet.addressValid(toAddr)
-                && !Arrays.equals(toAddr, ownerAddr)
-                && !Arrays.equals(dbManager.getBurnAddress(), toAddr)
-                && (!accStore.has(toAddr) || (accStore.get(toAddr).getType() != Protocol.AccountType.Contract)),
-                "Bad to address: invalid, is owner|burn| or contract address!");
+        Assert.isTrue(Wallet.addressValid(toAddr), "To address invalid!");
+        Assert.isTrue(!Arrays.equals(toAddr, ownerAddr), "Bad to address: is owner!");
+        Assert.isTrue(!Arrays.equals(dbManager.getBurnAddress(), toAddr), "Bad to address: is burner!");
+        Assert.isTrue((!accStore.has(toAddr) || (accStore.get(toAddr).getType() != Protocol.AccountType.Contract)), "Bad to address: is contract!");
 
         if(!accStore.has(toAddr)){
           fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());

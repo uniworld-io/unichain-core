@@ -49,11 +49,11 @@ public class TransferFutureDealActuator extends AbstractActuator {
       }
 
       //real amount
-      var dealKey = Util.makeFutureTransferIndexKey(ownerAddr, Util.makeDayTick(dealId));
-      var futureDeal = futureStore.get(dealKey);
+      var ownerDealKey = Util.makeFutureTransferIndexKey(ownerAddr, Util.makeDayTick(dealId));
+      var futureDeal = futureStore.get(ownerDealKey);
       var amt = ctx.hasField(TRANSFER_FUTURE_DEAL_FIELD_AMT) ? ctx.getAmount() : futureDeal.getBalance();
 
-      ActuatorUtil.cutFutureDeal(dbManager, ownerAddr, dealKey, amt);
+      ActuatorUtil.cutFutureDeal(dbManager, ownerAddr, ownerDealKey, amt);
       ActuatorUtil.addFutureDeal(dbManager, toAddr, amt, dealId);
 
       chargeFee(ownerAddr, fee);
@@ -92,7 +92,7 @@ public class TransferFutureDealActuator extends AbstractActuator {
         fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
       }
       else {
-        Assert.isTrue(toAccount.getType() != Protocol.AccountType.Contract, "Allow transfer to normal account only!");
+        Assert.isTrue(toAccount.getType() != Protocol.AccountType.Contract, "Can not transfer to contract account");
       }
 
       /**
@@ -103,7 +103,10 @@ public class TransferFutureDealActuator extends AbstractActuator {
       Assert.isTrue(futureStore.has(dealId) && futureStore.get(dealId).getBalance() > 0, "No future deal or not enough future balance for dealId: " + ctx.getDealId());
 
       if(ctx.hasField(TRANSFER_FUTURE_DEAL_FIELD_AMT)){
-        Assert.isTrue(ctx.getAmount() > 0 && ctx.getAmount() <= futureStore.get(dealId).getBalance(), "Invalid amount");
+        Assert.isTrue(ctx.getAmount() > 0
+                && ctx.getAmount() >= 2 * 1000000L, "Invalid amount: at least 2 UNW required");
+        Assert.isTrue(ctx.getAmount() <= futureStore.get(dealId).getBalance()
+                , "Invalid amount: not enough future balance");
       }
 
       Assert.isTrue(accountStore.get(ownerAddr).getBalance() > fee, "Validate TransferContract error, balance is not sufficient");

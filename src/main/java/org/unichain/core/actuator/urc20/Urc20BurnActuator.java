@@ -37,7 +37,6 @@ import org.unichain.protos.Protocol.Transaction.Result.code;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-//@todo dont charge unw fee, just charge token fee
 @Slf4j(topic = "actuator")
 public class Urc20BurnActuator extends AbstractActuator {
 

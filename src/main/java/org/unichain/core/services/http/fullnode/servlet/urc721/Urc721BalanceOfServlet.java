@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.unichain.api.GrpcAPI;
 import org.unichain.core.services.http.utils.JsonFormat;
 import org.unichain.core.services.http.utils.Util;
 import org.unichain.core.actuator.urc721.ext.Urc721;
@@ -40,7 +41,7 @@ public class Urc721BalanceOfServlet extends HttpServlet {
             if (reply != null) {
                 response.getWriter().println(JsonFormat.printToString(reply, visible));
             } else {
-                response.getWriter().println("{}");
+                response.getWriter().println(JsonFormat.printToString(GrpcAPI.NumberMessage.newBuilder().setNum(0).build(), visible));
             }
         } catch (Exception e) {
             logger.debug("Exception: {}", e.getMessage());

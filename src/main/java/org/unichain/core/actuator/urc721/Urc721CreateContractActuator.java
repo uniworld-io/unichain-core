@@ -55,12 +55,22 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       var ctx = contract.unpack(Urc721CreateContract.class);
       var owner = ctx.getOwnerAddress().toByteArray();
       var tokenAddr = ctx.getAddress().toByteArray();
+      var accountStore = dbManager.getAccountStore();
 
       //save contract
       dbManager.saveUrc721Contract(new Urc721ContractCapsule(ctx, dbManager.getHeadBlockTimeStamp(), 0));
 
-      //create account
+      //create contract account
       dbManager.createDefaultAccount(tokenAddr, Protocol.AccountType.Contract);
+
+      //create minter account
+      if (ctx.hasField(URC721_CREATE_CONTRACT_FIELD_MINTER)){
+        var minterAddr = ctx.getMinter().toByteArray();
+        if(!accountStore.has(minterAddr)){
+          dbManager.createDefaultAccount(minterAddr, Protocol.AccountType.Normal);
+          fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+        }
+      }
 
       chargeFee(owner, fee);
       dbManager.burnFee(fee);
@@ -122,11 +132,17 @@ public class Urc721CreateContractActuator extends AbstractActuator {
       if (ctx.hasField(URC721_CREATE_CONTRACT_FIELD_MINTER)){
         var minterAddr = ctx.getMinter().toByteArray();
         Assert.isTrue(Wallet.addressValid(minterAddr)
-                        && accountStore.has(minterAddr)
                         && !Arrays.equals(dbManager.getBurnAddress(), minterAddr)
-                        && (accountStore.get(minterAddr).getType() != Protocol.AccountType.Contract)
-                        && !Arrays.equals(minterAddr, ownerAddr)
-                , "Unrecognized minter address: must exist, not burn address, normal address and not owner address");
+                        && !Arrays.equals(minterAddr, ownerAddr),
+                "Bad minter address: must be valid address, not burn address, not owner address");
+
+        if(accountStore.has(minterAddr)){
+          Assert.isTrue(accountStore.get(minterAddr).getType() != Protocol.AccountType.Contract, "Minter can not be contract address");
+        }
+        else {
+          //more fee
+          fee = Math.addExact(fee, dbManager.getDynamicPropertiesStore().getCreateNewAccountFeeInSystemContract());
+        }
       }
 
       Assert.isTrue(ctx.getTotalSupply() > 0, "TotalSupply must greater than 0");

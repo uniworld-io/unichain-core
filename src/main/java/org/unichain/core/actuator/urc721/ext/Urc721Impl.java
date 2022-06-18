@@ -385,7 +385,7 @@ public class Urc721Impl implements Urc721 {
             Assert.isTrue(dbManager.getUrc721ContractStore().has(contract), "Unrecognized contract address");
 
             var relationStore = dbManager.getUrc721AccountTokenRelationStore();
-            var balance = relationStore.has(owner) ? relationStore.get(owner).getTotal(Wallet.encode58Check(contract)) : 0L;
+            var balance = relationStore.has(owner) ? relationStore.get(owner).getTotal(Wallet.encode58Check(contract)) : 0;
 
             return GrpcAPI.NumberMessage.newBuilder()
                     .setNum(balance)

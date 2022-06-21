@@ -110,7 +110,7 @@ public class PosBridgeCleanMapTokenActuator extends AbstractActuator {
             //check permission
             var config = dbManager.getPosBridgeConfigStore().get();
             Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
-            Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), config.getOwner()), "unmatched owner");
+            Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), config.getOwner()), "INSUFFICIENT_PERMISSIONS");
 
             Assert.isTrue(accountStore.get(ownerAddr).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;

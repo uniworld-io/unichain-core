@@ -106,7 +106,7 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             //token mapped ?
             var tokenMapStore = dbManager.getRootTokenMapStore();
             var childKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.childChainId , decodedMsg.childTokenAddr);
-            Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "TOKEN_NOT_MAPPED: " + childKey);
+            Assert.isTrue(tokenMapStore.has(childKey.getBytes()), "TOKEN_NOT_MAPPED");
 
             //check receive addr
             byte[] receiverAddress = Numeric.hexStringToByteArray(decodedMsg.receiveAddr);

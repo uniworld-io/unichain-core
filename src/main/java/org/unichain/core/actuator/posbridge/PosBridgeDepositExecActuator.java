@@ -106,7 +106,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             //token mapped ?
             var tokenMapStore = dbManager.getChildTokenMapStore();
             var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr);
-            Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "TOKEN_NOT_MAPPED: " + rootKey);
+            Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "TOKEN_NOT_MAPPED");
 
             var tokenMap = tokenMapStore.get(rootKey.getBytes());
             var childTokenAddr = tokenMap.getChildToken();
@@ -116,13 +116,13 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             switch (assetType){
                 case NATIVE:
                 case ERC20:
-                    Assert.isTrue(dbManager.getUrc20ContractStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "token with address not found: " + decodedMsg);
+                    Assert.isTrue(dbManager.getUrc20ContractStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "Token with address not found: " + decodedMsg);
                     break;
                 case ERC721:
                     Assert.isTrue(dbManager.getUrc721ContractStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "Erc721 with address not found: " + decodedMsg);
                     break;
                 default:
-                    throw new ContractValidateException("invalid asset type");
+                    throw new ContractValidateException("ASSET_TYPE_INVALID");
             }
             Assert.isTrue(accountStore.get(getOwnerAddress().toByteArray()).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;

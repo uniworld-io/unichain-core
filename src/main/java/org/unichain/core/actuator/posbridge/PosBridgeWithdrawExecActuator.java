@@ -27,6 +27,7 @@ import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
 import org.unichain.core.capsule.PosBridgeConfigCapsule;
+import org.unichain.core.capsule.PosBridgeTransactionOriginCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
@@ -34,6 +35,7 @@ import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.core.actuator.posbridge.ext.Predicate;
 import org.unichain.protos.Contract.PosBridgeWithdrawExecContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.utils.Numeric;
 
@@ -67,6 +69,17 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
             ByteString receiver = ByteString.copyFrom(Numeric.hexStringToByteArray(decodedMsg.receiveAddr));
             predicate.unlockTokens(receiver, rootToken, Hex.encodeHexString(decodedMsg.withdrawData.getValue()));
 
+            //store tx
+            var txOriginStore = dbManager.getPosBridgeTransactionOriginStore();
+            var txOriginCap = new PosBridgeTransactionOriginCapsule(
+                    Protocol.PosBridgeTransactionOrigin.newBuilder()
+                            .setChainId(decodedMsg.childChainId)
+                            .setMsg(ctx.getMessage())
+                            .setTx(decodedMsg.txOrigin)
+                            .build());
+            txOriginStore.put(decodedMsg.childChainId, decodedMsg.txOrigin, txOriginCap);
+
+
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
@@ -99,6 +112,10 @@ public class PosBridgeWithdrawExecActuator extends AbstractActuator {
 
             //check mapped token
             var decodedMsg = PosBridgeUtil.decodePosBridgeWithdrawExecMsg(ctx.getMessage());
+
+            //Check exist tx
+            var txOriginStore = dbManager.getPosBridgeTransactionOriginStore();
+            Assert.isTrue(!txOriginStore.has(decodedMsg.childChainId, decodedMsg.txOrigin), "EXIST_TRANSACTION");
 
             //command is for unichain ?
             Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.rootChainId) , "ROOT_CHAIN_INVALID");

@@ -32,15 +32,16 @@ public class PosBridgeUtil {
     /**
      * null address
      */
-    public static class NativeToken{
-        private NativeToken(){}
+    public static class NativeToken {
+        private NativeToken() {
+        }
 
         public static final String BNB = "0x000000000000000000000000000000000000dEaD";
         public static final String ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
         public static final String UNI = "0x4416748f8d05163e917388fa79050bafe5a30faa2f";
 
-        public static boolean contains(final String address){
-            if(BNB.equalsIgnoreCase(address) || ETH.equalsIgnoreCase(address) || UNI.equalsIgnoreCase(address)){
+        public static boolean contains(final String address) {
+            if (BNB.equalsIgnoreCase(address) || ETH.equalsIgnoreCase(address) || UNI.equalsIgnoreCase(address)) {
                 return true;
             }
             return false;
@@ -48,7 +49,7 @@ public class PosBridgeUtil {
     }
 
     @Getter
-    public enum AssetType{
+    public enum AssetType {
         NATIVE(1, "NATIVE"),
         ERC20(2, "ERC20"),
         ERC721(3, "ERC721");
@@ -56,12 +57,13 @@ public class PosBridgeUtil {
         private final int number;
         private final String type;
 
-        AssetType(int number, String type){
+        AssetType(int number, String type) {
             this.number = number;
             this.type = type;
         }
+
         public static AssetType valueOfNumber(int number) throws IllegalAccessException {
-            switch (number){
+            switch (number) {
                 case 1:
                     return NATIVE;
                 case 2:
@@ -76,7 +78,7 @@ public class PosBridgeUtil {
 
     public static Predicate lookupPredicate(int numberType, Manager dbManager, TransactionResultCapsule ret, PosBridgeConfigCapsule config) throws Exception {
         AssetType assetType = AssetType.valueOfNumber(numberType);
-        switch (assetType){
+        switch (assetType) {
             case NATIVE: {
                 return new UnwPredicate(dbManager, ret, config);
             }
@@ -93,7 +95,7 @@ public class PosBridgeUtil {
 
     public static ChildToken lookupChildToken(int numberType, Manager dbManager, TransactionResultCapsule ret) throws Exception {
         AssetType assetType = AssetType.valueOfNumber(numberType);
-        switch (assetType){
+        switch (assetType) {
             case NATIVE:
             case ERC20: {
                 return new ChildTokenUrc20(dbManager, ret);
@@ -109,6 +111,7 @@ public class PosBridgeUtil {
     @Builder
     @ToString
     public static class PosBridgeDepositExecMsg {
+        public String txOrigin;
         public long rootChainId;
         public String rootTokenAddr;
         public long childChainId;
@@ -119,6 +122,7 @@ public class PosBridgeUtil {
     @Builder
     @ToString
     public static class PosBridgeWithdrawExecMsg {
+        public String txOrigin;
         public long childChainId;
         public String childTokenAddr;
         public long rootChainId;
@@ -178,29 +182,29 @@ public class PosBridgeUtil {
     public static PosBridgeDepositExecMsg decodePosBridgeDepositExecMsg(String msgHex) {
         msgHex = Numeric.prependHexPrefix(msgHex);
         List<TypeReference<?>> types = new ArrayList<>();
-        TypeReference<Uint32> type1 = new TypeReference<Uint32>() {
-        };
-        TypeReference<Uint32> type2 = new TypeReference<Uint32>() {
-        };
-        TypeReference<Address> type3 = new TypeReference<Address>() {
-        };
-        TypeReference<Address> type4 = new TypeReference<Address>() {
-        };
-        TypeReference<DynamicBytes> type5 = new TypeReference<DynamicBytes>() {
-        };
-        types.add(type1);
-        types.add(type2);
-        types.add(type3);
-        types.add(type4);
-        types.add(type5);
+
+        types.add(new TypeReference<Utf8String>() {
+        });
+        types.add(new TypeReference<Uint32>() {
+        });
+        types.add(new TypeReference<Uint32>() {
+        });
+        types.add(new TypeReference<Address>() {
+        });
+        types.add(new TypeReference<Address>() {
+        });
+        types.add(new TypeReference<DynamicBytes>() {
+        });
+
         List<Type> out = FunctionReturnDecoder.decode(msgHex, org.web3j.abi.Utils.convert(types));
 
         return PosBridgeDepositExecMsg.builder()
-                .rootChainId(((Uint32) out.get(0)).getValue().longValue())
-                .childChainId(((Uint32) out.get(1)).getValue().longValue())
-                .rootTokenAddr(((Address) out.get(2)).getValue())
-                .receiveAddr(toUniAddress(((Address) out.get(3)).getValue()))
-                .depositData((DynamicBytes) out.get(4))
+                .txOrigin(((Utf8String) out.get(0)).getValue())
+                .rootChainId(((Uint32) out.get(1)).getValue().longValue())
+                .childChainId(((Uint32) out.get(2)).getValue().longValue())
+                .rootTokenAddr(((Address) out.get(3)).getValue())
+                .receiveAddr(toUniAddress(((Address) out.get(4)).getValue()))
+                .depositData((DynamicBytes) out.get(5))
                 .build();
     }
 
@@ -215,10 +219,12 @@ public class PosBridgeUtil {
         return (Uint256) FunctionReturnDecoder.decode(hex, org.web3j.abi.Utils.convert(valueTypes)).get(0);
     }
 
-    public static ERC721Decode abiDecodeToErc721(String hex){
+    public static ERC721Decode abiDecodeToErc721(String hex) {
         List<TypeReference<?>> valueTypes = new ArrayList<>();
-        valueTypes.add(new TypeReference<Uint256>() {});
-        valueTypes.add(new TypeReference<Utf8String>() {});
+        valueTypes.add(new TypeReference<Uint256>() {
+        });
+        valueTypes.add(new TypeReference<Utf8String>() {
+        });
         List<Type> types = FunctionReturnDecoder.decode(hex, org.web3j.abi.Utils.convert(valueTypes));
         return ERC721Decode.builder()
                 .tokenId(((Uint256) types.get(0)).getValue().longValue())
@@ -228,7 +234,8 @@ public class PosBridgeUtil {
 
     public static String abiDecodeFromToString(String hex) {
         List<TypeReference<?>> types = new ArrayList<>();
-        types.add(new TypeReference<Utf8String>() {});
+        types.add(new TypeReference<Utf8String>() {
+        });
         return ((Utf8String) FunctionReturnDecoder.decode(hex, org.web3j.abi.Utils.convert(types))
                 .get(0)).getValue();
     }
@@ -245,29 +252,29 @@ public class PosBridgeUtil {
      */
     public static PosBridgeWithdrawExecMsg decodePosBridgeWithdrawExecMsg(String msgHex) {
         List<TypeReference<?>> types = new ArrayList<>();
-        TypeReference<Uint32> type1 = new TypeReference<Uint32>() {
-        };
-        TypeReference<Uint32> type2 = new TypeReference<Uint32>() {
-        };
-        TypeReference<Address> type3 = new TypeReference<Address>() {
-        };
-        TypeReference<Address> type4 = new TypeReference<Address>() {
-        };
-        TypeReference<DynamicBytes> type5 = new TypeReference<DynamicBytes>() {
-        };
-        types.add(type1);
-        types.add(type2);
-        types.add(type3);
-        types.add(type4);
-        types.add(type5);
+
+        types.add(new TypeReference<Utf8String>() {
+        });
+        types.add(new TypeReference<Uint32>() {
+        });
+        types.add(new TypeReference<Uint32>() {
+        });
+        types.add(new TypeReference<Address>() {
+        });
+        types.add(new TypeReference<Address>() {
+        });
+        types.add(new TypeReference<DynamicBytes>() {
+        });
+
         List<Type> out = FunctionReturnDecoder.decode(msgHex, org.web3j.abi.Utils.convert(types));
 
         return PosBridgeWithdrawExecMsg.builder()
-                .childChainId(((Uint32) out.get(0)).getValue().longValue())
-                .rootChainId(((Uint32) out.get(1)).getValue().longValue())
-                .childTokenAddr(((Address) out.get(2)).getValue())
-                .receiveAddr(toUniAddress(((Address) out.get(3)).getValue()))
-                .withdrawData((DynamicBytes) out.get(4))
+                .txOrigin(((Utf8String) out.get(0)).getValue())
+                .childChainId(((Uint32) out.get(1)).getValue().longValue())
+                .rootChainId(((Uint32) out.get(2)).getValue().longValue())
+                .childTokenAddr(((Address) out.get(3)).getValue())
+                .receiveAddr(toUniAddress(((Address) out.get(4)).getValue()))
+                .withdrawData((DynamicBytes) out.get(5))
                 .build();
     }
 

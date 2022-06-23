@@ -121,6 +121,10 @@ public class Manager {
   private PosBridgeChildTokenMapStore childTokenMapStore;
 
   @Autowired
+  @Getter
+  private PosBridgeTransactionOriginStore posBridgeTransactionOriginStore;
+
+  @Autowired
   private TransactionStore transactionStore;
   @Autowired(required = false)
   private TransactionCache transactionCache;
@@ -1792,6 +1796,7 @@ public class Manager {
     closeOneStore(posBridgeConfigStore);
     closeOneStore(rootTokenMapStore);
     closeOneStore(childTokenMapStore);
+    closeOneStore(posBridgeTransactionOriginStore);
     closeOneStore(blockStore);
     closeOneStore(blockIndexStore);
     closeOneStore(accountIdIndexStore);

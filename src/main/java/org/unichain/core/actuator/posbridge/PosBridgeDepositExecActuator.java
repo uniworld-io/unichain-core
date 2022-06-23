@@ -26,12 +26,14 @@ import org.springframework.util.Assert;
 import org.unichain.common.utils.PosBridgeUtil;
 import org.unichain.core.Wallet;
 import org.unichain.core.actuator.AbstractActuator;
+import org.unichain.core.capsule.PosBridgeTransactionOriginCapsule;
 import org.unichain.core.capsule.TransactionResultCapsule;
 import org.unichain.core.config.Parameter;
 import org.unichain.core.db.Manager;
 import org.unichain.core.exception.ContractExeException;
 import org.unichain.core.exception.ContractValidateException;
 import org.unichain.protos.Contract.PosBridgeDepositExecContract;
+import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Transaction.Result.code;
 import org.web3j.utils.Numeric;
 
@@ -65,6 +67,16 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             var childTokenManager = lookupChildToken(tokenMap.getTokenType(), dbManager, ret);
             childTokenManager.deposit(receiver, childToken, Hex.encodeHexString(decodedMsg.depositData.getValue()));
 
+            //store tx
+            var txOriginStore = dbManager.getPosBridgeTransactionOriginStore();
+            var txOriginCap = new PosBridgeTransactionOriginCapsule(
+                    Protocol.PosBridgeTransactionOrigin.newBuilder()
+                            .setChainId(decodedMsg.rootChainId)
+                            .setMsg(ctx.getMessage())
+                            .setTx(decodedMsg.txOrigin)
+                            .build());
+            txOriginStore.put(decodedMsg.rootChainId, decodedMsg.txOrigin, txOriginCap);
+
             chargeFee(ownerAddr, fee);
             dbManager.burnFee(fee);
             ret.setStatus(fee, code.SUCESS);
@@ -94,7 +106,9 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             var decodedMsg = PosBridgeUtil.decodePosBridgeDepositExecMsg(ctx.getMessage());
             logger.info("Capture decode deposit exec: {}", decodedMsg);
 
-
+            //check exist
+            var txOriginStore = dbManager.getPosBridgeTransactionOriginStore();
+            Assert.isTrue(!txOriginStore.has(decodedMsg.rootChainId, decodedMsg.txOrigin), "EXIST_TRANSACTION");
 
             //make sure this command belong to our chain ?
             Assert.isTrue(PosBridgeUtil.isUnichain(decodedMsg.childChainId), "CHILD_CHAIN_INVALID");
@@ -106,7 +120,7 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             //token mapped ?
             var tokenMapStore = dbManager.getChildTokenMapStore();
             var rootKey = PosBridgeUtil.makeTokenMapKey(decodedMsg.rootChainId, decodedMsg.rootTokenAddr);
-            Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "TOKEN_NOT_MAPPED: " + rootKey);
+            Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "TOKEN_NOT_MAPPED");
 
             var tokenMap = tokenMapStore.get(rootKey.getBytes());
             var childTokenAddr = tokenMap.getChildToken();
@@ -116,13 +130,13 @@ public class PosBridgeDepositExecActuator extends AbstractActuator {
             switch (assetType){
                 case NATIVE:
                 case ERC20:
-                    Assert.isTrue(dbManager.getUrc20ContractStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "token with address not found: " + decodedMsg);
+                    Assert.isTrue(dbManager.getUrc20ContractStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "Token with address not found: " + decodedMsg);
                     break;
                 case ERC721:
                     Assert.isTrue(dbManager.getUrc721ContractStore().has(Numeric.hexStringToByteArray(childTokenAddr)), "Erc721 with address not found: " + decodedMsg);
                     break;
                 default:
-                    throw new ContractValidateException("invalid asset type");
+                    throw new ContractValidateException("ASSET_TYPE_INVALID");
             }
             Assert.isTrue(accountStore.get(getOwnerAddress().toByteArray()).getBalance() >= fee, "Not enough balance to cover fee, require " + fee + "ginza");
             return true;

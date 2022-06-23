@@ -31,7 +31,7 @@ import java.util.Map;
 @Slf4j(topic = "capsule")
 public class PosBridgeConfigCapsule implements ProtoCapsule<Protocol.PosBridgeConfig> {
     public static final byte[] DEFAULT_KEY = ArrayUtils.addAll(Util.stringAsBytesUppercase("PosBridgeConfig"));
-    public static final String POS_BRIDGE_GENESIS_ADMIN_WALLET = "UmKK513F4s81Lmp1xW3VLbjewVUPBDVm1k";
+    public static final String POS_BRIDGE_GENESIS_ADMIN_WALLET = "UhVCmQYvTPMkcDZNY4pB8GydXUbDmGXp4d";
 
 
     private Protocol.PosBridgeConfig config;

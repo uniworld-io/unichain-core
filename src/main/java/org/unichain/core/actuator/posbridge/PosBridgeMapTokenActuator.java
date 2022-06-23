@@ -89,18 +89,15 @@ public class PosBridgeMapTokenActuator extends AbstractActuator {
             var ownerAddr = ctx.getOwnerAddress().toByteArray();
 
             var config = dbManager.getPosBridgeConfigStore().get();
-            Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
+            Assert.isTrue(config.isInitialized(), "POS_BRIDGE_CONFIG_UNSET");
 
             //check permission
-            Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), config.getOwner()), "unmatched owner");
+            Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), config.getOwner()), "INSUFFICIENT_PERMISSIONS");
 
             //check valid chain id
-            Assert.isTrue(ctx.getChildChainid() != ctx.getRootChainid(), "root chain id must be different from child chain id");
-            Assert.isTrue(
-                    Wallet.getSupportedPosChainIds().contains(ctx.getChildChainid())
-                            && Wallet.getSupportedPosChainIds().contains(ctx.getRootChainid()),
-                    "not supported chainId, found rootChainId: " + ctx.getRootChainid() + ", childChainId: " + ctx.getChildChainid()
-            );
+            Assert.isTrue(ctx.getChildChainid() != ctx.getRootChainid(), "ROOT_AND_CHAIN_MUST_NOT_EQUAL");
+            Assert.isTrue(Wallet.getSupportedPosChainIds().contains(ctx.getChildChainid()), "NOT_SUPPORT_CHAIN_ID: " + ctx.getChildChainid());
+            Assert.isTrue(Wallet.getSupportedPosChainIds().contains(ctx.getRootChainid()), "NOT_SUPPORT_CHAIN_ID: " + ctx.getRootChainid());
 
             //check valid token address
             if (isUniChain(ctx.getRootChainid()))

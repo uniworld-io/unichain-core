@@ -105,40 +105,36 @@ public class PosBridgeSetupActuator extends AbstractActuator {
             var config = configStore.get();
 
             //check permission
-            Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), config.getOwner()), "unmatched owner");
+            Assert.isTrue(Arrays.equals(ctx.getOwnerAddress().toByteArray(), config.getOwner()), "INSUFFICIENT_PERMISSIONS");
 
             if(ctx.hasField(POSBRIDGE_NEW_OWNER)) {
-                Assert.isTrue(Wallet.addressValid(ctx.getOwnerAddress().toByteArray()), "Invalid new owner address");
+                Assert.isTrue(Wallet.addressValid(ctx.getOwnerAddress().toByteArray()), "NEW_OWNER_INVALID");
             }
 
             if(ctx.hasField(POSBRIDGE_MIN_VALIDATOR)) {
-                Assert.isTrue(ctx.getMinValidator() >= 1 && ctx.getMinValidator() <= 100, "Invalid new min validator");
+                Assert.isTrue(ctx.getMinValidator() >= 1 && ctx.getMinValidator() <= 100, "MIN_VALIDATOR_INVALID");
             }
 
             if(ctx.hasField(POSBRIDGE_CONSENSUS_RATE)) {
-                Assert.isTrue(ctx.getConsensusRate() >= 50 &&  ctx.getConsensusRate() <= 100, "Invalid consensus rate");
+                Assert.isTrue(ctx.getConsensusRate() >= 50 &&  ctx.getConsensusRate() <= 100, "CONSENSUS_RATE_INVALID");
             }
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_NATIVE)) {
                 var predicateAddr = Numeric.hexStringToByteArray(ctx.getPredicateNative());
-                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist Native predicate address");
+                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "PREDICATE_UNW_INVALID");
             }
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_TOKEN)) {
                 var predicateAddr = Numeric.hexStringToByteArray(ctx.getPredicateToken());
-                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist URC20 predicate address");
+                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "PREDICATE_URC20_INVALID");
             }
 
             if(ctx.hasField(POSBRIDGE_PREDICATE_URC721)) {
                 var predicateAddr = Numeric.hexStringToByteArray(ctx.getPredicateNft());
-                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "Invalid or not exist URC721 predicate address");
-            }
-
-            if(ctx.hasField(POSBRIDGE_MIN_VALIDATOR)) {
-                Assert.isTrue(ctx.getMinValidator() >= 1 && ctx.getMinValidator() <= 100, "Invalid new min validator");
+                Assert.isTrue(Wallet.addressValid(predicateAddr) && dbManager.getAccountStore().has(predicateAddr), "PREDICATE_URC721_INVALID");
             }
             if(!ctx.getValidatorsList().isEmpty()){
-                ctx.getValidatorsList().forEach(v -> Assert.isTrue(Wallet.addressValid(Numeric.hexStringToByteArray(v)) , "Invalid validator address -->" + v));
+                ctx.getValidatorsList().forEach(v -> Assert.isTrue(Wallet.addressValid(Numeric.hexStringToByteArray(v)) , "VALIDATOR_INVALID: " + v));
             }
             Assert.isTrue( ownerAcc.getBalance() >= fee, "Balance is not sufficient.");
             return true;

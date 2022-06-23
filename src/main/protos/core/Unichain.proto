@@ -1053,3 +1053,9 @@ message PosBridgeTokenMappingPage {
   repeated PostBridgeRootTokenMap root_token_maps = 4;
   repeated PostBridgeChildTokenMap child_token_maps = 5;
 }
+
+message PosBridgeTransactionOrigin{
+  string tx = 1;
+  int64 chainId = 2;
+  string msg = 3;
+}

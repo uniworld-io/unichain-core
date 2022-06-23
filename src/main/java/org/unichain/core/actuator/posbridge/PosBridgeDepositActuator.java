@@ -97,7 +97,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
             var config = dbManager.getPosBridgeConfigStore().get();
             logger.info("Found config -------> {}", config.getInstance());
 
-            Assert.isTrue(config.isInitialized(), "POSBridge not initialized yet");
+            Assert.isTrue(config.isInitialized(), "POS_BRIDGE_CONFIG_UNSET");
             Assert.isTrue(Wallet.addressValid(ctx.getRootToken()), "ROOT_TOKEN_INVALID");
             Assert.isTrue(WalletUtils.isValidAddress(ctx.getReceiveAddress()), "RECEIVER_INVALID");
 
@@ -106,7 +106,7 @@ public class PosBridgeDepositActuator extends AbstractActuator {
                 var tokenMapStore = dbManager.getRootTokenMapStore();
                 var rootKey = PosBridgeUtil.makeTokenMapKey(ctx.getChildChainid(), ctx.getRootToken());
 
-                Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "TOKEN_NOT_MAPPED: " + rootKey);
+                Assert.isTrue(tokenMapStore.has(rootKey.getBytes()), "TOKEN_NOT_MAPPED");
                 var tokenMap = tokenMapStore.get(rootKey.getBytes());
                 Assert.isTrue(tokenMap.getChildChainId() == ctx.getChildChainid(), "CHILD_CHAIN_INVALID: " + ctx.getChildChainid());
             }

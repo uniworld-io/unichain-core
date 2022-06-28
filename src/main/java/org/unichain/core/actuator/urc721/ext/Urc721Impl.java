@@ -34,6 +34,9 @@ public class Urc721Impl implements Urc721 {
 
     private static final Descriptors.FieldDescriptor ADDR_MSG_ADDR_FIELD = Protocol.AddressMessage.getDescriptor().findFieldByNumber(Protocol.AddressMessage.ADDRESS_FIELD_NUMBER);
 
+    private static final Descriptors.FieldDescriptor URC721_APPROVE_FOR_ALL_FIELD_OWNER= Protocol.Urc721ApprovedForAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ApprovedForAllQuery.OWNER_ADDRESS_FIELD_NUMBER);
+    private static final Descriptors.FieldDescriptor URC721_APPROVE_FOR_ALL_FIELD_CONTRACT= Protocol.Urc721ApprovedForAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721ApprovedForAllQuery.ADDRESS_FIELD_NUMBER);
+
     private static final Descriptors.FieldDescriptor URC721_IS_APPROVE_FOR_ALL_FIELD_OWNER= Protocol.Urc721IsApprovedForAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721IsApprovedForAllQuery.OWNER_ADDRESS_FIELD_NUMBER);
     private static final Descriptors.FieldDescriptor URC721_IS_APPROVE_FOR_ALL_FIELD_OPERATOR = Protocol.Urc721IsApprovedForAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721IsApprovedForAllQuery.OPERATOR_FIELD_NUMBER);
     private static final Descriptors.FieldDescriptor URC721_IS_APPROVE_FOR_ALL_FIELD_CONTRACT = Protocol.Urc721IsApprovedForAllQuery.getDescriptor().findFieldByNumber(Protocol.Urc721IsApprovedForAllQuery.ADDRESS_FIELD_NUMBER);
@@ -182,10 +185,34 @@ public class Urc721Impl implements Urc721 {
         }
     }
 
-    //@todo later
     @Override
     public Protocol.AddressMessage getApprovedForAll(Protocol.Urc721ApprovedForAllQuery query) {
-        return null;
+        try {
+            Assert.isTrue(query.hasField(URC721_APPROVE_FOR_ALL_FIELD_OWNER) && query.hasField(URC721_APPROVE_FOR_ALL_FIELD_CONTRACT),
+                    "Missing owner|contract address");
+
+            var ownerAddr = query.getOwnerAddress().toByteArray();
+            var contractAddr = query.getAddress().toByteArray();
+
+            Assert.isTrue(Wallet.addressValid(ownerAddr) && Wallet.addressValid(contractAddr),
+                    "Invalid owner|contract address");
+
+            var summaryStore = dbManager.getUrc721AccountTokenRelationStore();
+            var builder =  Protocol.AddressMessage
+                    .newBuilder()
+                    .clearAddress();
+
+            if(summaryStore.has(ownerAddr)){
+                var operator = summaryStore.get(ownerAddr).getApprovedForAll(contractAddr);
+                operator.ifPresent(operatorAddr -> builder.setAddress(ByteString.copyFrom(operatorAddr)));
+            }
+
+            return builder.build();
+        }
+        catch (Exception e){
+            logger.error("getApprovedForAll got error -->", e);
+            return Protocol.AddressMessage.newBuilder().build();
+        }
     }
 
     @Override

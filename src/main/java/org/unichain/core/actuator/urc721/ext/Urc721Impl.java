@@ -182,6 +182,12 @@ public class Urc721Impl implements Urc721 {
         }
     }
 
+    //@todo later
+    @Override
+    public Protocol.AddressMessage getApprovedForAll(Protocol.Urc721ApprovedForAllQuery query) {
+        return null;
+    }
+
     @Override
     public Protocol.Transaction burn(Contract.Urc721BurnContract contract) throws ContractValidateException {
         return wallet.createTransactionCapsule(contract, ContractType.Urc721BurnContract).getInstance();

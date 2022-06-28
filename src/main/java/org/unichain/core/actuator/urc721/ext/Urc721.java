@@ -25,6 +25,7 @@ public interface Urc721 {
     GrpcAPI.StringMessage tokenUri(Protocol.Urc721TokenQuery msg);
     Protocol.AddressMessage ownerOf(Protocol.Urc721TokenQuery msg);
     Protocol.AddressMessage getApproved(Protocol.Urc721TokenQuery query);
+    Protocol.AddressMessage getApprovedForAll(Protocol.Urc721ApprovedForAllQuery query);
     Protocol.BoolMessage isApprovedForAll(Protocol.Urc721IsApprovedForAllQuery query);
     Protocol.Urc721ContractPage listContract(Protocol.Urc721ContractQuery query);
     Protocol.Urc721Contract getContract(Protocol.AddressMessage query);

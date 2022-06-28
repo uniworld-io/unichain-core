@@ -82,6 +82,8 @@ public class FullNodeHttpApiService implements Service {
   private Urc721BalanceOfServlet urc721BalanceOfServlet;
   @Autowired
   private Urc721GetApprovedServlet urc721GetApprovedServlet;
+  @Autowired
+  private Urc721GetApprovedForAllServlet urc721GetApprovedForAllServlet;
 
   @Autowired
   private Urc721NameServlet urc721NameServlet;
@@ -403,6 +405,7 @@ public class FullNodeHttpApiService implements Service {
 
       //extended erc721
       context.addServlet(new ServletHolder(urc721GetApprovedServlet), "/urc721getapproved");
+      context.addServlet(new ServletHolder(urc721GetApprovedForAllServlet), "/urc721getapprovedforall");
       context.addServlet(new ServletHolder(urc721ContractListServlet), "/urc721contractlist");
       context.addServlet(new ServletHolder(urc721TokenListServlet), "/urc721tokenlist");
       context.addServlet(new ServletHolder(urc721ContractGetServlet), "/urc721contractget");

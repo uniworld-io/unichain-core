@@ -998,6 +998,11 @@ message Urc721TokenQuery{
   int64 id = 2;
 }
 
+message Urc721ApprovedForAllQuery{
+  bytes owner_address = 1;
+  bytes address = 2;
+}
+
 message Urc721BalanceOfQuery{
   bytes owner_address = 1;
   bytes address = 2;

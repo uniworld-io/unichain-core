@@ -61,6 +61,8 @@ public class HttpApiOnSolidityService implements Service {
   private Urc721BalanceOfOnSolidityServlet urc721BalanceOfOnSolidityServlet;
   @Autowired
   private Urc721GetApprovedOnSolidityServlet urc721GetApprovedOnSolidityServlet;
+  @Autowired
+  private Urc721GetApprovedForAllOnSolidityServlet urc721GetApprovedForAllOnSolidityServlet;
 
   @Autowired
   private Urc721IsApprovedForAllOnSolidityServlet urc721IsApprovedForAllOnSolidityServlet;
@@ -169,6 +171,8 @@ public class HttpApiOnSolidityService implements Service {
       context.addServlet(new ServletHolder(urc721GetTokenOnSolidityServlet), "/walletsolidity/urc721tokenget");
       context.addServlet(new ServletHolder(urc721BalanceOfOnSolidityServlet), "/walletsolidity/urc721balanceof");
       context.addServlet(new ServletHolder(urc721GetApprovedOnSolidityServlet), "/walletsolidity/urc721getapproved");
+      context.addServlet(new ServletHolder(urc721GetApprovedForAllOnSolidityServlet), "/walletsolidity/urc721getapprovedforall");
+
       context.addServlet(new ServletHolder(urc721NameOnSolidityServlet), "/walletsolidity/urc721name");
       context.addServlet(new ServletHolder(urc721SymbolOnSolidityServlet), "/walletsolidity/urc721symbol");
       context.addServlet(new ServletHolder(urc721TokenUriOnSolidityServlet), "/walletsolidity/urc721tokenuri");

@@ -379,6 +379,13 @@ public class RpcApiService implements Service {
       responseObserver.onCompleted();
     }
 
+    @Override
+    public void urc721GetApprovedForAll(Urc721ApprovedForAllQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc721.getApprovedForAll(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
     /**
      * urc20
      */
@@ -921,6 +928,13 @@ public class RpcApiService implements Service {
     @Override
     public void urc721GetApproved(Urc721TokenQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
       var reply = urc721.getApproved(request);
+      responseObserver.onNext(reply);
+      responseObserver.onCompleted();
+    }
+
+    @Override
+    public void urc721GetApprovedForAll(Urc721ApprovedForAllQuery request, io.grpc.stub.StreamObserver<AddressMessage> responseObserver) {
+      var reply = urc721.getApprovedForAll(request);
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }

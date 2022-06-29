@@ -44,11 +44,12 @@ public class Urc20BalanceOfServlet extends HttpServlet {
                 response.getWriter().println("{}");
             }
         } catch (Exception e) {
-            logger.error("Urc20BalanceOf error: {}", e.getMessage(), e);
             try {
-                response.getWriter().println(Util.printErrorMsg(e));
+                logger.error(e.getMessage(), e);
+                response.setStatus(400);
+                response.getWriter().println(Util.messageErrorHttp(e));
             } catch (IOException ioe) {
-                logger.debug("IOException: {}", ioe.getMessage());
+                logger.error("IOException: {}", ioe.getMessage());
             }
         }
     }

@@ -36,10 +36,11 @@ public class Urc20ApproveServlet extends HttpServlet {
       response.getWriter().println(Util.printCreateTransaction(tx, visible));
     } catch (Exception e) {
       try {
-        logger.error("Urc20Approve error: {} --> ", e.getMessage(), e);
-        response.getWriter().println(Util.printErrorMsg(e));
+        logger.error(e.getMessage(), e);
+        response.setStatus(400);
+        response.getWriter().println(Util.messageErrorHttp(e));
       } catch (IOException ioe) {
-        logger.debug("IOException: {}", ioe.getMessage());
+        logger.error("IOException: {}", ioe.getMessage());
       }
     }
   }

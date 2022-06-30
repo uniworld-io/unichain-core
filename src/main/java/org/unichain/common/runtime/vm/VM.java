@@ -1390,7 +1390,7 @@ public class VM {
 
           if (op == REVERT) {
             program.getResult().setRevert();
-            logger.info("==========================Seen REVERT opcode on VM...");
+            logger.info("==========================Seen REVERT opcode on VM...========================");
           }
           break;
         }

@@ -26,7 +26,7 @@ import org.unichain.protos.Protocol;
 import org.unichain.protos.Protocol.Urc721AccountTokenRelation;
 
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j(topic = "capsule")
 public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721AccountTokenRelation> {
@@ -191,7 +191,18 @@ public class Urc721AccountTokenRelationCapsule implements ProtoCapsule<Urc721Acc
       return false;
     else
       return (operatorBase58.equals(relation.getApprovedForAllsMap().get(contractBase58)));
+  }
 
+  public Optional<byte[]> getApprovedForAll(byte[] contractAddr){
+    var contractBase58 = Wallet.encode58Check(contractAddr);
+
+    if(!relation.containsApprovedForAlls(contractBase58))
+      return Optional.empty();
+    else
+    {
+      var operatorBase58 = relation.getApprovedForAllsMap().get(contractBase58);
+      return (operatorBase58 == null) ? Optional.empty() : Optional.ofNullable(Wallet.decodeFromBase58Check(operatorBase58));
+    }
   }
 
   public void clearApprovedForAll(byte[] contract, byte[] _operator){

@@ -1,188 +1,245 @@
-# Unichain Coding Guidelines
+# Contributing to Unichain-core
 
-The goal of these guidelines is to improve developer productivity by allowing
-developers to jump into any file in the codebase and not need to adapt to
-inconsistencies in how the code is written. The codebase should appear as if it
-had been authored by a single developer. If you don't agree with a convention,
-submit a PR patching this document and let's discuss! Once the PR is accepted,
-*all* code should be updated as soon as possible to reflect the new
-conventions.
+Unichain-core is an open-source project which needs the support of open-source contributors.
 
-## Pull Requests
+Below are the instructions. We understand that there is much left to be desired, and if you see any room for improvement, please let us know. Thank you.
 
-Small, frequent PRs are much preferred to large, infrequent ones. A large PR is
-difficult to review, can block others from making progress, and can quickly get
-its author into "rebase hell". A large PR oftentimes arises when one change
-requires another, which requires another, and then another. When you notice
-those dependencies, put the fix into a commit of its own, then checkout a new
-branch, and cherry-pick it.
+Here are some guidelines to get started quickly and easily:
+- [Reporting An Issue](#Reporting-An-Issue)
+- [Working on unichain-core](#Working-on-unichain-core)
+  - [Key Branches](#Key-Branches)
+  - [Submitting Code](#Submitting-Code)
+- [Code Review Guidelines](#Code-Review-Guidelines)
+  - [Terminology](#Terminology)
+  - [The Process](#The-Process)
+  - [Code Style](#Code-Style)
+  - [Commit Messages](#Commit-Messages)
+  - [Branch Naming Conventions](#Branch-Naming-Conventions)
+  - [Pull Request Guidelines](#Pull-Request-Guidelines)
+  - [Special Situations And How To Deal With Them](#Special-Situations-And-How-To-Deal-With-Them)
+- [Conduct](#Conduct)
 
-```bash
-$ git commit -am "Fix foo, needed by bar"
-$ git checkout master
-$ git checkout -b fix-foo
-$ git cherry-pick fix-bar
-$ git push --set-upstream origin fix-foo
+
+### Reporting An Issue
+
+If you're about to raise an issue because you think you've found a problem or bug with unichain-core, please respect the following restrictions:
+
+- Please search for existing issues. Help us keep duplicate issues to a minimum by checking to see if someone has already reported your problem or requested your idea.
+
+- Use the Issue Report Template below.
+    ```
+    1.What did you do? 
+
+    2.What did you expect to see? 
+
+    3.What did you see instead?
+    ```
+
+
+## Working on unichain-core
+Thank you for considering to help out with the source code! We welcome contributions from anyone on the internet, and are grateful for even the smallest of fixes!
+
+If you’d like to contribute to unichain-core, for small fixes, we recommend that you send a pull request (PR) for the maintainers to review and merge into the main code base, make sure the PR contains a detailed description. For more complex changes, you need to submit an issue to the TIP repository to detail your motive and implementation plan, etc. For how to submit a TIP issue, please refer to [TIP Specification](https://github.com/uniworld-io/tips#to-submit-a-tip).
+
+
+As the author of TIP issue, you are expected to encourage developers to discuss this issue, flesh out your issue by collecting their feedback, and eventually put your issue into practice.
+
+
+### Key Branches
+unichain-core only has `master`, `develop`, `release-*`, `feature-*`, and `hotfix-*` branches, which are described below:
+
+- ``develop`` branch  
+  The `develop` branch only accept merge request from other forked branches or`release_*` branches. It is not allowed to directly push changes to the `develop` branch. A `release_*` branch has to be pulled from the develop branch when a new build is to be released.
+
+- ``master`` branch  
+  `release_*` branches and `hotfix/*` branches should only be merged into the `master` branch when a new build is released.
+
+- ``release`` branch  
+  `release_*` is a branch pulled from the `develop` branch for release. It should be merged into `master` after a regression test and will be permanently kept in the repository. If a bug is identified in a `release_*` branch, its fixes should be directly merged into the branch. After passing the regression test, the `release_*` branch should be merged back into the `develop` branch. Essentially, a `release_*` branch serves as a snapshot for each release.
+
+- ``feature`` branch  
+  `feature/*` is an important feature branch pulled from the `develop` branch. After the `feature/*` branch is code-complete, it should be merged back to the `develop` branch. The `feature/*` branch is maintainable.
+
+- ``hotfix`` branch  
+  It is pulled from the `master` branch and should be merged back into the master branch and the `develop` branch. Only pull requests of the fork repository (pull requests for bug fixes) should be merged into the `hotfix/` branch. `hotfix/` branches are used only for fixing bugs found after release.
+
+
+### Submitting Code
+
+If you want to contribute codes to unichain-core, please follow the following steps:
+
+* Fork code repository
+  Fork a new repository from uniworld-io/unichain-core to your personal code repository
+
+* Edit the code in the fork repository
+    ```
+    git clone https://github.com/yourname/unichain-core.git
+
+    git remote add upstream https://github.com/uniworld-io/unichain-core.git     ("upstream" refers to upstream projects repositories, namely uniworld-io's repositories, and can be named as you like it. We usually call it "upstream" for convenience) 
+    ```
+  Before developing new features, please synchronize your fork repository with the upstream repository.
+    ```
+    git fetch upstream 
+    git checkout develop 
+    git merge upstream/develop --no-ff (Add --no-ff to turn off the default fast merge mode)
+    ```
+
+  Pull a new branch from the develop branch of your repository for local development. Please refer to [Branch Naming Conventions](#Branch-Naming-Conventions),
+    ```
+    git checkout -b feature/branch_name develop
+    ```
+
+  Write and commit the new code when it is completed. Please refer to [Commit Messages](#Commit-Messages)
+     ```
+     git add .
+     git commit -m 'commit message'
+     ```
+  Commit the new branch to your personal remote repository
+     ```
+     git push origin feature/branch_name
+     ```
+
+* Push code
+
+  Submit a pull request (PR) from your repository to `uniworld-io/unichain-core`.
+  Please be sure to click on the link in the red box shown below. Select the base branch for uniworld-io and the compare branch for your personal fork repository.
+  ![](https://codimd.s3.shivering-isles.com/demo/uploads/e24435ab42e4287d9369a2136.png)
+
+
+
+## Code Review Guidelines
+The only way to get code into unichain-core is to send a pull request. Those pull requests need to be reviewed by someone. there a guide that explains our expectations around PRs for both authors and reviewers.
+
+### Terminology
+- The author of a pull request is the entity who wrote the diff and submitted it to GitHub.
+- The team consists of people with commit rights on the unichain-core repository.
+- The reviewer is the person assigned to review the diff. The reviewer must be a team member.
+- The code owner is the person responsible for the subsystem being modified by the PR.
+
+### The Process
+The first decision to make for any PR is whether it’s worth including at all. This decision lies primarily with the code owner, but may be negotiated with team members.
+
+To make the decision we must understand what the PR is about. If there isn’t enough description content or the diff is too large, request an explanation. Anyone can do this part.
+
+We expect that reviewers check the style and functionality of the PR, providing comments to the author using the GitHub review system. Reviewers should follow up with the PR until it is in good shape, then approve the PR. Approved PRs can be merged by any code owner.
+
+When communicating with authors, be polite and respectful.
+
+### Code Style
+We would like all developers to follow a standard development flow and coding style. Therefore, we suggest the following:
+1. Review the code with coding style checkers.
+2. Review the code before submission.
+3. Run standardized tests.
+
+`Sonar`-scanner and `Travis CI` continuous integration scanner will be automatically triggered when a pull request has been submitted. When a PR passes all the checks, the **unichain-core** maintainers will then review the PR and offer feedback and modifications when necessary.  Once adopted, the PR will be closed and merged into the `develop` branch.
+
+We are glad to receive your pull requests and will try our best to review them as soon as we can. Any pull request is welcome, even if it is for a typo.
+
+Please kindly address the issue you find. We would appreciate your contribution.
+
+Please do not be discouraged if your pull request is not accepted, as it may be an oversight. Please explain your code as detailed as possible to make it easier to understand.
+
+Please make sure your submission meets the following code style:
+
+- The code must conform to [Google Code Style](https://google.github.io/styleguide/javaguide.html).
+- The code must have passed the Sonar scanner test.
+- The code has to be pulled from the `develop` branch.
+- The commit message should start with a verb, whose initial should not be capitalized.
+- The commit message should be less than 50 characters in length.
+
+
+
+### Commit Messages
+
+Commit messages should follow the rule below, we provide a template corresponding instructions.
+
+Template:
+```
+<commit type>(<scope>): <subject>
+<BLANK LINE>
+<body>
+<BLANK LINE>
+<footer>
 ```
 
-Open a PR to start the review process and then jump back to your original
-branch to keep making progress. Consider rebasing to make your fix the first
-commit:
+The message header is a single line that contains succinct description of the change containing a `commit type`, an optional `scope` and a subject.
 
-```bash
-$ git checkout fix-bar
-$ git rebase -i master <Move fix-foo to top>
+`commit type` describes the kind of change that this commit is providing:
+* feat     (new feature)
+* fix      (bug fix)
+* docs     (changes to documentation)
+* style    (formatting, missing semi colons, etc. no code change)
+* refactor (refactoring production code)
+* test     (adding or refactoring tests. no production code change)
+* chore    (updating grunt tasks etc. no production code change)
+
+The `scope` can be anything specifying place of the commit change. For example:`protobuf`,`api`,`test`,`docs`,`build`,`db`,`net`.You can use * if there isn't a more fitting scope.
+
+The subject contains a succinct description of the change:
+1. Limit the subject line, which briefly describes the purpose of the commit, to 50 characters.
+2. Start with a verb and use first-person present-tense (e.g., use "change" instead of "changed" or "changes").
+3. Do not capitalize the first letter.
+4. Do not end the subject line with a period.
+5. Avoid meaningless commits. It is recommended to use the git rebase command.
+
+Message body use the imperative, present tense: "change" not "changed" nor "changes". The body should include the motivation for the change and contrast this with previous behavior.
+
+Here is an example:
 ```
+feat(block): optimize product block
 
-Once the commit is merged, rebase the original branch to purge the
-cherry-picked commit:
+1. optimize the block production threads
+2. improve transaction entry speed
 
-```bash
-$ git pull --rebase upstream master
+Closes #1234
 ```
+If the purpose of this submission is to modify one issue, you need to refer to the issue in the footer, starting with the keyword Closes, such as `Closes #1234`,if multiple bugs have been modified, separate them with commas,such as `Closes #123, #245, #992`.
 
-### How big is too big?
 
-If there are no functional changes, PRs can be very large and that's no
-problem. If, however, your changes are making meaningful changes or additions,
-then about 1,000 lines of changes is about the most you should ask a Unichain
-maintainer to review.
 
-### Should I send small PRs as I develop large, new components?
+### Branch Naming Conventions
+1. Always name the `master` branch and `develop` branch as "master" and "develop".
+2. Name the `release_*` branch using version numbers, which are assigned by the project lead (e.g., Odyssey-v3.1.3, 3.1.3, etc.).
+3. Use `hotfix/` as the prefix of the `hotfix` branch, briefly describe the bug in the name, and connect words with underline (e.g., hotfix/typo, hotfix/null_point_exception, etc.).
+4. Use `feature/` as the prefix of the `feature` branch, briefly describe the feature in the name, and connect words with underline (e.g., feature/new_resource_model, etc.).
+### Pull Request Guidelines
 
-Add only code to the codebase that is ready to be deployed. If you are building
-a large library, consider developing it in a separate git repository. When it
-is ready to be integrated, the Unichain maintainers will work with you to decide
-on a path forward. Smaller libraries may be copied in whereas very large ones
-may be pulled in with a package manager.
+1. Create one PR for one issue.
+2. Avoid massive PRs.
+3. Write an overview of the purpose of the PR in its title.
+4. Write a description of the PR for future reviewers.
+5. Elaborate on the feedback you need (if any).
+6. Do not capitalize the first letter.
+7. Do not put a period (.) in the end.
 
-## Getting Pull Requests Merged
 
-There is no single person assigned to watching GitHub PR queue and ushering you
-through the process. Typically, you will ask the person that wrote a component
-to review changes to it. You can find the author using `git blame` or asking on
-Discord.  When working to get your PR merged, it's most important to understand
-that changing the code is your priority and not necessarily a priority of the
-person you need an approval from. Also, while you may interact the most with
-the component author, you should aim to be inclusive of others. Providing a
-detailed problem description is the most effective means of engaging both the
-component author and other potentially interested parties.
 
-Consider opening all PRs as Draft Pull Requests first. Using a draft PR allows
-you to kickstart the CI automation, which typically takes between 10 and 30
-minutes to execute. Use that time to write a detailed problem description. Once
-the description is written and CI succeeds, click the "Ready to Review" button
-and add reviewers. Adding reviewers before CI succeeds is a fast path to losing
-reviewer engagement. Not only will they be notified and see the PR is not yet
-ready for them, they will also be bombarded them with additional notifications
-each time you push a commit to get past CI or until they "mute" the PR. Once
-muted, you'll need to reach out over some other medium, such as Discord, to
-request they have another look. When you use draft PRs, no notifications are
-sent when you push commits and edit the PR description. Use draft PRs
-liberally.  Don't bug the humans until you have gotten past the bots.
 
-### What should be in my PR description?
 
-Reviewing code is hard work and generally involves an attempt to guess the
-author's intent at various levels. Please assume reviewer time is scarce and do
-what you can to make your PR as consumable as possible. Inspired by techniques
-for writing good whitepapers, the guidance here aims to maximize reviewer
-engagement.
+### Special Situations And How To Deal With Them
+As a reviewer, you may find yourself in one of the sitations below. Here’s how to deal with those:
 
-Assume the reviewer will spend no more than a few seconds reading the PR title.
-If it doesn't describe a noteworthy change, don't expect the reviewer to click
-to see more.
+The author doesn’t follow up: ping them after a while (i.e. after a few days). If there is no further response, close the PR or complete the work yourself.
 
-Next, like the abstract of a whitepaper, the reviewer will spend ~30 seconds
-reading the PR problem description. If what is described there doesn't look
-more important than competing issues, don't expect the reviewer to read on.
+Author insists on including refactoring changes alongside bug fix: We can tolerate small refactorings alongside any change. If you feel lost in the diff, ask the author to submit the refactoring as an independent PR, or at least as an independent commit in the same PR.
 
-Next, the reviewer will read the proposed changes. At this point, the reviewer
-needs to be convinced the proposed changes are a *good* solution to the problem
-described above.  If the proposed changes, not the code changes, generates
-discussion, consider closing the PR and returning with a design proposal
-instead.
+Author keeps rejecting your feedback: reviewers have authority to reject any change for technical reasons. If you’re unsure, ask the team for a second opinion. You may close the PR if no consensus can be reached.
 
-Finally, once the reviewer understands the problem and agrees with the approach
-to solving it, the reviewer will view the code changes. At this point, the
-reviewer is simply looking to see if the implementation actually implements
-what was proposed and if that implementation is maintainable. When a concise,
-readable test for each new code path is present, the reviewer can safely ignore
-the details of its implementation. When those tests are missing, expect to
-either lose engagement or get a pile of review comments as the reviewer
-attempts to consider every ambiguity in your implementation.
+## Conduct
+While contributing, please be respectful and constructive, so that participation in our project is a positive experience for everyone.
 
-### The PR Title
+Examples of behavior that contributes to creating a positive environment include:
 
-The PR title should contain a brief summary of the change, from the perspective
-of the user. Examples of good titles:
+- Using welcoming and inclusive language
+  Being respectful of differing viewpoints and experiences
+- Gracefully accepting constructive criticism
+- Focusing on what is best for the community
+- Showing empathy towards other community members
 
-* Add rent to accounts
-* Fix out-of-memory error in validator
-* Clean up `process_message()` in runtime
+Examples of unacceptable behavior include:
 
-The conventions here are all the same as a good git commit title:
-
-* First word capitalized and in the imperative mood, not past tense ("add", not
-  "added")
-* No trailing period
-* What was done, whom it was done to, and in what context
-
-### The PR Problem Statement
-
-The git repo implements a product with various features. The problem statement
-should describe how the product is missing a feature, how a feature is
-incomplete, or how the implementation of a feature is somehow undesirable. If
-an issue being fixed already describes the problem, go ahead and copy-paste it.
-As mentioned above, reviewer time is scarce. Given a queue of PRs to review,
-the reviewer may ignore PRs that expect them to click through links to see if
-the PR warrants attention.
-
-### The Proposed Changes
-
-Typically the content under the "Proposed changes" section will be a bulleted
-list of steps taken to solve the problem. Oftentimes, the list is identical to
-the subject lines of the git commits contained in the PR. It's especially
-generous (and not expected) to rebase or reword commits such that each change
-matches the logical flow in your PR description.
-
-### When will my PR be reviewed?
-
-PRs are typically reviewed and merged in under 7 days. If your PR has been open
-for longer, it's a strong indicator that the reviewers aren't confident the
-change meets the quality standards of the codebase. You might consider closing
-it and coming back with smaller PRs and longer descriptions detailing what
-problem it solves and how it solves it. Old PRs will be marked stale and then
-closed automatically 7 days later.
-
-### How to manage review feedback?
-
-After a reviewer provides feedback, you can quickly say "acknowledged, will
-fix" using a thumb's up emoji. If you're confident your fix is exactly as
-prescribed, add a reply "Fixed in COMMIT\_HASH" and mark the comment as
-resolved. If you're not sure, reply "Is this what you had in mind?
-COMMIT\_HASH" and if so, the reviewer will reply and mark the conversation as
-resolved. Marking conversations as resolved is an excellent way to engage more
-reviewers. Leaving conversations open may imply the PR is not yet ready for
-additional review.
-
-### When will my PR be re-reviewed?
-
-Recall that once your PR is opened, a notification is sent every time you push
-a commit.  After a reviewer adds feedback, they won't be checking on the status
-of that feedback after every new commit. Instead, directly mention the reviewer
-when you feel your PR is ready for another pass.
-
-## Draft Pull Requests
-
-If you want early feedback on your PR, use GitHub's "Draft Pull Request"
-mechanism. Draft PRs are a convenient way to collaborate with the Unichain
-maintainers without triggering notifications as you make changes. When you feel
-your PR is ready for a broader audience, you can transition your draft PR to a
-standard PR with the click of a button.
-
-Do not add reviewers to draft PRs.  GitHub doesn't automatically clear
-approvals when you click "Ready for Review", so a review that meant "I approve
-of the direction" suddenly has the appearance of "I approve of these changes."
-Instead, add a comment that mentions the usernames that you would like a review
-from. Ask explicitly what you would like feedback on.
+- The use of sexualized language or imagery and unwelcome sexual attention or advances
+- Trolling, insulting/derogatory comments, and personal or political attacks
+- Public or private harassment
+- Publishing others’ private information, such as a physical or electronic address, without explicit permission
+- Other conduct which could reasonably be considered inappropriate in a professional setting

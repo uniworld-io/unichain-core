@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Solidity File">
+  <listeners>
+    <listener class-name="stest.unx.wallet.common.client.utils.RetryListener"></listener>
+  </listeners>
+  <test name="solidity part 1">
+    <packages>
+      <package name="stest.unx.wallet.dailybuild.grammar.*"></package>
+      <package name="stest.unx.wallet.dailybuild.internaltransaction.*"></package>
+    </packages>
+    <classes>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken077"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken078"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken079"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken080"></class>
+    </classes>
+  </test>
+  <test name="solidity part 2">
+    <classes>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken001"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken002"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken003"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken005"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken011"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken012"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken014"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken018"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken023"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken026"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken027"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken028"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken029"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken030"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken031"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken034"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken035"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken036"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken037"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken038"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken039"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken041"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken043"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken048"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken049"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken050"></class>
+    </classes>
+  </test>
+  <test name="solidity part 3">
+    <packages>
+      <package name="stest.unx.wallet.solidityadd.*"></package>
+    </packages>
+  </test>
+  <test name="solidity part 4">
+    <packages>
+      <package name="stest.unx.wallet.contract.*"></package>
+    </packages>
+    <classes>
+      <class name="stest.unx.wallet.dailybuild.manual.ContractLinkage001"></class>
+      <class name="stest.unx.wallet.dailybuild.manual.ContractLinkage005"></class>
+      <class name="stest.unx.wallet.dailybuild.manual.ContractLinkage006"></class>
+      <class name="stest.unx.wallet.dailybuild.manual.ContractScenario002"></class>
+      <class name="stest.unx.wallet.dailybuild.manual.ContractScenario011"></class>
+      <class name="stest.unx.wallet.dailybuild.manual.ContractScenario014"></class>
+      <class name="stest.unx.wallet.dailybuild.manual.ContractUnknownException"></class>
+      <class name="stest.unx.wallet.dailybuild.manual.RequireException"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken051"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken052"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken054"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken055"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken060"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken061"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken064"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken066"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken067"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken073"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken075"></class>
+      <class name="stest.unx.wallet.dailybuild.urctoken.ContractUrcToken076"></class>
+    </classes>
+  </test>
+</suite>

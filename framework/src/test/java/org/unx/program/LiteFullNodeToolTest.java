@@ -3,9 +3,6 @@ package org.unx.program;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.io.File;
-import java.math.BigInteger;
-import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -31,6 +28,12 @@ import org.unx.protos.Protocol;
 import org.unx.protos.contract.BalanceContract;
 import org.unx.tool.litefullnode.LiteFullNodeTool;
 import stest.unx.wallet.common.client.utils.TransactionUtils;
+
+import java.io.File;
+import java.math.BigInteger;
+import java.nio.file.Paths;
+
+import static org.unx.core.Constant.ADD_PRE_FIX_BYTE_MAINNET;
 
 public class LiteFullNodeToolTest {
 
@@ -203,7 +206,7 @@ public class LiteFullNodeToolTest {
    * @return public addr
    */
   public static byte[] getFinalAddress(String priKey) {
-    Wallet.setAddressPreFixByte((byte) 0x41);
+    Wallet.setAddressPreFixByte(ADD_PRE_FIX_BYTE_MAINNET);
     ECKey key = ECKey.fromPrivate(new BigInteger(priKey, 16));
     return key.getAddress();
   }
@@ -219,7 +222,7 @@ public class LiteFullNodeToolTest {
    */
   public static Boolean sendcoin(byte[] to, long amount, byte[] owner, String priKey,
                                  WalletGrpc.WalletBlockingStub blockingStubFull) {
-    Wallet.setAddressPreFixByte((byte) 0x41);
+    Wallet.setAddressPreFixByte(ADD_PRE_FIX_BYTE_MAINNET);
     ECKey temKey = null;
     try {
       BigInteger priK = new BigInteger(priKey, 16);

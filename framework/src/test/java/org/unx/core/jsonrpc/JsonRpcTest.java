@@ -1,14 +1,5 @@
 package org.unx.core.jsonrpc;
 
-import static org.unx.common.utils.DecodeUtil.addressPreFixString;
-import static org.unx.core.services.jsonrpc.JsonRpcApiUtil.addressCompatibleToByteArray;
-import static org.unx.core.services.jsonrpc.JsonRpcApiUtil.addressToByteArray;
-import static org.unx.core.services.jsonrpc.JsonRpcApiUtil.getMethodSign;
-import static org.unx.core.services.jsonrpc.JsonRpcApiUtil.parseEnergyFee;
-
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,6 +15,13 @@ import org.unx.core.services.jsonrpc.filters.LogBlockQuery;
 import org.unx.core.services.jsonrpc.filters.LogFilter;
 import org.unx.core.services.jsonrpc.filters.LogFilterWrapper;
 import org.unx.core.services.jsonrpc.types.CallArguments;
+
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+
+import static org.unx.common.utils.DecodeUtil.addressPreFixString;
+import static org.unx.core.services.jsonrpc.JsonRpcApiUtil.*;
 
 
 public class JsonRpcTest {
@@ -233,7 +231,7 @@ public class JsonRpcTest {
     //address length of 42 hex string with 41 ahead will be invalid
     try {
       new LogFilter(
-          new FilterRequest(null, null, "0x41aa6612f03443517ced2bdcf27958c22353ceeab9", null,
+          new FilterRequest(null, null, "0x44aa6612f03443517ced2bdcf27958c22353ceeab9", null,
               null));
     } catch (JsonRpcInvalidParamsException e) {
       Assert.assertTrue(e.getMessage().contains("invalid address"));

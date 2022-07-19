@@ -1,10 +1,5 @@
 package org.unx.common.runtime.vm;
 
-import static org.unx.common.utils.WalletUtil.generateContractAddress2;
-import static org.unx.core.db.TransactionTrace.convertToUnxAddress;
-
-import java.util.Arrays;
-import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
@@ -19,6 +14,12 @@ import org.unx.core.exception.VMIllegalException;
 import org.unx.protos.Protocol.Transaction;
 import stest.unx.wallet.common.client.utils.AbiUtil;
 import stest.unx.wallet.common.client.utils.DataWord;
+
+import java.util.Arrays;
+import java.util.Collections;
+
+import static org.unx.common.utils.WalletUtil.generateContractAddress2;
+import static org.unx.core.db.TransactionTrace.convertToUnxAddress;
 
 @Slf4j
 public class Create2Test extends VMTestBase {
@@ -197,10 +198,10 @@ contract A {
          return addr;
     }
 
-    // prefix in main net is 0x41, testnet config is 0xa0
+    // prefix in main net is 0x44, testnet config is 0x82
     function get(bytes1 prefix, bytes calldata code, uint256 salt) external view returns(address) {
         //bytes32 hash = keccak256(abi.encodePacked
-        //(bytes1(0x41),address(this), salt, keccak256(code)));
+        //(bytes1(0x44),address(this), salt, keccak256(code)));
         bytes32 hash = keccak256(abi.encodePacked(prefix,address(this), salt, keccak256(code)));
         address addr = address(uint160(uint256(hash)));
         return addr;

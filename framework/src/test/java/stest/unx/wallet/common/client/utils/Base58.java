@@ -16,7 +16,7 @@ public class Base58 {
       .toCharArray();
   private static final int BASE58CHECK_ADDRESS_SIZE = 35;
   private static final int ADDRESS_SIZE = 21;
-  private static final byte ADD_PRE_FIX_BYTE = (byte) 0xa0;
+  private static final byte ADD_PRE_FIX_BYTE = (byte) 0x82;
   private static final int[] INDEXES = new int[128];
 
   static {

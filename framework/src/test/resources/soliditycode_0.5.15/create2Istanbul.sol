@@ -13,9 +13,8 @@ contract create2Istanbul {
     return addr;
   }
 
-  // prefix in main net is 0x41, testnet config is 0xa0
+  // prefix in main net is 0x44, testnet config is 0x82
   function get(bytes1 prefix, bytes calldata code, uint256 salt) external view returns(address) {
-    //bytes32 hash = keccak256(abi.encodePacked(bytes1(0x41),address(this), salt, keccak256(code)));
     bytes32 hash = keccak256(abi.encodePacked(prefix,address(this), salt, keccak256(code)));
     address addr = address(uint160(uint256(hash)));
     return addr;

@@ -14,10 +14,10 @@ public class Constant {
   // the block number that split between the snapshot and history
   public static final String SPLIT_BLOCK_NUM = "split_block_num";
 
-  public static final byte ADD_PRE_FIX_BYTE_MAINNET = (byte) 0x41;   //41 + address
-  public static final String ADD_PRE_FIX_STRING_MAINNET = "41";
-  public static final byte ADD_PRE_FIX_BYTE_TESTNET = (byte) 0xa0;   //a0 + address
-  public static final String ADD_PRE_FIX_STRING_TESTNET = "a0";
+  public static final byte ADD_PRE_FIX_BYTE_MAINNET = (byte) 0x44;   //44 + address
+  public static final String ADD_PRE_FIX_STRING_MAINNET = "44";
+  public static final byte ADD_PRE_FIX_BYTE_TESTNET = (byte) 0x82;   //82 + address
+  public static final String ADD_PRE_FIX_STRING_TESTNET = "82";
 
   public static final int NODE_TYPE_FULL_NODE = 0;
   public static final int NODE_TYPE_LIGHT_NODE = 1;

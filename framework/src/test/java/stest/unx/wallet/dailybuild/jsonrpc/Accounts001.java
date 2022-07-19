@@ -5,11 +5,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.grpc.ManagedChannelBuilder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpResponse;
 import org.junit.Assert;
@@ -22,6 +17,12 @@ import org.unx.common.utils.ByteArray;
 import org.unx.protos.Protocol.Block;
 import stest.unx.wallet.common.client.utils.HttpMethed;
 import stest.unx.wallet.common.client.utils.JsonRpcBase;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class Accounts001 extends JsonRpcBase {
@@ -135,7 +136,7 @@ public class Accounts001 extends JsonRpcBase {
     responseContent = HttpMethed.parseResponseContent(response);
 
     Assert.assertEquals(
-        "0x410be88a918d74d0dfd71dc84bd4abf036d0562991", responseContent.getString("result"));
+        "0x440be88a918d74d0dfd71dc84bd4abf036d0562991", responseContent.getString("result"));
   }
 
   @Test(enabled = true, description = "Json rpc api of eth_estimateGas")

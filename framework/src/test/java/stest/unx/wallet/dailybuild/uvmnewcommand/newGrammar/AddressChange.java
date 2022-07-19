@@ -2,8 +2,6 @@ package stest.unx.wallet.dailybuild.uvmnewcommand.newGrammar;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import java.util.HashMap;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.testng.annotations.AfterClass;
@@ -22,6 +20,11 @@ import stest.unx.wallet.common.client.Configuration;
 import stest.unx.wallet.common.client.Parameter;
 import stest.unx.wallet.common.client.utils.Base58;
 import stest.unx.wallet.common.client.utils.PublicMethed;
+
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
+
+import static org.unx.core.Constant.ADD_PRE_FIX_BYTE_MAINNET;
 
 @Slf4j
 public class AddressChange {
@@ -108,7 +111,7 @@ public class AddressChange {
     System.out.println(
         ":" + ByteArray.toStr(transactionExtention.getResult().getMessage().toByteArray()));
     byte[] b1 = new byte[21];
-    b1[0] = 0x41;
+    b1[0] = ADD_PRE_FIX_BYTE_MAINNET;
     System.arraycopy(result, 12, b1, 1, 20);
     Assert.assertEquals(Base58.encode58Check(contractAddress), Base58.encode58Check(b1));
   }
@@ -125,7 +128,7 @@ public class AddressChange {
     System.out.println(
         ":" + ByteArray.toStr(transactionExtention.getResult().getMessage().toByteArray()));
     byte[] b1 = new byte[21];
-    b1[0] = 0x41;
+    b1[0] = ADD_PRE_FIX_BYTE_MAINNET;
     System.arraycopy(result, 12, b1, 1, 20);
     Assert.assertEquals(Base58.encode58Check(contractAddressOld), Base58.encode58Check(b1));
   }

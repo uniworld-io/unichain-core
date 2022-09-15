@@ -25,9 +25,9 @@ import java.util.Objects;
 import static org.unichain.core.actuator.ActuatorConstant.ACCOUNT_EXCEPTION_STR;
 
 @Slf4j(topic = "actuator")
-public class WithdrawFutureActuatorV5 extends AbstractActuator {
+public class WithdrawFutureActuatorV6 extends AbstractActuator {
 
-    public WithdrawFutureActuatorV5(Any contract, Manager dbManager) {
+    public WithdrawFutureActuatorV6(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -105,9 +105,6 @@ public class WithdrawFutureActuatorV5 extends AbstractActuator {
             head = loopTick.getNextTick();
             if(Objects.isNull(head) || !futureStore.has(head.toByteArray()))
                 break;
-            else
-                continue;
-
         }
 
         return (headBlockTickDay >= lowerTime);
@@ -198,8 +195,6 @@ public class WithdrawFutureActuatorV5 extends AbstractActuator {
                     futureStore.put(nextTickKey, nextTick);
                 }
             }
-
-            continue;
         }
 
         /**

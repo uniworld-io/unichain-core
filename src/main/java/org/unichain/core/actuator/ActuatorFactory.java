@@ -75,9 +75,10 @@ public class ActuatorFactory {
           case BLOCK_VERSION_3:
             return new WithdrawFutureActuatorV3(contract.getParameter(), manager);
           case BLOCK_VERSION_4:
+          case BLOCK_VERSION_5:
             return new WithdrawFutureActuatorV4(contract.getParameter(), manager);
           default:
-            return new WithdrawFutureActuatorV5(contract.getParameter(), manager);
+            return new WithdrawFutureActuatorV6(contract.getParameter(), manager);
         }
       case TransferAssetContract:
         return new TransferAssetActuator(contract.getParameter(), manager);

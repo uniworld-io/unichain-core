@@ -60,6 +60,8 @@ public class Parameter {
     public static final int BLOCK_VERSION_6 = 6;
     public static final int BLOCK_VERSION_7 = 7;
     public static final int BLOCK_VERSION_8 = 8;
+    public static final int BLOCK_VERSION_9 = 9;
+    public static final int BLOCK_VERSION_10 = 10;
 
     /**
      * max unw/token transfer time range

@@ -25,9 +25,9 @@ import java.util.Objects;
 import static org.unichain.core.actuator.ActuatorConstant.ACCOUNT_EXCEPTION_STR;
 
 @Slf4j(topic = "actuator")
-public class WithdrawFutureActuatorV5 extends AbstractActuator {
+public class WithdrawFutureActuatorV6 extends AbstractActuator {
 
-    public WithdrawFutureActuatorV5(Any contract, Manager dbManager) {
+    public WithdrawFutureActuatorV6(Any contract, Manager dbManager) {
     super(contract, dbManager);
   }
 
@@ -90,24 +90,19 @@ public class WithdrawFutureActuatorV5 extends AbstractActuator {
             return false;
         }
 
-        var head = summary.getLowerTick();
+        var loopDealBs = summary.getLowerTick();
         var futureStore = dbManager.getFutureTransferStore();
-        FutureTransferCapsule loopTick;
+        FutureTransferCapsule loopDeal;
         var lowerTime = -1L;
+
         while (true){
-            //load lower time
-            loopTick = futureStore.get(head.toByteArray());
-            if(lowerTime <= 0)
-                lowerTime = loopTick.getExpireTime();
-            else
-                lowerTime = Math.min(lowerTime, loopTick.getExpireTime());
-
-            head = loopTick.getNextTick();
-            if(Objects.isNull(head) || !futureStore.has(head.toByteArray()))
+            //check first
+            if(Objects.isNull(loopDealBs) || !futureStore.has(loopDealBs.toByteArray()))
                 break;
-            else
-                continue;
-
+            //load lower time
+            loopDeal = futureStore.get(loopDealBs.toByteArray());
+            lowerTime = (lowerTime <= 0) ? loopDeal.getExpireTime() : Math.min(lowerTime, loopDeal.getExpireTime());
+            loopDealBs = loopDeal.getNextTick();
         }
 
         return (headBlockTickDay >= lowerTime);
@@ -116,122 +111,114 @@ public class WithdrawFutureActuatorV5 extends AbstractActuator {
     /**
      * Looping list & delete
      */
-    private void withdraw(byte[] ownerAddress, long headBlockTime){
+    private void withdraw(byte[] ownerAddr, long headBlockTime){
         var headBlockTickDay = Util.makeDayTick(headBlockTime);
         var futureStore = dbManager.getFutureTransferStore();
         var accountStore = dbManager.getAccountStore();
-        var ownerAcc = dbManager.getAccountStore().get(ownerAddress);
+        var ownerAcc = dbManager.getAccountStore().get(ownerAddr);
         var summary = ownerAcc.getFutureSummary();
 
         /**
          * loop to withdraw
          */
-        var loopTickKeyBs = summary.getLowerTick();
-        var withdrawAmount = 0L;
-        var withdrawDeal = 0L;
-        var headBs = summary.getLowerTick();
-        var tailBs = summary.getUpperTick();
+        var loopDealKeyBs = summary.getLowerTick();
+        var withdrawDealAmount = 0L;
+        var withdrawDealCounter = 0L;
+        var headDealKeyBs = summary.getLowerTick();
+        var tailDealKeyBs = summary.getUpperTick();
         var lowerTime = -1L;
         var upperTime = -1L;
 
         while (true){
-            if(Objects.isNull(loopTickKeyBs))
+            if(Objects.isNull(loopDealKeyBs))
                 break;
 
-            var loopTickKey = loopTickKeyBs.toByteArray();
-            if(!futureStore.has(loopTickKey))
+            var loopDealKey = loopDealKeyBs.toByteArray();
+            if(!futureStore.has(loopDealKey))
                 break;
 
-            var loopTick = futureStore.get(loopTickKey);
-            if(loopTick.getExpireTime() > headBlockTickDay)
+            var loopDeal = futureStore.get(loopDealKey);
+            if(loopDeal.getExpireTime() > headBlockTickDay)
             {
-                //update time bounder
-                if(lowerTime <= 0)
-                    lowerTime = loopTick.getExpireTime();
-                else
-                    lowerTime = Math.min(lowerTime, loopTick.getExpireTime());
+                //keep this deal, update time barrier
+                lowerTime = (lowerTime <= 0) ? loopDeal.getExpireTime() : Math.min(lowerTime, loopDeal.getExpireTime());
+                upperTime = (upperTime <= 0) ? loopDeal.getExpireTime() :  Math.max(upperTime, loopDeal.getExpireTime());
 
-                if(upperTime <= 0)
-                    upperTime = loopTick.getExpireTime();
-                else
-                    upperTime = Math.max(upperTime, loopTick.getExpireTime());
-
-                //next tick
-                continue;
+                //check  next deal
+                loopDealKeyBs = loopDeal.getNextTick();
             }
+            else {
+                /*
+                 * withdraw deal
+                 */
+                withdrawDealAmount = Math.addExact(withdrawDealAmount, loopDeal.getBalance());
+                withdrawDealCounter = Math.incrementExact(withdrawDealCounter);
 
-            /**
-             * withdraw deals
-             */
-            withdrawAmount = Math.addExact(withdrawAmount, loopTick.getBalance());
-            withdrawDeal = Math.incrementExact(withdrawDeal);
-            futureStore.delete(loopTickKey);
-            loopTickKeyBs = loopTick.getNextTick();
+                futureStore.delete(loopDealKey);
+                loopDealKeyBs = loopDeal.getNextTick();
 
-            //update head
-            if(Arrays.equals(headBs.toByteArray(), loopTickKey)){
-                headBs = loopTick.getNextTick();
-            }
+                //update summary header/tail pointer
+                if (Arrays.equals(headDealKeyBs.toByteArray(), loopDealKey)) {
+                    headDealKeyBs = loopDeal.getNextTick();
+                }
 
-            //update tail
-            if(Arrays.equals(tailBs.toByteArray(), loopTickKey)){
-                tailBs = loopTick.getPrevTick();
-            }
+                if (Arrays.equals(tailDealKeyBs.toByteArray(), loopDealKey)) {
+                    tailDealKeyBs = loopDeal.getPrevTick();
+                }
 
-            //new link prev
-            var prevTickBs = loopTick.getPrevTick();
-            var nextTickBs = loopTick.getNextTick();
-            if(!Objects.isNull(prevTickBs)){
-                var prevTickKey = prevTickBs.toByteArray();
-                if(futureStore.has(prevTickKey)){
-                    var prevTick = futureStore.get(prevTickKey);
-                    prevTick.setNextTick(nextTickBs);
-                    futureStore.put(prevTickKey, prevTick);
+                //update link prev
+                var prevTickBs = loopDeal.getPrevTick();
+                var nextTickBs = loopDeal.getNextTick();
+                if (!Objects.isNull(prevTickBs)) {
+                    var prevTickKey = prevTickBs.toByteArray();
+                    if (futureStore.has(prevTickKey)) {
+                        var prevTick = futureStore.get(prevTickKey);
+                        prevTick.setNextTick(nextTickBs);
+                        futureStore.put(prevTickKey, prevTick);
+                    }
+                }
+                //update link next
+                if (!Objects.isNull(nextTickBs)) {
+                    var nextTickKey = nextTickBs.toByteArray();
+                    if (futureStore.has(nextTickKey)) {
+                        var nextTick = futureStore.get(nextTickKey);
+                        nextTick.setPrevTick(prevTickBs);
+                        futureStore.put(nextTickKey, nextTick);
+                    }
                 }
             }
-            //update link next
-            if(!Objects.isNull(nextTickBs)){
-                var nextTickKey = nextTickBs.toByteArray();
-                if(futureStore.has(nextTickKey)){
-                    var nextTick = futureStore.get(nextTickKey);
-                    nextTick.setPrevTick(prevTickBs);
-                    futureStore.put(nextTickKey, nextTick);
-                }
-            }
-
-            continue;
         }
 
         /**
          * update summary
          */
-        var withdrawAll = (summary.getTotalDeal() <= withdrawDeal);
+        var withdrawAll = (summary.getTotalDeal() <= withdrawDealCounter);
         if(withdrawAll){
             ownerAcc.clearFuture();
-            ownerAcc.addBalance(withdrawAmount);
-            accountStore.put(ownerAddress, ownerAcc);
         }
         else {
-            //save head tick & tail tick
-            var headTick = futureStore.get(headBs.toByteArray());
-            headTick.clearPrevTick();
-            futureStore.put(headBs.toByteArray(), headTick);
-            var tailTick = futureStore.get(tailBs.toByteArray());
-            tailTick.clearNextTick();
-            futureStore.put(tailBs.toByteArray(), tailTick);
+            //maintain head/tail pointer
+            var headDeal = futureStore.get(headDealKeyBs.toByteArray());
+            headDeal.clearPrevTick();
+            futureStore.put(headDealKeyBs.toByteArray(), headDeal);
+            var tailDeal = futureStore.get(tailDealKeyBs.toByteArray());
+            tailDeal.clearNextTick();
+            futureStore.put(tailDealKeyBs.toByteArray(), tailDeal);
 
-            //save summary
+            //maintain summary
             summary = summary.toBuilder()
-                    .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), withdrawDeal))
-                    .setTotalBalance(Math.subtractExact(summary.getTotalBalance(), withdrawAmount))
-                    .setLowerTick(headBs)
-                    .setUpperTick(tailBs)
+                    .setTotalDeal(Math.subtractExact(summary.getTotalDeal(), withdrawDealCounter))
+                    .setTotalBalance(Math.subtractExact(summary.getTotalBalance(), withdrawDealAmount))
+                    .setLowerTick(headDealKeyBs)
+                    .setUpperTick(tailDealKeyBs)
                     .setLowerTime(lowerTime)
                     .setUpperTime(upperTime)
                     .build();
             ownerAcc.setFutureSummary(summary);
-            ownerAcc.addBalance(withdrawAmount);
-            accountStore.put(ownerAddress, ownerAcc);
         }
+
+        //update account balance anyway
+        ownerAcc.addBalance(withdrawDealAmount);
+        accountStore.put(ownerAddr, ownerAcc);
     }
 }

@@ -13,7 +13,7 @@ plugins {
 }
 
 group 'org.unichain'
-version '2.0.8'
+version '2.0.11'
 
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'

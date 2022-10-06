@@ -94,6 +94,7 @@ public class WithdrawFutureActuatorV6 extends AbstractActuator {
         var futureStore = dbManager.getFutureTransferStore();
         FutureTransferCapsule loopDeal;
         var lowerTime = -1L;
+        var atLest = false;
 
         while (true){
             //check first
@@ -103,10 +104,12 @@ public class WithdrawFutureActuatorV6 extends AbstractActuator {
             loopDeal = futureStore.get(loopDealBs.toByteArray());
             lowerTime = (lowerTime <= 0) ? loopDeal.getExpireTime() : Math.min(lowerTime, loopDeal.getExpireTime());
             loopDealBs = loopDeal.getNextTick();
+            atLest = true;
         }
 
-        return (headBlockTickDay >= lowerTime);
+        return atLest && (headBlockTickDay >= lowerTime);
     }
+
 
     /**
      * Looping list & delete
